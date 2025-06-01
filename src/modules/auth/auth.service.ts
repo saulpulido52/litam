@@ -112,6 +112,7 @@ private generateToken(userId: string, roleName: RoleName): string {
         const user = await this.userRepository
             .createQueryBuilder('user')
             .addSelect('user.password_hash') // Específicamente seleccionar el hash
+            .leftJoinAndSelect('user.role', 'role') 
             .where('user.email = :email', { email })
             .getOne();
 
