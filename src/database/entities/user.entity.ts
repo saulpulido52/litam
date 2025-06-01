@@ -7,11 +7,9 @@ import {
     UpdateDateColumn,
     ManyToOne,
     JoinColumn,
-    // BeforeInsert, // Comentado por ahora
-    // BeforeUpdate, // Comentado por ahora
 } from 'typeorm';
-import { Role } from './role.entity'; // Asumiendo que role.entity.ts está en el mismo directorio
-import bcrypt from 'bcrypt'; // Esto debería funcionar ahora
+import { Role } from './role.entity'; // CORREGIDO: './role.entity'
+import bcrypt from 'bcrypt';
 
 @Entity('users')
 export class User {
@@ -48,4 +46,10 @@ export class User {
 
     @UpdateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
     updated_at!: Date; // Añadido '!'
+
+    @Column({ type: 'timestamp', nullable: true })
+    passwordChangedAt?: Date;
+    // Añadido '?'
+    // @BeforeInsert() // Comentado por ahora
 }
+

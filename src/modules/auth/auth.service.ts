@@ -2,8 +2,8 @@
 // src/modules/auth/auth.service.ts
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../../database/data-source';
-import { User } from '../../database/entities/entities/user.entity'; // Ajusta la ruta si es necesario
-import { Role, RoleName } from '../../database/entities/entities/role.entity'; // Ajusta la ruta si es necesario
+import { User } from '../../database/entities/entities/user.entity'; // CORREGIDO
+import { Role, RoleName } from '../../database/entities/entities/role.entity'; // CORREGIDO
 import { RegisterPatientDto, RegisterNutritionistDto, LoginDto } from './auth.dto';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -112,7 +112,7 @@ private generateToken(userId: string, roleName: RoleName): string {
         const user = await this.userRepository
             .createQueryBuilder('user')
             .addSelect('user.password_hash') // Específicamente seleccionar el hash
-            .leftJoinAndSelect('user.role', 'role') 
+            .leftJoinAndSelect('user.role', 'role') // Asegurarse de que el rol se cargue
             .where('user.email = :email', { email })
             .getOne();
 

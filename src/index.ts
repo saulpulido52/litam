@@ -5,7 +5,7 @@ dotenv.config();
 
 import app from './app';
 import { AppDataSource } from './database/data-source';
-import { Role, RoleName } from './database/entities/entities/role.entity';
+import { Role, RoleName } from './database/entities/role.entity';
 
 const PORT = process.env.PORT || 3001;
 

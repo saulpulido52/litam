@@ -1,6 +1,7 @@
 // src/database/entities/entities/role.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { User } from './user.entity'; // Asumiendo que user.entity.ts está en el mismo directorio
+import { User } from './user.entity'; // CORREGIDO: './user.entity'
+
 
 export enum RoleName {
     PATIENT = 'patient',
@@ -16,6 +17,7 @@ export class Role {
     @Column({
         type: 'enum',
         enum: RoleName,
+        enumName: 'role_name_enum', // Especifica el nombre del enum en PostgreSQL
         unique: true,
         nullable: false,
     })
