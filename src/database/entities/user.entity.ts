@@ -9,10 +9,10 @@ import {
     OneToOne,
     OneToMany,
 } from 'typeorm';
-import { Role } from '@/database/entities/role.entity'; // Ruta corregida
-import { PatientProfile } from '@/database/entities/patient_profile.entity'; // Nueva entidad, ruta corregida
-import { NutritionistProfile } from '@/database/entities/nutritionist_profile.entity'; // Nueva entidad, ruta corregida
-import { PatientNutritionistRelation } from '@/database/entities/patient_nutritionist_relation.entity'; // Nueva entidad, ruta corregida
+import { Role } from '@/database/entities/role.entity';
+import { PatientProfile } from '@/database/entities/patient_profile.entity';
+import { NutritionistProfile } from '@/database/entities/nutritionist_profile.entity';
+import { PatientNutritionistRelation } from '@/database/entities/patient_nutritionist_relation.entity';
 import bcrypt from 'bcrypt';
 
 @Entity('users')
@@ -27,16 +27,16 @@ export class User {
     password_hash!: string;
 
     @Column({ type: 'varchar', length: 100, nullable: true })
-    first_name: string | null;
+    first_name!: string | null; // Fixed: Added definite assignment assertion
 
     @Column({ type: 'varchar', length: 100, nullable: true })
-    last_name: string | null;
+    last_name!: string | null; // Fixed: Added definite assignment assertion
 
     @Column({ type: 'integer', nullable: true })
-    age: number | null;
+    age!: number | null; // Fixed: Added definite assignment assertion
 
     @Column({ type: 'varchar', length: 50, nullable: true })
-    gender: string | null;
+    gender!: string | null; // Fixed: Added definite assignment assertion
 
     @ManyToOne(() => Role, (role) => role.users, { eager: true, nullable: false })
     @JoinColumn({ name: 'role_id' })
@@ -54,23 +54,19 @@ export class User {
     @Column({ type: 'timestamptz', nullable: true })
     passwordChangedAt?: Date;
 
-    // Nuevas relaciones OneToOne con los perfiles específicos
     @OneToOne(() => PatientProfile, (profile) => profile.user)
     patient_profile?: PatientProfile;
 
     @OneToOne(() => NutritionistProfile, (profile) => profile.user)
     nutritionist_profile?: NutritionistProfile;
 
-    // Relaciones para paciente-nutriólogo (si este usuario es un paciente o un nutriólogo)
     @OneToMany(() => PatientNutritionistRelation, (relation) => relation.patient)
     patient_relations_as_patient!: PatientNutritionistRelation[];
 
     @OneToMany(() => PatientNutritionistRelation, (relation) => relation.nutritionist)
     patient_relations_as_nutritionist!: PatientNutritionistRelation[];
 
-    // Método para verificar si la contraseña ha sido cambiada recientemente
     isPasswordChangedRecently(decodedIat: number): boolean {
-        // Compara el timestamp de cambio de contraseña (en segundos) con el de emisión del token (iat, en segundos)
         return !!this.passwordChangedAt && this.passwordChangedAt.getTime() / 1000 > decodedIat;
     }
 }

@@ -1,3 +1,4 @@
+// src/database/entities/patient_profile.entity.ts
 import {
     Entity,
     PrimaryGeneratedColumn,
@@ -18,36 +19,68 @@ export class PatientProfile {
     @JoinColumn({ name: 'user_id' })
     user!: User;
 
-    @Column({ type: 'jsonb', nullable: true })
-    goals: any | null; // Ej: { type: 'weight_loss', target_weight: 70, target_date: '2025-12-31' }
+    // --- Nuevos/Actualizados campos de datos biométricos ---
+    @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+    current_weight: number | null; // En kg (snake_case)
 
-    @Column({ type: 'jsonb', nullable: true })
-    preferences: any | null; // Ej: { dietary_restrictions: ['vegetarian'], disliked_foods: ['celery'], cooking_time_minutes: 30 }
-
-    @Column('text', { array: true, nullable: true })
-    allergies: string[] | null;
+    @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+    height: number | null; // En cm (snake_case)
 
     @Column({ type: 'varchar', length: 50, nullable: true })
-    activity_level: string | null; // Ej: 'sedentary', 'moderate', 'active'
+    activity_level: string | null; // Ej: 'sedentario', 'ligero', 'moderado', 'activo' (snake_case)
 
-    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-    monthly_budget: number | null;
+    // --- Nuevos/Actualizados campos de salud y objetivos ---
+    @Column('text', { array: true, nullable: true })
+    goals: string[] | null; // (snake_case)
+
+    @Column('text', { array: true, nullable: true })
+    medical_conditions: string[] | null; // (snake_case)
+
+    @Column('text', { array: true, nullable: true })
+    allergies: string[] | null; // (snake_case)
+
+    @Column('text', { array: true, nullable: true })
+    intolerances: string[] | null; // (snake_case)
+
+    @Column('text', { array: true, nullable: true })
+    medications: string[] | null; // (snake_case)
 
     @Column({ type: 'text', nullable: true })
-    basic_history: string | null; // Notas generales del paciente
+    clinical_notes: string | null; // (snake_case)
+
+    @Column({ type: 'varchar', length: 50, nullable: true })
+    pregnancy_status: string | null; // (snake_case)
+
+    // --- Nuevos/Actualizados campos de preferencias y estilo de vida ---
+    @Column('text', { array: true, nullable: true })
+    dietary_preferences: string[] | null; // (snake_case)
+
+    @Column('text', { array: true, nullable: true })
+    food_preferences: string[] | null; // (snake_case)
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+    monthly_budget: number | null; // (snake_case)
+
+    @Column({ type: 'text', nullable: true })
+    meal_schedule: string | null; // (snake_case)
+
+    // --- Campos JSONB existentes (para datos más estructurados o complejos) ---
+    @Column({ type: 'jsonb', nullable: true })
+    preferences: any | null;
 
     @Column('jsonb', { array: true, nullable: true })
-    weight_history: { date: Date; weight: number }[] | null; // Ej: [{ date: '2024-01-01', weight: 80 }]
+    weight_history: { date: Date; weight: number }[] | null;
 
     @Column('jsonb', { array: true, nullable: true })
-    measurements: { date: Date; type: string; value: number }[] | null; // Ej: [{ date: '2024-01-01', type: 'waist', value: 85 }]
+    measurements: { date: Date; type: string; value: number }[] | null;
 
     @Column('jsonb', { array: true, nullable: true })
-    photos: { date: Date; url: string; description: string }[] | null; // Metadata de fotos
+    photos: { date: Date; url: string; description: string }[] | null;
 
     @Column('jsonb', { array: true, nullable: true })
-    clinical_studies_docs: { id: string; filename: string; url: string; upload_date: Date; description: string }[] | null; // Metadata de documentos clínicos
+    clinical_studies_docs: { id: string; filename: string; url: string; upload_date: Date; description: string }[] | null;
 
+    // --- Campos de auditoría ---
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at!: Date;
 

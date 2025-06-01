@@ -1,7 +1,11 @@
+// src/app.ts
 import express, { Application, Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
-import authRoutes from '@/modules/auth/auth.routes'; // Ruta corregida
-import userRoutes from '@/modules/users/users.routes'; // Ruta corregida
+import authRoutes from '@/modules/auth/auth.routes';
+import userRoutes from '@/modules/users/users.routes';
+import patientRoutes from '@/modules/patients/patient.routes';
+import nutritionistRoutes from '@/modules/nutritionists/nutritionist.routes';
+import relationRoutes from '@/modules/relations/relation.routes'; // Importar rutas de relaciones
 import { AppError } from '@/utils/app.error';
 
 dotenv.config();
@@ -17,6 +21,9 @@ app.get('/api/health', (req: Request, res: Response) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/patients', patientRoutes);
+app.use('/api/nutritionists', nutritionistRoutes);
+app.use('/api/relations', relationRoutes); // Montar rutas de relaciones
 
 app.all('*', (req: Request, res: Response, next: NextFunction) => {
     next(new AppError(`No se puede encontrar ${req.originalUrl} en este servidor!`, 404));
