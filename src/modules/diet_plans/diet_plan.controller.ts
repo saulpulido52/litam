@@ -1,0 +1,155 @@
+// src/modules/diet_plans/diet_plan.controller.ts
+import { Request, Response, NextFunction } from 'express';
+import dietPlanService from '@/modules/diet_plans/diet_plan.service';
+import { AppError } from '@/utils/app.error';
+import {
+    CreateDietPlanDto,
+    UpdateDietPlanDto,
+    GenerateDietPlanAiDto,
+    UpdateDietPlanStatusDto, // Importar el DTO para el estado
+} from '@/modules/diet_plans/diet_plan.dto';
+import { RoleName } from '@/database/entities/role.entity';
+import { DietPlanStatus } from '@/database/entities/diet_plan.entity';
+
+class DietPlanController {
+    // --- Rutas para Nutriólogos y Administradores ---
+
+    public async createDietPlan(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user || (req.user.role.name !== RoleName.NUTRITIONIST && req.user.role.name !== RoleName.ADMIN)) {
+                return next(new AppError('Acceso denegado. Solo nutriólogos o administradores pueden crear planes de dieta.', 403));
+            }
+            const dietPlan = await dietPlanService.createDietPlan(req.body as CreateDietPlanDto, req.user.id);
+            res.status(201).json({
+                status: 'success',
+                data: { dietPlan },
+            });
+        } catch (error: any) {
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al crear el plan de dieta.', 500));
+        }
+    }
+
+    public async generateDietPlanByAI(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user || req.user.role.name !== RoleName.NUTRITIONIST) {
+                return next(new AppError('Acceso denegado. Solo nutriólogos pueden generar planes de dieta con IA.', 403));
+            }
+            const dietPlan = await dietPlanService.generateDietPlanByAI(req.body as GenerateDietPlanAiDto, req.user.id);
+            res.status(201).json({
+                status: 'success',
+                message: 'Plan de dieta generado por IA (requiere revisión).',
+                data: { dietPlan },
+            });
+        } catch (error: any) {
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al generar el plan de dieta con IA.', 500));
+        }
+    }
+
+    public async getDietPlanById(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user) {
+                return next(new AppError('Usuario no autenticado.', 401));
+            }
+            const { id } = req.params;
+            const dietPlan = await dietPlanService.getDietPlanById(id, req.user.id, req.user.role.name);
+            res.status(200).json({
+                status: 'success',
+                data: { dietPlan },
+            });
+        } catch (error: any) {
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener el plan de dieta.', 500));
+        }
+    }
+
+    public async getDietPlansForPatient(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user || (req.user.role.name !== RoleName.NUTRITIONIST && req.user.role.name !== RoleName.ADMIN)) {
+                return next(new AppError('Acceso denegado. Solo nutriólogos o administradores pueden ver los planes de un paciente.', 403));
+            }
+            const { patientId } = req.params;
+            const dietPlans = await dietPlanService.getDietPlansForPatient(patientId, req.user.id, req.user.role.name);
+            res.status(200).json({
+                status: 'success',
+                results: dietPlans.length,
+                data: { dietPlans },
+            });
+        } catch (error: any) {
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener los planes de dieta para el paciente.', 500));
+        }
+    }
+
+    public async updateDietPlan(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user || req.user.role.name !== RoleName.NUTRITIONIST) {
+                return next(new AppError('Acceso denegado. Solo nutriólogos pueden actualizar planes de dieta.', 403));
+            }
+            const { id } = req.params;
+            const updatedDietPlan = await dietPlanService.updateDietPlan(id, req.body as UpdateDietPlanDto, req.user.id);
+            res.status(200).json({
+                status: 'success',
+                data: { dietPlan: updatedDietPlan },
+            });
+        } catch (error: any) {
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al actualizar el plan de dieta.', 500));
+        }
+    }
+
+    public async updateDietPlanStatus(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user || req.user.role.name !== RoleName.NUTRITIONIST) {
+                return next(new AppError('Acceso denegado. Solo nutriólogos pueden cambiar el estado de un plan de dieta.', 403));
+            }
+            const { id } = req.params;
+            // El DTO de validación se encarga de asegurar que 'status' es un DietPlanStatus válido
+            const { status } = req.body as UpdateDietPlanStatusDto;
+
+            const updatedDietPlan = await dietPlanService.updateDietPlanStatus(id, status, req.user.id);
+            res.status(200).json({
+                status: 'success',
+                message: `Estado del plan actualizado a ${status}.`,
+                data: { dietPlan: updatedDietPlan },
+            });
+        } catch (error: any) {
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al actualizar el estado del plan de dieta.', 500));
+        }
+    }
+
+    public async deleteDietPlan(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user || (req.user.role.name !== RoleName.NUTRITIONIST && req.user.role.name !== RoleName.ADMIN)) {
+                return next(new AppError('Acceso denegado. Solo nutriólogos o administradores pueden eliminar planes de dieta.', 403));
+            }
+            const { id } = req.params;
+            await dietPlanService.deleteDietPlan(id, req.user.id, req.user.role.name);
+            res.status(204).json({
+                status: 'success',
+                data: null,
+            });
+        } catch (error: any) {
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al eliminar el plan de dieta.', 500));
+        }
+    }
+}
+
+export default new DietPlanController();

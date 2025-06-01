@@ -1,11 +1,12 @@
-// src/app.ts
 import express, { Application, Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import authRoutes from '@/modules/auth/auth.routes';
 import userRoutes from '@/modules/users/users.routes';
 import patientRoutes from '@/modules/patients/patient.routes';
 import nutritionistRoutes from '@/modules/nutritionists/nutritionist.routes';
-import relationRoutes from '@/modules/relations/relation.routes'; // Importar rutas de relaciones
+import relationRoutes from '@/modules/relations/relation.routes';
+import foodRoutes from '@/modules/foods/food.routes';
+import dietPlanRoutes from '@/modules/diet_plans/diet_plan.routes'; // Importar rutas de planes de dieta
 import { AppError } from '@/utils/app.error';
 
 dotenv.config();
@@ -23,7 +24,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/nutritionists', nutritionistRoutes);
-app.use('/api/relations', relationRoutes); // Montar rutas de relaciones
+app.use('/api/relations', relationRoutes);
+app.use('/api/foods', foodRoutes);
+app.use('/api/diet-plans', dietPlanRoutes); // Montar rutas de planes de dieta
 
 app.all('*', (req: Request, res: Response, next: NextFunction) => {
     next(new AppError(`No se puede encontrar ${req.originalUrl} en este servidor!`, 404));

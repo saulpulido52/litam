@@ -1,0 +1,156 @@
+// src/modules/diet_plans/diet_plan.dto.ts
+import {
+    IsString,
+    IsNotEmpty,
+    Length,
+    IsUUID,
+    IsNumber,
+    Min,
+    Max,
+    IsOptional,
+    IsArray,
+    ValidateNested,
+    IsDateString,
+    IsEnum,
+    IsBoolean,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { DietPlanStatus } from '@/database/entities/diet_plan.entity'; // Asegúrate de importar el enum
+
+// DTO para un elemento de comida (alimento + cantidad)
+export class MealItemDto {
+    @IsUUID('4', { message: 'El ID del alimento debe ser un UUID válido.' })
+    foodId!: string;
+
+    @IsNumber({}, { message: 'La cantidad debe ser un número.' })
+    @Min(0.01, { message: 'La cantidad debe ser mayor que 0.' })
+    quantity!: number;
+}
+
+// DTO para una comida individual (Desayuno, Almuerzo, etc.)
+export class MealDto {
+    @IsString({ message: 'El nombre de la comida debe ser una cadena de texto.' })
+    @IsNotEmpty({ message: 'El nombre de la comida es obligatorio.' })
+    @Length(2, 100, { message: 'El nombre de la comida debe tener entre 2 y 100 caracteres.' })
+    name!: string;
+
+    @IsNumber({}, { message: 'El orden de la comida debe ser un número entero.' })
+    @Min(0, { message: 'El orden de la comida no puede ser negativo.' })
+    order!: number; // Ej: 1 para Desayuno, 2 para Colación, 3 para Almuerzo
+
+    @IsArray({ message: 'Los ítems de la comida deben ser un array.' })
+    @ValidateNested({ each: true })
+    @Type(() => MealItemDto) // Usar @Type para que class-transformer sepa transformar a MealItemDto
+    mealItems!: MealItemDto[];
+}
+
+// DTO para crear un Plan de Dieta (incluye IA inicial)
+export class CreateDietPlanDto {
+    @IsString({ message: 'El nombre del plan de dieta debe ser una cadena de texto.' })
+    @IsNotEmpty({ message: 'El nombre del plan de dieta es obligatorio.' })
+    @Length(2, 255, { message: 'El nombre del plan de dieta debe tener entre 2 y 255 caracteres.' })
+    name!: string;
+
+    @IsUUID('4', { message: 'El ID del paciente debe ser un UUID válido.' })
+    patientId!: string;
+
+    @IsOptional()
+    @IsString({ message: 'Las notas deben ser una cadena de texto.' })
+    @Length(0, 1000, { message: 'Las notas no pueden exceder 1000 caracteres.' })
+    notes?: string;
+
+    @IsDateString({}, { message: 'La fecha de inicio debe ser una fecha válida (YYYY-MM-DD).' })
+    startDate!: string; // Se espera en formato YYYY-MM-DD
+
+    @IsDateString({}, { message: 'La fecha de fin debe ser una fecha válida (YYYY-MM-DD).' })
+    endDate!: string; // Se espera en formato YYYY-MM-DD
+
+    @IsOptional()
+    @IsNumber({}, { message: 'El objetivo de calorías diario debe ser un número.' })
+    @Min(0, { message: 'El objetivo de calorías diario no puede ser negativo.' })
+    dailyCaloriesTarget?: number;
+
+    @IsOptional()
+    // Validación más específica para dailyMacrosTarget si es necesario
+    dailyMacrosTarget?: { protein?: number; carbohydrates?: number; fats?: number };
+
+    @IsOptional()
+    @IsBoolean({ message: 'generatedByIA debe ser un booleano.' })
+    generatedByIA?: boolean;
+
+    @IsOptional()
+    @IsString({ message: 'La versión de IA debe ser una cadena de texto.' })
+    iaVersion?: string;
+
+    @IsOptional()
+    @IsArray({ message: 'Las comidas deben ser un array.' })
+    @ValidateNested({ each: true })
+    @Type(() => MealDto)
+    meals?: MealDto[]; // Opcional si el plan es generado por IA o creado vacío inicialmente
+}
+
+// DTO para actualizar un Plan de Dieta
+export class UpdateDietPlanDto {
+    @IsOptional()
+    @IsString({ message: 'El nombre del plan de dieta debe ser una cadena de texto.' })
+    @Length(2, 255, { message: 'El nombre del plan de dieta debe tener entre 2 y 255 caracteres.' })
+    name?: string;
+
+    @IsOptional()
+    @IsString({ message: 'Las notas deben ser una cadena de texto.' })
+    @Length(0, 1000, { message: 'Las notas no pueden exceder 1000 caracteres.' })
+    notes?: string;
+
+    @IsOptional()
+    @IsDateString({}, { message: 'La fecha de inicio debe ser una fecha válida (YYYY-MM-DD).' })
+    startDate?: string;
+
+    @IsOptional()
+    @IsDateString({}, { message: 'La fecha de fin debe ser una fecha válida (YYYY-MM-DD).' })
+    endDate?: string;
+
+    @IsOptional()
+    @IsNumber({}, { message: 'El objetivo de calorías diario debe ser un número.' })
+    @Min(0, { message: 'El objetivo de calorías diario no puede ser negativo.' })
+    dailyCaloriesTarget?: number;
+
+    @IsOptional()
+    dailyMacrosTarget?: { protein?: number; carbohydrates?: number; fats?: number };
+
+    @IsOptional()
+    @IsEnum(DietPlanStatus, { message: 'El estado del plan de dieta no es válido.' })
+    status?: DietPlanStatus;
+
+    @IsOptional()
+    @IsArray({ message: 'Las comidas deben ser un array.' })
+    @ValidateNested({ each: true })
+    @Type(() => MealDto)
+    meals?: MealDto[];
+}
+
+// DTO para solicitar generación de dieta por IA (IA v1.0)
+export class GenerateDietPlanAiDto {
+    @IsUUID('4', { message: 'El ID del paciente debe ser un UUID válido.' })
+    patientId!: string;
+
+    @IsString({ message: 'El nombre del plan debe ser una cadena de texto.' })
+    @IsNotEmpty({ message: 'El nombre del plan es obligatorio.' })
+    @Length(2, 255, { message: 'El nombre del plan debe tener entre 2 y 255 caracteres.' })
+    name!: string;
+
+    @IsDateString({}, { message: 'La fecha de inicio debe ser una fecha válida (YYYY-MM-DD).' })
+    startDate!: string;
+
+    @IsDateString({}, { message: 'La fecha de fin debe ser una fecha válida (YYYY-MM-DD).' })
+    endDate!: string;
+
+    @IsOptional()
+    @IsString({ message: 'Notas para la IA deben ser una cadena de texto.' })
+    notesForAI?: string;
+}
+
+// DTO para actualizar solo el estado de un plan de dieta
+export class UpdateDietPlanStatusDto {
+    @IsEnum(DietPlanStatus, { message: 'El estado del plan de dieta no es válido.' })
+    status!: DietPlanStatus;
+}
