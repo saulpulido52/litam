@@ -1,7 +1,5 @@
-// src/database/entities/entities/role.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { User } from './user.entity'; // CORREGIDO: './user.entity'
-
+import { User } from '@/database/entities/user.entity'; // Ruta corregida
 
 export enum RoleName {
     PATIENT = 'patient',
@@ -12,17 +10,17 @@ export enum RoleName {
 @Entity('roles')
 export class Role {
     @PrimaryGeneratedColumn()
-    id!: number; // Añadido '!'
+    id!: number;
 
     @Column({
         type: 'enum',
         enum: RoleName,
-        enumName: 'role_name_enum', // Especifica el nombre del enum en PostgreSQL
+        enumName: 'roles_name_enum', // Especifica el nombre del enum en PostgreSQL
         unique: true,
         nullable: false,
     })
-    name!: RoleName; // Añadido '!'
+    name!: RoleName;
 
     @OneToMany(() => User, (user) => user.role)
-    users!: User[]; // Añadido '!'
+    users!: User[];
 }

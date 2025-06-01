@@ -1,14 +1,12 @@
-// auth.service.ts 
-// src/modules/auth/auth.service.ts
 import { Repository } from 'typeorm';
-import { AppDataSource } from '../../database/data-source';
-import { User } from '../../database/entities/entities/user.entity'; // CORREGIDO
-import { Role, RoleName } from '../../database/entities/entities/role.entity'; // CORREGIDO
-import { RegisterPatientDto, RegisterNutritionistDto, LoginDto } from './auth.dto';
+import { AppDataSource } from '@/database/data-source'; // Ruta corregida
+import { User } from '@/database/entities/user.entity'; // Ruta corregida
+import { Role, RoleName } from '@/database/entities/role.entity'; // Ruta corregida
+import { RegisterPatientDto, RegisterNutritionistDto, LoginDto } from '@/modules/auth/auth.dto'; // Ruta corregida
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { AppError } from '../../utils/app.error';
+import { AppError } from '@/utils/app.error';
 
 dotenv.config();
 
@@ -21,31 +19,28 @@ class AuthService {
     constructor() {
         this.userRepository = AppDataSource.getRepository(User);
         this.roleRepository = AppDataSource.getRepository(Role);
-        this.JWT_SECRET = process.env.JWT_SECRET || 'supersecretjwtkey'; // Asegúrate de tener una variable de entorno fuerte
+        this.JWT_SECRET = process.env.JWT_SECRET || 'supersecretjwtkey';
         this.JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
     }
 
-private generateToken(userId: string, roleName: RoleName): string {
-    if (!this.JWT_SECRET) {
-        throw new AppError('JWT_SECRET no está configurado. Contacte al administrador.', 500);
+    private generateToken(userId: string, roleName: RoleName): string {
+        if (!this.JWT_SECRET) {
+            throw new AppError('JWT_SECRET no está configurado. Contacte al administrador.', 500);
+        }
+        const expiresIn: string | number = this.JWT_EXPIRES_IN; // Tipo explícito para JWT
+        return jwt.sign(
+            { userId, role: roleName },
+            this.JWT_SECRET,
+            { expiresIn }
+        );
     }
-    
-    // Conversión explícita para evitar errores de tipo
-    const expiresIn: string | number = this.JWT_EXPIRES_IN;
-    
-    return jwt.sign(
-        { userId, role: roleName },
-        this.JWT_SECRET,
-        { expiresIn } // Ahora TS reconoce correctamente el tipo
-    );
-}
 
     public async registerPatient(registerDto: RegisterPatientDto) {
         const { email, password, firstName, lastName, age, gender } = registerDto;
 
         const existingUser = await this.userRepository.findOneBy({ email });
         if (existingUser) {
-            throw new AppError('El email ya está registrado.', 409); // 409 Conflict
+            throw new AppError('El email ya está registrado.', 409);
         }
 
         const patientRole = await this.roleRepository.findOneBy({ name: RoleName.PATIENT });
@@ -53,7 +48,7 @@ private generateToken(userId: string, roleName: RoleName): string {
             throw new AppError('Rol de paciente no encontrado. Contacte al administrador.', 500);
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10); // Salt rounds
+        const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = this.userRepository.create({
             email,
             password_hash: hashedPassword,
@@ -69,7 +64,6 @@ private generateToken(userId: string, roleName: RoleName): string {
 
         const token = this.generateToken(newUser.id, patientRole.name);
 
-        // Devolver un objeto User sin el password_hash para seguridad
         const { password_hash, ...userWithoutHash } = newUser;
         return { user: userWithoutHash, token };
     }
@@ -108,24 +102,22 @@ private generateToken(userId: string, roleName: RoleName): string {
     public async login(loginDto: LoginDto) {
         const { email, password } = loginDto;
 
-        // `select: false` en password_hash significa que debemos especificarlo para cargarlo
         const user = await this.userRepository
             .createQueryBuilder('user')
-            .addSelect('user.password_hash') // Específicamente seleccionar el hash
-            .leftJoinAndSelect('user.role', 'role') // Asegurarse de que el rol se cargue
+            .addSelect('user.password_hash')
+            .leftJoinAndSelect('user.role', 'role') // Asegura que el rol se carga
             .where('user.email = :email', { email })
             .getOne();
 
         if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-            throw new AppError('Credenciales inválidas.', 401); // 401 Unauthorized
+            throw new AppError('Credenciales inválidas.', 401);
         }
 
         const token = this.generateToken(user.id, user.role.name);
 
-        // Devolver un objeto User sin el password_hash para seguridad
         const { password_hash, ...userWithoutHash } = user;
         return { user: userWithoutHash, token };
     }
 }
 
-export default new AuthService(); // Exportar una instancia singleton
+export default new AuthService();

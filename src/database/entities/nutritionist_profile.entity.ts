@@ -1,4 +1,3 @@
-// src/database/entities/entities/nutritionist_profile.entity.ts
 import {
     Entity,
     PrimaryGeneratedColumn,
@@ -8,7 +7,7 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { User } from './user.entity'; // CORREGIDO: './user.entity'
+import { User } from '@/database/entities/user.entity'; // Ruta corregida
 
 @Entity('nutritionist_profiles')
 export class NutritionistProfile {

@@ -1,26 +1,3 @@
-// src/database/entities/entities/role.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { User } from './user.entity'; // CORREGIDO: './user.entity'
-
-export enum RoleName {
-    PATIENT = 'patient',
-    NUTRITIONIST = 'nutritionist',
-    ADMIN = 'admin',
-}
-
-@Entity('roles')
-export class Role {
-    @PrimaryGeneratedColumn('uuid')
-    id!: string;
-
-    @Column({ type: 'enum', enum: RoleName, unique: true })
-    name!: RoleName;
-
-    @OneToMany(() => User, (user) => user.role)
-    users!: User[];
-}
-
-// src/database/entities/entities/patient-profile.entity.ts
 import {
     Entity,
     PrimaryGeneratedColumn,
@@ -30,71 +7,50 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { User } from './user.entity'; // CORREGIDO: './user.entity'
+import { User } from '@/database/entities/user.entity'; // Ruta corregida
 
 @Entity('patient_profiles')
 export class PatientProfile {
     @PrimaryGeneratedColumn('uuid')
     id!: string;
 
-    @Column()
-    address!: string;
-
-    @Column()
-    phoneNumber!: string;
-
-    @Column()
-    dateOfBirth!: Date;
-
-    @Column()
-    gender!: string;
-
-    @Column()
-    height!: number;
-
-    @Column()
-    weight!: number;
-
-    @Column()
-    medicalHistory!: string;
-
-    @Column()
-    allergies!: string;
-
-    @Column()
-    medications!: string;
-
-    @Column()
-    emergencyContact!: string;
-
-    @Column()
-    relationshipToEmergencyContact!: string;
-
-    @Column()
-    insuranceProvider!: string;
-
-    @Column()
-    policyNumber!: string;
-
-    @Column()
-    groupNumber!: string;
-
-    @Column()
-    subscriberName!: string;
-
-    @Column()
-    subscriberId!: string;
-
-    @Column()
-    patientId!: string;
-
-    @OneToOne(() => User, (user) => user.patientProfile)
-    @JoinColumn()
+    @OneToOne(() => User, (user) => user.patient_profile, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'user_id' })
     user!: User;
 
-    @CreateDateColumn()
-    createdAt!: Date;
+    @Column({ type: 'jsonb', nullable: true })
+    goals: any | null; // Ej: { type: 'weight_loss', target_weight: 70, target_date: '2025-12-31' }
 
-    @UpdateDateColumn()
-    updatedAt!: Date;
+    @Column({ type: 'jsonb', nullable: true })
+    preferences: any | null; // Ej: { dietary_restrictions: ['vegetarian'], disliked_foods: ['celery'], cooking_time_minutes: 30 }
+
+    @Column('text', { array: true, nullable: true })
+    allergies: string[] | null;
+
+    @Column({ type: 'varchar', length: 50, nullable: true })
+    activity_level: string | null; // Ej: 'sedentary', 'moderate', 'active'
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+    monthly_budget: number | null;
+
+    @Column({ type: 'text', nullable: true })
+    basic_history: string | null; // Notas generales del paciente
+
+    @Column('jsonb', { array: true, nullable: true })
+    weight_history: { date: Date; weight: number }[] | null; // Ej: [{ date: '2024-01-01', weight: 80 }]
+
+    @Column('jsonb', { array: true, nullable: true })
+    measurements: { date: Date; type: string; value: number }[] | null; // Ej: [{ date: '2024-01-01', type: 'waist', value: 85 }]
+
+    @Column('jsonb', { array: true, nullable: true })
+    photos: { date: Date; url: string; description: string }[] | null; // Metadata de fotos
+
+    @Column('jsonb', { array: true, nullable: true })
+    clinical_studies_docs: { id: string; filename: string; url: string; upload_date: Date; description: string }[] | null; // Metadata de documentos clínicos
+
+    @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+    created_at!: Date;
+
+    @UpdateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+    updated_at!: Date;
 }

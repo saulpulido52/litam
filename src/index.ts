@@ -1,11 +1,6 @@
-// src/index.ts
-import 'reflect-metadata'; // Asegura que los decoradores funcionen
-import dotenv from 'dotenv';
-dotenv.config();
-
-import app from './app';
-import { AppDataSource } from './database/data-source';
-import { Role, RoleName } from './database/entities/role.entity';
+import app from '@/app'; // Ruta corregida
+import { AppDataSource } from '@/database/data-source'; // Ruta corregida
+import { Role, RoleName } from '@/database/entities/role.entity'; // Ruta corregida
 
 const PORT = process.env.PORT || 3001;
 
@@ -16,18 +11,14 @@ async function initializeDatabase() {
             console.log('Data Source has been initialized!');
         }
 
-        // Seed roles if they don't exist
         const roleRepository = AppDataSource.getRepository(Role);
-        const rolesToSeed: RoleName[] = [
-            RoleName.PATIENT,
-            RoleName.NUTRITIONIST,
-            RoleName.ADMIN,
-        ];
+        const rolesToSeed: RoleName[] = [RoleName.PATIENT, RoleName.NUTRITIONIST, RoleName.ADMIN];
 
         for (const roleName of rolesToSeed) {
-            let role = await roleRepository.findOne({ where: { name: roleName } });
+            let role = await roleRepository.findOneBy({ name: roleName });
             if (!role) {
-                role = roleRepository.create({ name: roleName });
+                role = new Role();
+                role.name = roleName;
                 await roleRepository.save(role);
                 console.log(`Role ${roleName} seeded.`);
             }

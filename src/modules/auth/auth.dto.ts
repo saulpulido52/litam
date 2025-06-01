@@ -1,5 +1,3 @@
-// auth.dto.ts 
-// src/modules/auth/auth.dto.ts
 import {
     IsEmail,
     IsString,
@@ -10,9 +8,8 @@ import {
     Max,
     IsOptional,
     Matches,
-    IsEnum
 } from 'class-validator';
-import { RoleName } from '../../database/entities/entities/role.entity'; // Ajusta la ruta si es necesario
+import { RoleName } from '@/database/entities/role.entity'; // Ruta corregida
 
 export class RegisterPatientDto {
     @IsEmail({}, { message: 'El email debe ser una dirección de correo válida.' })
@@ -37,14 +34,14 @@ export class RegisterPatientDto {
     lastName!: string;
 
     @IsInt({ message: 'La edad debe ser un número entero.' })
-    @Min(18, { message: 'La edad mínima es 18 años.' })
-    @Max(110, { message: 'La edad máxima es 110 años.' })
-    @IsOptional() // Es opcional en la fase 1, pero puede ser requerido en fases futuras.
+    @Min(0, { message: 'La edad no puede ser negativa.' })
+    @Max(120, { message: 'La edad máxima es 120 años.' })
+    @IsOptional()
     age?: number;
 
     @IsString({ message: 'El género debe ser una cadena de texto.' })
-    @IsOptional() // Es opcional en la fase 1
-    gender?: string; // Podríamos usar un @IsEnum aquí si tuviéramos un enum de géneros
+    @IsOptional()
+    gender?: string;
 }
 
 export class RegisterNutritionistDto {

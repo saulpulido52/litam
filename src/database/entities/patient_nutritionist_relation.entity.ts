@@ -1,4 +1,3 @@
-// src/database/entities/entities/patient_nutritionist_relation.entity.ts
 import {
     Entity,
     PrimaryGeneratedColumn,
@@ -9,8 +8,8 @@ import {
     UpdateDateColumn,
     Unique,
 } from 'typeorm';
-import { User } from './user.entity'; // CORREGIDO: './user.entity'
-import { RoleName } from './role.entity'; // CORREGIDO: './role.entity'
+import { User } from '@/database/entities/user.entity'; // Ruta corregida
+import { RoleName } from '@/database/entities/role.entity'; // Ruta corregida
 
 export enum RelationshipStatus {
     PENDING = 'pending', // Solicitud enviada por el paciente al nutriólogo

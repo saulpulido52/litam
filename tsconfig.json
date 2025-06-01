@@ -6,13 +6,13 @@
     "outDir": "./dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": true, // Mantenemos esto para mayor seguridad de tipos
-    "experimentalDecorators": true, // Necesario para TypeORM
-    "emitDecoratorMetadata": true,   // Necesario para TypeORM
+    "strict": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "sourceMap": true,
-    "baseUrl": "./",
+    "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
     }
