@@ -1,5 +1,6 @@
+// src/modules/auth/auth.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import authService from '@/modules/auth/auth.service'; // Ruta corregida
+import authService from '@/modules/auth/auth.service';
 import { AppError } from '@/utils/app.error';
 
 class AuthController {
@@ -11,6 +12,7 @@ class AuthController {
                 data: { user, token },
             });
         } catch (error: any) {
+            console.error('Error en AuthController.registerPatient:', error); // LOG DE DEBUG
             if (error instanceof AppError) {
                 return next(error);
             }
@@ -26,7 +28,8 @@ class AuthController {
                 data: { user, token },
             });
         } catch (error: any) {
-             if (error instanceof AppError) {
+            console.error('Error en AuthController.registerNutritionist:', error); // LOG DE DEBUG
+            if (error instanceof AppError) {
                 return next(error);
             }
             next(new AppError('Error al registrar nutriólogo.', 500));
@@ -41,6 +44,7 @@ class AuthController {
                 data: { user, token },
             });
         } catch (error: any) {
+            console.error('Error en AuthController.login:', error); // LOG DE DEBUG
             if (error instanceof AppError) {
                 return next(error);
             }

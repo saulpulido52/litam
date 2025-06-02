@@ -47,16 +47,22 @@ class AuthService {
         );
     }
 
+
+
     public async registerPatient(registerDto: RegisterPatientDto) {
         const { email, password, firstName, lastName, age, gender } = registerDto;
 
+        console.log('[DEBUG] Intentando registrar paciente:', email); // DEBUG LOG
         const existingUser = await this.userRepository.findOneBy({ email });
         if (existingUser) {
+            console.log('[DEBUG] Email ya registrado:', email); // DEBUG LOG
             throw new AppError('El email ya está registrado.', 409);
         }
 
         const patientRole = await this.roleRepository.findOneBy({ name: RoleName.PATIENT });
+        console.log('[DEBUG] Rol de paciente encontrado:', patientRole ? patientRole.name : 'NO ENCONTRADO'); // DEBUG LOG
         if (!patientRole) {
+            console.error('[ERROR] Rol de paciente NO encontrado en la base de datos. Asegúrate de que los roles se siembren.'); // DEBUG LOG
             throw new AppError('Rol de paciente no encontrado. Contacte al administrador.', 500);
         }
 
@@ -72,9 +78,16 @@ class AuthService {
             is_active: true,
         });
 
-        await this.userRepository.save(newUser);
+        try {
+            await this.userRepository.save(newUser);
+            console.log('[DEBUG] Paciente guardado con éxito, ID:', newUser.id); // DEBUG LOG
+        } catch (dbError: any) {
+            console.error('[ERROR] Error al guardar nuevo paciente en BD:', dbError.message || dbError); // CRITICAL DEBUG LOG
+            throw new AppError('Error interno al guardar el usuario.', 500);
+        }
 
         const token = this.generateToken(newUser.id, patientRole.name);
+        console.log('[DEBUG] Token generado para paciente:', newUser.id); // DEBUG LOG
 
         const { password_hash, ...userWithoutHash } = newUser;
         return { user: userWithoutHash, token };
@@ -83,13 +96,17 @@ class AuthService {
     public async registerNutritionist(registerDto: RegisterNutritionistDto) {
         const { email, password, firstName, lastName } = registerDto;
 
+        console.log('[DEBUG] Intentando registrar nutriólogo:', email); // DEBUG LOG
         const existingUser = await this.userRepository.findOneBy({ email });
         if (existingUser) {
+            console.log('[DEBUG] Email ya registrado:', email); // DEBUG LOG
             throw new AppError('El email ya está registrado.', 409);
         }
 
         const nutritionistRole = await this.roleRepository.findOneBy({ name: RoleName.NUTRITIONIST });
+        console.log('[DEBUG] Rol de nutriólogo encontrado:', nutritionistRole ? nutritionistRole.name : 'NO ENCONTRADO'); // DEBUG LOG
         if (!nutritionistRole) {
+            console.error('[ERROR] Rol de nutriólogo NO encontrado en la base de datos. Asegúrate de que los roles se siembren.'); // DEBUG LOG
             throw new AppError('Rol de nutriólogo no encontrado. Contacte al administrador.', 500);
         }
 
@@ -103,9 +120,16 @@ class AuthService {
             is_active: true,
         });
 
-        await this.userRepository.save(newUser);
+        try {
+            await this.userRepository.save(newUser);
+            console.log('[DEBUG] Nutriólogo guardado con éxito, ID:', newUser.id); // DEBUG LOG
+        } catch (dbError: any) {
+            console.error('[ERROR] Error al guardar nuevo nutriólogo en BD:', dbError.message || dbError); // CRITICAL DEBUG LOG
+            throw new AppError('Error interno al guardar el usuario.', 500);
+        }
 
         const token = this.generateToken(newUser.id, nutritionistRole.name);
+        console.log('[DEBUG] Token generado para nutriólogo:', newUser.id); // DEBUG LOG
 
         const { password_hash, ...userWithoutHash } = newUser;
         return { user: userWithoutHash, token };

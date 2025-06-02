@@ -27,11 +27,11 @@ export class DietPlan {
     @Column({ type: 'varchar', length: 255, nullable: false })
     name!: string; // Ej: 'Plan Semanal de Pérdida de Peso (Semana 1)'
 
-    @ManyToOne(() => User, { nullable: false })
+    @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE'  })
     @JoinColumn({ name: 'patient_user_id' })
     patient!: User;
 
-    @ManyToOne(() => User, { nullable: false })
+    @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE'  })
     @JoinColumn({ name: 'nutritionist_user_id' })
     nutritionist!: User;
 
@@ -65,7 +65,7 @@ export class DietPlan {
     daily_calories_target: number | null;
 
     @Column({ type: 'jsonb', nullable: true })
-    daily_macros_target: { protein: number; carbohydrates: number; fats: number } | null; // Ej: { protein: 150, carbs: 200, fats: 50 }
+    daily_macros_target: any | null; // Ej: { protein: 150, carbs: 200, fats: 50 }
 
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at!: Date;

@@ -6,14 +6,12 @@ import {
     CreateDietPlanDto,
     UpdateDietPlanDto,
     GenerateDietPlanAiDto,
-    UpdateDietPlanStatusDto, // Importar el DTO para el estado
+    UpdateDietPlanStatusDto,
 } from '@/modules/diet_plans/diet_plan.dto';
 import { RoleName } from '@/database/entities/role.entity';
 import { DietPlanStatus } from '@/database/entities/diet_plan.entity';
 
 class DietPlanController {
-    // --- Rutas para Nutriólogos y Administradores ---
-
     public async createDietPlan(req: Request, res: Response, next: NextFunction) {
         try {
             if (!req.user || (req.user.role.name !== RoleName.NUTRITIONIST && req.user.role.name !== RoleName.ADMIN)) {
@@ -25,6 +23,7 @@ class DietPlanController {
                 data: { dietPlan },
             });
         } catch (error: any) {
+            console.error('Error en DietPlanController.createDietPlan:', error); // LOG DE DEBUG
             if (error instanceof AppError) {
                 return next(error);
             }
@@ -44,6 +43,7 @@ class DietPlanController {
                 data: { dietPlan },
             });
         } catch (error: any) {
+            console.error('Error en DietPlanController.generateDietPlanByAI:', error); // LOG DE DEBUG
             if (error instanceof AppError) {
                 return next(error);
             }
@@ -63,6 +63,7 @@ class DietPlanController {
                 data: { dietPlan },
             });
         } catch (error: any) {
+            console.error('Error en DietPlanController.getDietPlanById:', error); // LOG DE DEBUG
             if (error instanceof AppError) {
                 return next(error);
             }
@@ -83,6 +84,7 @@ class DietPlanController {
                 data: { dietPlans },
             });
         } catch (error: any) {
+            console.error('Error en DietPlanController.getDietPlansForPatient:', error); // LOG DE DEBUG
             if (error instanceof AppError) {
                 return next(error);
             }
@@ -102,6 +104,7 @@ class DietPlanController {
                 data: { dietPlan: updatedDietPlan },
             });
         } catch (error: any) {
+            console.error('Error en DietPlanController.updateDietPlan:', error); // LOG DE DEBUG
             if (error instanceof AppError) {
                 return next(error);
             }
@@ -115,7 +118,6 @@ class DietPlanController {
                 return next(new AppError('Acceso denegado. Solo nutriólogos pueden cambiar el estado de un plan de dieta.', 403));
             }
             const { id } = req.params;
-            // El DTO de validación se encarga de asegurar que 'status' es un DietPlanStatus válido
             const { status } = req.body as UpdateDietPlanStatusDto;
 
             const updatedDietPlan = await dietPlanService.updateDietPlanStatus(id, status, req.user.id);
@@ -125,6 +127,7 @@ class DietPlanController {
                 data: { dietPlan: updatedDietPlan },
             });
         } catch (error: any) {
+            console.error('Error en DietPlanController.updateDietPlanStatus:', error); // LOG DE DEBUG
             if (error instanceof AppError) {
                 return next(error);
             }
@@ -144,6 +147,7 @@ class DietPlanController {
                 data: null,
             });
         } catch (error: any) {
+            console.error('Error en DietPlanController.deleteDietPlan:', error); // LOG DE DEBUG
             if (error instanceof AppError) {
                 return next(error);
             }

@@ -1,3 +1,4 @@
+// src/database/data-source.ts
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import dotenv from 'dotenv';
@@ -6,10 +7,12 @@ import { Role } from '@/database/entities/role.entity';
 import { PatientProfile } from '@/database/entities/patient_profile.entity';
 import { NutritionistProfile } from '@/database/entities/nutritionist_profile.entity';
 import { PatientNutritionistRelation } from '@/database/entities/patient_nutritionist_relation.entity';
-import { Food } from '@/database/entities/food.entity'; // NUEVA ENTIDAD
-import { MealItem } from '@/database/entities/meal_item.entity'; // NUEVA ENTIDAD
-import { Meal } from '@/database/entities/meal.entity'; // NUEVA ENTIDAD
-import { DietPlan } from '@/database/entities/diet_plan.entity'; // NUEVA ENTIDAD
+import { Food } from '@/database/entities/food.entity';
+import { MealItem } from '@/database/entities/meal_item.entity';
+import { Meal } from '@/database/entities/meal.entity';
+import { DietPlan } from '@/database/entities/diet_plan.entity';
+import { Appointment } from '@/database/entities/appointment.entity'; // <--- NUEVA ENTIDAD
+import { NutritionistAvailability } from '@/database/entities/nutritionist_availability.entity'; // <--- NUEVA ENTIDAD
 
 dotenv.config();
 
@@ -28,10 +31,12 @@ export const AppDataSource = new DataSource({
         PatientProfile,
         NutritionistProfile,
         PatientNutritionistRelation,
-        Food, // Añadidas
-        MealItem, // Añadidas
-        Meal, // Añadidas
-        DietPlan, // Añadidas
+        Food,
+        MealItem,
+        Meal,
+        DietPlan,
+        Appointment, // Añadidas
+        NutritionistAvailability, // Añadidas
     ],
     migrations: ['src/database/migrations/**/*.ts'],
     subscribers: [],

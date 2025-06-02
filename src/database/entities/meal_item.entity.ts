@@ -1,4 +1,3 @@
-// src/database/entities/meal_item.entity.ts
 import {
     Entity,
     PrimaryGeneratedColumn,
@@ -8,20 +7,20 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { Food } from '@/database/entities/food.entity'; // Para el alimento
-import { Meal } from '@/database/entities/meal.entity'; // Para la comida a la que pertenece
+import { Food } from '@/database/entities/food.entity'; // Importa Food
+import { Meal } from '@/database/entities/meal.entity'; // Importa Meal
 
 @Entity('meal_items')
 export class MealItem {
     @PrimaryGeneratedColumn('uuid')
     id!: string;
 
-    @ManyToOne(() => Food, { nullable: false, eager: true }) // eager: true para cargar el alimento automáticamente
+    @ManyToOne(() => Food, (food) => food.meal_items, { nullable: false, eager: true, onDelete: 'CASCADE' }) // Asegurada relación inversa y ON DELETE CASCADE
     @JoinColumn({ name: 'food_id' })
     food!: Food;
 
     @Column({ type: 'decimal', precision: 10, scale: 2, nullable: false })
-    quantity!: number; // Cantidad de la porción (ej: 1.5 unidades, 200 gramos)
+    quantity!: number;
 
     @ManyToOne(() => Meal, (meal) => meal.meal_items, { nullable: false, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'meal_id' })

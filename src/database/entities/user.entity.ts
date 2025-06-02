@@ -1,3 +1,4 @@
+// src/database/entities/user.entity.ts
 import {
     Entity,
     PrimaryGeneratedColumn,
@@ -13,6 +14,10 @@ import { Role } from '@/database/entities/role.entity';
 import { PatientProfile } from '@/database/entities/patient_profile.entity';
 import { NutritionistProfile } from '@/database/entities/nutritionist_profile.entity';
 import { PatientNutritionistRelation } from '@/database/entities/patient_nutritionist_relation.entity';
+import { Food } from '@/database/entities/food.entity';
+import { DietPlan } from '@/database/entities/diet_plan.entity';
+import { Appointment } from '@/database/entities/appointment.entity'; // <--- NUEVO
+import { NutritionistAvailability } from '@/database/entities/nutritionist_availability.entity'; // <--- NUEVO
 import bcrypt from 'bcrypt';
 
 @Entity('users')
@@ -27,16 +32,16 @@ export class User {
     password_hash!: string;
 
     @Column({ type: 'varchar', length: 100, nullable: true })
-    first_name!: string | null; // Fixed: Added definite assignment assertion
+    first_name!: string | null;
 
     @Column({ type: 'varchar', length: 100, nullable: true })
-    last_name!: string | null; // Fixed: Added definite assignment assertion
+    last_name!: string | null;
 
     @Column({ type: 'integer', nullable: true })
-    age!: number | null; // Fixed: Added definite assignment assertion
+    age!: number | null;
 
     @Column({ type: 'varchar', length: 50, nullable: true })
-    gender!: string | null; // Fixed: Added definite assignment assertion
+    gender!: string | null;
 
     @ManyToOne(() => Role, (role) => role.users, { eager: true, nullable: false })
     @JoinColumn({ name: 'role_id' })
@@ -65,6 +70,26 @@ export class User {
 
     @OneToMany(() => PatientNutritionistRelation, (relation) => relation.nutritionist)
     patient_relations_as_nutritionist!: PatientNutritionistRelation[];
+
+    @OneToMany(() => Food, (food) => food.created_by_user)
+    created_foods!: Food[];
+
+    @OneToMany(() => DietPlan, (dietPlan) => dietPlan.patient)
+    patient_diet_plans!: DietPlan[];
+
+    @OneToMany(() => DietPlan, (dietPlan) => dietPlan.nutritionist)
+    nutritionist_diet_plans!: DietPlan[];
+
+    // --- NUEVAS RELACIONES para Citas y Disponibilidad ---
+    @OneToMany(() => Appointment, (appointment) => appointment.patient)
+    patient_appointments!: Appointment[];
+
+    @OneToMany(() => Appointment, (appointment) => appointment.nutritionist)
+    nutritionist_appointments!: Appointment[];
+
+    @OneToMany(() => NutritionistAvailability, (availability) => availability.nutritionist)
+    nutritionist_availabilities!: NutritionistAvailability[];
+
 
     isPasswordChangedRecently(decodedIat: number): boolean {
         return !!this.passwordChangedAt && this.passwordChangedAt.getTime() / 1000 > decodedIat;

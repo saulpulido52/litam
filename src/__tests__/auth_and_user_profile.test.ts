@@ -2,7 +2,14 @@
 import request from 'supertest';
 import { AppDataSource } from '@/database/data-source';
 import { User } from '@/database/entities/user.entity';
-import { Role } from '@/database/entities/role.entity'; // Necesario para limpiar la tabla de roles
+import { Role, RoleName } from '@/database/entities/role.entity';
+import { PatientNutritionistRelation } from '@/database/entities/patient_nutritionist_relation.entity';
+import { PatientProfile } from '@/database/entities/patient_profile.entity';
+import { NutritionistProfile } from '@/database/entities/nutritionist_profile.entity';
+import { Food } from '@/database/entities/food.entity';
+import { DietPlan } from '@/database/entities/diet_plan.entity';
+import { Meal } from '@/database/entities/meal.entity';
+import { MealItem } from '@/database/entities/meal_item.entity';
 import app from '@/app'; // Importa tu aplicación Express
 
 // Variables para almacenar tokens y IDs entre tests
@@ -10,7 +17,7 @@ let patientToken: string;
 let patientId: string;
 let nutritionistToken: string;
 let nutritionistId: string;
-let adminToken: string; // Para futuras pruebas de admin
+// let adminToken: string; // Para futuras pruebas de admin
 
 // Datos de prueba
 const patientCredentials = {
@@ -29,36 +36,46 @@ const nutritionistCredentials = {
     lastName: 'Smith',
 };
 
-const adminCredentials = { // Necesitaríamos una ruta de registro para admins, pero por ahora para el test
-    email: 'admin.auth@example.com',
-    password: 'SecurePass1!',
-    firstName: 'Admin',
-    lastName: 'User',
-};
+// const adminCredentials = { // Si se añade un registro de admin más adelante
+//     email: 'admin.auth@example.com',
+//     password: 'SecurePass1!',
+//     firstName: 'Admin',
+//     lastName: 'User',
+// };
 
 describe('Authentication and Basic User Profile Flow', () => {
+    // Aumentar el timeout global de Jest para beforeAll/afterAll si la configuración de BD es lenta
+    jest.setTimeout(40000); // 40 segundos
+
     beforeAll(async () => {
-        // 1. Inicializar la base de datos (si no está inicializada)
+        // Inicializar la base de datos para las pruebas
         if (!AppDataSource.isInitialized) {
             await AppDataSource.initialize();
         }
 
-        // 2. Limpiar todas las tablas relevantes en el orden correcto usando TRUNCATE CASCADE
-        // Esto es crucial para un entorno de prueba limpio en cada ejecución
+        // LIMPIAR TODAS LAS TABLAS EN EL ORDEN INVERSO DE SUS DEPENDENCIAS DE CLAVE FORÁNEA
+        // Usando TRUNCATE CASCADE para asegurar un estado limpio y borrar dependencias.
+        await AppDataSource.query(`TRUNCATE TABLE "meal_items" RESTART IDENTITY CASCADE;`);
+        await AppDataSource.query(`TRUNCATE TABLE "meals" RESTART IDENTITY CASCADE;`);
+        await AppDataSource.query(`TRUNCATE TABLE "diet_plans" RESTART IDENTITY CASCADE;`);
+        await AppDataSource.query(`TRUNCATE TABLE "patient_nutritionist_relations" RESTART IDENTITY CASCADE;`);
+        await AppDataSource.query(`TRUNCATE TABLE "patient_profiles" RESTART IDENTITY CASCADE;`);
+        await AppDataSource.query(`TRUNCATE TABLE "nutritionist_profiles" RESTART IDENTITY CASCADE;`);
+        await AppDataSource.query(`TRUNCATE TABLE "foods" RESTART IDENTITY CASCADE;`);
         await AppDataSource.query(`TRUNCATE TABLE "users" RESTART IDENTITY CASCADE;`);
-        await AppDataSource.query(`TRUNCATE TABLE "roles" RESTART IDENTITY CASCADE;`); // Aunque users cascade, lo hacemos para asegurar roles limpios
+        await AppDataSource.query(`TRUNCATE TABLE "roles" RESTART IDENTITY CASCADE;`);
 
-        // 3. Resembrar los roles, ya que TRUNCATE los elimina
+        // Resembrar roles después de limpiarlos, ya que son la base para User
         const roleRepository = AppDataSource.getRepository(Role);
-        const rolesToSeed = ['patient', 'nutritionist', 'admin'];
+        const rolesToSeed = [RoleName.PATIENT, RoleName.NUTRITIONIST, RoleName.ADMIN];
         for (const roleName of rolesToSeed) {
-            let role = await roleRepository.findOneBy({ name: roleName as Role['name'] });
+            let role = await roleRepository.findOneBy({ name: roleName });
             if (!role) {
-                role = roleRepository.create({ name: roleName as Role['name'] }); // Casteo correcto al tipo de la entidad
+                role = roleRepository.create({ name: roleName });
                 await roleRepository.save(role);
             }
         }
-    }, 30000); // Aumentar el timeout para la configuración inicial
+    });
 
     afterAll(async () => {
         // Cerrar la conexión a la base de datos después de todas las pruebas

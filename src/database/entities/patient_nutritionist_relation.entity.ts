@@ -25,11 +25,11 @@ export class PatientNutritionistRelation {
     @PrimaryGeneratedColumn('uuid')
     id!: string;
 
-    @ManyToOne(() => User, { nullable: false })
+    @ManyToOne(() => User, { nullable: false,  onDelete: 'CASCADE'  })
     @JoinColumn({ name: 'patient_user_id' })
     patient!: User;
 
-    @ManyToOne(() => User, { nullable: false })
+    @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'nutritionist_user_id' })
     nutritionist!: User;
 

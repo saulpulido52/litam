@@ -9,7 +9,7 @@ import { RoleName } from '@/database/entities/role.entity';
 dotenv.config(); // Asegura que las variables de entorno se carguen
 
 // Definimos la constante JWT_SECRET consistentemente aquí
-const JWT_SECRET_FOR_VERIFICATION = process.env.JWT_SECRET || 'supersecretjwtkey'; // Usar el mismo fallback que AuthService
+const JWT_SECRET_FOR_VERIFICATION = process.env.JWT_SECRET || 'supersecretjwtkey';
 
 declare module 'express-serve-static-core' {
     interface Request {
@@ -50,13 +50,14 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
             return next(new AppError('El usuario al que pertenece este token ya no existe.', 401));
         }
 
-        if (currentUser.isPasswordChangedRecently(decoded.iat)) {
-            return next(new AppError('La contraseña ha sido cambiada recientemente. Por favor, inicia sesión de nuevo.', 401));
-        }
+        // if (currentUser.isPasswordChangedRecently(decoded.iat)) {
+        //     return next(new AppError('La contraseña ha sido cambiada recientemente. Por favor, inicia sesión de nuevo.', 401));
+        // }
 
         req.user = currentUser;
         next();
     } catch (error: any) {
+        console.error('Error en AuthMiddleware.protect:', error); // LOG DE DEBUG
         if (error instanceof jwt.JsonWebTokenError) {
             return next(new AppError('Token inválido. Por favor, inicia sesión de nuevo.', 401));
         }
