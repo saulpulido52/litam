@@ -9,7 +9,8 @@ import relationRoutes from '@/modules/relations/relation.routes';
 import foodRoutes from '@/modules/foods/food.routes';
 import dietPlanRoutes from '@/modules/diet_plans/diet_plan.routes';
 import appointmentRoutes from '@/modules/appointments/appointment.routes';
-import progressTrackingRoutes from '@/modules/progress_tracking/progress_tracking.routes'; // Importar rutas de progreso
+import progressTrackingRoutes from '@/modules/progress_tracking/progress_tracking.routes';
+import subscriptionRoutes from '@/modules/subscriptions/subscription.routes'; // Importar rutas de suscripciones
 import { AppError } from '@/utils/app.error';
 
 dotenv.config();
@@ -31,7 +32,8 @@ app.use('/api/relations', relationRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/diet-plans', dietPlanRoutes);
 app.use('/api/appointments', appointmentRoutes);
-app.use('/api/progress-tracking', progressTrackingRoutes); // Montar rutas de seguimiento de progreso
+app.use('/api/progress-tracking', progressTrackingRoutes);
+app.use('/api/subscriptions', subscriptionRoutes); // Montar rutas de suscripciones
 
 app.all('*', (req: Request, res: Response, next: NextFunction) => {
     next(new AppError(`No se puede encontrar ${req.originalUrl} en este servidor!`, 404));

@@ -18,7 +18,9 @@ import { Food } from '@/database/entities/food.entity';
 import { DietPlan } from '@/database/entities/diet_plan.entity';
 import { Appointment } from '@/database/entities/appointment.entity';
 import { NutritionistAvailability } from '@/database/entities/nutritionist_availability.entity';
-import { PatientProgressLog } from '@/database/entities/patient_progress_log.entity'; // <--- NUEVO
+import { PatientProgressLog } from '@/database/entities/patient_progress_log.entity';
+import { UserSubscription } from '@/database/entities/user_subscription.entity'; // <--- NUEVO
+import { PaymentTransaction } from '@/database/entities/payment_transaction.entity'; // <--- NUEVO
 import bcrypt from 'bcrypt';
 
 @Entity('users')
@@ -90,9 +92,15 @@ export class User {
     @OneToMany(() => NutritionistAvailability, (availability) => availability.nutritionist)
     nutritionist_availabilities!: NutritionistAvailability[];
 
-    // --- NUEVA RELACIÓN para Seguimiento de Progreso ---
     @OneToMany(() => PatientProgressLog, (log) => log.patient)
     patient_progress_logs!: PatientProgressLog[];
+
+    // --- NUEVAS RELACIONES para Suscripciones y Pagos ---
+    @OneToOne(() => UserSubscription, (subscription) => subscription.patient)
+    user_subscription?: UserSubscription;
+
+    @OneToMany(() => PaymentTransaction, (transaction) => transaction.user)
+    payment_transactions!: PaymentTransaction[];
 
 
     isPasswordChangedRecently(decodedIat: number): boolean {
