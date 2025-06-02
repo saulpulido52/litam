@@ -8,7 +8,9 @@ import { Food } from '@/database/entities/food.entity';
 import { DietPlan, DietPlanStatus } from '@/database/entities/diet_plan.entity';
 import { Meal } from '@/database/entities/meal.entity';
 import { MealItem } from '@/database/entities/meal_item.entity';
-import app from '@/app'; // Importa tu aplicación Express
+import { PatientProfile } from '@/database/entities/patient_profile.entity'; // Importado para limpieza
+import { NutritionistProfile } from '@/database/entities/nutritionist_profile.entity'; // Importado para limpieza
+import app from '@/app';
 
 // Variables para almacenar tokens y IDs entre tests
 let nutritionistToken: string;
@@ -51,20 +53,38 @@ const foodData = {
 };
 
 describe('Diet Plans API Flow', () => {
+    // Aumentar el timeout global de Jest para beforeAll/afterAll si la configuración de BD es lenta
+    jest.setTimeout(40000); // 40 segundos
+
     beforeAll(async () => {
         // Inicializar la base de datos para las pruebas
         if (!AppDataSource.isInitialized) {
             await AppDataSource.initialize();
         }
 
-        // Limpiar todas las tablas relevantes antes de cada ejecución de test suite
-        await AppDataSource.getRepository(MealItem).delete({});
-        await AppDataSource.getRepository(Meal).delete({});
-        await AppDataSource.getRepository(DietPlan).delete({});
-        await AppDataSource.getRepository(Food).delete({});
-        await AppDataSource.getRepository(PatientNutritionistRelation).delete({});
-        await AppDataSource.getRepository(User).delete({}); // Eliminar usuarios al final
-        // Los roles se siembran en index.ts y no se eliminan aquí
+        // LIMPIAR TODAS LAS TABLAS EN EL ORDEN INVERSO DE SUS DEPENDENCIAS DE CLAVE FORÁNEA
+        // Usando TRUNCATE CASCADE para asegurar un estado limpio y borrar dependencias.
+        // El orden es importante para que CASCADE funcione en cascada y evite errores de FK.
+        await AppDataSource.query(`TRUNCATE TABLE "meal_items" RESTART IDENTITY CASCADE;`);
+        await AppDataSource.query(`TRUNCATE TABLE "meals" RESTART IDENTITY CASCADE;`);
+        await AppDataSource.query(`TRUNCATE TABLE "diet_plans" RESTART IDENTITY CASCADE;`);
+        await AppDataSource.query(`TRUNCATE TABLE "patient_nutritionist_relations" RESTART IDENTITY CASCADE;`);
+        await AppDataSource.query(`TRUNCATE TABLE "patient_profiles" RESTART IDENTITY CASCADE;`);
+        await AppDataSource.query(`TRUNCATE TABLE "nutritionist_profiles" RESTART IDENTITY CASCADE;`);
+        await AppDataSource.query(`TRUNCATE TABLE "foods" RESTART IDENTITY CASCADE;`);
+        await AppDataSource.query(`TRUNCATE TABLE "users" RESTART IDENTITY CASCADE;`);
+        await AppDataSource.query(`TRUNCATE TABLE "roles" RESTART IDENTITY CASCADE;`);
+
+        // Resembrar roles después de limpiarlos, ya que son la base para User
+        const roleRepository = AppDataSource.getRepository(Role);
+        const rolesToSeed = [RoleName.PATIENT, RoleName.NUTRITIONIST, RoleName.ADMIN];
+        for (const roleName of rolesToSeed) {
+            let role = await roleRepository.findOneBy({ name: roleName });
+            if (!role) {
+                role = roleRepository.create({ name: roleName });
+                await roleRepository.save(role);
+            }
+        }
 
         // 1. Registrar y loguear Nutriólogo
         const nutriRegRes = await request(app)
@@ -74,6 +94,13 @@ describe('Diet Plans API Flow', () => {
         nutritionistToken = nutriRegRes.body.data.token;
         nutritionistId = nutriRegRes.body.data.user.id;
 
+        // **IMPORTANTE**: Asegurar que el perfil del nutriólogo se crea/inicializa
+        // Al hacer un GET a su propio perfil, el servicio lo crea si no existe
+        const nutriProfileRes = await request(app)
+            .get('/api/nutritionists/me/profile')
+            .set('Authorization', `Bearer ${nutritionistToken}`);
+        expect(nutriProfileRes.statusCode).toBe(200);
+
         // 2. Registrar y loguear Paciente
         const patientRegRes = await request(app)
             .post('/api/auth/register/patient')
@@ -81,6 +108,14 @@ describe('Diet Plans API Flow', () => {
         expect(patientRegRes.statusCode).toBe(201);
         patientToken = patientRegRes.body.data.token;
         patientId = patientRegRes.body.data.user.id;
+
+        // **IMPORTANTE**: Asegurar que el perfil del paciente se crea/inicializa
+        // Al hacer un GET a su propio perfil, el servicio lo crea si no existe
+        const patientProfileRes = await request(app)
+            .get('/api/patients/me/profile')
+            .set('Authorization', `Bearer ${patientToken}`);
+        expect(patientProfileRes.statusCode).toBe(200);
+
 
         // 3. Establecer relación activa entre Paciente y Nutriólogo
         const relationReqRes = await request(app)
@@ -103,7 +138,7 @@ describe('Diet Plans API Flow', () => {
             .send(foodData);
         expect(foodRes.statusCode).toBe(201);
         foodId = foodRes.body.data.food.id;
-    }, 30000); // Aumentar el timeout para la configuración inicial
+    });
 
     afterAll(async () => {
         // Cerrar la conexión a la base de datos después de todas las pruebas
@@ -111,6 +146,7 @@ describe('Diet Plans API Flow', () => {
             await AppDataSource.destroy();
         }
     });
+
 
     it('should generate a diet plan with AI for a patient (POST /api/diet-plans/generate-ai)', async () => {
         const res = await request(app)
@@ -146,7 +182,9 @@ describe('Diet Plans API Flow', () => {
         expect(res.body.data.dietPlan.id).toBe(dietPlanId);
         expect(res.body.data.dietPlan.nutritionist.id).toBe(nutritionistId);
         expect(res.body.data.dietPlan.patient.id).toBe(patientId);
+        expect(res.body.data.dietPlan.meals).toBeInstanceOf(Array);
         expect(res.body.data.dietPlan.meals.length).toBeGreaterThan(0);
+        expect(res.body.data.dietPlan.meals[0].meal_items).toBeInstanceOf(Array);
         expect(res.body.data.dietPlan.meals[0].meal_items.length).toBeGreaterThan(0);
         expect(res.body.data.dietPlan.meals[0].meal_items[0].food).toBeDefined();
     });
@@ -164,11 +202,13 @@ describe('Diet Plans API Flow', () => {
     });
 
     it('should prevent unauthorized users (non-related patient) from getting a diet plan', async () => {
-        // Crear un paciente no relacionado
-        const unrelatedPatientRes = await request(app)
+        // Crear un paciente no relacionado para esta prueba
+        const unrelatedPatientCredentials = { email: 'unrelated.paci@example.com', password: 'Password123!', firstName: 'Unrelated', lastName: 'Patient' };
+        const unrelatedPatientRegRes = await request(app)
             .post('/api/auth/register/patient')
-            .send({ email: 'unrelated.paci@example.com', password: 'Password123!', firstName: 'Unrelated', lastName: 'Patient' });
-        const unrelatedPatientToken = unrelatedPatientRes.body.data.token;
+            .send(unrelatedPatientCredentials);
+        expect(unrelatedPatientRegRes.statusCode).toBe(201);
+        const unrelatedPatientToken = unrelatedPatientRegRes.body.data.token;
 
         const res = await request(app)
             .get(`/api/diet-plans/${dietPlanId}`)

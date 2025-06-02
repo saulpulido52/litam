@@ -1,8 +1,9 @@
+// src/modules/auth/auth.service.ts
 import { Repository } from 'typeorm';
-import { AppDataSource } from '@/database/data-source'; // Ruta corregida
-import { User } from '@/database/entities/user.entity'; // Ruta corregida
-import { Role, RoleName } from '@/database/entities/role.entity'; // Ruta corregida
-import { RegisterPatientDto, RegisterNutritionistDto, LoginDto } from '@/modules/auth/auth.dto'; // Ruta corregida
+import { AppDataSource } from '@/database/data-source';
+import { User } from '@/database/entities/user.entity';
+import { Role, RoleName } from '@/database/entities/role.entity';
+import { RegisterPatientDto, RegisterNutritionistDto, LoginDto } from '@/modules/auth/auth.dto';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
@@ -27,11 +28,22 @@ class AuthService {
         if (!this.JWT_SECRET) {
             throw new AppError('JWT_SECRET no está configurado. Contacte al administrador.', 500);
         }
-        const expiresIn: string | number = this.JWT_EXPIRES_IN; // Tipo explícito para JWT
+
+        const payload = { userId, role: roleName };
+        const secret: jwt.Secret = this.JWT_SECRET;
+        
+        // CORRECCIÓN CLAVE AQUÍ: Castear expiresIn a un tipo compatible
+        const options: jwt.SignOptions = { 
+            expiresIn: this.JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'] 
+        };
+        // O una alternativa más agresiva si la anterior no funciona:
+        // const options: jwt.SignOptions = { expiresIn: this.JWT_EXPIRES_IN as any };
+
+
         return jwt.sign(
-            { userId, role: roleName },
-            this.JWT_SECRET,
-            { expiresIn }
+            payload,
+            secret,
+            options
         );
     }
 
@@ -105,7 +117,7 @@ class AuthService {
         const user = await this.userRepository
             .createQueryBuilder('user')
             .addSelect('user.password_hash')
-            .leftJoinAndSelect('user.role', 'role') // Asegura que el rol se carga
+            .leftJoinAndSelect('user.role', 'role')
             .where('user.email = :email', { email })
             .getOne();
 

@@ -2,11 +2,14 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { AppError } from '@/utils/app.error';
-import { AppDataSource } from '@/database/data-source'; // Ruta corregida
-import { User } from '@/database/entities/user.entity'; // Ruta corregida
-import { RoleName } from '@/database/entities/role.entity'; // Ruta corregida
+import { AppDataSource } from '@/database/data-source';
+import { User } from '@/database/entities/user.entity';
+import { RoleName } from '@/database/entities/role.entity';
 
-dotenv.config();
+dotenv.config(); // Asegura que las variables de entorno se carguen
+
+// Definimos la constante JWT_SECRET consistentemente aquí
+const JWT_SECRET_FOR_VERIFICATION = process.env.JWT_SECRET || 'supersecretjwtkey'; // Usar el mismo fallback que AuthService
 
 declare module 'express-serve-static-core' {
     interface Request {
@@ -33,7 +36,8 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
+        // Usar la constante definida para la verificación
+        const decoded = jwt.verify(token, JWT_SECRET_FOR_VERIFICATION) as JwtPayload;
 
         const userRepository = AppDataSource.getRepository(User);
         const currentUser = await userRepository
@@ -46,7 +50,6 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
             return next(new AppError('El usuario al que pertenece este token ya no existe.', 401));
         }
 
-        // Verificar si la contraseña ha sido cambiada recientemente
         if (currentUser.isPasswordChangedRecently(decoded.iat)) {
             return next(new AppError('La contraseña ha sido cambiada recientemente. Por favor, inicia sesión de nuevo.', 401));
         }
