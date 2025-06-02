@@ -11,8 +11,9 @@ import { Food } from '@/database/entities/food.entity';
 import { MealItem } from '@/database/entities/meal_item.entity';
 import { Meal } from '@/database/entities/meal.entity';
 import { DietPlan } from '@/database/entities/diet_plan.entity';
-import { Appointment } from '@/database/entities/appointment.entity'; // <--- NUEVA ENTIDAD
-import { NutritionistAvailability } from '@/database/entities/nutritionist_availability.entity'; // <--- NUEVA ENTIDAD
+import { Appointment } from '@/database/entities/appointment.entity';
+import { NutritionistAvailability } from '@/database/entities/nutritionist_availability.entity';
+import { PatientProgressLog } from '@/database/entities/patient_progress_log.entity'; // <--- NUEVA ENTIDAD
 
 dotenv.config();
 
@@ -35,8 +36,9 @@ export const AppDataSource = new DataSource({
         MealItem,
         Meal,
         DietPlan,
-        Appointment, // Añadidas
-        NutritionistAvailability, // Añadidas
+        Appointment,
+        NutritionistAvailability,
+        PatientProgressLog, // Añadida
     ],
     migrations: ['src/database/migrations/**/*.ts'],
     subscribers: [],

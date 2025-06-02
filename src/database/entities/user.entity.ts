@@ -16,8 +16,9 @@ import { NutritionistProfile } from '@/database/entities/nutritionist_profile.en
 import { PatientNutritionistRelation } from '@/database/entities/patient_nutritionist_relation.entity';
 import { Food } from '@/database/entities/food.entity';
 import { DietPlan } from '@/database/entities/diet_plan.entity';
-import { Appointment } from '@/database/entities/appointment.entity'; // <--- NUEVO
-import { NutritionistAvailability } from '@/database/entities/nutritionist_availability.entity'; // <--- NUEVO
+import { Appointment } from '@/database/entities/appointment.entity';
+import { NutritionistAvailability } from '@/database/entities/nutritionist_availability.entity';
+import { PatientProgressLog } from '@/database/entities/patient_progress_log.entity'; // <--- NUEVO
 import bcrypt from 'bcrypt';
 
 @Entity('users')
@@ -80,7 +81,6 @@ export class User {
     @OneToMany(() => DietPlan, (dietPlan) => dietPlan.nutritionist)
     nutritionist_diet_plans!: DietPlan[];
 
-    // --- NUEVAS RELACIONES para Citas y Disponibilidad ---
     @OneToMany(() => Appointment, (appointment) => appointment.patient)
     patient_appointments!: Appointment[];
 
@@ -89,6 +89,10 @@ export class User {
 
     @OneToMany(() => NutritionistAvailability, (availability) => availability.nutritionist)
     nutritionist_availabilities!: NutritionistAvailability[];
+
+    // --- NUEVA RELACIÓN para Seguimiento de Progreso ---
+    @OneToMany(() => PatientProgressLog, (log) => log.patient)
+    patient_progress_logs!: PatientProgressLog[];
 
 
     isPasswordChangedRecently(decodedIat: number): boolean {
