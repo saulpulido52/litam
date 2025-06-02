@@ -14,9 +14,11 @@ import { DietPlan } from '@/database/entities/diet_plan.entity';
 import { Appointment } from '@/database/entities/appointment.entity';
 import { NutritionistAvailability } from '@/database/entities/nutritionist_availability.entity';
 import { PatientProgressLog } from '@/database/entities/patient_progress_log.entity';
-import { SubscriptionPlan } from '@/database/entities/subscription_plan.entity'; // <--- NUEVA ENTIDAD
-import { UserSubscription } from '@/database/entities/user_subscription.entity'; // <--- NUEVA ENTIDAD
-import { PaymentTransaction } from '@/database/entities/payment_transaction.entity'; // <--- NUEVA ENTIDAD
+import { SubscriptionPlan } from '@/database/entities/subscription_plan.entity';
+import { UserSubscription } from '@/database/entities/user_subscription.entity';
+import { PaymentTransaction } from '@/database/entities/payment_transaction.entity';
+import { EducationalContent } from '@/database/entities/educational_content.entity'; // <--- NUEVA ENTIDAD
+import { Recipe, RecipeIngredient } from '@/database/entities/recipe.entity'; // <--- NUEVAS ENTIDADES
 
 dotenv.config();
 
@@ -42,9 +44,12 @@ export const AppDataSource = new DataSource({
         Appointment,
         NutritionistAvailability,
         PatientProgressLog,
-        SubscriptionPlan, // Añadidas
-        UserSubscription, // Añadidas
-        PaymentTransaction, // Añadidas
+        SubscriptionPlan,
+        UserSubscription,
+        PaymentTransaction,
+        EducationalContent, // Añadidas
+        Recipe, // Añadidas
+        RecipeIngredient, // Añadidas
     ],
     migrations: ['src/database/migrations/**/*.ts'],
     subscribers: [],

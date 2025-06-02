@@ -19,8 +19,10 @@ import { DietPlan } from '@/database/entities/diet_plan.entity';
 import { Appointment } from '@/database/entities/appointment.entity';
 import { NutritionistAvailability } from '@/database/entities/nutritionist_availability.entity';
 import { PatientProgressLog } from '@/database/entities/patient_progress_log.entity';
-import { UserSubscription } from '@/database/entities/user_subscription.entity'; // <--- NUEVO
-import { PaymentTransaction } from '@/database/entities/payment_transaction.entity'; // <--- NUEVO
+import { UserSubscription } from '@/database/entities/user_subscription.entity';
+import { PaymentTransaction } from '@/database/entities/payment_transaction.entity';
+import { EducationalContent } from '@/database/entities/educational_content.entity'; // <--- NUEVO
+import { Recipe } from '@/database/entities/recipe.entity'; // <--- NUEVO
 import bcrypt from 'bcrypt';
 
 @Entity('users')
@@ -95,13 +97,24 @@ export class User {
     @OneToMany(() => PatientProgressLog, (log) => log.patient)
     patient_progress_logs!: PatientProgressLog[];
 
-    // --- NUEVAS RELACIONES para Suscripciones y Pagos ---
     @OneToOne(() => UserSubscription, (subscription) => subscription.patient)
     user_subscription?: UserSubscription;
 
     @OneToMany(() => PaymentTransaction, (transaction) => transaction.user)
     payment_transactions!: PaymentTransaction[];
 
+    // --- NUEVAS RELACIONES para Contenido Educativo y Recetas ---
+    @OneToMany(() => EducationalContent, (content) => content.created_by)
+    created_educational_content!: EducationalContent[];
+
+    @OneToMany(() => EducationalContent, (content) => content.last_modified_by)
+    modified_educational_content!: EducationalContent[];
+
+    @OneToMany(() => Recipe, (recipe) => recipe.created_by)
+    created_recipes!: Recipe[];
+
+    @OneToMany(() => Recipe, (recipe) => recipe.last_modified_by)
+    modified_recipes!: Recipe[];
 
     isPasswordChangedRecently(decodedIat: number): boolean {
         return !!this.passwordChangedAt && this.passwordChangedAt.getTime() / 1000 > decodedIat;
