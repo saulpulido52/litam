@@ -17,8 +17,10 @@ import { PatientProgressLog } from '@/database/entities/patient_progress_log.ent
 import { SubscriptionPlan } from '@/database/entities/subscription_plan.entity';
 import { UserSubscription } from '@/database/entities/user_subscription.entity';
 import { PaymentTransaction } from '@/database/entities/payment_transaction.entity';
-import { EducationalContent } from '@/database/entities/educational_content.entity'; // <--- NUEVA ENTIDAD
-import { Recipe, RecipeIngredient } from '@/database/entities/recipe.entity'; // <--- NUEVAS ENTIDADES
+import { EducationalContent } from '@/database/entities/educational_content.entity';
+import { Recipe, RecipeIngredient } from '@/database/entities/recipe.entity';
+import { Conversation } from '@/database/entities/conversation.entity'; // <--- NUEVA ENTIDAD
+import { Message } from '@/database/entities/message.entity'; // <--- NUEVA ENTIDAD
 
 dotenv.config();
 
@@ -47,9 +49,11 @@ export const AppDataSource = new DataSource({
         SubscriptionPlan,
         UserSubscription,
         PaymentTransaction,
-        EducationalContent, // Añadidas
-        Recipe, // Añadidas
-        RecipeIngredient, // Añadidas
+        EducationalContent,
+        Recipe,
+        RecipeIngredient,
+        Conversation, // Añadidas
+        Message, // Añadidas
     ],
     migrations: ['src/database/migrations/**/*.ts'],
     subscribers: [],

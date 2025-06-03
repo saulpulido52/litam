@@ -21,8 +21,10 @@ import { NutritionistAvailability } from '@/database/entities/nutritionist_avail
 import { PatientProgressLog } from '@/database/entities/patient_progress_log.entity';
 import { UserSubscription } from '@/database/entities/user_subscription.entity';
 import { PaymentTransaction } from '@/database/entities/payment_transaction.entity';
-import { EducationalContent } from '@/database/entities/educational_content.entity'; // <--- NUEVO
-import { Recipe } from '@/database/entities/recipe.entity'; // <--- NUEVO
+import { EducationalContent } from '@/database/entities/educational_content.entity';
+import { Recipe } from '@/database/entities/recipe.entity';
+import { Conversation } from '@/database/entities/conversation.entity'; // <--- NUEVO
+import { Message } from '@/database/entities/message.entity'; // <--- NUEVO
 import bcrypt from 'bcrypt';
 
 @Entity('users')
@@ -103,7 +105,6 @@ export class User {
     @OneToMany(() => PaymentTransaction, (transaction) => transaction.user)
     payment_transactions!: PaymentTransaction[];
 
-    // --- NUEVAS RELACIONES para Contenido Educativo y Recetas ---
     @OneToMany(() => EducationalContent, (content) => content.created_by)
     created_educational_content!: EducationalContent[];
 
@@ -115,6 +116,17 @@ export class User {
 
     @OneToMany(() => Recipe, (recipe) => recipe.last_modified_by)
     modified_recipes!: Recipe[];
+
+    // --- NUEVAS RELACIONES para Mensajería ---
+    @OneToMany(() => Conversation, (conversation) => conversation.participant1)
+    conversations_as_participant1!: Conversation[];
+
+    @OneToMany(() => Conversation, (conversation) => conversation.participant2)
+    conversations_as_participant2!: Conversation[];
+
+    @OneToMany(() => Message, (message) => message.sender)
+    sent_messages!: Message[];
+
 
     isPasswordChangedRecently(decodedIat: number): boolean {
         return !!this.passwordChangedAt && this.passwordChangedAt.getTime() / 1000 > decodedIat;
