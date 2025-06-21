@@ -73,11 +73,24 @@ class DietPlanController {
 
     public async getDietPlansForPatient(req: Request, res: Response, next: NextFunction) {
         try {
-            if (!req.user || (req.user.role.name !== RoleName.NUTRITIONIST && req.user.role.name !== RoleName.ADMIN)) {
-                return next(new AppError('Acceso denegado. Solo nutriólogos o administradores pueden ver los planes de un paciente.', 403));
+            if (!req.user) {
+                return next(new AppError('Usuario no autenticado.', 401));
             }
+
             const { patientId } = req.params;
-            const dietPlans = await dietPlanService.getDietPlansForPatient(patientId, req.user.id, req.user.role.name);
+            const userRole = req.user.role.name;
+
+            // Permitir que pacientes vean sus propios planes
+            if (userRole === RoleName.PATIENT && req.user.id !== patientId) {
+                return next(new AppError('Acceso denegado. Solo puedes ver tus propios planes de dieta.', 403));
+            }
+
+            // Permitir que nutriólogos y administradores vean planes de pacientes
+            if (userRole !== RoleName.PATIENT && userRole !== RoleName.NUTRITIONIST && userRole !== RoleName.ADMIN) {
+                return next(new AppError('Acceso denegado. Solo pacientes, nutriólogos o administradores pueden ver planes de dieta.', 403));
+            }
+
+            const dietPlans = await dietPlanService.getDietPlansForPatient(patientId, req.user.id, userRole);
             res.status(200).json({
                 status: 'success',
                 results: dietPlans.length,

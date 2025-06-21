@@ -3,14 +3,15 @@ import request from 'supertest';
 import { AppDataSource } from '@/database/data-source';
 import { User } from '@/database/entities/user.entity';
 import { Role, RoleName } from '@/database/entities/role.entity';
-import { PatientNutritionistRelation } from '@/database/entities/patient_nutritionist_relation.entity';
 import { PatientProfile } from '@/database/entities/patient_profile.entity';
 import { NutritionistProfile } from '@/database/entities/nutritionist_profile.entity';
+import { PatientNutritionistRelation } from '@/database/entities/patient_nutritionist_relation.entity';
 import { Food } from '@/database/entities/food.entity';
 import { DietPlan } from '@/database/entities/diet_plan.entity';
 import { Meal } from '@/database/entities/meal.entity';
 import { MealItem } from '@/database/entities/meal_item.entity';
 import app from '@/app'; // Importa tu aplicación Express
+import { setupTestEnvironment, cleanupTestEnvironment } from '@/setup-test-environment';
 
 // Variables para almacenar tokens y IDs entre tests
 let patientToken: string;
@@ -44,44 +45,19 @@ const adminCredentials = { // Si se añade un registro de admin más adelante
 };
 
 describe('Authentication and Basic User Profile Flow', () => {
-    // Aumentar el timeout global de Jest para beforeAll/afterAll si la configuración de BD es lenta
-    jest.setTimeout(40000); // 40 segundos
+    let patientId: string;
+    let patientToken: string;
+    let nutritionistId: string;
+    let nutritionistToken: string;
 
     beforeAll(async () => {
-        // Inicializar la base de datos para las pruebas
-        if (!AppDataSource.isInitialized) {
-            await AppDataSource.initialize();
-        }
-
-        // LIMPIAR TODAS LAS TABLAS EN EL ORDEN INVERSO DE SUS DEPENDENCIAS DE CLAVE FORÁNEA
-        // Usando TRUNCATE CASCADE para asegurar un estado limpio y borrar dependencias.
-        await AppDataSource.query(`TRUNCATE TABLE "meal_items" RESTART IDENTITY CASCADE;`);
-        await AppDataSource.query(`TRUNCATE TABLE "meals" RESTART IDENTITY CASCADE;`);
-        await AppDataSource.query(`TRUNCATE TABLE "diet_plans" RESTART IDENTITY CASCADE;`);
-        await AppDataSource.query(`TRUNCATE TABLE "patient_nutritionist_relations" RESTART IDENTITY CASCADE;`);
-        await AppDataSource.query(`TRUNCATE TABLE "patient_profiles" RESTART IDENTITY CASCADE;`);
-        await AppDataSource.query(`TRUNCATE TABLE "nutritionist_profiles" RESTART IDENTITY CASCADE;`);
-        await AppDataSource.query(`TRUNCATE TABLE "foods" RESTART IDENTITY CASCADE;`);
-        await AppDataSource.query(`TRUNCATE TABLE "users" RESTART IDENTITY CASCADE;`);
-        await AppDataSource.query(`TRUNCATE TABLE "roles" RESTART IDENTITY CASCADE;`);
-
-        // Resembrar roles después de limpiarlos, ya que son la base para User
-        const roleRepository = AppDataSource.getRepository(Role);
-        const rolesToSeed = [RoleName.PATIENT, RoleName.NUTRITIONIST, RoleName.ADMIN];
-        for (const roleName of rolesToSeed) {
-            let role = await roleRepository.findOneBy({ name: roleName });
-            if (!role) {
-                role = roleRepository.create({ name: roleName });
-                await roleRepository.save(role);
-            }
-        }
+        // Usar el nuevo entorno de configuración
+        await setupTestEnvironment();
     });
 
     afterAll(async () => {
-        // Cerrar la conexión a la base de datos después de todas las pruebas
-        if (AppDataSource.isInitialized) {
-            await AppDataSource.destroy();
-        }
+        // Limpiar el entorno de pruebas
+        await cleanupTestEnvironment();
     });
 
     // --- Tests de Registro ---

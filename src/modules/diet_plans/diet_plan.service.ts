@@ -148,16 +148,22 @@ class DietPlanService {
             status: DietPlanStatus.DRAFT, // Siempre comienza como borrador
         });
 
+        // Guardar primero el plan sin meals
+        await this.dietPlanRepository.save(newDietPlan);
+
         if (dietPlanDto.meals && dietPlanDto.meals.length > 0) {
             newDietPlan.meals = [];
             for (const mealDto of dietPlanDto.meals) {
+                // Crear y guardar el meal solo (sin meal_items)
                 const newMeal = this.mealRepository.create({
                     name: mealDto.name,
                     order: mealDto.order,
                     diet_plan: newDietPlan,
                 });
-                newMeal.meal_items = [];
+                await this.mealRepository.save(newMeal); // Guardar para obtener el ID
 
+                // Ahora crear y guardar los meal_items con el meal ya guardado
+                newMeal.meal_items = [];
                 for (const itemDto of mealDto.mealItems) {
                     const food = await this.foodRepository.findOneBy({ id: itemDto.foodId });
                     if (!food) {
@@ -168,14 +174,30 @@ class DietPlanService {
                         quantity: itemDto.quantity,
                         meal: newMeal,
                     });
+                    await this.mealItemRepository.save(newMealItem);
                     newMeal.meal_items.push(newMealItem);
                 }
-                newDietPlan.meals.push(newMeal);
+                // Recargar el meal con sus items
+                const savedMeal = await this.mealRepository.findOne({
+                    where: { id: newMeal.id },
+                    relations: ['meal_items', 'meal_items.food'],
+                });
+                newDietPlan.meals.push(savedMeal!);
             }
         }
 
-        await this.dietPlanRepository.save(newDietPlan);
-        return newDietPlan;
+        // Recargar el plan con meals y meal_items
+        const savedPlan = await this.dietPlanRepository.findOne({
+            where: { id: newDietPlan.id },
+            relations: [
+                'patient',
+                'nutritionist',
+                'meals',
+                'meals.meal_items',
+                'meals.meal_items.food',
+            ],
+        });
+        return savedPlan;
     }
 
     // Generar y crear un plan de dieta por IA (Nutriólogo)
@@ -286,12 +308,19 @@ class DietPlanService {
     }
 
     // Obtener planes de dieta de un paciente específico (solo por su nutriólogo o admin)
-    public async getDietPlansForPatient(patientId: string, nutritionistId: string, callerRole: RoleName) {
-        if (callerRole === RoleName.NUTRITIONIST) {
+    public async getDietPlansForPatient(patientId: string, userId: string, callerRole: RoleName) {
+        // Si es un paciente, verificar que esté viendo sus propios planes
+        if (callerRole === RoleName.PATIENT) {
+            if (patientId !== userId) {
+                throw new AppError('No tienes permiso para ver los planes de otro paciente.', 403);
+            }
+        }
+        // Si es un nutriólogo, verificar que esté vinculado con el paciente
+        else if (callerRole === RoleName.NUTRITIONIST) {
             const relation = await this.relationRepository.findOne({
                 where: {
                     patient: { id: patientId },
-                    nutritionist: { id: nutritionistId },
+                    nutritionist: { id: userId },
                     status: RelationshipStatus.ACTIVE,
                 },
             });
@@ -299,6 +328,7 @@ class DietPlanService {
                 throw new AppError('No estás vinculado con este paciente o no tienes permiso para ver sus planes.', 403);
             }
         }
+        // Los administradores pueden ver todos los planes
 
         const dietPlans = await this.dietPlanRepository.find({
             where: { patient: { id: patientId } },
