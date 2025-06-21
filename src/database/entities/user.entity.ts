@@ -23,8 +23,9 @@ import { UserSubscription } from '@/database/entities/user_subscription.entity';
 import { PaymentTransaction } from '@/database/entities/payment_transaction.entity';
 import { EducationalContent } from '@/database/entities/educational_content.entity';
 import { Recipe } from '@/database/entities/recipe.entity';
-import { Conversation } from '@/database/entities/conversation.entity'; // <--- NUEVO
-import { Message } from '@/database/entities/message.entity'; // <--- NUEVO
+import { Conversation } from '@/database/entities/conversation.entity';
+import { Message } from '@/database/entities/message.entity';
+import { ClinicalRecord } from '@/database/entities/clinical_record.entity'; // <--- NUEVO
 import bcrypt from 'bcrypt';
 
 @Entity('users')
@@ -117,7 +118,6 @@ export class User {
     @OneToMany(() => Recipe, (recipe) => recipe.last_modified_by)
     modified_recipes!: Recipe[];
 
-    // --- NUEVAS RELACIONES para Mensajería ---
     @OneToMany(() => Conversation, (conversation) => conversation.participant1)
     conversations_as_participant1!: Conversation[];
 
@@ -126,6 +126,13 @@ export class User {
 
     @OneToMany(() => Message, (message) => message.sender)
     sent_messages!: Message[];
+
+    // --- NUEVAS RELACIONES para Historia Clínica ---
+    @OneToMany(() => ClinicalRecord, (record) => record.patient)
+    patient_clinical_records!: ClinicalRecord[];
+
+    @OneToMany(() => ClinicalRecord, (record) => record.nutritionist)
+    nutritionist_created_clinical_records!: ClinicalRecord[];
 
 
     isPasswordChangedRecently(decodedIat: number): boolean {

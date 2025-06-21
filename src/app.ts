@@ -13,7 +13,8 @@ import progressTrackingRoutes from '@/modules/progress_tracking/progress_trackin
 import subscriptionRoutes from '@/modules/subscriptions/subscription.routes';
 import educationalContentRoutes from '@/modules/educational_content/educational_content.routes';
 import adminRoutes from '@/modules/admin/admin.routes';
-import messagingRoutes from '@/modules/messaging/message.routes'; // Importar rutas de mensajería
+import messagingRoutes from '@/modules/messaging/message.routes';
+import clinicalRecordRoutes from '@/modules/clinical_records/clinical_record.routes'; // Importar rutas de historia clínica
 import { AppError } from '@/utils/app.error';
 
 dotenv.config();
@@ -39,7 +40,8 @@ app.use('/api/progress-tracking', progressTrackingRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/educational-content', educationalContentRoutes);
-app.use('/api/messages', messagingRoutes); // Montar rutas de mensajería
+app.use('/api/messages', messagingRoutes);
+app.use('/api/clinical-records', clinicalRecordRoutes); // Montar rutas de historia clínica
 
 app.all('*', (req: Request, res: Response, next: NextFunction) => {
     next(new AppError(`No se puede encontrar ${req.originalUrl} en este servidor!`, 404));

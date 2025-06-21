@@ -36,12 +36,12 @@ const nutritionistCredentials = {
     lastName: 'Smith',
 };
 
-// const adminCredentials = { // Si se añade un registro de admin más adelante
-//     email: 'admin.auth@example.com',
-//     password: 'SecurePass1!',
-//     firstName: 'Admin',
-//     lastName: 'User',
-// };
+const adminCredentials = { // Si se añade un registro de admin más adelante
+    email: 'admin.auth@example.com',
+    password: 'SecurePass1!',
+    firstName: 'Admin',
+    lastName: 'User',
+};
 
 describe('Authentication and Basic User Profile Flow', () => {
     // Aumentar el timeout global de Jest para beforeAll/afterAll si la configuración de BD es lenta
