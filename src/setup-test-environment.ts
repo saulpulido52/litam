@@ -61,7 +61,7 @@ class TestEnvironmentManager {
         if (!process.env.DB_PASSWORD) process.env.DB_PASSWORD = '';
         if (!process.env.DB_DATABASE) process.env.DB_DATABASE = 'nutri_test';
         if (!process.env.NODE_ENV) process.env.NODE_ENV = 'test';
-        if (!process.env.JWT_SECRET) process.env.JWT_SECRET = 'test-secret-key-for-testing';
+        if (!process.env.JWT_SECRET) process.env.JWT_SECRET = 'supersecretjwtkey';
 
         console.log('🔧 Variables de entorno configuradas:', {
             DB_HOST: process.env.DB_HOST,

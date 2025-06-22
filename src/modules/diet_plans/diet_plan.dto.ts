@@ -13,6 +13,8 @@ import {
     IsDateString,
     IsEnum,
     IsBoolean,
+    Validate,
+    ValidateIf,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { DietPlanStatus } from '@/database/entities/diet_plan.entity'; // Asegúrate de importar el enum
@@ -143,6 +145,26 @@ export class GenerateDietPlanAiDto {
 
     @IsDateString({}, { message: 'La fecha de fin debe ser una fecha válida (YYYY-MM-DD).' })
     endDate!: string;
+
+    @IsOptional()
+    @IsNumber({}, { message: 'El objetivo de calorías diario debe ser un número.' })
+    @Min(0, { message: 'El objetivo de calorías diario no puede ser negativo.' })
+    dailyCaloriesTarget?: number;
+
+    @IsOptional()
+    @IsArray({ message: 'Las preferencias deben ser un array.' })
+    @IsString({ each: true, message: 'Cada preferencia debe ser una cadena de texto.' })
+    preferences?: string[];
+
+    @IsOptional()
+    @IsArray({ message: 'Las restricciones deben ser un array.' })
+    @IsString({ each: true, message: 'Cada restricción debe ser una cadena de texto.' })
+    restrictions?: string[];
+
+    @IsOptional()
+    @IsArray({ message: 'Los objetivos deben ser un array.' })
+    @IsString({ each: true, message: 'Cada objetivo debe ser una cadena de texto.' })
+    goals?: string[];
 
     @IsOptional()
     @IsString({ message: 'Notas para la IA deben ser una cadena de texto.' })

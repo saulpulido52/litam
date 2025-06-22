@@ -19,8 +19,8 @@ router.use(protect);
 // Obtener un plan de dieta específico por ID (Nutriólogo, Paciente, Admin)
 router.get('/:id', dietPlanController.getDietPlanById);
 
-// Obtener todos los planes de dieta para un paciente específico (Nutriólogo, Admin)
-router.get('/patient/:patientId', authorize(RoleName.NUTRITIONIST, RoleName.ADMIN), dietPlanController.getDietPlansForPatient);
+// Obtener todos los planes de dieta para un paciente específico (Paciente, Nutriólogo, Admin)
+router.get('/patient/:patientId', dietPlanController.getDietPlansForPatient);
 
 // Rutas solo para Nutriólogos (y Admin si se quiere dar ese permiso)
 router.use(authorize(RoleName.NUTRITIONIST)); // Las siguientes rutas son solo para nutriólogos

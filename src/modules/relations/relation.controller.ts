@@ -52,6 +52,11 @@ class RelationController {
                 return next(new AppError('Solo los pacientes pueden ver su nutriólogo activo.', 403));
             }
             const nutritionist = await relationService.getPatientActiveNutritionist(req.user.id);
+            
+            if (!nutritionist) {
+                return next(new AppError('No tienes un nutriólogo activo asignado.', 404));
+            }
+            
             res.status(200).json({
                 status: 'success',
                 data: { nutritionist },

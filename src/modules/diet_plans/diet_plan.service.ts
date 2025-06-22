@@ -240,10 +240,14 @@ class DietPlanService {
             notes: generateDto.notesForAI,
             start_date: new Date(generateDto.startDate),
             end_date: new Date(generateDto.endDate),
+            daily_calories_target: generateDto.dailyCaloriesTarget || 2000, // Default value if not provided
             generated_by_ia: true,
             ia_version: '1.0', // Versión inicial de la IA
             status: DietPlanStatus.PENDING_REVIEW, // Generado por IA, necesita revisión
         });
+
+        // Guardar primero el plan sin meals
+        await this.dietPlanRepository.save(newDietPlan);
 
         newDietPlan.meals = [];
         for (const mealDto of generatedMeals) {
@@ -252,7 +256,10 @@ class DietPlanService {
                 order: mealDto.order,
                 diet_plan: newDietPlan,
             });
-            newMeal.meal_items = [];
+            
+            // Guardar la comida primero
+            const savedMeal = await this.mealRepository.save(newMeal);
+            savedMeal.meal_items = [];
 
             for (const itemDto of mealDto.mealItems) {
                 const food = await this.foodRepository.findOneBy({ id: itemDto.foodId });
@@ -262,15 +269,29 @@ class DietPlanService {
                 const newMealItem = this.mealItemRepository.create({
                     food: food,
                     quantity: itemDto.quantity,
-                    meal: newMeal,
+                    meal: savedMeal,
                 });
-                newMeal.meal_items.push(newMealItem);
+                
+                // Guardar el item de comida
+                const savedMealItem = await this.mealItemRepository.save(newMealItem);
+                savedMeal.meal_items.push(savedMealItem);
             }
-            newDietPlan.meals.push(newMeal);
+            newDietPlan.meals.push(savedMeal);
         }
 
-        await this.dietPlanRepository.save(newDietPlan);
-        return newDietPlan;
+        // Recargar el plan con todas las relaciones
+        const savedPlan = await this.dietPlanRepository.findOne({
+            where: { id: newDietPlan.id },
+            relations: [
+                'patient',
+                'nutritionist',
+                'meals',
+                'meals.meal_items',
+                'meals.meal_items.food',
+            ],
+        });
+        
+        return savedPlan;
     }
 
     // Obtener un plan de dieta por ID (Nutriólogo, Paciente, Admin)
@@ -397,9 +418,19 @@ class DietPlanService {
             if (dietPlan.status !== DietPlanStatus.DRAFT && dietPlan.status !== DietPlanStatus.PENDING_REVIEW) {
                 throw new AppError('La actualización detallada de comidas solo está permitida para planes en borrador o pendientes de revisión.', 400);
             }
+            
+            // Guardar el plan primero para asegurar que existe
+            await this.dietPlanRepository.save(dietPlan);
+            
             // Eliminar comidas e ítems existentes para recrearlos
-            await this.mealItemRepository.remove(dietPlan.meals.flatMap(meal => meal.meal_items));
-            await this.mealRepository.remove(dietPlan.meals);
+            if (dietPlan.meals && dietPlan.meals.length > 0) {
+                for (const meal of dietPlan.meals) {
+                    if (meal.meal_items && meal.meal_items.length > 0) {
+                        await this.mealItemRepository.remove(meal.meal_items);
+                    }
+                }
+                await this.mealRepository.remove(dietPlan.meals);
+            }
             
             dietPlan.meals = []; // Resetear el array de comidas
 
@@ -409,7 +440,10 @@ class DietPlanService {
                     order: mealDto.order,
                     diet_plan: dietPlan,
                 });
-                newMeal.meal_items = [];
+                
+                // Guardar la comida primero
+                const savedMeal = await this.mealRepository.save(newMeal);
+                savedMeal.meal_items = [];
 
                 for (const itemDto of mealDto.mealItems) {
                     const food = await this.foodRepository.findOneBy({ id: itemDto.foodId });
@@ -419,17 +453,45 @@ class DietPlanService {
                     const newMealItem = this.mealItemRepository.create({
                         food: food,
                         quantity: itemDto.quantity,
-                        meal: newMeal,
+                        meal: savedMeal,
                     });
-                    newMeal.meal_items.push(newMealItem);
+                    
+                    // Guardar el item de comida
+                    const savedMealItem = await this.mealItemRepository.save(newMealItem);
+                    savedMeal.meal_items.push(savedMealItem);
                 }
-                dietPlan.meals.push(newMeal);
+                dietPlan.meals.push(savedMeal);
             }
         }
 
 
         await this.dietPlanRepository.save(dietPlan);
-        return dietPlan;
+        
+        // Recargar el plan con todas las relaciones para devolverlo completo
+        const updatedDietPlan = await this.dietPlanRepository.findOne({
+            where: { id: dietPlanId },
+            relations: [
+                'patient',
+                'nutritionist',
+                'meals',
+                'meals.meal_items',
+                'meals.meal_items.food',
+            ],
+        });
+
+        if (!updatedDietPlan) {
+            throw new AppError('Error al recargar el plan de dieta actualizado.', 500);
+        }
+
+        // Mapear los campos para la respuesta
+        const { password_hash: patientHash, ...patientWithoutHash } = updatedDietPlan.patient;
+        const { password_hash: nutritionistHash, ...nutritionistWithoutHash } = updatedDietPlan.nutritionist;
+
+        return {
+            ...updatedDietPlan,
+            patient: patientWithoutHash,
+            nutritionist: nutritionistWithoutHash,
+        };
     }
 
     // Cambiar el estado de un plan (Nutriólogo)
