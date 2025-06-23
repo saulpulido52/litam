@@ -28,6 +28,11 @@ import { Message } from '@/database/entities/message.entity';
 import { ClinicalRecord } from '@/database/entities/clinical_record.entity'; // <--- NUEVO
 import bcrypt from 'bcrypt';
 
+export enum UserRegistrationType {
+    ONLINE = 'online',      // Paciente se registra solo
+    IN_PERSON = 'in_person', // Nutriólogo registra al paciente
+}
+
 @Entity('users')
 export class User {
     @PrimaryGeneratedColumn('uuid')
@@ -45,6 +50,12 @@ export class User {
     @Column({ type: 'varchar', length: 100, nullable: true })
     last_name!: string | null;
 
+    @Column({ type: 'varchar', length: 20, nullable: true })
+    phone!: string | null;
+
+    @Column({ type: 'date', nullable: true })
+    birth_date!: Date | null;
+
     @Column({ type: 'integer', nullable: true })
     age!: number | null;
 
@@ -55,8 +66,28 @@ export class User {
     @JoinColumn({ name: 'role_id' })
     role!: Role;
 
-    @Column({ type: 'boolean', default: true })
+    @Column({ type: 'boolean', default: true, nullable: false })
     is_active!: boolean;
+
+    @Column({
+        type: 'enum',
+        enum: UserRegistrationType,
+        default: UserRegistrationType.ONLINE,
+        nullable: false,
+    })
+    registration_type!: UserRegistrationType;
+
+    @Column({ type: 'boolean', default: false })
+    has_temporary_password!: boolean;
+
+    @Column({ type: 'timestamptz', nullable: true })
+    temporary_password_expires_at!: Date | null;
+
+    @Column({ type: 'boolean', default: false })
+    requires_initial_setup!: boolean; // Si necesita completar su perfil
+
+    @Column({ type: 'uuid', nullable: true })
+    created_by_nutritionist_id!: string | null; // ID del nutriólogo que lo creó (escenario 1)
 
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at!: Date;
@@ -65,19 +96,19 @@ export class User {
     updated_at!: Date;
 
     @Column({ type: 'timestamptz', nullable: true })
-    passwordChangedAt?: Date;
+    passwordChangedAt!: Date | null;
 
-    @OneToOne(() => PatientProfile, (profile) => profile.user)
+    @OneToOne(() => PatientProfile, (profile) => profile.user, { cascade: true })
     patient_profile?: PatientProfile;
 
     @OneToOne(() => NutritionistProfile, (profile) => profile.user)
     nutritionist_profile?: NutritionistProfile;
 
     @OneToMany(() => PatientNutritionistRelation, (relation) => relation.patient)
-    patient_relations_as_patient!: PatientNutritionistRelation[];
+    patient_relations?: PatientNutritionistRelation[];
 
     @OneToMany(() => PatientNutritionistRelation, (relation) => relation.nutritionist)
-    patient_relations_as_nutritionist!: PatientNutritionistRelation[];
+    nutritionist_relations?: PatientNutritionistRelation[];
 
     @OneToMany(() => Food, (food) => food.created_by_user)
     created_foods!: Food[];
@@ -100,8 +131,8 @@ export class User {
     @OneToMany(() => PatientProgressLog, (log) => log.patient)
     patient_progress_logs!: PatientProgressLog[];
 
-    @OneToOne(() => UserSubscription, (subscription) => subscription.patient)
-    user_subscription?: UserSubscription;
+    @OneToMany(() => UserSubscription, (subscription) => subscription.user)
+    subscriptions?: UserSubscription[];
 
     @OneToMany(() => PaymentTransaction, (transaction) => transaction.user)
     payment_transactions!: PaymentTransaction[];
@@ -133,7 +164,6 @@ export class User {
 
     @OneToMany(() => ClinicalRecord, (record) => record.nutritionist)
     nutritionist_created_clinical_records!: ClinicalRecord[];
-
 
     isPasswordChangedRecently(decodedIat: number): boolean {
         return !!this.passwordChangedAt && this.passwordChangedAt.getTime() / 1000 > decodedIat;

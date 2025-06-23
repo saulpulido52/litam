@@ -112,6 +112,100 @@ class ClinicalRecordController {
             next(new AppError('Error al eliminar el registro clínico.', 500));
         }
     }
+
+    // --- MÉTODOS ESPECIALIZADOS PARA GESTIÓN DE EXPEDIENTES ---
+
+    public async transferPatientRecords(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user || req.user.role.name !== RoleName.ADMIN) {
+                return next(new AppError('Acceso denegado. Solo administradores pueden transferir expedientes.', 403));
+            }
+
+            const { patientId, fromNutritionistId, toNutritionistId } = req.body;
+
+            if (!patientId || !fromNutritionistId || !toNutritionistId) {
+                return next(new AppError('Faltan parámetros requeridos: patientId, fromNutritionistId, toNutritionistId.', 400));
+            }
+
+            const result = await clinicalRecordService.transferPatientRecords(
+                patientId,
+                fromNutritionistId,
+                toNutritionistId
+            );
+
+            res.status(200).json({
+                status: 'success',
+                message: 'Transferencia de expedientes completada.',
+                data: result,
+            });
+        } catch (error: any) {
+            console.error('Error en ClinicalRecordController.transferPatientRecords:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al transferir los expedientes.', 500));
+        }
+    }
+
+    public async deleteAllPatientRecords(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user) {
+                return next(new AppError('Usuario no autenticado.', 401));
+            }
+
+            const { patientId } = req.params;
+
+            // Solo el propio paciente o un administrador pueden eliminar todos los expedientes
+            if (req.user.role.name !== RoleName.ADMIN && req.user.id !== patientId) {
+                return next(new AppError('Solo el paciente o un administrador pueden eliminar todos los expedientes.', 403));
+            }
+
+            const result = await clinicalRecordService.deleteAllPatientRecords(
+                patientId,
+                req.user.id,
+                req.user.role.name
+            );
+
+            res.status(200).json({
+                status: 'success',
+                message: 'Todos los expedientes han sido eliminados.',
+                data: result,
+            });
+        } catch (error: any) {
+            console.error('Error en ClinicalRecordController.deleteAllPatientRecords:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al eliminar todos los expedientes.', 500));
+        }
+    }
+
+    public async getPatientRecordsStats(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user) {
+                return next(new AppError('Usuario no autenticado.', 401));
+            }
+
+            const { patientId } = req.params;
+
+            const stats = await clinicalRecordService.getPatientRecordsStats(
+                patientId,
+                req.user.id,
+                req.user.role.name
+            );
+
+            res.status(200).json({
+                status: 'success',
+                data: { stats },
+            });
+        } catch (error: any) {
+            console.error('Error en ClinicalRecordController.getPatientRecordsStats:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener estadísticas de expedientes.', 500));
+        }
+    }
 }
 
 export default new ClinicalRecordController();

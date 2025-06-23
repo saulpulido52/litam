@@ -21,7 +21,7 @@ import { EducationalContent } from '@/database/entities/educational_content.enti
 import { Recipe, RecipeIngredient } from '@/database/entities/recipe.entity';
 import { Conversation } from '@/database/entities/conversation.entity';
 import { Message } from '@/database/entities/message.entity';
-import { ClinicalRecord } from '@/database/entities/clinical_record.entity'; // <--- NUEVA ENTIDAD
+import { ClinicalRecord } from '@/database/entities/clinical_record.entity';
 
 dotenv.config();
 
@@ -32,9 +32,31 @@ export const AppDataSource = new DataSource({
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
-    // Solo sincronizar si es la base de datos de pruebas Y no estamos en modo test (para evitar conflictos con Jest)
+    
+    // Configuración optimizada para múltiples usuarios
+    extra: {
+        // Pool de conexiones - configuración para manejar múltiples usuarios concurrentes
+        max: 20,           // Máximo 20 conexiones simultáneas
+        min: 5,            // Mínimo 5 conexiones mantenidas
+        acquireTimeoutMillis: 60000,    // 60 segundos timeout para obtener conexión
+        idleTimeoutMillis: 30000,       // 30 segundos antes de cerrar conexión inactiva
+        connectionTimeoutMillis: 10000,  // 10 segundos timeout para conectar
+        
+        // Configuraciones adicionales de PostgreSQL
+        statement_timeout: 30000,        // 30 segundos timeout para queries
+        idle_in_transaction_session_timeout: 60000, // 60 segundos timeout para transacciones inactivas
+        
+        // Configuración SSL para producción (opcional)
+        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    },
+    
+    // Pool de conexiones a nivel de TypeORM
+    maxQueryExecutionTime: 10000,  // Log queries que tomen más de 10 segundos
+    
+    // Solo sincronizar si es la base de datos de pruebas Y no estamos en modo test
     synchronize: process.env.DB_DATABASE === 'nutri_test' && process.env.NODE_ENV !== 'test' || process.env.NODE_ENV === 'development',
-    logging: process.env.NODE_ENV === 'development',
+    logging: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    
     entities: [
         User,
         Role,
@@ -56,7 +78,7 @@ export const AppDataSource = new DataSource({
         RecipeIngredient,
         Conversation,
         Message,
-        ClinicalRecord, // Añadida
+        ClinicalRecord,
     ],
     migrations: ['src/database/migrations/**/*.ts'],
     subscribers: [],

@@ -9,7 +9,7 @@ import {
     UpdateUserSubscriptionStatusDto,
 } from '@/modules/subscriptions/subscription.dto';
 import { RoleName } from '@/database/entities/role.entity';
-import { UserSubscriptionStatus } from '@/database/entities/user_subscription.entity'; // <-- AÑADIDO
+import { SubscriptionStatus } from '@/database/entities/user_subscription.entity';
 
 class SubscriptionController {
     // --- Rutas de Gestión de Planes de Suscripción (Solo Administradores) ---

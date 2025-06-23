@@ -15,7 +15,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { SubscriptionDurationType } from '@/database/entities/subscription_plan.entity';
-import { UserSubscriptionStatus } from '@/database/entities/user_subscription.entity';
+import { SubscriptionStatus } from '@/database/entities/user_subscription.entity';
 import { PaymentStatus } from '@/database/entities/payment_transaction.entity';
 
 // DTO para crear un plan de suscripción (Solo Admin)
@@ -92,8 +92,8 @@ export class SubscribeToPlanDto {
 
 // DTO para actualizar el estado de una suscripción de usuario (Admin o webhook)
 export class UpdateUserSubscriptionStatusDto {
-    @IsEnum(UserSubscriptionStatus, { message: 'El estado de la suscripción no es válido.' })
-    status!: UserSubscriptionStatus;
+    @IsEnum(SubscriptionStatus, { message: 'El estado de la suscripción no es válido.' })
+    status!: SubscriptionStatus;
 
     @IsOptional()
     @IsString({ message: 'La razón de cancelación debe ser una cadena de texto.' })

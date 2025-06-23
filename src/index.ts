@@ -5,62 +5,257 @@ import { Role, RoleName } from '@/database/entities/role.entity';
 import http from 'http'; // Importar módulo http de Node.js
 import { Server as SocketIOServer } from 'socket.io'; // Importar Server de socket.io
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 4000;
 
 // Crear el servidor HTTP para Express y Socket.IO
 const server = http.createServer(app);
 
-// Configurar Socket.IO para escuchar en el mismo servidor HTTP
-// Opcional: configurar CORS para Socket.IO
+// *** CONFIGURACIÓN OPTIMIZADA DE SOCKET.IO PARA MÚLTIPLES USUARIOS ***
 const io = new SocketIOServer(server, {
     cors: {
-        origin: "*", // Permitir todas las conexiones CORS para desarrollo. En producción, especificar dominios.
-        methods: ["GET", "POST"]
-    }
+        origin: function(origin, callback) {
+            // Permitir requests sin origin (mobile apps)
+            if (!origin) return callback(null, true);
+            
+            const allowedOrigins = [
+                'http://localhost:5000',
+                'http://localhost:3000',
+                'http://127.0.0.1:5000',
+                'http://127.0.0.1:3000',
+                // Añadir dominios de producción aquí
+            ];
+            
+            if (allowedOrigins.indexOf(origin) !== -1) {
+                callback(null, true);
+            } else {
+                callback(new Error('No permitido por CORS'));
+            }
+        },
+        methods: ["GET", "POST"],
+        credentials: true
+    },
+    // Configuraciones para múltiples usuarios concurrentes
+    transports: ['websocket', 'polling'],
+    pingTimeout: 60000,      // 60 segundos timeout para ping
+    pingInterval: 25000,     // 25 segundos intervalo de ping
+    maxHttpBufferSize: 1e6,  // 1MB máximo buffer size
+    allowEIO3: true,         // Soporte para Engine.IO v3 (retrocompatibilidad)
+    
+    // Configuración para manejar alta concurrencia
+    connectTimeout: 45000,   // 45 segundos timeout para conexión
+    serveClient: false,      // No servir cliente Socket.IO (mejora rendimiento)
 });
 
-// *** Lógica de Socket.IO (lo moveremos a un handler después) ***
-io.on('connection', (socket) => {
-    console.log(`[Socket.IO] Usuario conectado: ${socket.id}`);
+// Middleware de autenticación para Socket.IO (opcional pero recomendado)
+io.use((socket, next) => {
+    const token = socket.handshake.auth.token || socket.handshake.headers.authorization;
+    
+    // Aquí puedes verificar el token JWT si es necesario
+    // Por ahora, permitimos todas las conexiones para desarrollo
+    console.log(`[Socket.IO] Middleware - Conexión desde: ${socket.handshake.address}`);
+    
+    // Almacenar información del usuario en el socket si está autenticado
+    if (token) {
+        // TODO: Verificar JWT y extraer información del usuario
+        socket.data.userId = 'user_id_from_token'; // Placeholder
+        socket.data.userRole = 'nutritionist'; // Placeholder
+    }
+    
+    next();
+});
 
-    // Evento para cuando un usuario se une a una conversación/sala
-    socket.on('joinConversation', (conversationId: string) => {
-        socket.join(conversationId);
-        console.log(`[Socket.IO] Usuario ${socket.id} unido a la sala: ${conversationId}`);
+// *** MANEJO DE EVENTOS SOCKET.IO OPTIMIZADO PARA MÚLTIPLES USUARIOS ***
+io.on('connection', (socket) => {
+    console.log(`[Socket.IO] Usuario conectado: ${socket.id} desde ${socket.handshake.address}`);
+    
+    // Estadísticas de conexiones activas
+    const connectedUsers = io.engine.clientsCount;
+    console.log(`[Socket.IO] Usuarios conectados actualmente: ${connectedUsers}`);
+
+    // Evento para cuando un usuario se identifica (después del login)
+    socket.on('authenticate', (userData: { userId: string; role: string; name: string }) => {
+        socket.data.userId = userData.userId;
+        socket.data.userRole = userData.role;
+        socket.data.userName = userData.name;
+        
+        console.log(`[Socket.IO] Usuario autenticado: ${userData.name} (${userData.role}) - Socket: ${socket.id}`);
+        
+        // Unir a sala específica del rol para notificaciones masivas
+        socket.join(`role_${userData.role}`);
+        
+        // Notificar al usuario que está conectado
+        socket.emit('authenticated', {
+            message: 'Conectado exitosamente',
+            timestamp: new Date().toISOString()
+        });
     });
 
-    // Evento para cuando un usuario envía un mensaje
-    socket.on('sendMessage', async (data: { conversationId: string; senderId: string; content: string }) => {
-        console.log(`[Socket.IO] Mensaje recibido en ${data.conversationId} de ${data.senderId}: ${data.content}`);
-        // Aquí llamaríamos a un servicio para guardar el mensaje en la BD
-        // y luego emitiríamos el mensaje a la sala
-        try {
-            // Esto es un placeholder; la lógica real de guardado estará en el servicio
-            // await messageService.saveMessage(data.conversationId, data.senderId, data.content);
+    // Evento para unirse a una conversación/sala específica
+    socket.on('joinConversation', (conversationId: string) => {
+        if (!conversationId) {
+            socket.emit('error', { message: 'ID de conversación requerido' });
+            return;
+        }
+        
+        socket.join(conversationId);
+        console.log(`[Socket.IO] Usuario ${socket.data.userName || socket.id} unido a conversación: ${conversationId}`);
+        
+        // Notificar a otros usuarios en la conversación
+        socket.to(conversationId).emit('userJoined', {
+            userId: socket.data.userId,
+            userName: socket.data.userName,
+            timestamp: new Date().toISOString()
+        });
+    });
 
-            // Emitir el mensaje a todos los usuarios en la sala de la conversación
-            io.to(data.conversationId).emit('receiveMessage', {
+    // Evento para salir de una conversación
+    socket.on('leaveConversation', (conversationId: string) => {
+        socket.leave(conversationId);
+        console.log(`[Socket.IO] Usuario ${socket.data.userName || socket.id} salió de conversación: ${conversationId}`);
+        
+        // Notificar a otros usuarios en la conversación
+        socket.to(conversationId).emit('userLeft', {
+            userId: socket.data.userId,
+            userName: socket.data.userName,
+            timestamp: new Date().toISOString()
+        });
+    });
+
+    // Evento para enviar mensajes con validación mejorada
+    socket.on('sendMessage', async (data: { 
+        conversationId: string; 
+        senderId: string; 
+        content: string;
+        messageType?: 'text' | 'image' | 'file';
+        metadata?: any;
+    }) => {
+        try {
+            // Validaciones básicas
+            if (!data.conversationId || !data.senderId || !data.content) {
+                socket.emit('messageError', { 
+                    error: 'Datos de mensaje incompletos',
+                    code: 'INVALID_MESSAGE_DATA'
+                });
+                return;
+            }
+
+            // Verificar que el usuario esté en la conversación
+            const userRooms = Array.from(socket.rooms);
+            if (!userRooms.includes(data.conversationId)) {
+                socket.emit('messageError', { 
+                    error: 'No tienes acceso a esta conversación',
+                    code: 'UNAUTHORIZED_CONVERSATION'
+                });
+                return;
+            }
+
+            console.log(`[Socket.IO] Mensaje recibido en ${data.conversationId} de ${socket.data.userName || data.senderId}`);
+
+            // TODO: Aquí llamar al servicio para guardar el mensaje en la BD
+            // await messageService.saveMessage(data);
+
+            // Crear objeto de mensaje completo
+            const message = {
+                id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // ID temporal
                 conversationId: data.conversationId,
                 senderId: data.senderId,
+                senderName: socket.data.userName || 'Usuario',
                 content: data.content,
+                messageType: data.messageType || 'text',
+                metadata: data.metadata || {},
                 timestamp: new Date().toISOString(),
                 isRead: false
+            };
+
+            // Emitir el mensaje a todos los usuarios en la conversación
+            io.to(data.conversationId).emit('receiveMessage', message);
+            
+            // Confirma al remitente que el mensaje fue enviado
+            socket.emit('messageDelivered', {
+                temporaryId: data.metadata?.temporaryId,
+                messageId: message.id,
+                timestamp: message.timestamp
             });
-            console.log(`[Socket.IO] Mensaje emitido a sala ${data.conversationId}`);
+
+            console.log(`[Socket.IO] Mensaje emitido a conversación ${data.conversationId}`);
+
         } catch (error) {
-            console.error(`[Socket.IO ERROR] Fallo al procesar/enviar mensaje: ${error}`);
-            // Podrías emitir un evento de error al remitente
-            socket.emit('messageError', 'Fallo al enviar el mensaje.');
+            console.error(`[Socket.IO ERROR] Error al procesar mensaje:`, error);
+            socket.emit('messageError', { 
+                error: 'Error interno del servidor',
+                code: 'SERVER_ERROR'
+            });
         }
     });
 
-    socket.on('disconnect', () => {
-        console.log(`[Socket.IO] Usuario desconectado: ${socket.id}`);
+    // Evento para marcar mensajes como leídos
+    socket.on('markAsRead', (data: { conversationId: string; messageIds: string[] }) => {
+        if (!data.conversationId || !data.messageIds?.length) return;
+
+        // TODO: Llamar al servicio para marcar como leído en la BD
+        // await messageService.markAsRead(data.messageIds, socket.data.userId);
+
+        // Notificar a otros usuarios en la conversación
+        socket.to(data.conversationId).emit('messagesRead', {
+            readBy: socket.data.userId,
+            messageIds: data.messageIds,
+            timestamp: new Date().toISOString()
+        });
+    });
+
+    // Evento para notificaciones push a grupos específicos
+    socket.on('notifyRole', (data: { role: string; message: string; type: string }) => {
+        if (socket.data.userRole !== 'admin') {
+            socket.emit('error', { message: 'No autorizado para enviar notificaciones masivas' });
+            return;
+        }
+
+        io.to(`role_${data.role}`).emit('notification', {
+            type: data.type,
+            message: data.message,
+            timestamp: new Date().toISOString(),
+            from: socket.data.userName
+        });
+
+        console.log(`[Socket.IO] Notificación enviada a rol ${data.role}: ${data.message}`);
+    });
+
+    // Manejo de desconexión
+    socket.on('disconnect', (reason) => {
+        const connectedUsers = io.engine.clientsCount;
+        console.log(`[Socket.IO] Usuario desconectado: ${socket.data.userName || socket.id} - Razón: ${reason}`);
+        console.log(`[Socket.IO] Usuarios conectados ahora: ${connectedUsers}`);
+    });
+
+    // Manejo de errores del socket
+    socket.on('error', (error) => {
+        console.error(`[Socket.IO ERROR] Error en socket ${socket.id}:`, error);
     });
 });
-// *** FIN Lógica de Socket.IO ***
 
+// *** FUNCIONES DE UTILIDAD PARA MÚLTIPLES USUARIOS ***
 
+// Función para obtener estadísticas de conexiones
+export const getConnectionStats = () => {
+    return {
+        totalConnections: io.engine.clientsCount,
+        timestamp: new Date().toISOString()
+    };
+};
+
+// Función para enviar notificación a usuario específico
+export const notifyUser = (userId: string, notification: any) => {
+    const sockets = io.sockets.sockets;
+    for (const [socketId, socket] of sockets) {
+        if (socket.data.userId === userId) {
+            socket.emit('notification', notification);
+            return true;
+        }
+    }
+    return false;
+};
+
+// *** INICIALIZACIÓN DE LA BASE DE DATOS ***
 async function initializeDatabase() {
     try {
         if (!AppDataSource.isInitialized) {
@@ -76,22 +271,46 @@ async function initializeDatabase() {
             if (!role) {
                 role = roleRepository.create({ name: roleName });
                 await roleRepository.save(role);
+                console.log(`Rol creado: ${roleName}`);
             }
         }
+
+        console.log('Base de datos inicializada y roles verificados');
     } catch (err) {
         console.error('Error during Data Source initialization or seeding:', err);
         process.exit(1);
     }
 }
 
+// *** INICIO DEL SERVIDOR ***
 async function startServer() {
     await initializeDatabase();
 
-    server.listen(PORT, () => { // Usar 'server' en lugar de 'app' para escuchar
-        console.log(`Server is running on port ${PORT}`);
-        console.log(`API available at http://localhost:${PORT}/api`);
-        console.log(`Socket.IO available on ws://localhost:${PORT}`);
+    server.listen(PORT, () => {
+        console.log(`🚀 Server is running on port ${PORT}`);
+        console.log(`📡 API available at http://localhost:${PORT}/api`);
+        console.log(`🔌 Socket.IO available on ws://localhost:${PORT}`);
+        console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`💾 Database: ${process.env.DB_DATABASE || 'default'}`);
+        console.log(`👥 Ready for multiple concurrent users`);
     });
 }
+
+// Manejo de cierre graceful del servidor
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    server.close(() => {
+        console.log('Process terminated');
+        process.exit(0);
+    });
+});
+
+process.on('SIGINT', () => {
+    console.log('SIGINT received, shutting down gracefully');
+    server.close(() => {
+        console.log('Process terminated');
+        process.exit(0);
+    });
+});
 
 startServer();

@@ -5,52 +5,71 @@ import {
     Column,
     CreateDateColumn,
     UpdateDateColumn,
-    OneToMany,
-    Unique,
 } from 'typeorm';
-import { UserSubscription } from './user_subscription.entity'; // Para la relación inversa
 
-// Tipo de duración del plan (mensual, anual, etc.)
+export enum PlanType {
+    MONTHLY = 'monthly',
+    ANNUAL = 'annual',
+}
+
+export enum PlanStatus {
+    ACTIVE = 'active',
+    INACTIVE = 'inactive',
+    SUSPENDED = 'suspended',
+}
+
+// For DTO compatibility
 export enum SubscriptionDurationType {
     MONTHLY = 'monthly',
-    YEARLY = 'yearly',
-    LIFETIME = 'lifetime', // Plan de pago único
+    ANNUAL = 'annual',
 }
 
 @Entity('subscription_plans')
-@Unique(['name', 'duration_type']) // Un plan con el mismo nombre y duración debe ser único
 export class SubscriptionPlan {
     @PrimaryGeneratedColumn('uuid')
     id!: string;
 
     @Column({ type: 'varchar', length: 100, nullable: false })
-    name!: string; // Ej: 'Básico Mensual', 'Premium Anual'
+    name!: string;
 
     @Column({ type: 'text', nullable: true })
-    description: string | null;
-
-    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: false })
-    price!: number; // Precio del plan
+    description!: string | null;
 
     @Column({
         type: 'enum',
-        enum: SubscriptionDurationType,
+        enum: PlanType,
         nullable: false,
     })
-    duration_type!: SubscriptionDurationType; // Ej: 'monthly', 'yearly', 'lifetime'
+    type!: PlanType;
 
-    @Column('text', { array: true, nullable: true })
-    features: string[] | null; // Ej: ['acceso_chat', 'planes_ia_ilimitados']
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: false })
+    price!: number;
+
+    @Column({ type: 'int', nullable: false })
+    duration_days!: number; // 30 para mensual, 365 para anual
+
+    @Column({ type: 'int', nullable: true })
+    max_consultations!: number | null; // null = ilimitadas
 
     @Column({ type: 'boolean', default: true })
-    is_active!: boolean; // Si el plan está disponible para nuevas suscripciones
+    includes_nutrition_plan!: boolean;
 
-    @OneToMany(() => UserSubscription, (userSubscription) => userSubscription.subscription_plan)
-    user_subscriptions!: UserSubscription[]; // Relación inversa a UserSubscription
+    @Column({ type: 'boolean', default: false })
+    includes_progress_tracking!: boolean;
 
-    @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+    @Column({ type: 'boolean', default: false })
+    includes_messaging!: boolean;
+
+    @Column({
+        type: 'enum',
+        enum: PlanStatus,
+        default: PlanStatus.ACTIVE,
+    })
+    status!: PlanStatus;
+
+    @CreateDateColumn({ type: 'timestamptz' })
     created_at!: Date;
 
-    @UpdateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+    @UpdateDateColumn({ type: 'timestamptz' })
     updated_at!: Date;
 }

@@ -9,7 +9,7 @@ import {
     AdminUpdateSettingsDto, // Si se añade
 } from '@/modules/admin/admin.dto';
 import { RoleName } from '@/database/entities/role.entity';
-import { UserSubscriptionStatus } from '@/database/entities/user_subscription.entity'; // Para tipo en query param
+import { SubscriptionStatus } from '@/database/entities/user_subscription.entity'; // Para tipo en query param
 
 class AdminController {
     // --- Gestión de Usuarios ---
@@ -109,7 +109,7 @@ class AdminController {
 
     public async getAllUserSubscriptions(req: Request, res: Response, next: NextFunction) {
         try {
-            const status = req.query.status as UserSubscriptionStatus | undefined;
+            const status = req.query.status as SubscriptionStatus | undefined;
             const page = parseInt(req.query.page as string || '1', 10);
             const limit = parseInt(req.query.limit as string || '20', 10);
 

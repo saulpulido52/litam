@@ -42,4 +42,25 @@ router.route('/:id') // Gestión de un registro específico por su ID
         clinicalRecordController.deleteClinicalRecord
     );
 
+// --- Rutas especializadas para gestión de expedientes ---
+
+// Transferir expedientes entre nutriólogos (solo administradores)
+router.post(
+    '/transfer',
+    authorize(RoleName.ADMIN),
+    clinicalRecordController.transferPatientRecords
+);
+
+// Eliminar todos los expedientes de un paciente (solo cuando elimina su cuenta)
+router.delete(
+    '/patient/:patientId/all',
+    clinicalRecordController.deleteAllPatientRecords
+);
+
+// Obtener estadísticas de expedientes de un paciente
+router.get(
+    '/patient/:patientId/stats',
+    clinicalRecordController.getPatientRecordsStats
+);
+
 export default router;

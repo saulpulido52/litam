@@ -11,7 +11,7 @@ import {
     IsDateString, // <--- AÑADIDO
 } from 'class-validator';
 import { RoleName } from '@/database/entities/role.entity';
-import { UserSubscriptionStatus } from '@/database/entities/user_subscription.entity';
+import { SubscriptionStatus } from '@/database/entities/user_subscription.entity';
 import { SubscriptionDurationType } from '@/database/entities/subscription_plan.entity'; // <-- AÑADIDO
 
 // DTO para actualizar un usuario por el administrador
@@ -65,8 +65,8 @@ export class AdminUpdateUserSubscriptionDto {
     endDate?: string;
 
     @IsOptional()
-    @IsEnum(UserSubscriptionStatus, { message: 'El estado de la suscripción no es válido.' })
-    status?: UserSubscriptionStatus;
+    @IsEnum(SubscriptionStatus, { message: 'El estado de la suscripción no es válido.' })
+    status?: SubscriptionStatus;
 
     @IsOptional()
     @IsString({ message: 'La razón de cancelación debe ser una cadena de texto.' })

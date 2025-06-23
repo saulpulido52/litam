@@ -3,7 +3,7 @@ import { Repository } from 'typeorm';
 import { AppDataSource } from '@/database/data-source';
 import { User } from '@/database/entities/user.entity';
 import { Role, RoleName } from '@/database/entities/role.entity';
-import { UserSubscription, UserSubscriptionStatus } from '@/database/entities/user_subscription.entity';
+import { UserSubscription, SubscriptionStatus } from '@/database/entities/user_subscription.entity';
 import { SubscriptionPlan, SubscriptionDurationType } from '@/database/entities/subscription_plan.entity'; // <-- AÑADIDO
 import { NutritionistProfile } from '@/database/entities/nutritionist_profile.entity';
 import {
@@ -140,27 +140,27 @@ class AdminService {
 
     // --- Gestión de Suscripciones de Usuario (por Admin) ---
 
-    public async getAllUserSubscriptions(status?: UserSubscriptionStatus, page: number = 1, limit: number = 20) {
+    public async getAllUserSubscriptions(status?: SubscriptionStatus, page: number = 1, limit: number = 20) {
         const skip = (page - 1) * limit;
         const whereClause: any = {};
         if (status) whereClause.status = status;
 
         const [subscriptions, total] = await this.userSubscriptionRepository.findAndCount({
             where: whereClause,
-            relations: ['patient', 'patient.role', 'subscription_plan'],
+            relations: ['user', 'user.role', 'subscription_plan'],
             order: { created_at: 'DESC' },
             skip: skip,
             take: limit,
         });
 
-        // Ocultar hash de contraseña de los pacientes
-        const subscriptionsWithCleanPatients = subscriptions.map(sub => {
-            const { password_hash, ...patientWithoutHash } = sub.patient;
-            return { ...sub, patient: patientWithoutHash };
+        // Ocultar hash de contraseña de los usuarios
+        const subscriptionsWithCleanUsers = subscriptions.map(sub => {
+            const { password_hash, ...userWithoutHash } = sub.user;
+            return { ...sub, user: userWithoutHash };
         });
 
         return {
-            subscriptions: subscriptionsWithCleanPatients,
+            subscriptions: subscriptionsWithCleanUsers,
             total,
             page,
             limit,
@@ -171,7 +171,7 @@ class AdminService {
     public async adminUpdateUserSubscription(userSubscriptionId: string, updateDto: AdminUpdateUserSubscriptionDto) {
         const subscription = await this.userSubscriptionRepository.findOne({
             where: { id: userSubscriptionId },
-            relations: ['patient', 'subscription_plan'],
+            relations: ['user', 'subscription_plan'],
         });
         if (!subscription) {
             throw new AppError('Suscripción de usuario no encontrada.', 404);
@@ -192,28 +192,20 @@ class AdminService {
 
         // Actualizar estado
         if (updateDto.status !== undefined) {
-            if (updateDto.status === UserSubscriptionStatus.CANCELLED) {
-                subscription.cancel_date = new Date();
-                subscription.cancel_reason = updateDto.cancelReason || 'Cancelado por administrador.';
-            } else if (updateDto.status === UserSubscriptionStatus.ACTIVE) {
-                 subscription.cancel_date = null;
-                 subscription.cancel_reason = null;
-                 subscription.last_payment_date = new Date(); // Asumir pago al activar manualmente
-                 // Recalcular next_renewal_date si es necesario
-                 if (subscription.subscription_plan.duration_type === SubscriptionDurationType.MONTHLY) {
-                    subscription.next_renewal_date = new Date(subscription.start_date.getFullYear(), subscription.start_date.getMonth() + 1, subscription.start_date.getDate());
-                 } else if (subscription.subscription_plan.duration_type === SubscriptionDurationType.YEARLY) {
-                    subscription.next_renewal_date = new Date(subscription.start_date.getFullYear() + 1, subscription.start_date.getMonth(), subscription.start_date.getDate());
-                 } else {
-                    subscription.next_renewal_date = null;
-                 }
+            if (updateDto.status === SubscriptionStatus.CANCELLED) {
+                subscription.cancelled_at = new Date();
+                subscription.cancellation_reason = updateDto.cancelReason || 'Cancelado por administrador.';
+            } else if (updateDto.status === SubscriptionStatus.ACTIVE) {
+                 subscription.cancelled_at = null;
+                 subscription.cancellation_reason = null;
             }
             subscription.status = updateDto.status;
         }
 
         // Forzar renovación (ej: para reintentar un pago fallido)
         if (updateDto.forceRenewal) {
-            subscription.next_renewal_date = new Date(); // Poner fecha de renovación a hoy para que el cronjob la detecte
+            // Note: next_renewal_date no existe en la entidad actual
+            // Esta funcionalidad requiere agregar campos adicionales a la entidad
         }
 
         await this.userSubscriptionRepository.save(subscription);

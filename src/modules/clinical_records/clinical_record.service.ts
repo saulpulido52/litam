@@ -576,6 +576,165 @@ class ClinicalRecordService {
         
         return entityUpdate;
     }
+
+    // --- MÉTODOS PARA GESTIÓN DE EXPEDIENTES ESPECIALIZADOS ---
+
+    /**
+     * Transfiere todos los expedientes de un paciente de un nutriólogo anterior a uno nuevo
+     * Se ejecuta automáticamente cuando el paciente cambia de nutriólogo
+     */
+    public async transferPatientRecords(patientId: string, fromNutritionistId: string, toNutritionistId: string) {
+        // Verificar que el nuevo nutriólogo existe
+        const newNutritionist = await this.userRepository.findOne({
+            where: { id: toNutritionistId, role: { name: RoleName.NUTRITIONIST } },
+            relations: ['role'],
+        });
+        if (!newNutritionist) {
+            throw new AppError('Nuevo nutriólogo no encontrado.', 404);
+        }
+
+        // Obtener todos los registros clínicos del paciente con el nutriólogo anterior
+        const recordsToTransfer = await this.clinicalRecordRepository.find({
+            where: {
+                patient: { id: patientId },
+                nutritionist: { id: fromNutritionistId },
+            },
+            relations: ['patient', 'nutritionist'],
+        });
+
+        if (recordsToTransfer.length === 0) {
+            return { message: 'No hay expedientes que transferir.', transferred_count: 0 };
+        }
+
+        // Transferir cada registro al nuevo nutriólogo
+        for (const record of recordsToTransfer) {
+            record.nutritionist = newNutritionist;
+            
+            // Agregar nota de transferencia en las notas de evolución
+            const transferNote = `\n\n--- TRANSFERENCIA ---\nExpediente transferido del Dr./Dra. ${record.nutritionist.first_name} ${record.nutritionist.last_name} al Dr./Dra. ${newNutritionist.first_name} ${newNutritionist.last_name} el ${new Date().toLocaleString('es-MX')}\n`;
+            
+            if (record.evolution_and_follow_up_notes) {
+                record.evolution_and_follow_up_notes += transferNote;
+            } else {
+                record.evolution_and_follow_up_notes = transferNote;
+            }
+        }
+
+        await this.clinicalRecordRepository.save(recordsToTransfer);
+
+        return {
+            message: `${recordsToTransfer.length} expediente(s) transferido(s) exitosamente.`,
+            transferred_count: recordsToTransfer.length,
+            new_nutritionist: {
+                id: newNutritionist.id,
+                name: `${newNutritionist.first_name} ${newNutritionist.last_name}`,
+            },
+        };
+    }
+
+    /**
+     * Elimina todos los expedientes clínicos de un paciente
+     * Solo debe llamarse cuando el paciente elimine completamente su cuenta
+     */
+    public async deleteAllPatientRecords(patientId: string, requesterId: string, requesterRole: RoleName) {
+        // Solo el propio paciente o un administrador pueden eliminar todos los expedientes
+        if (requesterRole !== RoleName.ADMIN && requesterId !== patientId) {
+            throw new AppError('Solo el paciente o un administrador pueden eliminar todos los expedientes.', 403);
+        }
+
+        // Verificar que el paciente existe
+        const patient = await this.userRepository.findOne({
+            where: { id: patientId, role: { name: RoleName.PATIENT } },
+            relations: ['role'],
+        });
+        if (!patient) {
+            throw new AppError('Paciente no encontrado.', 404);
+        }
+
+        // Obtener todos los registros clínicos del paciente
+        const allPatientRecords = await this.clinicalRecordRepository.find({
+            where: { patient: { id: patientId } },
+        });
+
+        if (allPatientRecords.length === 0) {
+            return { message: 'No hay expedientes para eliminar.', deleted_count: 0 };
+        }
+
+        // Eliminar todos los registros
+        await this.clinicalRecordRepository.remove(allPatientRecords);
+
+        return {
+            message: `${allPatientRecords.length} expediente(s) eliminado(s) permanentemente debido a la eliminación de cuenta del paciente.`,
+            deleted_count: allPatientRecords.length,
+            patient: {
+                id: patient.id,
+                name: `${patient.first_name} ${patient.last_name}`,
+            },
+        };
+    }
+
+    /**
+     * Obtiene estadísticas de expedientes de un paciente
+     */
+    public async getPatientRecordsStats(patientId: string, callerId: string, callerRole: RoleName) {
+        // Verificar permisos
+        if (callerRole === RoleName.PATIENT && patientId !== callerId) {
+            throw new AppError('No tienes permiso para ver estadísticas de otros pacientes.', 403);
+        } else if (callerRole === RoleName.NUTRITIONIST) {
+            const activeRelation = await this.relationRepository.findOne({
+                where: {
+                    patient: { id: patientId },
+                    nutritionist: { id: callerId },
+                    status: RelationshipStatus.ACTIVE,
+                },
+            });
+            if (!activeRelation) {
+                throw new AppError('No tienes una relación activa con este paciente.', 403);
+            }
+        } else if (callerRole !== RoleName.ADMIN) {
+            throw new AppError('Rol no autorizado.', 403);
+        }
+
+        const totalRecords = await this.clinicalRecordRepository.count({
+            where: { patient: { id: patientId } },
+        });
+
+        const recordsByNutritionist = await this.clinicalRecordRepository
+            .createQueryBuilder('record')
+            .leftJoin('record.nutritionist', 'nutritionist')
+            .select('nutritionist.id', 'nutritionist_id')
+            .addSelect('nutritionist.first_name', 'first_name')
+            .addSelect('nutritionist.last_name', 'last_name')
+            .addSelect('COUNT(record.id)', 'record_count')
+            .where('record.patient_user_id = :patientId', { patientId })
+            .groupBy('nutritionist.id, nutritionist.first_name, nutritionist.last_name')
+            .getRawMany();
+
+        const latestRecord = await this.clinicalRecordRepository.findOne({
+            where: { patient: { id: patientId } },
+            relations: ['nutritionist'],
+            order: { record_date: 'DESC', created_at: 'DESC' },
+        });
+
+        return {
+            total_records: totalRecords,
+            records_by_nutritionist: recordsByNutritionist.map(item => ({
+                nutritionist: {
+                    id: item.nutritionist_id,
+                    name: `${item.first_name} ${item.last_name}`,
+                },
+                record_count: parseInt(item.record_count),
+            })),
+            latest_record: latestRecord ? {
+                id: latestRecord.id,
+                date: latestRecord.record_date,
+                nutritionist: {
+                    id: latestRecord.nutritionist.id,
+                    name: `${latestRecord.nutritionist.first_name} ${latestRecord.nutritionist.last_name}`,
+                },
+            } : null,
+        };
+    }
 }
 
 export default new ClinicalRecordService();
