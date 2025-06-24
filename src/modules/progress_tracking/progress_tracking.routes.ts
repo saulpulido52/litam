@@ -1,13 +1,13 @@
 // src/modules/progress_tracking/progress_tracking.routes.ts
 import { Router } from 'express';
-import progressTrackingController from '@/modules/progress_tracking/progress_tracking.controller';
-import { protect, authorize } from '@/middleware/auth.middleware';
-import { validateMiddleware } from '@/middleware/validation.middleware';
+import progressTrackingController from '../../modules/progress_tracking/progress_tracking.controller';
+import { protect, authorize } from '../../middleware/auth.middleware';
+import { validateMiddleware } from '../../middleware/validation.middleware';
 import {
     CreateUpdateProgressLogDto,
     SearchProgressLogsDto,
-} from '@/modules/progress_tracking/progress_tracking.dto';
-import { RoleName } from '@/database/entities/role.entity';
+} from '../../modules/progress_tracking/progress_tracking.dto';
+import { RoleName } from '../../database/entities/role.entity';
 
 const router = Router();
 

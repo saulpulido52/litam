@@ -1,16 +1,16 @@
 // src/modules/appointments/appointment.routes.ts
 import { Router } from 'express'; // <-- Asegúrate de que esta línea esté bien
-import appointmentController from '@/modules/appointments/appointment.controller';
-import { protect, authorize } from '@/middleware/auth.middleware';
-import { validateMiddleware } from '@/middleware/validation.middleware';
+import appointmentController from '../../modules/appointments/appointment.controller';
+import { protect, authorize } from '../../middleware/auth.middleware';
+import { validateMiddleware } from '../../middleware/validation.middleware';
 import {
     ScheduleAppointmentDto,
     UpdateAppointmentStatusDto,
     ManageAvailabilityDto,
     SearchAvailabilityDto, // Asegúrate de importar esto también si lo usas en este archivo
-} from '@/modules/appointments/appointment.dto';
-import { RoleName } from '@/database/entities/role.entity';
-import { AppointmentStatus } from '@/database/entities/appointment.entity'; // Asegúrate de importar esto
+} from '../../modules/appointments/appointment.dto';
+import { RoleName } from '../../database/entities/role.entity';
+import { AppointmentStatus } from '../../database/entities/appointment.entity'; // Asegúrate de importar esto
 
 const router = Router();
 

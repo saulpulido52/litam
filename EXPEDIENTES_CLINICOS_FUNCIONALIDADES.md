@@ -114,9 +114,9 @@ PATCH  /api/clinical-records/:id                # Actualizar expediente
 DELETE /api/clinical-records/:id                # Eliminar expediente individual
 
 # Funcionalidades especializadas
-POST   /api/clinical-records/transfer           # Transferir expedientes (admin)
+POST   /api/clinical-records/transfer           # Transferir expedientes
 DELETE /api/clinical-records/patient/:id/all   # Eliminar todos (cuenta)
-GET    /api/clinical-records/patient/:id/stats # Estadísticas de expedientes
+GET    /api/clinical-records/patient/:id/stats # Estadísticas
 ```
 
 ### Gestión de Pacientes (`/api/patients`)
@@ -124,10 +124,10 @@ GET    /api/clinical-records/patient/:id/stats # Estadísticas de expedientes
 ```bash
 # Gestión de cuenta
 DELETE /api/patients/:id/account               # Eliminar cuenta completa
-GET    /api/patients/my-profile                # Ver propio perfil (paciente)
+GET    /api/patients/my-profile                # Ver perfil (paciente)
 
 # Cambio de nutriólogo
-POST   /api/patients/change-nutritionist       # Solicitar cambio
+POST   /api/patients/change-nutritionist       # Cambiar nutriólogo
 ```
 
 ---

@@ -1,86 +1,77 @@
-# Script para probar los endpoints de pacientes
-Write-Host "🧪 Probando API de Pacientes..." -ForegroundColor Green
+# Test Patients API Endpoint
+Write-Host "Testing Patients API Endpoint..." -ForegroundColor Cyan
 
-# Test 1: Health Check
-Write-Host "`n1. Probando Health Check..." -ForegroundColor Yellow
-try {
-    $health = Invoke-RestMethod -Uri "http://localhost:4000/api/health" -Method GET
-    Write-Host "✅ Backend funcionando: $($health.status)" -ForegroundColor Green
-} catch {
-    Write-Host "❌ Backend no disponible" -ForegroundColor Red
-    exit 1
-}
+# Login as nutritionist
+Write-Host "`nLogging in as nutritionist..." -ForegroundColor Yellow
+$loginBody = @{
+    email = "nutritionist@demo.com"
+    password = "demo123"
+} | ConvertTo-Json
 
-# Test 2: Login
-Write-Host "`n2. Probando Login..." -ForegroundColor Yellow
 try {
-    $loginBody = @{
-        email = "nutritionist@demo.com"
-        password = "demo123"
-    } | ConvertTo-Json
-    
     $loginResponse = Invoke-RestMethod -Uri "http://localhost:4000/api/auth/login" -Method POST -Body $loginBody -ContentType "application/json"
-    $token = $loginResponse.token
-    Write-Host "✅ Login exitoso, token obtenido" -ForegroundColor Green
+    $token = $loginResponse.data.token
+    Write-Host "Login successful" -ForegroundColor Green
 } catch {
-    Write-Host "❌ Error en login: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Login failed: $($_.Exception.Message)" -ForegroundColor Red
     exit 1
 }
 
-# Test 3: Obtener pacientes
-Write-Host "`n3. Probando obtener pacientes..." -ForegroundColor Yellow
+# Test my-patients endpoint
+Write-Host "`nTesting /patients/my-patients endpoint..." -ForegroundColor Yellow
 try {
     $headers = @{
-        Authorization = "Bearer $token"
-        'Content-Type' = "application/json"
+        "Authorization" = "Bearer $token"
+        "Content-Type" = "application/json"
     }
     
-    $patients = Invoke-RestMethod -Uri "http://localhost:4000/api/patients/my-patients" -Method GET -Headers $headers
-    Write-Host "✅ Pacientes obtenidos: $($patients.data.patients.Count) pacientes" -ForegroundColor Green
+    $response = Invoke-RestMethod -Uri "http://localhost:4000/api/patients/my-patients" -Method GET -Headers $headers
     
-    if ($patients.data.patients.Count -gt 0) {
-        $firstPatient = $patients.data.patients[0]
-        Write-Host "   Primer paciente: $($firstPatient.first_name) $($firstPatient.last_name)" -ForegroundColor Cyan
-    }
-} catch {
-    Write-Host "❌ Error obteniendo pacientes: $($_.Exception.Message)" -ForegroundColor Red
-}
-
-# Test 4: Crear paciente de prueba
-Write-Host "`n4. Probando crear paciente..." -ForegroundColor Yellow
-try {
-    $newPatientBody = @{
-        email = "paciente.test@demo.com"
-        password = "test123"
-        first_name = "Paciente"
-        last_name = "Prueba"
-        age = 30
-        gender = "male"
-        profile = @{
-            height = 175
-            current_weight = 80
-            activity_level = "Moderada"
-            medical_conditions = @("Ninguna")
-            allergies = @()
-            objectives = @("Mantener peso")
+    Write-Host "API call successful" -ForegroundColor Green
+    Write-Host "Total patients: $($response.data.total)" -ForegroundColor Cyan
+    Write-Host "Patients returned: $($response.data.patients.Count)" -ForegroundColor Cyan
+    
+    # Check for problematic IDs
+    $problematicIds = @("73a9ef86-60fc-4b3a-b8a0-8b87998b86a8")
+    $problematicPatients = @()
+    
+    foreach ($patient in $response.data.patients) {
+        $patientId = $patient.user.id
+        $patientName = "$($patient.user.first_name) $($patient.user.last_name)"
+        $patientEmail = $patient.user.email
+        
+        Write-Host "`nPatient: $patientName" -ForegroundColor White
+        Write-Host "   ID: $patientId" -ForegroundColor Gray
+        Write-Host "   Email: $patientEmail" -ForegroundColor Gray
+        
+        if ($problematicIds -contains $patientId) {
+            Write-Host "   PROBLEMATIC ID DETECTED!" -ForegroundColor Red
+            $problematicPatients += @{
+                id = $patientId
+                name = $patientName
+                email = $patientEmail
+            }
+        } else {
+            Write-Host "   Valid ID" -ForegroundColor Green
         }
-    } | ConvertTo-Json -Depth 3
+    }
     
-    $newPatient = Invoke-RestMethod -Uri "http://localhost:4000/api/patients" -Method POST -Body $newPatientBody -Headers $headers
-    Write-Host "✅ Paciente creado: $($newPatient.data.patient.first_name) $($newPatient.data.patient.last_name)" -ForegroundColor Green
-    $createdPatientId = $newPatient.data.patient.id
+    if ($problematicPatients.Count -gt 0) {
+        Write-Host "`nPROBLEM DETECTED:" -ForegroundColor Red
+        Write-Host "   The API is returning patients with problematic IDs:" -ForegroundColor Red
+        foreach ($problematic in $problematicPatients) {
+            Write-Host "   - $($problematic.name) ($($problematic.id))" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "`nNO PROBLEMS DETECTED:" -ForegroundColor Green
+        Write-Host "   All patients returned by the API have valid IDs." -ForegroundColor Green
+    }
+    
 } catch {
-    Write-Host "❌ Error creando paciente: $($_.Exception.Message)" -ForegroundColor Red
-}
-
-# Test 5: Obtener paciente específico
-if ($createdPatientId) {
-    Write-Host "`n5. Probando obtener paciente específico..." -ForegroundColor Yellow
-    try {
-        $specificPatient = Invoke-RestMethod -Uri "http://localhost:4000/api/patients/$createdPatientId" -Method GET -Headers $headers
-        Write-Host "✅ Paciente específico obtenido: $($specificPatient.data.patient.email)" -ForegroundColor Green
-    } catch {
-        Write-Host "❌ Error obteniendo paciente específico: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "API call failed: $($_.Exception.Message)" -ForegroundColor Red
+    if ($_.Exception.Response) {
+        $statusCode = $_.Exception.Response.StatusCode
+        Write-Host "   Status Code: $statusCode" -ForegroundColor Red
     }
 }
 

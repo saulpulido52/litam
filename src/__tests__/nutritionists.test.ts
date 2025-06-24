@@ -1,10 +1,10 @@
 import request from 'supertest';
-import { AppDataSource } from '@/database/data-source';
-import { User } from '@/database/entities/user.entity';
-import { Role, RoleName } from '@/database/entities/role.entity';
-import { NutritionistProfile } from '@/database/entities/nutritionist_profile.entity';
-import app from '@/app';
-import { setupTestEnvironment, cleanupTestEnvironment } from '@/setup-test-environment';
+import { AppDataSource } from '../database/data-source';
+import { User } from '../database/entities/user.entity';
+import { Role, RoleName } from '../database/entities/role.entity';
+import { NutritionistProfile } from '../database/entities/nutritionist_profile.entity';
+import app from '../app';
+import { setupTestEnvironment, cleanupTestEnvironment } from '../setup-test-environment';
 
 function uniqueEmail(prefix: string) {
     return `${prefix}.${Date.now()}.${Math.floor(Math.random()*1000000)}@example.com`;

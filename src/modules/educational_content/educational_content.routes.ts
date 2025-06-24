@@ -1,13 +1,13 @@
 // src/modules/educational_content/educational_content.routes.ts
 import { Router } from 'express';
-import educationalContentController from '@/modules/educational_content/educational_content.controller';
-import { protect, authorize } from '@/middleware/auth.middleware';
-import { validateMiddleware } from '@/middleware/validation.middleware';
+import educationalContentController from '../../modules/educational_content/educational_content.controller';
+import { protect, authorize } from '../../middleware/auth.middleware';
+import { validateMiddleware } from '../../middleware/validation.middleware';
 import {
     CreateUpdateEducationalContentDto,
     CreateUpdateRecipeDto,
-} from '@/modules/educational_content/educational_content.dto';
-import { RoleName } from '@/database/entities/role.entity';
+} from '../../modules/educational_content/educational_content.dto';
+import { RoleName } from '../../database/entities/role.entity';
 
 const router = Router();
 

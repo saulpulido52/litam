@@ -8,8 +8,8 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { User } from '@/database/entities/user.entity';
-import { SubscriptionPlan } from '@/database/entities/subscription_plan.entity';
+import { User } from '../../database/entities/user.entity';
+import { SubscriptionPlan } from '../../database/entities/subscription_plan.entity';
 
 // Estado de la transacción de pago
 export enum PaymentStatus {

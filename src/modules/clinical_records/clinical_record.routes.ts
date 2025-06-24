@@ -1,10 +1,10 @@
 // src/modules/clinical_records/clinical_record.routes.ts
 import { Router } from 'express';
-import clinicalRecordController from '@/modules/clinical_records/clinical_record.controller';
-import { protect, authorize } from '@/middleware/auth.middleware';
-import { validateMiddleware } from '@/middleware/validation.middleware';
-import { CreateUpdateClinicalRecordDto } from '@/modules/clinical_records/clinical_record.dto';
-import { RoleName } from '@/database/entities/role.entity';
+import clinicalRecordController from '../../modules/clinical_records/clinical_record.controller';
+import { protect, authorize } from '../../middleware/auth.middleware';
+import { validateMiddleware } from '../../middleware/validation.middleware';
+import { CreateUpdateClinicalRecordDto } from '../../modules/clinical_records/clinical_record.dto';
+import { RoleName } from '../../database/entities/role.entity';
 
 const router = Router();
 
@@ -61,6 +61,12 @@ router.delete(
 router.get(
     '/patient/:patientId/stats',
     clinicalRecordController.getPatientRecordsStats
+);
+
+// Contar expedientes de un paciente
+router.get(
+    '/patient/:patientId/count',
+    clinicalRecordController.getPatientRecordsCount
 );
 
 export default router;

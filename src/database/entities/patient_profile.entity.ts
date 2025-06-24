@@ -8,7 +8,7 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { User } from '@/database/entities/user.entity'; // Ruta corregida
+import { User } from '../../database/entities/user.entity'; // Ruta corregida
 
 @Entity('patient_profiles')
 export class PatientProfile {

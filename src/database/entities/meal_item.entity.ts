@@ -7,8 +7,8 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { Food } from '@/database/entities/food.entity'; // Importa Food
-import { Meal } from '@/database/entities/meal.entity'; // Importa Meal
+import { Food } from '../../database/entities/food.entity'; // Importa Food
+import { Meal } from '../../database/entities/meal.entity'; // Importa Meal
 
 @Entity('meal_items')
 export class MealItem {

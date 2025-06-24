@@ -1,15 +1,15 @@
 // src/modules/diet_plans/diet_plan.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import dietPlanService from '@/modules/diet_plans/diet_plan.service';
-import { AppError } from '@/utils/app.error';
+import dietPlanService from '../../modules/diet_plans/diet_plan.service';
+import { AppError } from '../../utils/app.error';
 import {
     CreateDietPlanDto,
     UpdateDietPlanDto,
     GenerateDietPlanAiDto,
     UpdateDietPlanStatusDto,
-} from '@/modules/diet_plans/diet_plan.dto';
-import { RoleName } from '@/database/entities/role.entity';
-import { DietPlanStatus } from '@/database/entities/diet_plan.entity';
+} from '../../modules/diet_plans/diet_plan.dto';
+import { RoleName } from '../../database/entities/role.entity';
+import { DietPlanStatus } from '../../database/entities/diet_plan.entity';
 
 class DietPlanController {
     public async createDietPlan(req: Request, res: Response, next: NextFunction) {

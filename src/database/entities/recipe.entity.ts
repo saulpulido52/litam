@@ -9,8 +9,8 @@ import {
     UpdateDateColumn,
     OneToMany,
 } from 'typeorm';
-import { User } from '@/database/entities/user.entity'; // Para el creador de la receta
-import { Food } from '@/database/entities/food.entity'; // Para ingredientes (si se referencian Food existentes)
+import { User } from '../../database/entities/user.entity'; // Para el creador de la receta
+import { Food } from '../../database/entities/food.entity'; // Para ingredientes (si se referencian Food existentes)
 
 // CLASE RECIPE (PADRE) - DEFINIR PRIMERO
 @Entity('recipes')

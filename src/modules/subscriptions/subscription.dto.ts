@@ -14,9 +14,9 @@ import {
     IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { SubscriptionDurationType } from '@/database/entities/subscription_plan.entity';
-import { SubscriptionStatus } from '@/database/entities/user_subscription.entity';
-import { PaymentStatus } from '@/database/entities/payment_transaction.entity';
+import { SubscriptionDurationType } from '../../database/entities/subscription_plan.entity';
+import { SubscriptionStatus } from '../../database/entities/user_subscription.entity';
+import { PaymentStatus } from '../../database/entities/payment_transaction.entity';
 
 // DTO para crear un plan de suscripción (Solo Admin)
 export class CreateSubscriptionPlanDto {

@@ -9,8 +9,8 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { MealItem } from '@/database/entities/meal_item.entity'; // Para los ítems de la comida
-import { DietPlan } from '@/database/entities/diet_plan.entity'; // Para el plan de dieta al que pertenece
+import { MealItem } from '../../database/entities/meal_item.entity'; // Para los ítems de la comida
+import { DietPlan } from '../../database/entities/diet_plan.entity'; // Para el plan de dieta al que pertenece
 
 @Entity('meals')
 export class Meal {

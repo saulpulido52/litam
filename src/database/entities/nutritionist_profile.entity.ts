@@ -7,7 +7,7 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { User } from '@/database/entities/user.entity';
+import { User } from '../../database/entities/user.entity';
 
 @Entity('nutritionist_profiles')
 export class NutritionistProfile {

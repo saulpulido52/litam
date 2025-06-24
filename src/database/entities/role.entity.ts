@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { User } from '@/database/entities/user.entity'; // Ruta corregida
+import { User } from '../../database/entities/user.entity'; // Ruta corregida
 
 export enum RoleName {
     PATIENT = 'patient',

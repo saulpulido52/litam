@@ -1,22 +1,22 @@
 // src/modules/diet_plans/diet_plan.service.ts
 import { Repository } from 'typeorm';
-import { AppDataSource } from '@/database/data-source';
-import { User } from '@/database/entities/user.entity';
-import { DietPlan, DietPlanStatus } from '@/database/entities/diet_plan.entity';
-import { Meal } from '@/database/entities/meal.entity';
-import { MealItem } from '@/database/entities/meal_item.entity';
-import { Food } from '@/database/entities/food.entity';
-import { PatientNutritionistRelation, RelationshipStatus } from '@/database/entities/patient_nutritionist_relation.entity';
+import { AppDataSource } from '../../database/data-source';
+import { User } from '../../database/entities/user.entity';
+import { DietPlan, DietPlanStatus } from '../../database/entities/diet_plan.entity';
+import { Meal } from '../../database/entities/meal.entity';
+import { MealItem } from '../../database/entities/meal_item.entity';
+import { Food } from '../../database/entities/food.entity';
+import { PatientNutritionistRelation, RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
 import {
     CreateDietPlanDto,
     UpdateDietPlanDto,
     MealDto,
     MealItemDto,
     GenerateDietPlanAiDto,
-} from '@/modules/diet_plans/diet_plan.dto';
-import { AppError } from '@/utils/app.error';
-import { RoleName } from '@/database/entities/role.entity';
-import { PatientProfile } from '@/database/entities/patient_profile.entity';
+} from '../../modules/diet_plans/diet_plan.dto';
+import { AppError } from '../../utils/app.error';
+import { RoleName } from '../../database/entities/role.entity';
+import { PatientProfile } from '../../database/entities/patient_profile.entity';
 
 class DietPlanService {
     private dietPlanRepository: Repository<DietPlan>;

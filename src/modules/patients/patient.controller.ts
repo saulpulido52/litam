@@ -1,15 +1,39 @@
 // src/modules/patients/patient.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import { PatientService } from '@/modules/patients/patient.service';
-import { AppError } from '@/utils/app.error';
-import { CreatePatientDTO, UpdatePatientDTO, PatientsSearchDTO } from '@/modules/patients/patient.dto';
-import { AppDataSource } from '@/database/data-source';
-import { RelationshipStatus } from '@/database/entities/patient_nutritionist_relation.entity';
+import { PatientService } from './patient.service';
+import { AppError } from '../../utils/app.error';
+import { CreatePatientDTO, UpdatePatientDTO, PatientsSearchDTO } from './patient.dto';
+import { AppDataSource } from '../../database/data-source';
+import { RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
 
 const patientService = new PatientService(AppDataSource);
 
 class PatientController {
     // ==================== MÉTODOS PARA NUTRIÓLOGOS ====================
+
+    // Verificar si un email ya existe
+    public async checkEmailExists(req: Request, res: Response, next: NextFunction) {
+        try {
+            const email = req.query.email as string;
+            
+            if (!email) {
+                return next(new AppError('Email es requerido', 400));
+            }
+
+            const exists = await patientService.checkEmailExists(email);
+
+            res.status(200).json({
+                status: 'success',
+                data: {
+                    exists: exists,
+                    email: email
+                }
+            });
+        } catch (error: any) {
+            console.error('Error checking email:', error);
+            next(new AppError('Error al verificar el email.', 500));
+        }
+    }
 
     // Obtener todos los pacientes del nutriólogo
     public async getMyPatients(req: Request, res: Response, next: NextFunction) {
@@ -90,22 +114,63 @@ class PatientController {
     // Actualizar un paciente
     public async updatePatient(req: Request, res: Response, next: NextFunction) {
         try {
+            console.log(`🔍 UPDATE PATIENT - User: ${req.user?.id || 'NONE'} - Role: ${req.user?.role?.name || 'NONE'}`);
+            console.log(`🔍 UPDATE PATIENT - Patient ID: ${req.params.patientId}`);
+            console.log(`🔍 UPDATE PATIENT - Body:`, JSON.stringify(req.body, null, 2));
+            
             if (!req.user || req.user.role.name !== 'nutritionist') {
+                console.log(`❌ UPDATE PATIENT - Access denied: User=${req.user?.id}, Role=${req.user?.role?.name}`);
                 return next(new AppError('Acceso denegado. Solo nutriólogos pueden actualizar pacientes.', 403));
             }
 
             const { patientId } = req.params;
+            console.log(`🔄 UPDATE PATIENT - Calling service with nutritionist ${req.user.id}`);
+            
             const patient = await patientService.updatePatient(patientId, req.user.id, req.body as UpdatePatientDTO);
             
+            console.log(`✅ UPDATE PATIENT - Success for patient ${patientId}`);
             res.status(200).json({
                 status: 'success',
                 data: { patient },
             });
         } catch (error: any) {
+            console.error(`💥 UPDATE PATIENT - Error:`, error);
             if (error instanceof AppError) {
                 return next(error);
             }
             next(new AppError('Error al actualizar el paciente.', 500));
+        }
+    }
+
+    // 🎯 NUEVO: Actualizar paciente por EMAIL (más robusto)
+    public async updatePatientByEmail(req: Request, res: Response, next: NextFunction) {
+        try {
+            console.log(`🔍 UPDATE BY EMAIL - User: ${req.user?.id || 'NONE'} - Role: ${req.user?.role?.name || 'NONE'}`);
+            console.log(`🔍 UPDATE BY EMAIL - Email: ${req.params.email}`);
+            console.log(`🔍 UPDATE BY EMAIL - Body:`, JSON.stringify(req.body, null, 2));
+            
+            if (!req.user || req.user.role.name !== 'nutritionist') {
+                console.log(`❌ UPDATE BY EMAIL - Access denied`);
+                return next(new AppError('Acceso denegado. Solo nutriólogos pueden actualizar pacientes.', 403));
+            }
+
+            const { email } = req.params;
+            const updateData = req.body as UpdatePatientDTO;
+            
+            // Usar el nuevo método que busca directamente por email
+            const patient = await patientService.updatePatientByEmail(email, req.user.id, updateData);
+            
+            console.log(`✅ UPDATE BY EMAIL - Success for email ${email}`);
+            res.status(200).json({
+                status: 'success',
+                data: { patient },
+            });
+        } catch (error: any) {
+            console.error(`💥 UPDATE BY EMAIL - Error:`, error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al actualizar el paciente por email.', 500));
         }
     }
 
@@ -255,8 +320,34 @@ class PatientController {
         }
     }
 
-    // ==================== ELIMINACIÓN COMPLETA DE CUENTA ====================
+    // ==================== FUNCIONALIDADES DE ELIMINACIÓN ====================
     
+    // Remover paciente de la lista del nutriólogo (terminar relación)
+    public async removePatientRelationship(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user || req.user.role.name !== 'nutritionist') {
+                return next(new AppError('Solo nutriólogos pueden remover pacientes de su lista.', 403));
+            }
+
+            const { patientId } = req.params;
+            const { reason } = req.body;
+
+            const result = await patientService.endPatientRelationship(patientId, req.user.id, reason);
+
+            res.status(200).json({
+                status: 'success',
+                message: 'Paciente removido de tu lista exitosamente.',
+                data: result,
+            });
+        } catch (error: any) {
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al remover paciente de la lista.', 500));
+        }
+    }
+
+    // Eliminación completa de cuenta del paciente
     public async deletePatientAccount(req: Request, res: Response, next: NextFunction) {
         try {
             if (!req.user) {

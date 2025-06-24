@@ -1,17 +1,17 @@
 // src/modules/educational_content/educational_content.service.ts
 import { Repository } from 'typeorm';
-import { AppDataSource } from '@/database/data-source';
-import { User } from '@/database/entities/user.entity';
-import { EducationalContent, ContentType } from '@/database/entities/educational_content.entity';
-import { Recipe, RecipeIngredient } from '@/database/entities/recipe.entity';
-import { Food } from '@/database/entities/food.entity';
+import { AppDataSource } from '../../database/data-source';
+import { User } from '../../database/entities/user.entity';
+import { EducationalContent, ContentType } from '../../database/entities/educational_content.entity';
+import { Recipe, RecipeIngredient } from '../../database/entities/recipe.entity';
+import { Food } from '../../database/entities/food.entity';
 import {
     CreateUpdateEducationalContentDto,
     CreateUpdateRecipeDto,
     RecipeIngredientDto,
-} from '@/modules/educational_content/educational_content.dto';
-import { AppError } from '@/utils/app.error';
-import { RoleName } from '@/database/entities/role.entity';
+} from '../../modules/educational_content/educational_content.dto';
+import { AppError } from '../../utils/app.error';
+import { RoleName } from '../../database/entities/role.entity';
 
 class EducationalContentService {
     private userRepository: Repository<User>;

@@ -15,8 +15,8 @@ import {
     IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ContentType } from '@/database/entities/educational_content.entity';
-import { Food } from '@/database/entities/food.entity'; // Para referenciar alimentos en ingredientes de receta
+import { ContentType } from '../../database/entities/educational_content.entity';
+import { Food } from '../../database/entities/food.entity'; // Para referenciar alimentos en ingredientes de receta
 
 // DTO para un ingrediente de receta (para ser usado en RecipeDto)
 export class RecipeIngredientDto {

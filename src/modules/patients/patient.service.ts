@@ -1,17 +1,17 @@
 // src/modules/patients/patient.service.ts
 import { Repository, DataSource, ILike } from 'typeorm';
-import { User, UserRegistrationType } from '@/database/entities/user.entity';
-import { PatientProfile } from '@/database/entities/patient_profile.entity';
-import { PatientNutritionistRelation } from '@/database/entities/patient_nutritionist_relation.entity';
-import { Role, RoleName } from '@/database/entities/role.entity';
-import { Appointment } from '@/database/entities/appointment.entity';
-import { PatientProgressLog } from '@/database/entities/patient_progress_log.entity';
-import { AppError } from '@/utils/app.error';
+import { User, UserRegistrationType } from '../../database/entities/user.entity';
+import { PatientProfile } from '../../database/entities/patient_profile.entity';
+import { PatientNutritionistRelation } from '../../database/entities/patient_nutritionist_relation.entity';
+import { Role, RoleName } from '../../database/entities/role.entity';
+import { Appointment } from '../../database/entities/appointment.entity';
+import { PatientProgressLog } from '../../database/entities/patient_progress_log.entity';
+import { AppError } from '../../utils/app.error';
 import bcrypt from 'bcrypt';
-import { RelationshipStatus } from '@/database/entities/patient_nutritionist_relation.entity';
+import { RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
 import { CreatePatientDTO, UpdatePatientDTO, PatientResponseDTO, PatientsSearchDTO, CreatePatientByNutritionistDTO, BasicPatientRegistrationDTO } from './patient.dto';
-import { UserSubscription, SubscriptionStatus } from '@/database/entities/user_subscription.entity';
-import { SubscriptionPlan } from '@/database/entities/subscription_plan.entity';
+import { UserSubscription, SubscriptionStatus } from '../../database/entities/user_subscription.entity';
+import { SubscriptionPlan } from '../../database/entities/subscription_plan.entity';
 
 export class PatientService {
     private userRepository: Repository<User>;
@@ -30,6 +30,31 @@ export class PatientService {
         this.appointmentRepository = dataSource.getRepository(Appointment);
         this.progressLogRepository = dataSource.getRepository(PatientProgressLog);
         this.dataSource = dataSource;
+    }
+
+    // 🎯 FUNCIÓN: Calcular edad automáticamente desde fecha de nacimiento
+    private calculateAgeFromBirthDate(birthDate: string): number | undefined {
+        if (!birthDate) return undefined;
+        
+        try {
+            const today = new Date();
+            const birth = new Date(birthDate);
+            
+            if (birth > today) return undefined; // Fecha inválida en el futuro
+            
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            
+            console.log(`📅 Edad calculada: ${age} años desde fecha de nacimiento: ${birthDate}`);
+            return age >= 0 ? age : undefined;
+        } catch (error) {
+            console.error('❌ Error calculando edad desde fecha de nacimiento:', error);
+            return undefined;
+        }
     }
 
     // ==================== CREAR PACIENTE COMPLETO ====================
@@ -278,14 +303,33 @@ export class PatientService {
 
     // ==================== ACTUALIZAR PACIENTE ====================
     async updatePatient(patientId: string, nutritionistId: string, updateData: UpdatePatientDTO): Promise<PatientResponseDTO> {
-        // Verificar acceso
-        const relation = await this.relationRepository.findOne({
+        // SOLUCIÓN ROBUSTA: Verificar acceso usando email como fallback
+        let relation = await this.relationRepository.findOne({
             where: {
                 patient: { id: patientId },
                 nutritionist: { id: nutritionistId },
                 status: RelationshipStatus.ACTIVE,
             },
         });
+
+        // Si no encuentra por ID, buscar por email (más robusto)
+        if (!relation && updateData.email) {
+            console.log(`🔄 ID no encontrado, buscando relación por email: ${updateData.email}`);
+            relation = await this.relationRepository
+                .createQueryBuilder('relation')
+                .leftJoin('relation.patient', 'patient')
+                .leftJoin('relation.nutritionist', 'nutritionist')
+                .where('patient.email = :patientEmail', { patientEmail: updateData.email })
+                .andWhere('nutritionist.id = :nutritionistId', { nutritionistId })
+                .andWhere('relation.status = :status', { status: RelationshipStatus.ACTIVE })
+                .select(['relation', 'patient.id', 'patient.email'])
+                .getOne();
+                
+            if (relation) {
+                console.log(`✅ Relación encontrada por email, actualizando patientId: ${relation.patient.id}`);
+                patientId = relation.patient.id; // Usar el ID correcto
+            }
+        }
 
         if (!relation) {
             throw new AppError('No tienes acceso a este paciente', 403);
@@ -304,8 +348,20 @@ export class PatientService {
         // Actualizar datos del usuario
         if (updateData.first_name !== undefined) patient.first_name = updateData.first_name;
         if (updateData.last_name !== undefined) patient.last_name = updateData.last_name;
-        if (updateData.age !== undefined) patient.age = updateData.age;
         if (updateData.gender !== undefined) patient.gender = updateData.gender;
+        
+        // 🎯 CALCULAR EDAD AUTOMÁTICAMENTE desde fecha de nacimiento si se proporciona
+        if (updateData.birth_date !== undefined) {
+            patient.birth_date = new Date(updateData.birth_date); // Convertir string a Date
+            const calculatedAge = this.calculateAgeFromBirthDate(updateData.birth_date);
+            if (calculatedAge !== undefined) {
+                patient.age = calculatedAge;
+                console.log(`✅ Edad actualizada automáticamente: ${calculatedAge} años`);
+            }
+        } else if (updateData.age !== undefined) {
+            // Si no hay fecha de nacimiento, usar la edad proporcionada manualmente
+            patient.age = updateData.age;
+        }
 
         await this.userRepository.save(patient);
 
@@ -400,6 +456,76 @@ export class PatientService {
         return this.formatPatientResponse(patient, profile);
     }
 
+    // 🎯 NUEVO: Actualizar paciente por EMAIL directamente (método independiente)
+    async updatePatientByEmail(email: string, nutritionistId: string, updateData: UpdatePatientDTO): Promise<PatientResponseDTO> {
+        console.log(`🚀🚀🚀 MÉTODO INDEPENDIENTE EJECUTÁNDOSE - Email: ${email} 🚀🚀🚀`);
+        console.log(`🔍 UPDATE BY EMAIL - Buscando paciente por email: ${email}`);
+        
+        // 1. Buscar usuario por email
+        const patient = await this.userRepository.findOne({
+            where: { email: email },
+            relations: ['patient_profile']
+        });
+
+        if (!patient || !patient.patient_profile) {
+            throw new AppError(`Paciente con email ${email} no encontrado`, 404);
+        }
+
+        console.log(`🔍 PACIENTE ENCONTRADO - ID: ${patient.id}, Email: ${patient.email}`);
+
+        // 2. Verificar relación activa con el nutricionista
+        const relation = await this.relationRepository.findOne({
+            where: {
+                patient: { id: patient.id },
+                nutritionist: { id: nutritionistId },
+                status: RelationshipStatus.ACTIVE,
+            },
+        });
+
+        if (!relation) {
+            throw new AppError(`No tienes acceso al paciente ${email}`, 403);
+        }
+
+        console.log(`✅ RELACIÓN ACTIVA CONFIRMADA - Procediendo con actualización`);
+
+        // 3. Actualizar datos del usuario directamente
+        if (updateData.first_name !== undefined) patient.first_name = updateData.first_name;
+        if (updateData.last_name !== undefined) patient.last_name = updateData.last_name;
+        if (updateData.gender !== undefined) patient.gender = updateData.gender;
+        
+        // 🎯 CALCULAR EDAD AUTOMÁTICAMENTE desde fecha de nacimiento si se proporciona
+        if (updateData.birth_date !== undefined) {
+            patient.birth_date = new Date(updateData.birth_date); // Convertir string a Date
+            const calculatedAge = this.calculateAgeFromBirthDate(updateData.birth_date);
+            if (calculatedAge !== undefined) {
+                patient.age = calculatedAge;
+                console.log(`✅ Edad actualizada automáticamente por email: ${calculatedAge} años`);
+            }
+        } else if (updateData.age !== undefined) {
+            // Si no hay fecha de nacimiento, usar la edad proporcionada manualmente
+            patient.age = updateData.age;
+        }
+
+        await this.userRepository.save(patient);
+
+        // 4. Actualizar perfil del paciente
+        const profile = patient.patient_profile;
+        
+        if (updateData.consultation_reason !== undefined) profile.consultation_reason = updateData.consultation_reason;
+        if (updateData.current_weight !== undefined) profile.current_weight = updateData.current_weight;
+        if (updateData.height !== undefined) profile.height = updateData.height;
+        if (updateData.activity_level !== undefined) profile.activity_level = updateData.activity_level;
+        if (updateData.goals !== undefined) profile.goals = updateData.goals;
+        if (updateData.allergies !== undefined) profile.allergies = updateData.allergies;
+        if (updateData.medical_conditions !== undefined) profile.medical_conditions = updateData.medical_conditions;
+
+        await this.patientProfileRepository.save(profile);
+
+        console.log(`✅ ACTUALIZACIÓN COMPLETADA para ${email}`);
+
+        return this.formatPatientResponse(patient, profile);
+    }
+
     // ==================== OBTENER ESTADÍSTICAS ====================
     async getPatientStats(nutritionistId: string): Promise<any> {
         // Total de pacientes activos
@@ -451,6 +577,8 @@ export class PatientService {
                 email: user.email,
                 first_name: user.first_name ?? '',
                 last_name: user.last_name ?? '',
+                phone: user.phone ?? undefined,
+                birth_date: this.formatBirthDate(user.birth_date), // 🎯 AGREGADO: Fecha de nacimiento
                 age: user.age ?? undefined,
                 gender: user.gender ?? undefined,
                 created_at: user.created_at,
@@ -534,6 +662,19 @@ export class PatientService {
         };
     }
 
+    // ==================== VERIFICAR EMAIL ====================
+    async checkEmailExists(email: string): Promise<boolean> {
+        try {
+            const existingUser = await this.userRepository.findOne({ 
+                where: { email: email.toLowerCase() } 
+            });
+            return !!existingUser;
+        } catch (error) {
+            console.error('Error checking email existence:', error);
+            return false;
+        }
+    }
+
     // ==================== UTILIDADES ====================
     private calculateBMI(weight: number | null, height: number | null): number | undefined {
         if (!weight || !height || height === 0) return undefined;
@@ -547,6 +688,20 @@ export class PatientService {
         if (bmi < 25) return 'Normal';
         if (bmi < 30) return 'Sobrepeso';
         return 'Obesidad';
+    }
+
+    // 🎯 NUEVO: Formatear fecha de nacimiento de forma segura
+    private formatBirthDate(birthDate: Date | string | null | undefined): string | undefined {
+        if (!birthDate) return undefined;
+        
+        try {
+            const date = typeof birthDate === 'string' ? new Date(birthDate) : birthDate;
+            if (isNaN(date.getTime())) return undefined;
+            return date.toISOString().split('T')[0];
+        } catch (error) {
+            console.error('Error formatting birth date:', error);
+            return undefined;
+        }
     }
 
     // ==================== ESCENARIO 1: REGISTRO POR NUTRIÓLOGO ====================
@@ -582,13 +737,23 @@ export class PatientService {
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + 24); // Expira en 24 horas
 
-        // 5. Crear usuario del paciente
+        // 5. Calcular edad automáticamente desde birth_date si está disponible
+        let calculatedAge = patientData.age;
+        if (patientData.birth_date) {
+            const ageFromBirthDate = this.calculateAgeFromBirthDate(patientData.birth_date);
+            if (ageFromBirthDate !== undefined) {
+                calculatedAge = ageFromBirthDate;
+            }
+        }
+
+        // 6. Crear usuario del paciente
         const newUser = this.userRepository.create({
             email: patientData.email,
             password_hash: hashedPassword,
             first_name: patientData.first_name,
             last_name: patientData.last_name,
-            age: patientData.age,
+            birth_date: patientData.birth_date ? new Date(patientData.birth_date) : undefined,
+            age: calculatedAge,
             gender: patientData.gender,
             phone: patientData.phone,
             role: patientRole,
@@ -602,7 +767,7 @@ export class PatientService {
 
         const savedUser = await this.userRepository.save(newUser);
 
-        // 6. Crear perfil completo del paciente (todos los datos del expediente)
+        // 7. Crear perfil completo del paciente (todos los datos del expediente)
         const newPatientProfile = this.patientProfileRepository.create({
             user: savedUser,
             
@@ -666,7 +831,7 @@ export class PatientService {
 
         const savedProfile = await this.patientProfileRepository.save(newPatientProfile);
 
-        // 7. Crear relación paciente-nutricionista directa
+        // 8. Crear relación paciente-nutricionista directa
         const relationship = this.relationRepository.create({
             patient: savedUser,
             nutritionist: nutritionist,
@@ -866,8 +1031,44 @@ export class PatientService {
         });
     }
 
-    // ==================== ELIMINACIÓN COMPLETA DE CUENTA ====================
+    // ==================== FUNCIONALIDADES DE ELIMINACIÓN ====================
     
+    /**
+     * Terminar relación entre nutriólogo y paciente (remover de la lista)
+     * El paciente mantiene su cuenta, solo se termina la relación con el nutriólogo
+     * Solo puede ser ejecutado por el nutriólogo propietario de la relación
+     */
+    async endPatientRelationship(patientId: string, nutritionistId: string, reason?: string): Promise<{
+        message: string;
+        ended_relation: PatientNutritionistRelation;
+    }> {
+        // Verificar que la relación existe y está activa
+        const activeRelation = await this.relationRepository.findOne({
+            where: {
+                patient: { id: patientId },
+                nutritionist: { id: nutritionistId },
+                status: RelationshipStatus.ACTIVE,
+            },
+            relations: ['patient', 'nutritionist'],
+        });
+
+        if (!activeRelation) {
+            throw new AppError('No se encontró una relación activa con este paciente.', 404);
+        }
+
+        // Terminar la relación
+        activeRelation.status = RelationshipStatus.INACTIVE;
+        activeRelation.ended_at = new Date();
+        activeRelation.notes = `${activeRelation.notes || ''}\n--- RELACIÓN TERMINADA ---\nTerminada por el nutriólogo el ${new Date().toLocaleString('es-MX')}. Motivo: ${reason || 'No especificado'}`;
+
+        const savedRelation = await this.relationRepository.save(activeRelation);
+
+        return {
+            message: `Relación con ${activeRelation.patient.first_name} ${activeRelation.patient.last_name} terminada exitosamente.`,
+            ended_relation: savedRelation,
+        };
+    }
+
     /**
      * Elimina completamente la cuenta de un paciente y todos sus datos relacionados
      * Esto incluye: expedientes clínicos, relaciones, citas, progreso, suscripciones, etc.
@@ -1083,7 +1284,7 @@ export class PatientService {
             const savedRelation = await relationRepo.save(newRelation);
 
             // Transferir expedientes automáticamente
-            const clinicalRecordsService = await import('@/modules/clinical_records/clinical_record.service');
+            const clinicalRecordsService = await import('../../modules/clinical_records/clinical_record.service');
             const transferResult = await clinicalRecordsService.default.transferPatientRecords(
                 patientId,
                 currentRelation.nutritionist.id,

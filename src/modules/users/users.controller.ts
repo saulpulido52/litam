@@ -1,7 +1,7 @@
 // users.controller.ts 
 import { Request, Response, NextFunction } from 'express';
-import userService from '@/modules/users/users.service'; // Ruta corregida
-import { AppError } from '@/utils/app.error';
+import userService from '../../modules/users/users.service'; // Ruta corregida
+import { AppError } from '../../utils/app.error';
 
 class UserController {
     public async getMyProfile(req: Request, res: Response, next: NextFunction) {

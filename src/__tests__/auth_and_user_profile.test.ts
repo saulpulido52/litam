@@ -1,17 +1,17 @@
 // src/__tests__/auth_and_user_profile.test.ts
 import request from 'supertest';
-import { AppDataSource } from '@/database/data-source';
-import { User } from '@/database/entities/user.entity';
-import { Role, RoleName } from '@/database/entities/role.entity';
-import { PatientProfile } from '@/database/entities/patient_profile.entity';
-import { NutritionistProfile } from '@/database/entities/nutritionist_profile.entity';
-import { PatientNutritionistRelation } from '@/database/entities/patient_nutritionist_relation.entity';
-import { Food } from '@/database/entities/food.entity';
-import { DietPlan } from '@/database/entities/diet_plan.entity';
-import { Meal } from '@/database/entities/meal.entity';
-import { MealItem } from '@/database/entities/meal_item.entity';
-import app from '@/app'; // Importa tu aplicación Express
-import { setupTestEnvironment, cleanupTestEnvironment } from '@/setup-test-environment';
+import { AppDataSource } from '../database/data-source';
+import { User } from '../database/entities/user.entity';
+import { Role, RoleName } from '../database/entities/role.entity';
+import { PatientProfile } from '../database/entities/patient_profile.entity';
+import { NutritionistProfile } from '../database/entities/nutritionist_profile.entity';
+import { PatientNutritionistRelation } from '../database/entities/patient_nutritionist_relation.entity';
+import { Food } from '../database/entities/food.entity';
+import { DietPlan } from '../database/entities/diet_plan.entity';
+import { Meal } from '../database/entities/meal.entity';
+import { MealItem } from '../database/entities/meal_item.entity';
+import app from '../app'; // Importa tu aplicación Express
+import { setupTestEnvironment, cleanupTestEnvironment } from '../setup-test-environment';
 
 // Variables para almacenar tokens y IDs entre tests
 let patientToken: string;

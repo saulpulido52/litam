@@ -1,14 +1,14 @@
 // src/modules/messaging/message.routes.ts
 import { Router } from 'express';
-import messageController from '@/modules/messaging/message.controller';
-import { protect, authorize } from '@/middleware/auth.middleware';
-import { validateMiddleware } from '@/middleware/validation.middleware';
+import messageController from '../../modules/messaging/message.controller';
+import { protect, authorize } from '../../middleware/auth.middleware';
+import { validateMiddleware } from '../../middleware/validation.middleware';
 import {
     CreateConversationDto,
     SendMessageDto,
     MarkMessageAsReadDto,
-} from '@/modules/messaging/message.dto';
-import { RoleName } from '@/database/entities/role.entity';
+} from '../../modules/messaging/message.dto';
+import { RoleName } from '../../database/entities/role.entity';
 
 const router = Router();
 

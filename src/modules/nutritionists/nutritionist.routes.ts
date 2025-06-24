@@ -1,10 +1,10 @@
 // src/modules/nutritionists/nutritionist.routes.ts
 import { Router } from 'express';
-import nutritionistController from '@/modules/nutritionists/nutritionist.controller';
-import { protect, authorize } from '@/middleware/auth.middleware';
-import { validateMiddleware } from '@/middleware/validation.middleware';
-import { CreateUpdateNutritionistProfileDto } from '@/modules/nutritionists/nutritionist.dto';
-import { RoleName } from '@/database/entities/role.entity';
+import nutritionistController from '../../modules/nutritionists/nutritionist.controller';
+import { protect, authorize } from '../../middleware/auth.middleware';
+import { validateMiddleware } from '../../middleware/validation.middleware';
+import { CreateUpdateNutritionistProfileDto } from '../../modules/nutritionists/nutritionist.dto';
+import { RoleName } from '../../database/entities/role.entity';
 
 const router = Router();
 

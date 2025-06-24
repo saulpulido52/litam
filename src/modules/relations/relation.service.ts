@@ -1,11 +1,11 @@
 // src/modules/relations/relation.service.ts
 import { Repository } from 'typeorm';
-import { AppDataSource } from '@/database/data-source';
-import { User } from '@/database/entities/user.entity';
-import { PatientNutritionistRelation, RelationshipStatus } from '@/database/entities/patient_nutritionist_relation.entity';
-import { RequestRelationDto } from '@/modules/relations/relation.dto';
-import { AppError } from '@/utils/app.error';
-import { RoleName } from '@/database/entities/role.entity';
+import { AppDataSource } from '../../database/data-source';
+import { User } from '../../database/entities/user.entity';
+import { PatientNutritionistRelation, RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
+import { RequestRelationDto } from '../../modules/relations/relation.dto';
+import { AppError } from '../../utils/app.error';
+import { RoleName } from '../../database/entities/role.entity';
 
 class RelationService {
     private userRepository: Repository<User>;

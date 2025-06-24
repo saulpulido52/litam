@@ -1,15 +1,15 @@
 // src/modules/admin/admin.routes.ts
 import { Router } from 'express';
-import adminController from '@/modules/admin/admin.controller';
-import { protect, authorize } from '@/middleware/auth.middleware';
-import { validateMiddleware } from '@/middleware/validation.middleware';
+import adminController from '../../modules/admin/admin.controller';
+import { protect, authorize } from '../../middleware/auth.middleware';
+import { validateMiddleware } from '../../middleware/validation.middleware';
 import {
     AdminUpdateUserDto,
     AdminVerifyNutritionistDto,
     AdminUpdateUserSubscriptionDto,
     AdminUpdateSettingsDto,
-} from '@/modules/admin/admin.dto';
-import { RoleName } from '@/database/entities/role.entity';
+} from '../../modules/admin/admin.dto';
+import { RoleName } from '../../database/entities/role.entity';
 
 const router = Router();
 

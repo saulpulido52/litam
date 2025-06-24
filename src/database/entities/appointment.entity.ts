@@ -8,7 +8,7 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { User } from '@/database/entities/user.entity'; // Para paciente y nutriólogo
+import { User } from '../../database/entities/user.entity'; // Para paciente y nutriólogo
 
 export enum AppointmentStatus {
     SCHEDULED = 'scheduled', // Cita agendada y pendiente

@@ -1,10 +1,10 @@
 // src/modules/relations/relation.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import relationService from '@/modules/relations/relation.service';
-import { AppError } from '@/utils/app.error';
-import { RequestRelationDto, UpdateRelationStatusDto } from '@/modules/relations/relation.dto';
-import { RoleName } from '@/database/entities/role.entity';
-import { RelationshipStatus } from '@/database/entities/patient_nutritionist_relation.entity';
+import relationService from '../../modules/relations/relation.service';
+import { AppError } from '../../utils/app.error';
+import { RequestRelationDto, UpdateRelationStatusDto } from '../../modules/relations/relation.dto';
+import { RoleName } from '../../database/entities/role.entity';
+import { RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
 
 class RelationController {
     // --- Métodos para Pacientes ---

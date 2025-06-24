@@ -1,17 +1,17 @@
 // src/modules/messaging/message.service.ts
 import { Repository, Not, In } from 'typeorm';
-import { AppDataSource } from '@/database/data-source';
-import { User } from '@/database/entities/user.entity';
-import { Conversation } from '@/database/entities/conversation.entity';
-import { Message } from '@/database/entities/message.entity';
-import { PatientNutritionistRelation, RelationshipStatus } from '@/database/entities/patient_nutritionist_relation.entity';
+import { AppDataSource } from '../../database/data-source';
+import { User } from '../../database/entities/user.entity';
+import { Conversation } from '../../database/entities/conversation.entity';
+import { Message } from '../../database/entities/message.entity';
+import { PatientNutritionistRelation, RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
 import {
     CreateConversationDto,
     SendMessageDto,
     MarkMessageAsReadDto,
-} from '@/modules/messaging/message.dto';
-import { AppError } from '@/utils/app.error';
-import { RoleName } from '@/database/entities/role.entity';
+} from '../../modules/messaging/message.dto';
+import { AppError } from '../../utils/app.error';
+import { RoleName } from '../../database/entities/role.entity';
 
 class MessageService {
     private userRepository: Repository<User>;

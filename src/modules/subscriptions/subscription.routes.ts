@@ -1,15 +1,15 @@
 // src/modules/subscriptions/subscription.routes.ts
 import { Router } from 'express';
-import subscriptionController from '@/modules/subscriptions/subscription.controller';
-import { protect, authorize } from '@/middleware/auth.middleware';
-import { validateMiddleware } from '@/middleware/validation.middleware';
+import subscriptionController from '../../modules/subscriptions/subscription.controller';
+import { protect, authorize } from '../../middleware/auth.middleware';
+import { validateMiddleware } from '../../middleware/validation.middleware';
 import {
     CreateSubscriptionPlanDto,
     UpdateSubscriptionPlanDto,
     SubscribeToPlanDto,
     UpdateUserSubscriptionStatusDto,
-} from '@/modules/subscriptions/subscription.dto';
-import { RoleName } from '@/database/entities/role.entity';
+} from '../../modules/subscriptions/subscription.dto';
+import { RoleName } from '../../database/entities/role.entity';
 
 const router = Router();
 

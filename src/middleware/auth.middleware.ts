@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { AppError } from '@/utils/app.error';
-import { AppDataSource } from '@/database/data-source';
-import { User } from '@/database/entities/user.entity';
-import { RoleName } from '@/database/entities/role.entity';
+import { AppError } from '../utils/app.error';
+import { AppDataSource } from '../database/data-source';
+import { User } from '../database/entities/user.entity';
+import { RoleName } from '../database/entities/role.entity';
 
 dotenv.config(); // Asegura que las variables de entorno se carguen
 
@@ -35,8 +35,38 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
         return next(new AppError('No estás logueado. Por favor, inicia sesión para obtener acceso.', 401));
     }
 
+    // 🔍 EXTENSIVE TOKEN DEBUGGING + SIGNATURE VERIFICATION
+    console.log('🔍 BACKEND TOKEN DEBUG:');
+    console.log('  Full Authorization header:', req.headers.authorization);
+    console.log('  Extracted token:', token);
+    console.log('  Token length:', token?.length);
+    console.log('  Token type:', typeof token);
+    console.log('  Token starts with:', token?.substring(0, 30));
+    console.log('  Token ends with:', token?.substring(token.length - 30));
+    console.log('  Token contains quotes:', token?.includes('"'));
+    console.log('  Token contains newlines:', token?.includes('\n'));
+    console.log('  Token dot count:', (token?.match(/\./g) || []).length);
+    
+    // 🔍 JWT SECRET DEBUGGING
+    console.log('🔑 JWT SECRET DEBUG:');
+    console.log('  JWT_SECRET exists:', !!JWT_SECRET_FOR_VERIFICATION);
+    console.log('  JWT_SECRET length:', JWT_SECRET_FOR_VERIFICATION?.length);
+    console.log('  JWT_SECRET type:', typeof JWT_SECRET_FOR_VERIFICATION);
+    console.log('  JWT_SECRET starts with:', JWT_SECRET_FOR_VERIFICATION?.substring(0, 10));
+    
+    // 🔍 DECODE WITHOUT VERIFICATION FIRST
+    try {
+        const decodedWithoutVerification = jwt.decode(token, { complete: true });
+        console.log('🔓 Token decoded without verification:');
+        console.log('  Header:', JSON.stringify(decodedWithoutVerification?.header));
+        console.log('  Payload:', JSON.stringify(decodedWithoutVerification?.payload));
+    } catch (decodeError: any) {
+        console.log('❌ Failed to decode token without verification:', decodeError.message);
+    }
+
     try {
         // Usar la constante definida para la verificación
+        console.log('🔐 Attempting JWT verification...');
         const decoded = jwt.verify(token, JWT_SECRET_FOR_VERIFICATION) as JwtPayload;
 
         const userRepository = AppDataSource.getRepository(User);

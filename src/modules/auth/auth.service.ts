@@ -1,13 +1,13 @@
 // src/modules/auth/auth.service.ts
 import { Repository } from 'typeorm';
-import { AppDataSource } from '@/database/data-source';
-import { User } from '@/database/entities/user.entity';
-import { Role, RoleName } from '@/database/entities/role.entity';
-import { RegisterPatientDto, RegisterNutritionistDto, LoginDto } from '@/modules/auth/auth.dto';
+import { AppDataSource } from '../../database/data-source';
+import { User } from '../../database/entities/user.entity';
+import { Role, RoleName } from '../../database/entities/role.entity';
+import { RegisterPatientDto, RegisterNutritionistDto, LoginDto } from '../../modules/auth/auth.dto';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { AppError } from '@/utils/app.error';
+import { AppError } from '../../utils/app.error';
 
 dotenv.config();
 

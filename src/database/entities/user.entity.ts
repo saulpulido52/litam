@@ -10,22 +10,22 @@ import {
     OneToOne,
     OneToMany,
 } from 'typeorm';
-import { Role } from '@/database/entities/role.entity';
-import { PatientProfile } from '@/database/entities/patient_profile.entity';
-import { NutritionistProfile } from '@/database/entities/nutritionist_profile.entity';
-import { PatientNutritionistRelation } from '@/database/entities/patient_nutritionist_relation.entity';
-import { Food } from '@/database/entities/food.entity';
-import { DietPlan } from '@/database/entities/diet_plan.entity';
-import { Appointment } from '@/database/entities/appointment.entity';
-import { NutritionistAvailability } from '@/database/entities/nutritionist_availability.entity';
-import { PatientProgressLog } from '@/database/entities/patient_progress_log.entity';
-import { UserSubscription } from '@/database/entities/user_subscription.entity';
-import { PaymentTransaction } from '@/database/entities/payment_transaction.entity';
-import { EducationalContent } from '@/database/entities/educational_content.entity';
-import { Recipe } from '@/database/entities/recipe.entity';
-import { Conversation } from '@/database/entities/conversation.entity';
-import { Message } from '@/database/entities/message.entity';
-import { ClinicalRecord } from '@/database/entities/clinical_record.entity'; // <--- NUEVO
+import { Role } from '../../database/entities/role.entity';
+import { PatientProfile } from '../../database/entities/patient_profile.entity';
+import { NutritionistProfile } from '../../database/entities/nutritionist_profile.entity';
+import { PatientNutritionistRelation } from '../../database/entities/patient_nutritionist_relation.entity';
+import { Food } from '../../database/entities/food.entity';
+import { DietPlan } from '../../database/entities/diet_plan.entity';
+import { Appointment } from '../../database/entities/appointment.entity';
+import { NutritionistAvailability } from '../../database/entities/nutritionist_availability.entity';
+import { PatientProgressLog } from '../../database/entities/patient_progress_log.entity';
+import { UserSubscription } from '../../database/entities/user_subscription.entity';
+import { PaymentTransaction } from '../../database/entities/payment_transaction.entity';
+import { EducationalContent } from '../../database/entities/educational_content.entity';
+import { Recipe } from '../../database/entities/recipe.entity';
+import { Conversation } from '../../database/entities/conversation.entity';
+import { Message } from '../../database/entities/message.entity';
+import { ClinicalRecord } from '../../database/entities/clinical_record.entity'; // <--- NUEVO
 import bcrypt from 'bcrypt';
 
 export enum UserRegistrationType {

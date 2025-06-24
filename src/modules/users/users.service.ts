@@ -1,9 +1,9 @@
 // users.service.ts 
 import { Repository } from 'typeorm';
-import { AppDataSource } from '@/database/data-source'; // Ruta corregida
-import { User } from '@/database/entities/user.entity'; // Ruta corregida
-import { UpdateUserDto } from '@/modules/auth/auth.dto'; // Ruta corregida
-import { AppError } from '@/utils/app.error'; // Importar AppError
+import { AppDataSource } from '../../database/data-source'; // Ruta corregida
+import { User } from '../../database/entities/user.entity'; // Ruta corregida
+import { UpdateUserDto } from '../../modules/auth/auth.dto'; // Ruta corregida
+import { AppError } from '../../utils/app.error'; // Importar AppError
 
 class UserService {
     private userRepository: Repository<User>;

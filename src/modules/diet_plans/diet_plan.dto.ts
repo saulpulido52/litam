@@ -17,7 +17,7 @@ import {
     ValidateIf,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { DietPlanStatus } from '@/database/entities/diet_plan.entity'; // Asegúrate de importar el enum
+import { DietPlanStatus } from '../../database/entities/diet_plan.entity'; // Asegúrate de importar el enum
 
 // DTO para un elemento de comida (alimento + cantidad)
 export class MealItemDto {

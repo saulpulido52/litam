@@ -1,15 +1,15 @@
 // src/modules/subscriptions/subscription.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import subscriptionService from '@/modules/subscriptions/subscription.service';
-import { AppError } from '@/utils/app.error';
+import subscriptionService from '../../modules/subscriptions/subscription.service';
+import { AppError } from '../../utils/app.error';
 import {
     CreateSubscriptionPlanDto,
     UpdateSubscriptionPlanDto,
     SubscribeToPlanDto,
     UpdateUserSubscriptionStatusDto,
-} from '@/modules/subscriptions/subscription.dto';
-import { RoleName } from '@/database/entities/role.entity';
-import { SubscriptionStatus } from '@/database/entities/user_subscription.entity';
+} from '../../modules/subscriptions/subscription.dto';
+import { RoleName } from '../../database/entities/role.entity';
+import { SubscriptionStatus } from '../../database/entities/user_subscription.entity';
 
 class SubscriptionController {
     // --- Rutas de Gestión de Planes de Suscripción (Solo Administradores) ---

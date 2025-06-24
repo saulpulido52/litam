@@ -10,9 +10,9 @@ import {
     IsEmail,
     IsDateString, // <--- AÑADIDO
 } from 'class-validator';
-import { RoleName } from '@/database/entities/role.entity';
-import { SubscriptionStatus } from '@/database/entities/user_subscription.entity';
-import { SubscriptionDurationType } from '@/database/entities/subscription_plan.entity'; // <-- AÑADIDO
+import { RoleName } from '../../database/entities/role.entity';
+import { SubscriptionStatus } from '../../database/entities/user_subscription.entity';
+import { SubscriptionDurationType } from '../../database/entities/subscription_plan.entity'; // <-- AÑADIDO
 
 // DTO para actualizar un usuario por el administrador
 export class AdminUpdateUserDto {

@@ -1,15 +1,15 @@
 // src/modules/diet_plans/diet_plan.routes.ts
 import { Router } from 'express';
-import dietPlanController from '@/modules/diet_plans/diet_plan.controller';
-import { protect, authorize } from '@/middleware/auth.middleware';
-import { validateMiddleware } from '@/middleware/validation.middleware';
+import dietPlanController from '../../modules/diet_plans/diet_plan.controller';
+import { protect, authorize } from '../../middleware/auth.middleware';
+import { validateMiddleware } from '../../middleware/validation.middleware';
 import {
     CreateDietPlanDto,
     UpdateDietPlanDto,
     GenerateDietPlanAiDto,
     UpdateDietPlanStatusDto, // Importar el nuevo DTO
-} from '@/modules/diet_plans/diet_plan.dto';
-import { RoleName } from '@/database/entities/role.entity';
+} from '../../modules/diet_plans/diet_plan.dto';
+import { RoleName } from '../../database/entities/role.entity';
 
 const router = Router();
 

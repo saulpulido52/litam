@@ -1,12 +1,12 @@
 // src/modules/progress_tracking/progress_tracking.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import progressTrackingService from '@/modules/progress_tracking/progress_tracking.service';
-import { AppError } from '@/utils/app.error';
+import progressTrackingService from '../../modules/progress_tracking/progress_tracking.service';
+import { AppError } from '../../utils/app.error';
 import {
     CreateUpdateProgressLogDto,
     SearchProgressLogsDto,
-} from '@/modules/progress_tracking/progress_tracking.dto';
-import { RoleName } from '@/database/entities/role.entity';
+} from '../../modules/progress_tracking/progress_tracking.dto';
+import { RoleName } from '../../database/entities/role.entity';
 
 class ProgressTrackingController {
     // --- Métodos para Pacientes ---

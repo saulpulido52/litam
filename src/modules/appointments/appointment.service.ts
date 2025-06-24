@@ -1,19 +1,19 @@
 // src/modules/appointments/appointment.service.ts
 import { Repository, Between, And } from 'typeorm'; // Importar Between y And para consultas de rango
-import { AppDataSource } from '@/database/data-source';
-import { User } from '@/database/entities/user.entity';
-import { Appointment, AppointmentStatus } from '@/database/entities/appointment.entity';
-import { NutritionistAvailability, DayOfWeek } from '@/database/entities/nutritionist_availability.entity';
-import { PatientNutritionistRelation, RelationshipStatus } from '@/database/entities/patient_nutritionist_relation.entity';
+import { AppDataSource } from '../../database/data-source';
+import { User } from '../../database/entities/user.entity';
+import { Appointment, AppointmentStatus } from '../../database/entities/appointment.entity';
+import { NutritionistAvailability, DayOfWeek } from '../../database/entities/nutritionist_availability.entity';
+import { PatientNutritionistRelation, RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
 import {
     ScheduleAppointmentDto,
     UpdateAppointmentStatusDto,
     AvailabilitySlotDto,
     ManageAvailabilityDto,
     SearchAvailabilityDto,
-} from '@/modules/appointments/appointment.dto';
-import { AppError } from '@/utils/app.error';
-import { RoleName } from '@/database/entities/role.entity';
+} from '../../modules/appointments/appointment.dto';
+import { AppError } from '../../utils/app.error';
+import { RoleName } from '../../database/entities/role.entity';
 
 class AppointmentService {
     private userRepository: Repository<User>;

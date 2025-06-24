@@ -1,10 +1,10 @@
 // users.routes.ts 
 import { Router } from 'express';
-import userController from '@/modules/users/users.controller'; // Ruta corregida
-import { protect, authorize } from '@/middleware/auth.middleware'; // Ruta corregida
-import { validateMiddleware } from '@/middleware/validation.middleware'; // Ruta corregida
-import { UpdateUserDto } from '@/modules/auth/auth.dto'; // Ruta corregida
-import { RoleName } from '@/database/entities/role.entity'; // Importar RoleName para authorize
+import userController from '../../modules/users/users.controller'; // Ruta corregida
+import { protect, authorize } from '../../middleware/auth.middleware'; // Ruta corregida
+import { validateMiddleware } from '../../middleware/validation.middleware'; // Ruta corregida
+import { UpdateUserDto } from '../../modules/auth/auth.dto'; // Ruta corregida
+import { RoleName } from '../../database/entities/role.entity'; // Importar RoleName para authorize
 
 const router = Router();
 

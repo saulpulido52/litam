@@ -1,15 +1,15 @@
 // src/modules/progress_tracking/progress_tracking.service.ts
 import { Repository, Between, LessThanOrEqual, MoreThanOrEqual, FindOptionsWhere } from 'typeorm'; // Importar operadores
-import { AppDataSource } from '@/database/data-source';
-import { User } from '@/database/entities/user.entity';
-import { PatientProgressLog } from '@/database/entities/patient_progress_log.entity';
-import { PatientNutritionistRelation, RelationshipStatus } from '@/database/entities/patient_nutritionist_relation.entity';
+import { AppDataSource } from '../../database/data-source';
+import { User } from '../../database/entities/user.entity';
+import { PatientProgressLog } from '../../database/entities/patient_progress_log.entity';
+import { PatientNutritionistRelation, RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
 import {
     CreateUpdateProgressLogDto,
     SearchProgressLogsDto,
-} from '@/modules/progress_tracking/progress_tracking.dto';
-import { AppError } from '@/utils/app.error';
-import { RoleName } from '@/database/entities/role.entity';
+} from '../../modules/progress_tracking/progress_tracking.dto';
+import { AppError } from '../../utils/app.error';
+import { RoleName } from '../../database/entities/role.entity';
 
 class ProgressTrackingService {
     private userRepository: Repository<User>;

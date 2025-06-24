@@ -15,8 +15,8 @@ import {
     IsBoolean, // <-- AÑADIDO
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { AppointmentStatus } from '@/database/entities/appointment.entity';
-import { DayOfWeek } from '@/database/entities/nutritionist_availability.entity';
+import { AppointmentStatus } from '../../database/entities/appointment.entity';
+import { DayOfWeek } from '../../database/entities/nutritionist_availability.entity';
 
 // DTO para que un Paciente agende una cita
 export class ScheduleAppointmentDto {

@@ -1,13 +1,13 @@
 // src/modules/messaging/message.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import messageService from '@/modules/messaging/message.service';
-import { AppError } from '@/utils/app.error';
+import messageService from '../../modules/messaging/message.service';
+import { AppError } from '../../utils/app.error';
 import {
     CreateConversationDto,
     SendMessageDto,
     MarkMessageAsReadDto,
-} from '@/modules/messaging/message.dto';
-import { RoleName } from '@/database/entities/role.entity';
+} from '../../modules/messaging/message.dto';
+import { RoleName } from '../../database/entities/role.entity';
 
 class MessageController {
     // --- Rutas de Conversaciones ---

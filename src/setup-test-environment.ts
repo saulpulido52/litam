@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { AppDataSource } from '@/database/data-source';
-import { Role, RoleName } from '@/database/entities/role.entity';
+import { AppDataSource } from './database/data-source';
+import { Role, RoleName } from './database/entities/role.entity';
 
 interface TestEnvironment {
     isInitialized: boolean;

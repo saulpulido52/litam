@@ -1,7 +1,7 @@
 // src/index.ts
-import app from '@/app';
-import { AppDataSource } from '@/database/data-source';
-import { Role, RoleName } from '@/database/entities/role.entity';
+import app from './app';
+import { AppDataSource } from './database/data-source';
+import { Role, RoleName } from './database/entities/role.entity';
 import http from 'http'; // Importar módulo http de Node.js
 import { Server as SocketIOServer } from 'socket.io'; // Importar Server de socket.io
 

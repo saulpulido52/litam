@@ -1,11 +1,11 @@
 import request from 'supertest';
-import { AppDataSource } from '@/database/data-source';
-import { User } from '@/database/entities/user.entity';
-import { Role, RoleName } from '@/database/entities/role.entity';
-import { ClinicalRecord } from '@/database/entities/clinical_record.entity';
-import { PatientNutritionistRelation, RelationshipStatus } from '@/database/entities/patient_nutritionist_relation.entity';
-import app from '@/app';
-import { setupTestEnvironment, cleanupTestEnvironment } from '@/setup-test-environment';
+import { AppDataSource } from '../database/data-source';
+import { User } from '../database/entities/user.entity';
+import { Role, RoleName } from '../database/entities/role.entity';
+import { ClinicalRecord } from '../database/entities/clinical_record.entity';
+import { PatientNutritionistRelation, RelationshipStatus } from '../database/entities/patient_nutritionist_relation.entity';
+import app from '../app';
+import { setupTestEnvironment, cleanupTestEnvironment } from '../setup-test-environment';
 
 function uniqueEmail(prefix: string) {
     return `${prefix}.${Date.now()}.${Math.floor(Math.random()*1000000)}@example.com`;
@@ -630,7 +630,7 @@ describe('Clinical Records API (/api/clinical-records)', () => {
                 .delete(`/api/clinical-records/${recordId}`)
                 .set('Authorization', `Bearer ${nutritionistToken}`);
 
-            expect(res.statusCode).toBe(204);
+            expect(res.statusCode).toBe(200);
 
             // Verificar que el registro ya no existe
             const getRes = await request(app)

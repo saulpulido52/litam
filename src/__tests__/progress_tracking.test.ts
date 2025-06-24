@@ -1,12 +1,12 @@
 import request from 'supertest';
-import { AppDataSource } from '@/database/data-source';
-import { User } from '@/database/entities/user.entity';
-import { Role, RoleName } from '@/database/entities/role.entity';
-import { PatientProgressLog } from '@/database/entities/patient_progress_log.entity';
-import { PatientNutritionistRelation } from '@/database/entities/patient_nutritionist_relation.entity';
-import app from '@/app';
-import { setupTestEnvironment, cleanupTestEnvironment } from '@/setup-test-environment';
-import { RelationshipStatus } from '@/database/entities/patient_nutritionist_relation.entity';
+import { AppDataSource } from '../database/data-source';
+import { User } from '../database/entities/user.entity';
+import { Role, RoleName } from '../database/entities/role.entity';
+import { PatientProgressLog } from '../database/entities/patient_progress_log.entity';
+import { PatientNutritionistRelation } from '../database/entities/patient_nutritionist_relation.entity';
+import app from '../app';
+import { setupTestEnvironment, cleanupTestEnvironment } from '../setup-test-environment';
+import { RelationshipStatus } from '../database/entities/patient_nutritionist_relation.entity';
 
 function uniqueEmail(prefix: string) {
     return `${prefix}.${Date.now()}.${Math.floor(Math.random()*1000000)}@example.com`;

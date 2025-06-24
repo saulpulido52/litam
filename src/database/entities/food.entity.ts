@@ -8,8 +8,8 @@ import {
     JoinColumn,
     OneToMany,
 } from 'typeorm';
-import { User } from '@/database/entities/user.entity'; // Importa User para la relación created_by_user
-import { MealItem } from '@/database/entities/meal_item.entity'; // Importa MealItem para la relación OneToMany
+import { User } from '../../database/entities/user.entity'; // Importa User para la relación created_by_user
+import { MealItem } from '../../database/entities/meal_item.entity'; // Importa MealItem para la relación OneToMany
 
 @Entity('foods')
 export class Food {

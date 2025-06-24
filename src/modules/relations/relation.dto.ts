@@ -1,6 +1,6 @@
 // src/modules/relations/relation.dto.ts
 import { IsUUID, IsOptional, IsString, Length } from 'class-validator';
-import { RelationshipStatus } from '@/database/entities/patient_nutritionist_relation.entity';
+import { RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
 
 // DTO para que un Paciente solicite vincularse con un Nutriólogo
 export class RequestRelationDto {

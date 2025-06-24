@@ -8,7 +8,7 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { User } from '@/database/entities/user.entity'; // Para referenciar al paciente y al nutriólogo
+import { User } from '../../database/entities/user.entity'; // Para referenciar al paciente y al nutriólogo
 
 @Entity('clinical_records')
 export class ClinicalRecord {

@@ -1,11 +1,11 @@
 // src/modules/nutritionists/nutritionist.service.ts
 import { Repository } from 'typeorm';
-import { AppDataSource } from '@/database/data-source';
-import { User } from '@/database/entities/user.entity';
-import { NutritionistProfile } from '@/database/entities/nutritionist_profile.entity';
-import { CreateUpdateNutritionistProfileDto } from '@/modules/nutritionists/nutritionist.dto';
-import { AppError } from '@/utils/app.error';
-import { RoleName } from '@/database/entities/role.entity';
+import { AppDataSource } from '../../database/data-source';
+import { User } from '../../database/entities/user.entity';
+import { NutritionistProfile } from '../../database/entities/nutritionist_profile.entity';
+import { CreateUpdateNutritionistProfileDto } from '../../modules/nutritionists/nutritionist.dto';
+import { AppError } from '../../utils/app.error';
+import { RoleName } from '../../database/entities/role.entity';
 
 class NutritionistService {
     private userRepository: Repository<User>;

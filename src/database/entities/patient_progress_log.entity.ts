@@ -8,7 +8,7 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { User } from '@/database/entities/user.entity'; // Para referenciar al paciente
+import { User } from '../../database/entities/user.entity'; // Para referenciar al paciente
 import { Min, Max } from 'class-validator';
 
 @Entity('patient_progress_logs')

@@ -9,8 +9,8 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { User } from '@/database/entities/user.entity'; // Para paciente y nutriólogo
-import { Meal } from '@/database/entities/meal.entity'; // Para las comidas del plan
+import { User } from '../../database/entities/user.entity'; // Para paciente y nutriólogo
+import { Meal } from '../../database/entities/meal.entity'; // Para las comidas del plan
 
 export enum DietPlanStatus {
     DRAFT = 'draft', // En borrador, el nutriólogo lo está creando

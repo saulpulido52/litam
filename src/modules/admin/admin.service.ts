@@ -1,17 +1,17 @@
 // src/modules/admin/admin.service.ts
 import { Repository } from 'typeorm';
-import { AppDataSource } from '@/database/data-source';
-import { User } from '@/database/entities/user.entity';
-import { Role, RoleName } from '@/database/entities/role.entity';
-import { UserSubscription, SubscriptionStatus } from '@/database/entities/user_subscription.entity';
-import { SubscriptionPlan, SubscriptionDurationType } from '@/database/entities/subscription_plan.entity'; // <-- AÑADIDO
-import { NutritionistProfile } from '@/database/entities/nutritionist_profile.entity';
+import { AppDataSource } from '../../database/data-source';
+import { User } from '../../database/entities/user.entity';
+import { Role, RoleName } from '../../database/entities/role.entity';
+import { UserSubscription, SubscriptionStatus } from '../../database/entities/user_subscription.entity';
+import { SubscriptionPlan, SubscriptionDurationType } from '../../database/entities/subscription_plan.entity'; // <-- AÑADIDO
+import { NutritionistProfile } from '../../database/entities/nutritionist_profile.entity';
 import {
     AdminUpdateUserDto,
     AdminVerifyNutritionistDto,
     AdminUpdateUserSubscriptionDto,
-} from '@/modules/admin/admin.dto';
-import { AppError } from '@/utils/app.error';
+} from '../../modules/admin/admin.dto';
+import { AppError } from '../../utils/app.error';
 import bcrypt from 'bcrypt';
 
 class AdminService {

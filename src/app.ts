@@ -5,21 +5,21 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
-import authRoutes from '@/modules/auth/auth.routes';
-import userRoutes from '@/modules/users/users.routes';
-import patientRoutes from '@/modules/patients/patient.routes';
-import nutritionistRoutes from '@/modules/nutritionists/nutritionist.routes';
-import relationRoutes from '@/modules/relations/relation.routes';
-import foodRoutes from '@/modules/foods/food.routes';
-import dietPlanRoutes from '@/modules/diet_plans/diet_plan.routes';
-import appointmentRoutes from '@/modules/appointments/appointment.routes';
-import progressTrackingRoutes from '@/modules/progress_tracking/progress_tracking.routes';
-import subscriptionRoutes from '@/modules/subscriptions/subscription.routes';
-import educationalContentRoutes from '@/modules/educational_content/educational_content.routes';
-import adminRoutes from '@/modules/admin/admin.routes';
-import messagingRoutes from '@/modules/messaging/message.routes';
-import clinicalRecordRoutes from '@/modules/clinical_records/clinical_record.routes';
-import { AppError } from '@/utils/app.error';
+import authRoutes from './modules/auth/auth.routes';
+import userRoutes from './modules/users/users.routes';
+import patientRoutes from './modules/patients/patient.routes';
+import nutritionistRoutes from './modules/nutritionists/nutritionist.routes';
+import relationRoutes from './modules/relations/relation.routes';
+import foodRoutes from './modules/foods/food.routes';
+import dietPlanRoutes from './modules/diet_plans/diet_plan.routes';
+import appointmentRoutes from './modules/appointments/appointment.routes';
+import progressTrackingRoutes from './modules/progress_tracking/progress_tracking.routes';
+import subscriptionRoutes from './modules/subscriptions/subscription.routes';
+import educationalContentRoutes from './modules/educational_content/educational_content.routes';
+import adminRoutes from './modules/admin/admin.routes';
+import messagingRoutes from './modules/messaging/message.routes';
+import clinicalRecordRoutes from './modules/clinical_records/clinical_record.routes';
+import { AppError } from './utils/app.error';
 
 // Extensión de tipos para Request
 declare global {
@@ -126,8 +126,8 @@ app.use(express.urlencoded({
 // Middleware de logging para debugging con múltiples usuarios
 app.use((req: Request, res: Response, next: NextFunction) => {
     const timestamp = new Date().toISOString();
-    const userId = req.headers['x-user-id'] || 'anonymous';
-    console.log(`[${timestamp}] ${req.method} ${req.path} - User: ${userId} - IP: ${req.ip}`);
+    // Log básico al inicio - el userId se mostrará en logs específicos después de auth
+    console.log(`[${timestamp}] ${req.method} ${req.path} - IP: ${req.ip}`);
     next();
 });
 
@@ -174,7 +174,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
     // Log del error para debugging
     const timestamp = new Date().toISOString();
-    const userId = req.headers['x-user-id'] || 'anonymous';
+    const userId = (req as any).user?.id || 'anonymous';
     console.error(`[${timestamp}] ERROR - User: ${userId} - IP: ${req.ip} - ${err.message}`);
 
     if (err instanceof AppError) {

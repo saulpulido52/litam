@@ -9,7 +9,7 @@ import {
     UpdateDateColumn,
     OneToMany, // Para enlaces a recetas si fuera necesario
 } from 'typeorm';
-import { User } from '@/database/entities/user.entity'; // Para el creador/editor
+import { User } from '../../database/entities/user.entity'; // Para el creador/editor
 
 // Tipos de contenido
 export enum ContentType {

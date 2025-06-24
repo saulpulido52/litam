@@ -8,8 +8,8 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { Conversation } from '@/database/entities/conversation.entity'; // Para la conversación a la que pertenece
-import { User } from '@/database/entities/user.entity'; // Para el remitente
+import { Conversation } from '../../database/entities/conversation.entity'; // Para la conversación a la que pertenece
+import { User } from '../../database/entities/user.entity'; // Para el remitente
 
 @Entity('messages')
 export class Message {

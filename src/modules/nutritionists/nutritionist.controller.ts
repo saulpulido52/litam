@@ -1,8 +1,8 @@
 // src/modules/nutritionists/nutritionist.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import nutritionistService from '@/modules/nutritionists/nutritionist.service';
-import { AppError } from '@/utils/app.error';
-import { CreateUpdateNutritionistProfileDto } from '@/modules/nutritionists/nutritionist.dto';
+import nutritionistService from '../../modules/nutritionists/nutritionist.service';
+import { AppError } from '../../utils/app.error';
+import { CreateUpdateNutritionistProfileDto } from '../../modules/nutritionists/nutritionist.dto';
 
 class NutritionistController {
     public async getMyProfile(req: Request, res: Response, next: NextFunction) {

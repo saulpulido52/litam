@@ -1,7 +1,7 @@
 // src/modules/auth/auth.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import authService from '@/modules/auth/auth.service';
-import { AppError } from '@/utils/app.error';
+import authService from '../../modules/auth/auth.service';
+import { AppError } from '../../utils/app.error';
 
 class AuthController {
     public async registerPatient(req: Request, res: Response, next: NextFunction) {

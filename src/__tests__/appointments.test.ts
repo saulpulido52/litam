@@ -1,14 +1,14 @@
 import request from 'supertest';
-import { AppDataSource } from '@/database/data-source';
-import { User } from '@/database/entities/user.entity';
-import { Role, RoleName } from '@/database/entities/role.entity';
-import { PatientProfile } from '@/database/entities/patient_profile.entity';
-import { NutritionistProfile } from '@/database/entities/nutritionist_profile.entity';
-import { PatientNutritionistRelation, RelationshipStatus } from '@/database/entities/patient_nutritionist_relation.entity';
-import { Appointment, AppointmentStatus } from '@/database/entities/appointment.entity';
-import { NutritionistAvailability, DayOfWeek } from '@/database/entities/nutritionist_availability.entity';
-import app from '@/app';
-import { setupTestEnvironment, cleanupTestEnvironment } from '@/setup-test-environment';
+import { AppDataSource } from '../database/data-source';
+import { User } from '../database/entities/user.entity';
+import { Role, RoleName } from '../database/entities/role.entity';
+import { PatientProfile } from '../database/entities/patient_profile.entity';
+import { NutritionistProfile } from '../database/entities/nutritionist_profile.entity';
+import { PatientNutritionistRelation, RelationshipStatus } from '../database/entities/patient_nutritionist_relation.entity';
+import { Appointment, AppointmentStatus } from '../database/entities/appointment.entity';
+import { NutritionistAvailability, DayOfWeek } from '../database/entities/nutritionist_availability.entity';
+import app from '../app';
+import { setupTestEnvironment, cleanupTestEnvironment } from '../setup-test-environment';
 
 function uniqueEmail(prefix: string) {
     return `${prefix}.${Date.now()}.${Math.floor(Math.random()*1000000)}@example.com`;

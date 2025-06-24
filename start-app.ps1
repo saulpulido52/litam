@@ -1,5 +1,3 @@
-#!/usr/bin/env pwsh
-
 Write-Host "🚀 Iniciando Nutri App..." -ForegroundColor Green
 
 # Matar procesos de Node.js existentes para evitar conflictos
@@ -38,7 +36,8 @@ if ($backend -and $frontend) {
     Write-Host "🚀 Abriendo aplicación en el navegador..." -ForegroundColor Cyan
     Start-Sleep -Seconds 2
     Start-Process "http://localhost:5000"
-} else {
+}
+else {
     Write-Host "❌ Error al iniciar algunos servicios:" -ForegroundColor Red
     if (-not $backend) { Write-Host "   - Backend no está corriendo en puerto 4000" -ForegroundColor Red }
     if (-not $frontend) { Write-Host "   - Frontend no está corriendo en puerto 5000" -ForegroundColor Red }
@@ -46,4 +45,6 @@ if ($backend -and $frontend) {
 }
 
 Write-Host ""
-Write-Host "💡 Para detener la aplicación, usa: Get-Process | Where-Object {\$_.ProcessName -eq 'node'} | Stop-Process -Force" -ForegroundColor DarkGray 
+Write-Host "💡 Para detener la aplicación, usa: Get-Process | Where-Object {`$_.ProcessName -eq 'node'} | Stop-Process -Force" -ForegroundColor DarkGray
+
+npx ts-node seed-test-data.ts 

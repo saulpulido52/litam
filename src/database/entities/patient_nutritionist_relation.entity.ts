@@ -8,8 +8,8 @@ import {
     UpdateDateColumn,
     Unique,
 } from 'typeorm';
-import { User } from '@/database/entities/user.entity';
-import { RoleName } from '@/database/entities/role.entity';
+import { User } from '../../database/entities/user.entity';
+import { RoleName } from '../../database/entities/role.entity';
 
 export enum RelationshipStatus {
     PENDING = 'pending',

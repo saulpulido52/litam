@@ -1,9 +1,9 @@
 // src/modules/foods/food.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import foodService from '@/modules/foods/food.service';
-import { AppError } from '@/utils/app.error';
-import { CreateFoodDto, UpdateFoodDto } from '@/modules/foods/food.dto';
-import { RoleName } from '@/database/entities/role.entity'; // Necesario para verificar roles si se usa en el controlador
+import foodService from '../../modules/foods/food.service';
+import { AppError } from '../../utils/app.error';
+import { CreateFoodDto, UpdateFoodDto } from '../../modules/foods/food.dto';
+import { RoleName } from '../../database/entities/role.entity'; // Necesario para verificar roles si se usa en el controlador
 
 class FoodController {
     public async createFood(req: Request, res: Response, next: NextFunction) {

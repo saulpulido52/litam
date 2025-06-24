@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import authController from '@/modules/auth/auth.controller'; // Ruta corregida
-import { validateMiddleware } from '@/middleware/validation.middleware'; // Ruta corregida
-import { RegisterPatientDto, RegisterNutritionistDto, LoginDto } from '@/modules/auth/auth.dto'; // Ruta corregida
+import authController from './auth.controller'; // Ruta corregida
+import { validateMiddleware } from '../../middleware/validation.middleware'; // Ruta corregida
+import { RegisterPatientDto, RegisterNutritionistDto, LoginDto } from './auth.dto'; // Ruta corregida
 
 const router = Router();
 

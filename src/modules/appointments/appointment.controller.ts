@@ -1,16 +1,16 @@
 // src/modules/appointments/appointment.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import appointmentService from '@/modules/appointments/appointment.service';
-import { AppError } from '@/utils/app.error';
+import appointmentService from '../../modules/appointments/appointment.service';
+import { AppError } from '../../utils/app.error';
 import {
     ScheduleAppointmentDto,
     UpdateAppointmentStatusDto,
     ManageAvailabilityDto,
     SearchAvailabilityDto,
     AvailabilitySlotDto,
-} from '@/modules/appointments/appointment.dto';
-import { RoleName } from '@/database/entities/role.entity';
-import { AppointmentStatus } from '@/database/entities/appointment.entity';
+} from '../../modules/appointments/appointment.dto';
+import { RoleName } from '../../database/entities/role.entity';
+import { AppointmentStatus } from '../../database/entities/appointment.entity';
 
 class AppointmentController {
     // --- Gestión de Disponibilidad (Nutriólogos) ---

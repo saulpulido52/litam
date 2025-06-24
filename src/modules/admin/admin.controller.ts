@@ -1,15 +1,15 @@
 // src/modules/admin/admin.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import adminService from '@/modules/admin/admin.service';
-import { AppError } from '@/utils/app.error';
+import adminService from '../../modules/admin/admin.service';
+import { AppError } from '../../utils/app.error';
 import {
     AdminUpdateUserDto,
     AdminVerifyNutritionistDto,
     AdminUpdateUserSubscriptionDto,
     AdminUpdateSettingsDto, // Si se añade
-} from '@/modules/admin/admin.dto';
-import { RoleName } from '@/database/entities/role.entity';
-import { SubscriptionStatus } from '@/database/entities/user_subscription.entity'; // Para tipo en query param
+} from '../../modules/admin/admin.dto';
+import { RoleName } from '../../database/entities/role.entity';
+import { SubscriptionStatus } from '../../database/entities/user_subscription.entity'; // Para tipo en query param
 
 class AdminController {
     // --- Gestión de Usuarios ---

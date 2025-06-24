@@ -1,9 +1,9 @@
 // src/modules/clinical_records/clinical_record.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import clinicalRecordService from '@/modules/clinical_records/clinical_record.service';
-import { AppError } from '@/utils/app.error';
-import { CreateUpdateClinicalRecordDto } from '@/modules/clinical_records/clinical_record.dto';
-import { RoleName } from '@/database/entities/role.entity';
+import clinicalRecordService from '../../modules/clinical_records/clinical_record.service';
+import { AppError } from '../../utils/app.error';
+import { CreateUpdateClinicalRecordDto } from '../../modules/clinical_records/clinical_record.dto';
+import { RoleName } from '../../database/entities/role.entity';
 
 class ClinicalRecordController {
     // --- Métodos para Nutriólogos (y Administradores) ---
@@ -100,8 +100,9 @@ class ClinicalRecordController {
             }
             const { id } = req.params;
             await clinicalRecordService.deleteClinicalRecord(id, req.user.id);
-            res.status(204).json({
+            res.status(200).json({
                 status: 'success',
+                message: 'Registro clínico eliminado con éxito.',
                 data: null,
             });
         } catch (error: any) {
@@ -204,6 +205,33 @@ class ClinicalRecordController {
                 return next(error);
             }
             next(new AppError('Error al obtener estadísticas de expedientes.', 500));
+        }
+    }
+
+    public async getPatientRecordsCount(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user) {
+                return next(new AppError('Usuario no autenticado.', 401));
+            }
+
+            const { patientId } = req.params;
+
+            const count = await clinicalRecordService.getPatientRecordsCount(
+                patientId,
+                req.user.id,
+                req.user.role.name
+            );
+
+            res.status(200).json({
+                status: 'success',
+                data: { count },
+            });
+        } catch (error: any) {
+            console.error('Error en ClinicalRecordController.getPatientRecordsCount:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener el conteo de expedientes.', 500));
         }
     }
 }

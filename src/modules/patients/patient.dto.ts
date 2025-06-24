@@ -534,10 +534,22 @@ export class UpdatePatientDTO {
     last_name?: string;
 
     @IsOptional()
+    @IsEmail()
+    email?: string;
+
+    @IsOptional()
+    @IsString()
+    phone?: string;
+
+    @IsOptional()
+    @IsDateString({}, { message: 'La fecha de nacimiento debe ser una fecha válida (YYYY-MM-DD).' })
+    birth_date?: string; // 🎯 NUEVO: Fecha de nacimiento para calcular edad automáticamente
+
+    @IsOptional()
     @IsInt()
     @Min(1)
     @Max(120)
-    age?: number;
+    age?: number; // Opcional, se calcula automáticamente desde birth_date
 
     @IsOptional()
     @IsString()
@@ -772,6 +784,8 @@ export class PatientResponseDTO {
         email: string;
         first_name: string;
         last_name: string;
+        phone?: string;
+        birth_date?: string; // 🎯 AGREGADO: Fecha de nacimiento
         age?: number;
         gender?: string;
         created_at: Date;
@@ -921,10 +935,14 @@ export class CreatePatientByNutritionistDTO {
     last_name!: string;
 
     @IsOptional()
+    @IsDateString({}, { message: 'La fecha de nacimiento debe ser una fecha válida (YYYY-MM-DD).' })
+    birth_date?: string; // 🎯 AGREGADO: Fecha de nacimiento para calcular edad automáticamente
+
+    @IsOptional()
     @IsNumber()
     @Min(1)
     @Max(120)
-    age?: number;
+    age?: number; // Opcional, se calcula automáticamente desde birth_date
 
     @IsOptional()
     @IsString()

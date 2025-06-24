@@ -10,7 +10,7 @@ import {
     OneToMany,
     Unique,
 } from 'typeorm';
-import { User } from '@/database/entities/user.entity'; // Para los participantes
+import { User } from '../../database/entities/user.entity'; // Para los participantes
 import { Message } from './message.entity'; // Para los mensajes en la conversación
 
 @Entity('conversations')

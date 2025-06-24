@@ -9,7 +9,7 @@ import {
     IsOptional,
     Matches,
 } from 'class-validator';
-import { RoleName } from '@/database/entities/role.entity'; // Ruta corregida
+import { RoleName } from '../../database/entities/role.entity'; // Ruta corregida
 
 export class RegisterPatientDto {
     @IsEmail({}, { message: 'El email debe ser una dirección de correo válida.' })

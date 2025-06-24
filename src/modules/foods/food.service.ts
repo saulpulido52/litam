@@ -1,10 +1,10 @@
 import { Repository } from 'typeorm';
-import { AppDataSource } from '@/database/data-source';
-import { Food } from '@/database/entities/food.entity';
-import { User } from '@/database/entities/user.entity';
-import { CreateFoodDto, UpdateFoodDto } from '@/modules/foods/food.dto';
-import { AppError } from '@/utils/app.error';
-import { RoleName } from '@/database/entities/role.entity';
+import { AppDataSource } from '../../database/data-source';
+import { Food } from '../../database/entities/food.entity';
+import { User } from '../../database/entities/user.entity';
+import { CreateFoodDto, UpdateFoodDto } from '../../modules/foods/food.dto';
+import { AppError } from '../../utils/app.error';
+import { RoleName } from '../../database/entities/role.entity';
 
 class FoodService {
     private foodRepository: Repository<Food>;

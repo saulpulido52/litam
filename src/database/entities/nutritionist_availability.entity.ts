@@ -9,7 +9,7 @@ import {
     UpdateDateColumn,
     Unique,
 } from 'typeorm';
-import { User } from '@/database/entities/user.entity';
+import { User } from '../../database/entities/user.entity';
 
 // Enum para los días de la semana
 export enum DayOfWeek {

@@ -1,10 +1,10 @@
 // src/modules/foods/food.routes.ts
 import { Router } from 'express';
-import foodController from '@/modules/foods/food.controller';
-import { protect, authorize } from '@/middleware/auth.middleware';
-import { validateMiddleware } from '@/middleware/validation.middleware';
-import { CreateFoodDto, UpdateFoodDto } from '@/modules/foods/food.dto';
-import { RoleName } from '@/database/entities/role.entity';
+import foodController from '../../modules/foods/food.controller';
+import { protect, authorize } from '../../middleware/auth.middleware';
+import { validateMiddleware } from '../../middleware/validation.middleware';
+import { CreateFoodDto, UpdateFoodDto } from '../../modules/foods/food.dto';
+import { RoleName } from '../../database/entities/role.entity';
 
 const router = Router();
 

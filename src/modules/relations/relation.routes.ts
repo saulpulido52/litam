@@ -1,11 +1,11 @@
 // src/modules/relations/relation.routes.ts
 import { Router } from 'express';
-import relationController from '@/modules/relations/relation.controller';
-import { protect, authorize } from '@/middleware/auth.middleware';
-import { validateMiddleware } from '@/middleware/validation.middleware';
-import { RequestRelationDto, UpdateRelationStatusDto } from '@/modules/relations/relation.dto';
-import { RoleName } from '@/database/entities/role.entity';
-import { RelationshipStatus } from '@/database/entities/patient_nutritionist_relation.entity'; // Asegúrate de importar el enum
+import relationController from '../../modules/relations/relation.controller';
+import { protect, authorize } from '../../middleware/auth.middleware';
+import { validateMiddleware } from '../../middleware/validation.middleware';
+import { RequestRelationDto, UpdateRelationStatusDto } from '../../modules/relations/relation.dto';
+import { RoleName } from '../../database/entities/role.entity';
+import { RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity'; // Asegúrate de importar el enum
 
 const router = Router();
 

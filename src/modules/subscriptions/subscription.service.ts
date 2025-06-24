@@ -1,16 +1,16 @@
 import { Repository, DataSource } from 'typeorm';
-import { SubscriptionPlan, PlanType, PlanStatus } from '@/database/entities/subscription_plan.entity';
-import { UserSubscription, SubscriptionStatus } from '@/database/entities/user_subscription.entity';
-import { User } from '@/database/entities/user.entity';
-import { AppError } from '@/utils/app.error';
-import { AppDataSource } from '@/database/data-source';
+import { SubscriptionPlan, PlanType, PlanStatus } from '../../database/entities/subscription_plan.entity';
+import { UserSubscription, SubscriptionStatus } from '../../database/entities/user_subscription.entity';
+import { User } from '../../database/entities/user.entity';
+import { AppError } from '../../utils/app.error';
+import { AppDataSource } from '../../database/data-source';
 import {
     CreateSubscriptionPlanDto,
     UpdateSubscriptionPlanDto,
     SubscribeToPlanDto,
     UpdateUserSubscriptionStatusDto,
-} from '@/modules/subscriptions/subscription.dto';
-import { RoleName } from '@/database/entities/role.entity';
+} from '../../modules/subscriptions/subscription.dto';
+import { RoleName } from '../../database/entities/role.entity';
 
 export class SubscriptionService {
     private subscriptionPlanRepository: Repository<SubscriptionPlan>;

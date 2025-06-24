@@ -1,13 +1,13 @@
 // src/modules/educational_content/educational_content.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import educationalContentService from '@/modules/educational_content/educational_content.service';
-import { AppError } from '@/utils/app.error';
+import educationalContentService from '../../modules/educational_content/educational_content.service';
+import { AppError } from '../../utils/app.error';
 import {
     CreateUpdateEducationalContentDto,
     CreateUpdateRecipeDto,
-} from '@/modules/educational_content/educational_content.dto';
-import { RoleName } from '@/database/entities/role.entity';
-import { ContentType } from '@/database/entities/educational_content.entity';
+} from '../../modules/educational_content/educational_content.dto';
+import { RoleName } from '../../database/entities/role.entity';
+import { ContentType } from '../../database/entities/educational_content.entity';
 
 class EducationalContentController {
     // --- Gestión de Contenido Educativo (Artículos, Guías, Videos) ---

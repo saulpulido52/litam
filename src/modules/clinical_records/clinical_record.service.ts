@@ -1,12 +1,12 @@
 // src/modules/clinical_records/clinical_record.service.ts
 import { Repository, Between } from 'typeorm';
-import { AppDataSource } from '@/database/data-source';
-import { User } from '@/database/entities/user.entity';
-import { ClinicalRecord } from '@/database/entities/clinical_record.entity';
-import { PatientNutritionistRelation, RelationshipStatus } from '@/database/entities/patient_nutritionist_relation.entity';
-import { CreateUpdateClinicalRecordDto } from '@/modules/clinical_records/clinical_record.dto';
-import { AppError } from '@/utils/app.error';
-import { RoleName } from '@/database/entities/role.entity';
+import { AppDataSource } from '../../database/data-source';
+import { User } from '../../database/entities/user.entity';
+import { ClinicalRecord } from '../../database/entities/clinical_record.entity';
+import { PatientNutritionistRelation, RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
+import { CreateUpdateClinicalRecordDto } from '../../modules/clinical_records/clinical_record.dto';
+import { AppError } from '../../utils/app.error';
+import { RoleName } from '../../database/entities/role.entity';
 
 class ClinicalRecordService {
     private userRepository: Repository<User>;
@@ -233,7 +233,22 @@ class ClinicalRecordService {
     }
 
     public async getPatientClinicalRecords(patientId: string, callerId: string, callerRole: RoleName, startDate?: string, endDate?: string) {
-        const patient = await this.userRepository.findOne({ where: { id: patientId } });
+        // Intentar buscar primero por ID de usuario
+        let patient = await this.userRepository.findOne({ where: { id: patientId } });
+        
+        // Si no se encuentra por ID de usuario, buscar por ID de perfil de paciente
+        if (!patient) {
+            const patientProfile = await this.userRepository.findOne({
+                where: { patient_profile: { id: patientId } },
+                relations: ['patient_profile']
+            });
+            if (patientProfile) {
+                patient = patientProfile;
+                // Usar el ID del usuario para las consultas posteriores
+                patientId = patient.id;
+            }
+        }
+        
         if (!patient) {
             throw new AppError('Paciente no encontrado.', 404);
         }
@@ -734,6 +749,35 @@ class ClinicalRecordService {
                 },
             } : null,
         };
+    }
+
+    /**
+     * Obtiene el conteo de expedientes de un paciente
+     */
+    public async getPatientRecordsCount(patientId: string, callerId: string, callerRole: RoleName) {
+        // Verificar permisos
+        if (callerRole === RoleName.PATIENT && patientId !== callerId) {
+            throw new AppError('No tienes permiso para ver el conteo de expedientes de otros pacientes.', 403);
+        } else if (callerRole === RoleName.NUTRITIONIST) {
+            const activeRelation = await this.relationRepository.findOne({
+                where: {
+                    patient: { id: patientId },
+                    nutritionist: { id: callerId },
+                    status: RelationshipStatus.ACTIVE,
+                },
+            });
+            if (!activeRelation) {
+                throw new AppError('No tienes una relación activa con este paciente.', 403);
+            }
+        } else if (callerRole !== RoleName.ADMIN) {
+            throw new AppError('Rol no autorizado.', 403);
+        }
+
+        const count = await this.clinicalRecordRepository.count({
+            where: { patient: { id: patientId } },
+        });
+
+        return count;
     }
 }
 
