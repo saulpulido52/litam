@@ -36,6 +36,18 @@ export type {
   AppointmentSlot,
 } from './appointment';
 
+// Clinical Records types
+export type {
+  ClinicalRecord,
+  CreateClinicalRecordDto,
+  UpdateClinicalRecordDto,
+  ClinicalRecordStats,
+  TransferResult,
+  NutritionistChangeRequest,
+  DeleteAccountRequest,
+  DeleteAccountResult,
+} from './clinical-record';
+
 // API Response types
 export interface ApiResponse<T> {
   status: 'success' | 'error';

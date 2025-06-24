@@ -61,23 +61,69 @@ export const usePatients = (): UsePatientsReturn => {
 
   // Cargar pacientes
   const refreshPatients = useCallback(async () => {
+    let isMounted = true;
+    
     try {
       setLoading(true);
       setErrorState(null);
       
-      const [patientsData, statsData] = await Promise.all([
-        patientsService.getMyPatients(),
-        patientsService.getPatientsStats()
-      ]);
+      // Verificar autenticación antes de hacer llamadas
+      const isAuth = authService.isAuthenticated();
+      if (!isAuth) {
+        console.warn('⚠️ Usuario no autenticado. Redirigiendo...');
+        throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+      }
       
-      setPatients(patientsData);
-      setStats(statsData);
+      // Solo una llamada - getPatientsStats ya incluye getMyPatients internamente
+      const patientsData = await patientsService.getMyPatients();
+      
+      if (isMounted) {
+        // Verificar integridad de los datos
+        const validPatients = patientsData.filter(patient => {
+          if (!patient.id || !patient.first_name) {
+            console.warn('⚠️ Paciente con datos incompletos detectado:', patient);
+            return false;
+          }
+          return true;
+        });
+        
+        console.log(`✅ Cargados ${validPatients.length} pacientes válidos de ${patientsData.length} totales`);
+        setPatients(validPatients);
+        
+        // Calcular estadísticas localmente
+        const stats: PatientsStats = {
+          total: validPatients.length,
+          active: validPatients.filter(p => p.is_active).length,
+          new: validPatients.filter(p => {
+            const created = new Date(p.created_at);
+            const now = new Date();
+            return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+          }).length,
+          withConditions: validPatients.filter(p => 
+            p.profile?.medical_conditions && p.profile.medical_conditions.length > 0
+          ).length
+        };
+        setStats(stats);
+      }
     } catch (err: any) {
-      const errorMessage = err.message || 'Error al cargar los pacientes';
-      setErrorState(errorMessage);
-      console.error('Error loading patients:', err);
+      if (isMounted) {
+        // Si es un error de autenticación o acceso, limpiar datos
+        if (err.message.includes('autenticado') || err.message.includes('Sesión expirada')) {
+          console.warn('🔐 Problema de autenticación detectado. Limpiando sesión...');
+          authService.logout();
+          localStorage.clear();
+          window.location.href = '/login';
+          return;
+        }
+        
+        const errorMessage = err.message || 'Error al cargar los pacientes';
+        setErrorState(errorMessage);
+        console.error('❌ Error loading patients:', err);
+      }
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -87,28 +133,25 @@ export const usePatients = (): UsePatientsReturn => {
       setLoading(true);
       setErrorState(null);
       
+      console.log('👥 usePatients: Creando nuevo paciente...');
       const newPatient = await patientsService.createPatient(patientData);
+      console.log('✅ usePatients: Paciente creado:', newPatient);
       
-      // Actualizar la lista local
-      setPatients(prev => [newPatient, ...prev]);
+      // Refresco completo desde el servidor para asegurar consistencia
+      console.log('🔄 usePatients: Refrescando lista completa desde el servidor...');
+      await refreshPatients();
       
-      // Actualizar estadísticas
-      setStats(prev => ({
-        ...prev,
-        total: prev.total + 1,
-        active: prev.active + (newPatient.is_active ? 1 : 0),
-        new: prev.new + 1
-      }));
-      
+      console.log('✅ usePatients: Lista actualizada exitosamente');
       return newPatient;
     } catch (err: any) {
       const errorMessage = err.message || 'Error al crear el paciente';
       setErrorState(errorMessage);
+      console.error('❌ usePatients: Error creando paciente:', err);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [refreshPatients]);
 
   // Actualizar paciente
   const updatePatient = useCallback(async (patientId: string, patientData: UpdatePatientRequest): Promise<Patient> => {
@@ -162,13 +205,29 @@ export const usePatients = (): UsePatientsReturn => {
         setSelectedPatient(null);
       }
     } catch (err: any) {
+      console.error('❌ Error in deletePatient:', err);
+      
+      // Handle stale data scenario
+      if (err.message?.includes('ya no está en tu lista') || err.message?.includes('actualizará automáticamente')) {
+        console.warn('⚠️ Stale data detected. Refreshing patient list...');
+        // Force refresh the patient list
+        await refreshPatients();
+        // Remove from local list anyway since it's not there anymore
+        setPatients(prev => prev.filter(patient => patient.id !== patientId));
+        if (selectedPatient && selectedPatient.id === patientId) {
+          setSelectedPatient(null);
+        }
+        // Don't throw error since the patient was effectively "removed"
+        return;
+      }
+      
       const errorMessage = err.message || 'Error al eliminar el paciente';
       setErrorState(errorMessage);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [selectedPatient]);
+  }, [selectedPatient, refreshPatients]);
 
   // Seleccionar paciente
   const selectPatient = useCallback((patient: Patient | null) => {
@@ -195,17 +254,27 @@ export const usePatients = (): UsePatientsReturn => {
 
   // Cargar pacientes al montar el componente (solo si está autenticado)
   useEffect(() => {
-    console.log('👥 usePatients: Component mounted, checking auth...');
-    const isAuth = authService.isAuthenticated();
-    console.log('👥 usePatients: isAuthenticated =', isAuth);
+    let isMounted = true;
     
-    if (isAuth) {
-      console.log('👥 usePatients: User authenticated, loading patients...');
-      refreshPatients();
-    } else {
-      console.log('👥 usePatients: User not authenticated, skipping patient load');
-    }
-  }, [refreshPatients]);
+    const loadPatientsOnMount = async () => {
+      console.log('👥 usePatients: Component mounted, checking auth...');
+      const isAuth = authService.isAuthenticated();
+      console.log('👥 usePatients: isAuthenticated =', isAuth);
+      
+      if (isAuth && isMounted) {
+        console.log('👥 usePatients: User authenticated, loading patients...');
+        await refreshPatients();
+      } else {
+        console.log('👥 usePatients: User not authenticated, skipping patient load');
+      }
+    };
+    
+    loadPatientsOnMount();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Solo ejecutar una vez al montar
 
   return {
     // State
@@ -254,17 +323,27 @@ export const usePatientAppointments = (patientId: string | null) => {
   }, [patientId]);
 
   useEffect(() => {
-    console.log('📅 usePatientAppointments: Effect triggered, patientId =', patientId);
-    const isAuth = authService.isAuthenticated();
-    console.log('📅 usePatientAppointments: isAuthenticated =', isAuth);
+    let isMounted = true;
     
-    if (isAuth && patientId) {
-      console.log('📅 usePatientAppointments: Fetching appointments for patient:', patientId);
-      fetchAppointments();
-    } else {
-      console.log('📅 usePatientAppointments: Skipping fetch - auth:', isAuth, 'patientId:', patientId);
-    }
-  }, [fetchAppointments]);
+    const loadAppointments = async () => {
+      console.log('📅 usePatientAppointments: Effect triggered, patientId =', patientId);
+      const isAuth = authService.isAuthenticated();
+      console.log('📅 usePatientAppointments: isAuthenticated =', isAuth);
+      
+      if (isAuth && patientId && isMounted) {
+        console.log('📅 usePatientAppointments: Fetching appointments for patient:', patientId);
+        await fetchAppointments();
+      } else {
+        console.log('📅 usePatientAppointments: Skipping fetch - auth:', isAuth, 'patientId:', patientId);
+      }
+    };
+    
+    loadAppointments();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [patientId]); // Solo depender de patientId
 
   return { appointments, loading, error, refreshAppointments: fetchAppointments };
 };
@@ -308,17 +387,27 @@ export const usePatientProgress = (patientId: string | null) => {
   }, [patientId]);
 
   useEffect(() => {
-    console.log('📈 usePatientProgress: Effect triggered, patientId =', patientId);
-    const isAuth = authService.isAuthenticated();
-    console.log('📈 usePatientProgress: isAuthenticated =', isAuth);
+    let isMounted = true;
     
-    if (isAuth && patientId) {
-      console.log('📈 usePatientProgress: Fetching progress for patient:', patientId);
-      fetchProgress();
-    } else {
-      console.log('📈 usePatientProgress: Skipping fetch - auth:', isAuth, 'patientId:', patientId);
-    }
-  }, [fetchProgress]);
+    const loadProgress = async () => {
+      console.log('📈 usePatientProgress: Effect triggered, patientId =', patientId);
+      const isAuth = authService.isAuthenticated();
+      console.log('📈 usePatientProgress: isAuthenticated =', isAuth);
+      
+      if (isAuth && patientId && isMounted) {
+        console.log('📈 usePatientProgress: Fetching progress for patient:', patientId);
+        await fetchProgress();
+      } else {
+        console.log('📈 usePatientProgress: Skipping fetch - auth:', isAuth, 'patientId:', patientId);
+      }
+    };
+    
+    loadProgress();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [patientId]); // Solo depender de patientId
 
   return { 
     progress, 

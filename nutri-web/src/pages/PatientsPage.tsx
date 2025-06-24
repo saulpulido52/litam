@@ -1,828 +1,1148 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { usePatients } from '../hooks/usePatients';
+import type { Patient } from '../services/patientsService';
+import patientsService from '../services/patientsService';
+
+// React Icons
+import { 
+  MdEmail, 
+  MdAdd,
+  MdArrowBack,
+  MdHome,
+  MdSearch,
+  MdEdit,
+  MdDelete,
+  MdSave,
+  MdClose,
+  MdWarning,
+  MdCheckCircle,
+  MdContentCopy,
+  MdLock,
+  MdRefresh
+} from 'react-icons/md';
+import { FaUsers, FaUserCircle } from 'react-icons/fa';
+import { BsPersonPlus } from 'react-icons/bs';
+import { HiOutlineDocumentText } from 'react-icons/hi';
+
+import { 
+  BsGenderMale, 
+  BsGenderFemale, 
+  BsGenderAmbiguous
+} from 'react-icons/bs';
 
 const PatientsPage: React.FC = () => {
-  const [showMedicalRecordModal, setShowMedicalRecordModal] = useState(false);
+  const navigate = useNavigate();
+  const { patients, loading, error, createPatient, updatePatient, deletePatient, clearError, refreshPatients } = usePatients();
+  
+  const [viewMode, setViewMode] = useState<'list' | 'create' | 'edit'>('list');
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCredentialsModal, setShowCredentialsModal] = useState(false);
+  const [temporaryCredentials, setTemporaryCredentials] = useState<any>(null);
+  const [emailCheckLoading, setEmailCheckLoading] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Datos de ejemplo con expediente clínico completo según el formato solicitado
-  const selectedPatient = {
-    id: 'exp-001',
-    user: {
-      id: 'user-001',
-      email: 'maria.gonzalez@demo.com',
-      first_name: 'María',
-      last_name: 'González Pérez',
-      age: 35,
-      gender: 'Femenino',
-      created_at: new Date()
-    },
-    consultation_reason: 'Desea perder peso de manera saludable y mejorar sus hábitos alimentarios para controlar la hipertensión',
-    current_weight: 70.5,
-    height: 165,
-    activity_level: 'moderada',
-    diagnosed_diseases: 'Hipertensión arterial',
-    diagnosed_since: 'Hace 2 años',
-    medications: ['Lisinopril 10mg'],
-    important_diseases_history: 'No presenta antecedentes importantes',
-    current_treatments: 'Tratamiento antihipertensivo',
-    surgeries_history: 'Apendicectomía a los 25 años',
-    current_symptoms: {
-      diarrhea: 'No',
-      constipation: 'Ocasional',
-      gastritis: 'No',
-      ulcer: 'No',
-      nausea: 'No',
-      heartburn: 'Ocasional después de comidas pesadas',
-      vomiting: 'No',
-      colitis: 'No',
-      mouth_mechanics: 'Sin problemas',
-      others: 'Sensación de hinchazón abdominal',
-      observations: 'Síntomas digestivos leves relacionados con alimentación'
-    },
-    family_history: {
-      obesity: true,
-      diabetes: true,
-      hypertension: true,
-      cancer: false,
-      thyroid_issues: false,
-      dyslipidemia: true,
-      other: 'Madre con diabetes tipo 2, padre con hipertensión'
-    },
-    does_exercise: true,
-    exercise_type: 'Caminata y yoga',
-    exercise_frequency: '3 veces por semana',
-    exercise_duration: '45 minutos',
-    exercise_since: 'Hace 6 meses',
-    alcohol_consumption: 'Copa de vino ocasional los fines de semana',
-    tobacco_consumption: 'No fuma',
-    coffee_consumption: '2 tazas por día',
-    general_appearance: 'Buena apariencia general, piel hidratada, cabello brillante',
-    knows_blood_pressure: true,
-    usual_blood_pressure: '135/85',
-    biochemical_indicators: {
-      glucose: 105,
-      cholesterol: 220,
-      triglycerides: 150,
-      hdl: 45,
-      ldl: 140,
-      hemoglobin: 12.5,
-      hematocrit: 38,
-      other_labs: 'TSH: 2.1 mIU/L (normal)',
-      last_update: new Date('2024-06-01')
-    },
-    previous_nutritional_guidance: true,
-    previous_guidance_when: 'Hace 1 año',
-    guidance_adherence_level: 'moderado',
-    guidance_adherence_reason: 'Le costó mantener la constancia por el trabajo',
-    who_prepares_food: 'Ella misma y esposo',
-    eats_home_or_out: 'Principalmente en casa',
-    diet_modified_last_6_months: true,
-    diet_modification_reason: 'Reducción de porciones y eliminación de harinas',
-    hungriest_time: '6:00 PM',
-    preferred_foods: ['Ensaladas', 'Frutas', 'Pescado', 'Vegetales'],
-    disliked_foods: ['Vísceras', 'Mariscos'],
-    food_intolerances: ['Lactosa'],
-    takes_supplements: true,
-    supplements_details: 'Omega 3 (1000mg) - 1 cápsula diaria para colesterol',
-    daily_water_glasses: 6,
-    daily_schedule: {
-      wake_up_time: '6:30 AM',
-      breakfast_time: '7:00 AM',
-      lunch_time: '1:00 PM',
-      dinner_time: '7:00 PM',
-      sleep_time: '10:30 PM',
-      main_activities: [
-        { time: '8:00 AM', activity: 'Trabajo de oficina' },
-        { time: '12:00 PM', activity: 'Pausa para almorzar' },
-        { time: '6:00 PM', activity: 'Ejercicio o tareas domésticas' },
-        { time: '8:00 PM', activity: 'Tiempo en familia' }
-      ]
-    },
-    food_frequency: {
-      vegetables: 'Diario (2-3 porciones)',
-      fruits: 'Diario (2 porciones)',
-      cereals: '2-3 veces por semana',
-      legumes: '1 vez por semana',
-      animal_products: '4-5 veces por semana',
-      dairy: '2-3 veces por semana (sin lactosa)',
-      fats: 'Diario (aceite de oliva)',
-      sugars: '2-3 veces por semana',
-      alcohol: '1 vez por semana'
-    },
-    bmi: 25.9,
-    bmi_category: 'Sobrepeso'
+  // Estados para formulario
+  const [formData, setFormData] = useState({
+    email: '',
+    first_name: '',
+    last_name: '',
+    phone: '',
+    age: '',
+    birth_date: '', // 🎯 NUEVO: Campo fecha de nacimiento
+    gender: 'male' as 'male' | 'female' | 'other',
+  });
+
+  const [formLoading, setFormLoading] = useState(false);
+
+  // 🎯 FUNCIÓN: Calcular edad automáticamente desde fecha de nacimiento
+  const calculateAgeFromBirthDate = (birthDate: string): string => {
+    if (!birthDate) return '';
+    
+    const today = new Date();
+    const birth = new Date(birthDate);
+    
+    if (birth > today) return ''; // Fecha inválida en el futuro
+    
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    
+    return age >= 0 ? String(age) : '';
   };
 
-  return (
-    <div className="container-fluid py-4">
-      <div className="row">
-        <div className="col-12">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <h1 className="h3 mb-0">
-                <i className="bi bi-people-fill me-2 text-primary"></i>
-                Gestión de Pacientes
-              </h1>
-              <p className="text-muted mb-0">Sistema completo de expedientes clínicos</p>
-            </div>
-            <Link to="/dashboard" className="btn btn-outline-secondary">
-              <i className="bi bi-arrow-left me-1"></i>
-              Volver al Dashboard
-            </Link>
+  // Manejar cambio de fecha de nacimiento
+  const handleBirthDateChange = (birthDate: string) => {
+    const calculatedAge = calculateAgeFromBirthDate(birthDate);
+    console.log(`📅 Fecha nacimiento: ${birthDate} → Edad calculada: ${calculatedAge}`);
+    
+    setFormData({
+      ...formData,
+      birth_date: birthDate,
+      age: calculatedAge
+    });
+  };
+
+  // Verificar email con debounce
+  useEffect(() => {
+    const checkEmail = async () => {
+      if (formData.email && formData.email.length > 5 && viewMode === 'create') {
+        console.log('🔍 Checking email:', formData.email);
+        setEmailCheckLoading(true);
+        try {
+          const exists = await patientsService.checkEmailExists(formData.email);
+          console.log('📧 Email check result:', { email: formData.email, exists, type: typeof exists });
+          setEmailExists(exists);
+          console.log('✅ emailExists state updated to:', exists);
+        } catch (error) {
+          console.error('❌ Error checking email:', error);
+          setEmailExists(false);
+        } finally {
+          setEmailCheckLoading(false);
+        }
+      } else {
+        console.log('⏭️ Skipping email check:', { 
+          email: formData.email, 
+          length: formData.email?.length, 
+          viewMode 
+        });
+        setEmailExists(false);
+      }
+    };
+
+    const timeoutId = setTimeout(checkEmail, 500); // Debounce de 500ms
+    return () => clearTimeout(timeoutId);
+  }, [formData.email, viewMode]);
+
+  // Debug useEffect para UI states
+  useEffect(() => {
+    console.log('🎯 UI State Debug:', {
+      email: formData.email,
+      emailExists,
+      emailCheckLoading,
+      viewMode,
+      shouldShowError: emailExists,
+      shouldShowSuccess: formData.email && !emailExists && !emailCheckLoading && viewMode === 'create'
+    });
+  }, [formData.email, emailExists, emailCheckLoading, viewMode]);
+
+  // Filtrar pacientes por término de búsqueda y excluir IDs problemáticos
+  const filteredPatients = useMemo(() => {
+    const problematicIds = [
+      '73a9ef86-60fc-4b3a-b8a0-8b87998b86a8',
+      // Agregar otros IDs problemáticos aquí si es necesario
+    ];
+
+    console.log('🔍 Filtrando pacientes:', {
+      total: patients.length,
+      searchTerm,
+      problematicIds
+    });
+
+    // Filtrar por búsqueda y excluir IDs problemáticos
+    const filtered = patients.filter(patient => {
+      const matchesSearch = !searchTerm || 
+        patient.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const isNotProblematic = !problematicIds.includes(patient.id);
+      
+      if (!isNotProblematic) {
+        console.log('⚠️ Excluyendo paciente problemático:', {
+          id: patient.id,
+          name: `${patient.first_name} ${patient.last_name}`,
+          email: patient.email
+        });
+      }
+      
+      return matchesSearch && isNotProblematic;
+    });
+
+    console.log('✅ Pacientes filtrados:', {
+      original: patients.length,
+      filtered: filtered.length,
+      excluded: patients.length - filtered.length
+    });
+
+    return filtered;
+  }, [patients, searchTerm]);
+
+  const handleCreatePatient = () => {
+    setSelectedPatient(null);
+    setFormData({
+      email: '',
+      first_name: '',
+      last_name: '',
+      phone: '',
+      age: '',
+      birth_date: '', // 🎯 AGREGAR: Campo fecha de nacimiento
+      gender: 'male',
+    });
+    setViewMode('create');
+    clearError();
+  };
+
+  const handleEditPatient = (patient: Patient) => {
+    setSelectedPatient(patient);
+    
+    // 🎯 SOLUCIÓN: Usar el campo age directo si está disponible, si no calcular desde birth_date
+    let patientAge = '';
+    if (patient.age) {
+      patientAge = String(patient.age);
+    } else if (patient.birth_date) {
+      patientAge = String(new Date().getFullYear() - new Date(patient.birth_date).getFullYear());
+    }
+    
+    console.log('📝 Cargando paciente para editar:', {
+      name: `${patient.first_name} ${patient.last_name}`,
+      email: patient.email,
+      age: patient.age,
+      birth_date: patient.birth_date,
+      calculated_age: patientAge
+    });
+    
+    setFormData({
+      email: patient.email,
+      first_name: patient.first_name,
+      last_name: patient.last_name,
+      phone: patient.phone || '',
+      age: patientAge,
+      birth_date: patient.birth_date || '', // 🎯 AGREGAR: Campo fecha de nacimiento
+      gender: patient.gender || 'male',
+    });
+    setViewMode('edit');
+    clearError();
+  };
+
+  const handleDeletePatient = (patient: Patient) => {
+    setSelectedPatient(patient);
+    setShowDeleteModal(true);
+  };
+
+  const handleViewClinicalRecords = async (patient: Patient) => {
+    try {
+      console.log('🔍 handleViewClinicalRecords - Recibido:', {
+        id: patient.id,
+        nombre: `${patient.first_name} ${patient.last_name}`,
+        email: patient.email
+      });
+      // Verificar que el paciente existe antes de navegar
+      const patientExists = await patientsService.getPatientById(patient.id);
+      if (patientExists) {
+        console.log('✅ Navegando a:', `/patients/${patient.id}/clinical-records`);
+        navigate(`/patients/${patient.id}/clinical-records`);
+      } else {
+        console.error('❌ Paciente no encontrado, no se puede navegar');
+        alert('El paciente ya no está disponible. La lista se actualizará.');
+        await refreshPatients();
+      }
+    } catch (error: any) {
+      console.error('❌ Error al validar paciente:', error);
+      alert('Error al validar paciente.');
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedPatient) return;
+
+    try {
+      // 🎯 FIX: Usar userId si está disponible, sino usar id como fallback
+      const patientIdToDelete = selectedPatient.userId || selectedPatient.id;
+      console.log('🗑️ Frontend - Attempting to delete patient:', {
+        relationId: selectedPatient.id,
+        userId: selectedPatient.userId,
+        usingId: patientIdToDelete
+      });
+      
+      await deletePatient(patientIdToDelete);
+      setShowDeleteModal(false);
+      setSelectedPatient(null);
+      await refreshPatients(); // Actualizar la lista después de remover
+    } catch (err) {
+      console.error('Error removing patient from list:', err);
+    }
+  };
+
+  // Función para limpiar y validar los datos del formulario
+  const preparePatientData = (data: typeof formData) => {
+    const cleanData: any = {};
+    
+    // Campos obligatorios
+    if (data.first_name?.trim()) {
+      cleanData.first_name = data.first_name.trim();
+    }
+    
+    if (data.last_name?.trim()) {
+      cleanData.last_name = data.last_name.trim();
+    }
+    
+    if (data.email?.trim()) {
+      cleanData.email = data.email.trim().toLowerCase();
+    }
+    
+    // Campos opcionales
+    if (data.phone?.trim()) {
+      cleanData.phone = data.phone.trim();
+    }
+    
+    if (data.gender) {
+      cleanData.gender = data.gender;
+    }
+    
+    // Fecha de nacimiento
+    if (data.birth_date?.trim()) {
+      cleanData.birth_date = data.birth_date.trim();
+    }
+    
+    // Edad: convertir a entero y validar rango (opcional, se calculará en el backend)
+    if (data.age && data.age.trim()) {
+      const ageNumber = parseInt(data.age.trim());
+      if (!isNaN(ageNumber) && ageNumber >= 1 && ageNumber <= 120) {
+        cleanData.age = ageNumber;
+      }
+    }
+    
+    return cleanData;
+  };
+
+  const handleSubmitForm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormLoading(true);
+
+    try {
+      if (viewMode === 'create') {
+        const cleanedData = preparePatientData(formData);
+        console.log('🔄 Datos preparados para crear:', cleanedData);
+        
+        const newPatient = await createPatient(cleanedData) as any;
+        
+        // 🎯 RECARGAR: Actualizar la lista de pacientes después de crear
+        console.log('🔄 Recargando lista después de crear paciente...');
+        await refreshPatients();
+        
+        // Si hay credenciales temporales, mostrarlas en el modal
+        if (newPatient.temporaryCredentials) {
+          setTemporaryCredentials(newPatient.temporaryCredentials);
+          setShowCredentialsModal(true);
+        }
+      } else if (viewMode === 'edit' && selectedPatient) {
+        const cleanedData = preparePatientData(formData);
+        console.log('🔄 Datos preparados para actualizar:', cleanedData);
+        
+        // Para editar, solo enviar campos que realmente han cambiado
+        const updatedFields: any = {};
+        
+        if (cleanedData.first_name && cleanedData.first_name !== selectedPatient.first_name) {
+          updatedFields.first_name = cleanedData.first_name;
+        }
+        
+        if (cleanedData.last_name && cleanedData.last_name !== selectedPatient.last_name) {
+          updatedFields.last_name = cleanedData.last_name;
+        }
+        
+        if (cleanedData.email && cleanedData.email !== selectedPatient.email) {
+          updatedFields.email = cleanedData.email;
+        }
+        
+        if (cleanedData.phone !== selectedPatient.phone) {
+          updatedFields.phone = cleanedData.phone || null;
+        }
+        
+        if (cleanedData.gender && cleanedData.gender !== selectedPatient.gender) {
+          updatedFields.gender = cleanedData.gender;
+        }
+        
+        // 🎯 NUEVO: Incluir fecha de nacimiento si ha cambiado
+        if (cleanedData.birth_date && cleanedData.birth_date !== selectedPatient.birth_date) {
+          updatedFields.birth_date = cleanedData.birth_date;
+        }
+        
+        // Para la edad, no está en la interfaz Patient directamente, así que solo añadir si es diferente de undefined
+        if (cleanedData.age !== undefined) {
+          updatedFields.age = cleanedData.age;
+        }
+        
+        console.log('🔄 Campos a actualizar:', updatedFields);
+        
+        // Solo actualizar si hay cambios
+        if (Object.keys(updatedFields).length > 0) {
+          // 🎯 IMPORTANTE: Siempre incluir el email para usar la nueva funcionalidad robusta
+          const dataWithEmail = {
+            ...updatedFields,
+            email: selectedPatient.email // Incluir email del paciente seleccionado
+          };
+          console.log('📧 Datos finales con email:', dataWithEmail);
+          
+          await updatePatient(selectedPatient.id, dataWithEmail);
+          
+          // 🎯 RECARGAR: Actualizar la lista de pacientes para mostrar cambios
+          console.log('🔄 Recargando lista de pacientes...');
+          await refreshPatients();
+        } else {
+          console.log('ℹ️ No hay cambios para actualizar');
+        }
+      }
+      setViewMode('list');
+      setSelectedPatient(null);
+    } catch (err) {
+      // Error se maneja en el hook
+      console.error('❌ Error en handleSubmitForm:', err);
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleCancelForm = () => {
+    setViewMode('list');
+    setSelectedPatient(null);
+    clearError();
+  };
+
+  // Añadir función para limpiar datos desactualizados
+  const handleClearCache = () => {
+    console.log('🧹 Limpiando datos desactualizados...');
+    
+    // Importar y usar las nuevas utilidades
+    import('../utils/clearStaleData').then(({ clearStaleData, clearBrowserHistory }) => {
+      // Limpiar caché
+      clearStaleData();
+      
+      // Limpiar historial del navegador
+      clearBrowserHistory();
+      
+      // Mostrar mensaje de éxito
+      alert('Cache y historial limpiados exitosamente. La página se recargará.');
+      
+      // Recargar la página después de un breve delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    });
+  };
+
+  // Función para forzar redirección a pacientes
+  const handleForceRedirect = () => {
+    console.log('🔄 Forzando redirección a página de pacientes...');
+    
+    // Limpiar caché y redirigir
+    import('../utils/clearStaleData').then(({ clearStaleData }) => {
+      clearStaleData();
+      window.location.href = '/patients';
+    });
+  };
+
+  // Función para resolver problemas de navegación
+  const handleFixNavigation = () => {
+    console.log('🔧 Resolviendo problemas de navegación...');
+    
+    import('../utils/clearStaleData').then(({ clearStaleData, validateCurrentUrl }) => {
+      // Limpiar caché
+      clearStaleData();
+      
+      // Validar URL actual
+      if (!validateCurrentUrl()) {
+        console.log('⚠️ URL inválida detectada, redirigiendo...');
+        window.location.href = '/patients';
+        return;
+      }
+      
+      // Recargar pacientes
+      refreshPatients();
+      
+      alert('Problemas de navegación resueltos. Los datos se han actualizado.');
+    });
+  };
+
+  if (loading && patients.length === 0) {
+    return (
+      <div className="container-fluid py-4">
+        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+          <div className="text-center">
+            <div className="spinner-border text-primary mb-3" role="status"></div>
+            <p>Cargando pacientes...</p>
           </div>
+        </div>
+      </div>
+    );
+  }
 
-          {/* Demostración del Expediente Clínico */}
-          <div className="row">
-            <div className="col-md-6">
-              <div className="card">
-                <div className="card-header bg-primary text-white">
-                  <h5 className="card-title mb-0">
-                    <i className="bi bi-person-fill me-2"></i>
-                    Paciente de Ejemplo
-                  </h5>
-                </div>
-                <div className="card-body">
-                  <div className="d-flex align-items-center mb-3">
-                    <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" 
-                         style={{ width: '60px', height: '60px' }}>
-                      <i className="bi bi-person-fill text-white fs-4"></i>
-                    </div>
-                    <div>
-                      <h5 className="mb-0">{selectedPatient.user.first_name} {selectedPatient.user.last_name}</h5>
-                      <p className="text-muted mb-0">{selectedPatient.user.email}</p>
-                      <small className="text-muted">
-                        {selectedPatient.user.age} años • {selectedPatient.user.gender}
-                      </small>
-                    </div>
-                  </div>
-
-                  <div className="row mb-3">
-                    <div className="col-6">
-                      <div className="text-center p-3 bg-light rounded">
-                        <div className="h4 mb-0 text-primary">{selectedPatient.current_weight} kg</div>
-                        <small className="text-muted">Peso Actual</small>
-                      </div>
-                    </div>
-                    <div className="col-6">
-                      <div className="text-center p-3 bg-light rounded">
-                        <div className="h4 mb-0 text-info">{selectedPatient.bmi}</div>
-                        <small className="text-muted">IMC ({selectedPatient.bmi_category})</small>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <strong>Motivo de consulta:</strong>
-                    <p className="text-muted mb-0">{selectedPatient.consultation_reason}</p>
-                  </div>
-
-                  <div className="mb-3">
-                    <strong>Antecedentes:</strong>
-                    <span className="badge bg-warning ms-2">Hipertensión</span>
-                    <span className="badge bg-info ms-1">Antec. Familiares</span>
-                  </div>
-
-                  <div className="d-grid">
-                    <button 
-                      className="btn btn-primary btn-lg"
-                      onClick={() => setShowMedicalRecordModal(true)}
+  return (
+    <div className="container-fluid mobile-page-content py-4">
+      {/* Encabezado */}
+      <div className="row mb-4">
+        <div className="col-12">
+                      <div className="d-flex justify-content-between align-items-center flex-wrap">
+              <div className="mb-2 mb-md-0">
+                <h1 className="h3 mb-1 d-flex align-items-center">
+                  <FaUsers className="text-primary me-3" size={24} />
+                  Gestión de Pacientes
+                </h1>
+                <p className="text-muted mb-0 small-text-mobile">
+                  {patients.length} paciente{patients.length !== 1 ? 's' : ''} registrado{patients.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+              
+              <div className="btn-group mobile-action-buttons flex-wrap">
+                {viewMode !== 'list' && (
+                  <button
+                    className="btn btn-outline-secondary btn-mobile mb-1"
+                    onClick={() => setViewMode('list')}
+                  >
+                    <MdArrowBack className="me-1" size={18} />
+                    <span className="d-none d-sm-inline">Volver a la </span>Lista
+                  </button>
+                )}
+                
+                {viewMode === 'list' && (
+                  <>
+                    <button
+                      className="btn btn-outline-warning btn-mobile mb-1 me-2"
+                      onClick={handleClearCache}
+                      title="Limpiar datos desactualizados y recargar"
                     >
-                      <i className="bi bi-file-medical me-2"></i>
-                      Ver Expediente Clínico Completo
+                      <MdRefresh className="me-1" size={16} />
+                      <span className="d-none d-sm-inline">Limpiar </span>Cache
                     </button>
+                    <button
+                      className="btn btn-outline-info btn-mobile mb-1 me-2"
+                      onClick={handleFixNavigation}
+                      title="Resolver problemas de navegación"
+                    >
+                      <MdRefresh className="me-1" size={16} />
+                      <span className="d-none d-sm-inline">Arreglar </span>Navegación
+                    </button>
+                    <button
+                      className="btn btn-outline-danger btn-mobile mb-1 me-2"
+                      onClick={handleForceRedirect}
+                      title="Forzar redirección a pacientes"
+                    >
+                      <MdRefresh className="me-1" size={16} />
+                      <span className="d-none d-sm-inline">Forzar </span>Redirección
+                    </button>
+                    <button
+                      className="btn btn-primary btn-mobile mb-1"
+                      onClick={handleCreatePatient}
+                      disabled={loading}
+                    >
+                      <BsPersonPlus className="me-1" size={18} />
+                      <span className="d-none d-sm-inline">Nuevo </span>Paciente
+                    </button>
+                  </>
+                )}
+                
+                <Link to="/dashboard" className="btn btn-outline-secondary btn-mobile mb-1">
+                  <MdHome className="me-1" size={18} />
+                  <span className="d-none d-sm-inline">Dashboard</span>
+                </Link>
+              </div>
+            </div>
+        </div>
+      </div>
+
+      {/* Alertas de error */}
+      {error && (
+        <div className="row mb-4">
+          <div className="col-12">
+            <div className="alert alert-danger alert-dismissible fade show mobile-card border-0 shadow-sm">
+              <div className="d-flex align-items-center">
+                <div className="bg-danger bg-opacity-20 rounded-circle p-2 me-3">
+                  <MdWarning className="text-danger" size={20} />
+                </div>
+                <div className="flex-grow-1">
+                  <strong>Error:</strong> {error}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={clearError}
+              ></button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Contenido principal */}
+      {viewMode === 'list' ? (
+        <div className="row">
+          <div className="col-12">
+            {/* Búsqueda */}
+            <div className="card mb-4 mobile-card border-0 shadow-sm">
+              <div className="card-body">
+                <div className="row">
+                  <div className="col-12">
+                    <div className="input-group">
+                      <span className="input-group-text bg-light border-end-0">
+                        <MdSearch className="text-muted" size={18} />
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control border-start-0 ps-0"
+                        placeholder="Buscar pacientes por nombre o email..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="col-md-6">
-              <div className="card">
-                <div className="card-header">
-                  <h5 className="card-title mb-0">
-                    <i className="bi bi-info-circle me-2"></i>
-                    Sobre el Expediente Clínico
-                  </h5>
-                </div>
-                <div className="card-body">
-                  <p>El expediente clínico completo incluye todas las secciones requeridas para una evaluación nutricional profesional:</p>
-                  
-                  <ul className="list-unstyled">
-                    <li className="mb-2">
-                      <i className="bi bi-check-circle-fill text-success me-2"></i>
-                      <strong>Datos Personales</strong> - Información completa del paciente
-                    </li>
-                    <li className="mb-2">
-                      <i className="bi bi-check-circle-fill text-success me-2"></i>
-                      <strong>Indicadores Clínicos</strong> - Peso, altura, IMC
-                    </li>
-                    <li className="mb-2">
-                      <i className="bi bi-check-circle-fill text-success me-2"></i>
-                      <strong>Antecedentes Patológicos</strong> - Historia médica
-                    </li>
-                    <li className="mb-2">
-                      <i className="bi bi-check-circle-fill text-success me-2"></i>
-                      <strong>Problemas Actuales</strong> - Síntomas digestivos
-                    </li>
-                    <li className="mb-2">
-                      <i className="bi bi-check-circle-fill text-success me-2"></i>
-                      <strong>Antecedentes Familiares</strong> - Historia familiar
-                    </li>
-                    <li className="mb-2">
-                      <i className="bi bi-check-circle-fill text-success me-2"></i>
-                      <strong>Actividad Física</strong> - Rutinas y ejercicios
-                    </li>
-                    <li className="mb-2">
-                      <i className="bi bi-check-circle-fill text-success me-2"></i>
-                      <strong>Indicadores Bioquímicos</strong> - Laboratorios
-                    </li>
-                    <li className="mb-2">
-                      <i className="bi bi-check-circle-fill text-success me-2"></i>
-                      <strong>Indicadores Dietéticos</strong> - Hábitos alimentarios
-                    </li>
-                    <li className="mb-2">
-                      <i className="bi bi-check-circle-fill text-success me-2"></i>
-                      <strong>Estilo de Vida</strong> - Rutina diaria
-                    </li>
-                    <li className="mb-2">
-                      <i className="bi bi-check-circle-fill text-success me-2"></i>
-                      <strong>Frecuencia de Consumo</strong> - Por grupos alimentarios
-                    </li>
-                  </ul>
-
-                  <div className="alert alert-info">
-                    <i className="bi bi-lightbulb me-2"></i>
-                    El expediente está optimizado para impresión y descarga en PDF para su uso profesional.
+            {/* Lista de pacientes */}
+            <div className="card mobile-card border-0 shadow-sm">
+              <div className="card-header bg-light border-0">
+                <h5 className="mb-0 text-dark d-flex align-items-center">
+                  <HiOutlineDocumentText className="me-2 text-primary" size={22} />
+                  Lista de Pacientes
+                  <span className="badge bg-primary text-white ms-2">{filteredPatients.length}</span>
+                </h5>
+              </div>
+              <div className="card-body">
+                {filteredPatients.length === 0 ? (
+                  <div className="text-center py-5">
+                    <div className="bg-light rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center" 
+                         style={{ width: '80px', height: '80px' }}>
+                      <FaUsers className="text-muted" size={36} />
+                    </div>
+                    <h5 className="text-muted mb-3">
+                      {searchTerm ? 'No se encontraron pacientes' : 'No hay pacientes registrados'}
+                    </h5>
+                    <p className="text-muted small-text-mobile mb-4">
+                      {searchTerm 
+                        ? 'Intenta con otros términos de búsqueda'
+                        : 'Los pacientes aparecerán aquí una vez que se registren'
+                      }
+                    </p>
+                    {!searchTerm && (
+                      <button className="btn btn-primary btn-mobile px-4 py-2" onClick={handleCreatePatient}>
+                        <MdAdd className="me-2" size={18} />
+                        Registrar Primer Paciente
+                      </button>
+                    )}
                   </div>
-                </div>
+                ) : (
+                  <div className="row g-3">
+                    {filteredPatients.map((patient, idx) => {
+                      console.log('📝 Renderizando paciente:', {
+                        idx,
+                        id: patient.id,
+                        nombre: `${patient.first_name} ${patient.last_name}`,
+                        email: patient.email
+                      });
+                      return (
+                        <div key={patient.id} className="col-12 col-sm-6 col-lg-4 col-xl-3 patient-card-mobile">
+                          <div className="card h-100 shadow-sm">
+                            <div className="card-body">
+                              {/* Header con avatar y status */}
+                              <div className="d-flex align-items-center justify-content-between mb-3">
+                                <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                                     style={{ 
+                                       width: '50px', 
+                                       height: '50px'
+                                     }}>
+                                  <FaUserCircle className="text-primary" size={24} />
+                                </div>
+                                <span className={`badge ${patient.is_active ? 'bg-success' : 'bg-secondary'}`}>
+                                  {patient.is_active ? 'Activo' : 'Inactivo'}
+                                </span>
+                              </div>
+
+                              {/* Información del paciente */}
+                              <div className="mb-3 text-center">
+                                <h6 className="mb-2 patient-name-mobile fw-bold text-dark">
+                                  {patient.first_name || ''} {patient.last_name || ''}
+                                </h6>
+                                
+                                <p className="text-muted small mb-2 patient-email-mobile d-flex align-items-center justify-content-center">
+                                  <MdEmail className="me-1" size={14} />
+                                  {patient.email || 'Sin email'}
+                                </p>
+
+                                <p className="text-muted small mb-0 d-flex align-items-center justify-content-center">
+                                  {patient.gender === 'male' ? (
+                                    <BsGenderMale className="me-1" size={14} />
+                                  ) : patient.gender === 'female' ? (
+                                    <BsGenderFemale className="me-1" size={14} />
+                                  ) : (
+                                    <BsGenderAmbiguous className="me-1" size={14} />
+                                  )}
+                                  {patient.gender === 'male' ? 'Masculino' : 
+                                   patient.gender === 'female' ? 'Femenino' : 
+                                   patient.gender === 'other' ? 'Otro' : 'No especificado'}
+                                </p>
+                              </div>
+
+                              {/* Botones de acción */}
+                              <div className="d-grid gap-2">
+                                <button
+                                  className="btn btn-primary btn-sm"
+                                  onClick={() => {
+                                    console.log('🟢 Botón "Ver Expedientes" clickeado:', {
+                                      id: patient.id,
+                                      nombre: `${patient.first_name} ${patient.last_name}`,
+                                      email: patient.email
+                                    });
+                                    handleViewClinicalRecords(patient);
+                                  }}
+                                  title="Ver expedientes clínicos"
+                                >
+                                  <HiOutlineDocumentText className="me-2" size={14} />
+                                  Expedientes
+                                </button>
+                                
+                                <div className="row g-2">
+                                  <div className="col-6">
+                                    <button
+                                      className="btn btn-outline-secondary btn-sm w-100"
+                                      onClick={() => handleEditPatient(patient)}
+                                      title="Editar paciente"
+                                    >
+                                      <MdEdit className="me-1" size={16} />
+                                      Editar
+                                    </button>
+                                  </div>
+                                  <div className="col-6">
+                                    <button
+                                      className="btn btn-outline-danger btn-sm w-100"
+                                      onClick={() => handleDeletePatient(patient)}
+                                      title="Remover paciente de tu lista"
+                                    >
+                                      <MdDelete className="me-1" size={16} />
+                                      Remover
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <button
+                                  className="btn btn-outline-info btn-sm"
+                                  onClick={() => navigate(`/progress?patient=${patient.id}`)}
+                                  title="Ver progreso"
+                                >
+                                  <HiOutlineDocumentText className="me-2" size={16} />
+                                  Progreso
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Separador visual solo en móviles */}
+                          {idx < filteredPatients.length - 1 && (
+                            <div className="d-block d-sm-none">
+                              <hr className="my-3 mx-auto" style={{ 
+                                width: '80%', 
+                                border: 'none', 
+                                height: '1px', 
+                                background: 'linear-gradient(to right, transparent, #dee2e6, transparent)',
+                                opacity: 0.5
+                              }} />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Modal de Expediente Clínico Completo */}
-      <div className={`modal fade ${showMedicalRecordModal ? 'show' : ''}`} 
-           style={{ display: showMedicalRecordModal ? 'block' : 'none' }}
-           tabIndex={-1}>
-        <div className="modal-dialog modal-xl">
-          <div className="modal-content">
-            <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title">
-                <i className="bi bi-file-medical me-2"></i>
-                Expediente Clínico Completo
-              </h5>
-              <button type="button" className="btn-close btn-close-white" 
-                      onClick={() => setShowMedicalRecordModal(false)}></button>
-            </div>
-            <div className="modal-body" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
-              <div className="clinical-record">
-                {/* Datos Personales */}
-                <div className="section mb-4">
-                  <h6 className="bg-light p-2 mb-3 border-start border-primary border-4">
-                    DATOS PERSONALES
-                  </h6>
+      ) : (
+        // Formulario (crear/editar)
+        <div className="row">
+          <div className="col-12 col-md-8 col-lg-6 mx-auto">
+            <div className="card mobile-card border-0 shadow-sm">
+              <div className="card-header bg-light border-0">
+                <h5 className="mb-0 text-dark d-flex align-items-center">
+                  {viewMode === 'create' ? (
+                    <MdAdd className="text-primary me-3" size={20} />
+                  ) : (
+                    <MdEdit className="text-primary me-3" size={20} />
+                  )}
+                  {viewMode === 'create' ? 'Registrar Nuevo Paciente' : 'Editar Paciente'}
+                </h5>
+              </div>
+              <div className="card-body mobile-form">
+                <form onSubmit={handleSubmitForm}>
                   <div className="row">
-                    <div className="col-md-6">
-                      <p><strong>Expediente:</strong> #{selectedPatient.id.slice(-8).toUpperCase()}</p>
-                      <p><strong>Nombre:</strong> {selectedPatient.user.first_name} {selectedPatient.user.last_name}</p>
-                      <p><strong>Edad:</strong> {selectedPatient.user.age || 'No especificado'}</p>
-                      <p><strong>Fecha:</strong> {new Date().toLocaleDateString()}</p>
+                    <div className="col-12 col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label">Nombres *</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={formData.first_name}
+                          onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                          required
+                        />
+                      </div>
                     </div>
-                    <div className="col-md-6">
-                      <p><strong>Sexo:</strong> {selectedPatient.user.gender || 'No especificado'}</p>
-                      <p><strong>Estado Civil:</strong> _________________</p>
-                      <p><strong>Escolaridad:</strong> __________________________________</p>
-                      <p><strong>Ocupación:</strong> __________________</p>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="col-12">
-                      <p><strong>Dirección:</strong></p>
-                      <p>________________________________________________________________________________</p>
-                      <p><strong>Teléfono:</strong> ______________________________ <strong>E-mail:</strong> {selectedPatient.user.email}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Motivo de la Consulta */}
-                <div className="section mb-4">
-                  <h6 className="bg-light p-2 mb-3 border-start border-primary border-4">
-                    Motivo de la consulta
-                  </h6>
-                  <div className="border p-3 bg-light">
-                    <p>{selectedPatient.consultation_reason}</p>
-                  </div>
-                </div>
-
-                {/* Actividad Física */}
-                <div className="section mb-4">
-                  <h6 className="bg-light p-2 mb-3 border-start border-primary border-4">
-                    Actividad:
-                  </h6>
-                  <div className="row mb-3">
-                    <div className="col-12">
-                      <div className="d-flex gap-4">
-                        <span className={`badge ${selectedPatient.activity_level === 'muy_ligera' ? 'bg-primary' : 'bg-light text-dark'} p-2`}>
-                          Muy ligera
-                        </span>
-                        <span className={`badge ${selectedPatient.activity_level === 'ligera' ? 'bg-primary' : 'bg-light text-dark'} p-2`}>
-                          Ligera
-                        </span>
-                        <span className={`badge ${selectedPatient.activity_level === 'moderada' ? 'bg-primary' : 'bg-light text-dark'} p-2`}>
-                          Moderada ✓
-                        </span>
-                        <span className={`badge ${selectedPatient.activity_level === 'pesada' ? 'bg-primary' : 'bg-light text-dark'} p-2`}>
-                          Pesada
-                        </span>
-                        <span className={`badge ${selectedPatient.activity_level === 'excepcional' ? 'bg-primary' : 'bg-light text-dark'} p-2`}>
-                          Excepcional
-                        </span>
+                    <div className="col-12 col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label">Apellidos *</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={formData.last_name}
+                          onChange={(e) => setFormData({...formData, last_name: e.target.value})}
+                          required
+                        />
                       </div>
                     </div>
                   </div>
-                  <div className="row">
-                    <div className="col-md-4">
-                      <p><strong>¿Realiza algún tipo de ejercicio físico?:</strong> 
-                        <span className={`ms-2 badge ${selectedPatient.does_exercise ? 'bg-success' : 'bg-danger'}`}>
-                          {selectedPatient.does_exercise ? 'SÍ' : 'NO'}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="col-md-8">
-                      <p><strong>¿Cuál?:</strong> {selectedPatient.exercise_type || '_______________________'}</p>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="col-md-4">
-                      <p><strong>Frecuencia:</strong> {selectedPatient.exercise_frequency}</p>
-                    </div>
-                    <div className="col-md-4">
-                      <p><strong>Duración:</strong> {selectedPatient.exercise_duration}</p>
-                    </div>
-                    <div className="col-md-4">
-                      <p><strong>¿Desde cuándo?:</strong> {selectedPatient.exercise_since}</p>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Consumo */}
-                <div className="section mb-4">
-                  <h6 className="bg-light p-2 mb-3 border-start border-primary border-4">
-                    Consumo (frecuencia y cantidad)
-                  </h6>
-                  <div className="row">
-                    <div className="col-md-4">
-                      <p><strong>Alcohol:</strong> {selectedPatient.alcohol_consumption}</p>
+                  <div className="mb-3">
+                    <label className="form-label">Email *</label>
+                    <div className="input-group">
+                      <input
+                        type="email"
+                        className={`form-control ${emailExists ? 'is-invalid' : formData.email && !emailExists && viewMode === 'create' ? 'is-valid' : ''}`}
+                        value={formData.email}
+                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        required
+                      />
+                      {emailCheckLoading && (
+                        <span className="input-group-text">
+                          <span className="spinner-border spinner-border-sm" role="status"></span>
+                        </span>
+                      )}
                     </div>
-                    <div className="col-md-4">
-                      <p><strong>Tabaco:</strong> {selectedPatient.tobacco_consumption}</p>
-                    </div>
-                    <div className="col-md-4">
-                      <p><strong>Café:</strong> {selectedPatient.coffee_consumption}</p>
-                    </div>
+                    {emailExists && (
+                      <div className="invalid-feedback d-block">
+                        <div className="d-flex align-items-center">
+                          <MdWarning className="me-2 text-danger" size={16} />
+                          Este email ya está registrado. Use un email diferente.
+                        </div>
+                      </div>
+                    )}
+                    {formData.email && !emailExists && !emailCheckLoading && viewMode === 'create' && (
+                      <div className="valid-feedback d-block">
+                        <div className="d-flex align-items-center">
+                          <MdCheckCircle className="me-2 text-success" size={16} />
+                          Email disponible
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
 
-                {/* Signos */}
-                <div className="section mb-4">
-                  <h6 className="bg-light p-2 mb-3 border-start border-primary border-4">
-                    SIGNOS
-                  </h6>
-                  <div className="mb-3">
-                    <p><strong>Aspecto General (cabello, ojos, piel, uñas, labios, encías, etc.):</strong></p>
-                    <div className="border p-3 bg-light">
-                      <p>{selectedPatient.general_appearance}</p>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="col-md-6">
-                      <p><strong>Presión Arterial</strong></p>
-                      <p><strong>¿Conoce su presión Arterial?:</strong> 
-                        <span className={`ms-2 badge ${selectedPatient.knows_blood_pressure ? 'bg-success' : 'bg-danger'}`}>
-                          {selectedPatient.knows_blood_pressure ? 'SÍ' : 'NO'}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="col-md-6">
-                      <p><strong>¿Cuál es? (habitual):</strong> {selectedPatient.usual_blood_pressure}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Indicadores Clínicos */}
-                <div className="section mb-4">
-                  <h6 className="bg-light p-2 mb-3 border-start border-primary border-4">
-                    INDICADORES CLÍNICOS
-                  </h6>
-                  <div className="row">
-                    <div className="col-md-4">
-                      <p><strong>Peso actual:</strong> {selectedPatient.current_weight} kg</p>
-                    </div>
-                    <div className="col-md-4">
-                      <p><strong>Altura:</strong> {selectedPatient.height} cm</p>
-                    </div>
-                    <div className="col-md-4">
-                      <p><strong>IMC:</strong> {selectedPatient.bmi} ({selectedPatient.bmi_category})</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Indicadores Bioquímicos */}
-                <div className="section mb-4">
-                  <h6 className="bg-light p-2 mb-3 border-start border-primary border-4">
-                    INDICADORES BIOQUÍMICOS
-                  </h6>
-                  <div className="row">
-                    <div className="col-md-3">
-                      <p><strong>Glucosa:</strong> {selectedPatient.biochemical_indicators.glucose} mg/dL</p>
-                    </div>
-                    <div className="col-md-3">
-                      <p><strong>Colesterol:</strong> {selectedPatient.biochemical_indicators.cholesterol} mg/dL</p>
-                    </div>
-                    <div className="col-md-3">
-                      <p><strong>Triglicéridos:</strong> {selectedPatient.biochemical_indicators.triglycerides} mg/dL</p>
-                    </div>
-                    <div className="col-md-3">
-                      <p><strong>HDL:</strong> {selectedPatient.biochemical_indicators.hdl} mg/dL</p>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="col-md-3">
-                      <p><strong>LDL:</strong> {selectedPatient.biochemical_indicators.ldl} mg/dL</p>
-                    </div>
-                    <div className="col-md-3">
-                      <p><strong>Hemoglobina:</strong> {selectedPatient.biochemical_indicators.hemoglobin} g/dL</p>
-                    </div>
-                    <div className="col-md-3">
-                      <p><strong>Hematocrito:</strong> {selectedPatient.biochemical_indicators.hematocrit}%</p>
-                    </div>
-                    <div className="col-md-3">
-                      <p><strong>Otros:</strong> {selectedPatient.biochemical_indicators.other_labs}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Antecedentes Patológicos */}
-                <div className="section mb-4">
-                  <h6 className="bg-light p-2 mb-3 border-start border-primary border-4">
-                    ANTECEDENTES PATOLÓGICOS
-                  </h6>
-                  <div className="mb-3">
-                    <p><strong>¿Padece alguna enfermedad diagnosticada?:</strong> {selectedPatient.diagnosed_diseases}</p>
-                  </div>
-                  <div className="mb-3">
-                    <p><strong>¿Desde cuándo?:</strong> {selectedPatient.diagnosed_since}</p>
-                  </div>
-                  <div className="mb-3">
-                    <p><strong>¿Toma algún medicamento?:</strong> 
-                      <span className="ms-2">
-                        {selectedPatient.medications && selectedPatient.medications.length > 0 ? 'SÍ' : 'NO'}
-                      </span>
-                    </p>
-                    <p><strong>¿Cuáles?:</strong> {selectedPatient.medications?.join(', ')}</p>
-                  </div>
-                  <div className="mb-3">
-                    <p><strong>¿Ha padecido alguna enfermedad importante?:</strong> {selectedPatient.important_diseases_history}</p>
-                  </div>
-                  <div className="mb-3">
-                    <p><strong>¿Actualmente toma algún tratamiento especial?:</strong> {selectedPatient.current_treatments}</p>
-                  </div>
-                  <div className="mb-3">
-                    <p><strong>¿Le han practicado alguna cirugía?:</strong> {selectedPatient.surgeries_history}</p>
-                  </div>
-                </div>
-
-                {/* Problemas Actuales */}
-                <div className="section mb-4">
-                  <h6 className="bg-light p-2 mb-3 border-start border-primary border-4">
-                    PROBLEMAS ACTUALES
-                  </h6>
-                  <div className="row mb-3">
-                    <div className="col-md-3">
-                      <p><strong>Diarrea:</strong> {selectedPatient.current_symptoms.diarrhea}</p>
-                    </div>
-                    <div className="col-md-3">
-                      <p><strong>Estreñimiento:</strong> {selectedPatient.current_symptoms.constipation}</p>
-                    </div>
-                    <div className="col-md-3">
-                      <p><strong>Gastritis:</strong> {selectedPatient.current_symptoms.gastritis}</p>
-                    </div>
-                    <div className="col-md-3">
-                      <p><strong>Úlcera:</strong> {selectedPatient.current_symptoms.ulcer}</p>
-                    </div>
-                  </div>
-                  <div className="row mb-3">
-                    <div className="col-md-3">
-                      <p><strong>Náusea:</strong> {selectedPatient.current_symptoms.nausea}</p>
-                    </div>
-                    <div className="col-md-3">
-                      <p><strong>Pirosis:</strong> {selectedPatient.current_symptoms.heartburn}</p>
-                    </div>
-                    <div className="col-md-3">
-                      <p><strong>Vómito:</strong> {selectedPatient.current_symptoms.vomiting}</p>
-                    </div>
-                    <div className="col-md-3">
-                      <p><strong>Colitis:</strong> {selectedPatient.current_symptoms.colitis}</p>
-                    </div>
-                  </div>
-                  <div className="mb-3">
-                    <p><strong>Mecánicos de la boca:</strong> {selectedPatient.current_symptoms.mouth_mechanics}</p>
-                    <p><strong>Otros:</strong> {selectedPatient.current_symptoms.others}</p>
-                  </div>
-                  <div className="mb-3">
-                    <p><strong>Observaciones:</strong></p>
-                    <div className="border p-3 bg-light">
-                      <p>{selectedPatient.current_symptoms.observations}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Antecedentes Familiares */}
-                <div className="section mb-4">
-                  <h6 className="bg-light p-2 mb-3 border-start border-primary border-4">
-                    ¿PRESENTA ALGUNO DE ESTOS ANTECEDENTES FAMILIARES?
-                  </h6>
-                  <div className="row">
-                    <div className="col-md-2">
-                      <p><strong>Obesidad:</strong> 
-                        <span className={`ms-2 badge ${selectedPatient.family_history.obesity ? 'bg-warning' : 'bg-light text-dark'}`}>
-                          {selectedPatient.family_history.obesity ? '✓' : '____'}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="col-md-2">
-                      <p><strong>Diabetes:</strong> 
-                        <span className={`ms-2 badge ${selectedPatient.family_history.diabetes ? 'bg-warning' : 'bg-light text-dark'}`}>
-                          {selectedPatient.family_history.diabetes ? '✓' : '____'}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="col-md-2">
-                      <p><strong>HTA:</strong> 
-                        <span className={`ms-2 badge ${selectedPatient.family_history.hypertension ? 'bg-warning' : 'bg-light text-dark'}`}>
-                          {selectedPatient.family_history.hypertension ? '✓' : '____'}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="col-md-2">
-                      <p><strong>Cáncer:</strong> 
-                        <span className={`ms-2 badge ${selectedPatient.family_history.cancer ? 'bg-warning' : 'bg-light text-dark'}`}>
-                          {selectedPatient.family_history.cancer ? '✓' : '____'}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="col-md-2">
-                      <p><strong>Hipo/Hipertiroidismo:</strong> 
-                        <span className={`ms-2 badge ${selectedPatient.family_history.thyroid_issues ? 'bg-warning' : 'bg-light text-dark'}`}>
-                          {selectedPatient.family_history.thyroid_issues ? '✓' : '____'}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="col-md-2">
-                      <p><strong>Dislipidemias:</strong> 
-                        <span className={`ms-2 badge ${selectedPatient.family_history.dyslipidemia ? 'bg-warning' : 'bg-light text-dark'}`}>
-                          {selectedPatient.family_history.dyslipidemia ? '✓' : '____'}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                  {selectedPatient.family_history.other && (
-                    <div className="mt-3">
-                      <p><strong>Otros antecedentes:</strong> {selectedPatient.family_history.other}</p>
+                  {viewMode === 'create' && (
+                    <div className="mb-3">
+                      <div className="alert alert-info">
+                        <div className="d-flex align-items-start">
+                          <MdLock className="text-info me-2 mt-1" size={18} />
+                          <div>
+                            <strong>Nota importante:</strong><br />
+                            Se generará automáticamente una contraseña temporal para el paciente. 
+                            Las credenciales se mostrarán después del registro.
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
-                </div>
 
-                {/* Indicadores Dietéticos */}
-                <div className="section mb-4">
-                  <h6 className="bg-light p-2 mb-3 border-start border-primary border-4">
-                    INDICADORES DIETÉTICOS
-                  </h6>
-                  <div className="mb-3">
-                    <p><strong>¿Ha recibido orientación nutricional anteriormente?:</strong> 
-                      <span className={`ms-2 badge ${selectedPatient.previous_nutritional_guidance ? 'bg-success' : 'bg-danger'}`}>
-                        {selectedPatient.previous_nutritional_guidance ? 'SÍ' : 'NO'}
-                      </span>
-                    </p>
-                    <p><strong>¿Cuándo?:</strong> {selectedPatient.previous_guidance_when}</p>
-                  </div>
-                  <div className="mb-3">
-                    <p><strong>¿Cuál fue el apego que tuvo a las recomendaciones nutricionales?</strong></p>
-                    <div className="d-flex gap-3 mb-2">
-                      <span className={`badge ${selectedPatient.guidance_adherence_level === 'nada' ? 'bg-primary' : 'bg-light text-dark'} p-2`}>
-                        Nada
-                      </span>
-                      <span className={`badge ${selectedPatient.guidance_adherence_level === 'minimo' ? 'bg-primary' : 'bg-light text-dark'} p-2`}>
-                        Mínimo
-                      </span>
-                      <span className={`badge ${selectedPatient.guidance_adherence_level === 'moderado' ? 'bg-primary' : 'bg-light text-dark'} p-2`}>
-                        Moderado apego ✓
-                      </span>
-                      <span className={`badge ${selectedPatient.guidance_adherence_level === 'bueno' ? 'bg-primary' : 'bg-light text-dark'} p-2`}>
-                        Buen apego
-                      </span>
-                      <span className={`badge ${selectedPatient.guidance_adherence_level === 'excelente' ? 'bg-primary' : 'bg-light text-dark'} p-2`}>
-                        Excelente apego
-                      </span>
+                  <div className="row">
+                    <div className="col-12 col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label">Teléfono</label>
+                        <input
+                          type="tel"
+                          className="form-control"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                        />
+                      </div>
                     </div>
-                    <p><strong>¿Por qué?:</strong> {selectedPatient.guidance_adherence_reason}</p>
-                  </div>
-                  <div className="row mb-3">
-                    <div className="col-md-6">
-                      <p><strong>¿Quién prepara sus alimentos en casa?:</strong> {selectedPatient.who_prepares_food}</p>
-                    </div>
-                    <div className="col-md-6">
-                      <p><strong>¿Acostumbra más a comer en casa o fuera de casa?:</strong> {selectedPatient.eats_home_or_out}</p>
+                    <div className="col-12 col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label">Fecha de Nacimiento</label>
+                        <input
+                          type="date"
+                          className="form-control"
+                          value={formData.birth_date}
+                          onChange={(e) => handleBirthDateChange(e.target.value)}
+                          max={new Date().toISOString().split('T')[0]} // No permitir fechas futuras
+                        />
+                        <div className="form-text">
+                          La edad se calculará automáticamente
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="mb-3">
-                    <p><strong>¿Ha modificado su alimentación en los últimos 6 meses? (trabajo, estudio o actividad):</strong></p>
-                    <p>
-                      <span className={`badge ${selectedPatient.diet_modified_last_6_months ? 'bg-success' : 'bg-danger'}`}>
-                        {selectedPatient.diet_modified_last_6_months ? 'SÍ' : 'NO'}
-                      </span>
-                      <span className="ms-3"><strong>¿Por qué?:</strong> {selectedPatient.diet_modification_reason}</span>
-                    </p>
-                  </div>
-                  <div className="mb-3">
-                    <p><strong>¿A qué hora tiene más hambre?:</strong> {selectedPatient.hungriest_time}</p>
-                  </div>
-                  <div className="row mb-3">
-                    <div className="col-md-6">
-                      <p><strong>Cuáles son sus alimentos preferidos:</strong> {selectedPatient.preferred_foods?.join(', ')}</p>
+
+                  {formData.age && (
+                    <div className="mb-3">
+                      <label className="form-label">Edad Calculada</label>
+                      <input
+                        type="text"
+                        className="form-control bg-light"
+                        value={`${formData.age} años`}
+                        readOnly
+                      />
+                      <div className="form-text text-success">
+                        ✓ Calculada automáticamente desde la fecha de nacimiento
+                      </div>
                     </div>
-                    <div className="col-md-6">
-                      <p><strong>Cuáles son los que no le agradan/acostumbra:</strong> {selectedPatient.disliked_foods?.join(', ')}</p>
+                  )}
+
+                  <div className="mb-3">
+                    <label className="form-label">Género</label>
+                    <select
+                      className="form-select"
+                      value={formData.gender}
+                      onChange={(e) => setFormData({...formData, gender: e.target.value as 'male' | 'female' | 'other'})}
+                    >
+                      <option value="male">Masculino</option>
+                      <option value="female">Femenino</option>
+                      <option value="other">Otro</option>
+                    </select>
+                  </div>
+
+                  <div className="d-grid gap-2 d-md-flex justify-content-md-end mobile-action-buttons">
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={handleCancelForm}
+                      disabled={formLoading}
+                    >
+                      <MdClose className="me-2" size={16} />
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={formLoading || emailExists || emailCheckLoading}
+                    >
+                      {formLoading ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                          {viewMode === 'create' ? 'Registrando...' : 'Guardando...'}
+                        </>
+                      ) : (
+                        <>
+                          {viewMode === 'create' ? (
+                            <MdAdd className="me-2" size={16} />
+                          ) : (
+                            <MdSave className="me-2" size={16} />
+                          )}
+                          {viewMode === 'create' ? 'Registrar Paciente' : 'Guardar Cambios'}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación de eliminación */}
+      <div className={`modal fade ${showDeleteModal ? 'show' : ''}`} 
+           style={{ display: showDeleteModal ? 'block' : 'none' }}
+           tabIndex={-1}>
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title d-flex align-items-center">
+                <MdWarning className="text-warning me-2" size={22} />
+                Remover Paciente de tu Lista
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setShowDeleteModal(false)}
+              ></button>
+            </div>
+            <div className="modal-body">
+              <p className="mb-3">¿Estás seguro de que deseas remover este paciente de tu lista?</p>
+              {selectedPatient && (
+                <div className="alert alert-warning">
+                  <div className="d-flex align-items-center">
+                    <FaUserCircle className="text-warning me-3" size={24} />
+                    <div>
+                      <strong>Paciente:</strong> {selectedPatient.first_name || ''} {selectedPatient.last_name || ''}<br/>
+                      <strong>Email:</strong> {selectedPatient.email || 'Sin email'}
                     </div>
-                  </div>
-                  <div className="mb-3">
-                    <p><strong>Qué alimentos le causan malestar ó alergia:</strong> {selectedPatient.food_intolerances?.join(', ')}</p>
-                  </div>
-                  <div className="mb-3">
-                    <p><strong>¿Toma algún suplemento/complemento alimenticio?:</strong></p>
-                    <p>
-                      <span className={`badge ${selectedPatient.takes_supplements ? 'bg-success' : 'bg-danger'}`}>
-                        {selectedPatient.takes_supplements ? 'SÍ' : 'NO'}
-                      </span>
-                    </p>
-                    <p><strong>¿Cuál? Dosis ¿Por qué?:</strong> {selectedPatient.supplements_details}</p>
-                  </div>
-                  <div className="mb-3">
-                    <p><strong>¿Cuántos vasos de agua consume en el día?:</strong> {selectedPatient.daily_water_glasses}</p>
                   </div>
                 </div>
-
-                {/* Estilo de Vida */}
-                <div className="section mb-4">
-                  <h6 className="bg-light p-2 mb-3 border-start border-primary border-4">
-                    ESTILO DE VIDA - Diario de Actividades (24 horas):
-                  </h6>
-                  <table className="table table-bordered">
-                    <thead>
-                      <tr>
-                        <th>HORA</th>
-                        <th>PRINCIPAL ACTIVIDAD REALIZADA</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td><strong>DESPERTARSE</strong></td>
-                        <td>{selectedPatient.daily_schedule.wake_up_time}</td>
-                      </tr>
-                      <tr>
-                        <td><strong>DESAYUNO</strong></td>
-                        <td>{selectedPatient.daily_schedule.breakfast_time}</td>
-                      </tr>
-                      <tr>
-                        <td><strong>COMIDA</strong></td>
-                        <td>{selectedPatient.daily_schedule.lunch_time}</td>
-                      </tr>
-                      <tr>
-                        <td><strong>CENA</strong></td>
-                        <td>{selectedPatient.daily_schedule.dinner_time}</td>
-                      </tr>
-                      <tr>
-                        <td><strong>DORMIR</strong></td>
-                        <td>{selectedPatient.daily_schedule.sleep_time}</td>
-                      </tr>
-                      {selectedPatient.daily_schedule.main_activities?.map((activity, index) => (
-                        <tr key={index}>
-                          <td>{activity.time}</td>
-                          <td>{activity.activity}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Frecuencia de Consumo */}
-                <div className="section mb-4">
-                  <h6 className="bg-light p-2 mb-3 border-start border-primary border-4">
-                    FRECUENCIA DE CONSUMO POR GRUPOS DE ALIMENTOS (SEMANAL)
-                  </h6>
-                  <table className="table table-bordered">
-                    <thead>
-                      <tr>
-                        <th>verduras</th>
-                        <th>frutas</th>
-                        <th>cereales</th>
-                        <th>leguminosas</th>
-                        <th>animal</th>
-                        <th>leche</th>
-                        <th>grasas</th>
-                        <th>azúcares</th>
-                        <th>alcohol</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>{selectedPatient.food_frequency.vegetables}</td>
-                        <td>{selectedPatient.food_frequency.fruits}</td>
-                        <td>{selectedPatient.food_frequency.cereals}</td>
-                        <td>{selectedPatient.food_frequency.legumes}</td>
-                        <td>{selectedPatient.food_frequency.animal_products}</td>
-                        <td>{selectedPatient.food_frequency.dairy}</td>
-                        <td>{selectedPatient.food_frequency.fats}</td>
-                        <td>{selectedPatient.food_frequency.sugars}</td>
-                        <td>{selectedPatient.food_frequency.alcohol}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="text-end mt-4">
-                  <p><strong>Fecha:</strong> {new Date().toLocaleDateString()}</p>
-                  <p><strong>Expediente:</strong> #{selectedPatient.id.slice(-8).toUpperCase()}</p>
+              )}
+              <div className="alert alert-info">
+                <div className="d-flex align-items-start">
+                  <MdWarning className="text-info me-2 mt-1" size={18} />
+                  <div className="small-text-mobile">
+                    <strong>Nota:</strong> Esto terminará tu relación profesional con este paciente. El paciente mantendrá su cuenta y podrá ser asignado a otro nutriólogo.
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="modal-footer">
-              <button type="button" className="btn btn-success me-2">
-                <i className="bi bi-printer me-1"></i>
-                Imprimir Expediente
+            <div className="modal-footer d-grid gap-2 d-md-flex justify-content-md-end">
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                <MdClose className="me-2" size={16} />
+                Cancelar
               </button>
-              <button type="button" className="btn btn-primary me-2">
-                <i className="bi bi-download me-1"></i>
-                Descargar PDF
-              </button>
-              <button type="button" className="btn btn-secondary" 
-                      onClick={() => setShowMedicalRecordModal(false)}>
-                Cerrar
+              <button
+                type="button"
+                className="btn btn-warning"
+                onClick={confirmDelete}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2"></span>
+                    Removiendo...
+                  </>
+                ) : (
+                  <>
+                    <MdDelete className="me-2" size={16} />
+                    Remover de mi Lista
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* CSS para el expediente clínico */}
-      <style>
-        {`
-          .clinical-record .section {
-            margin-bottom: 2rem;
-          }
-          
-          .clinical-record h6 {
-            font-weight: bold;
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-          }
-          
-          .clinical-record p {
-            margin-bottom: 0.5rem;
-            line-height: 1.4;
-          }
-          
-          .clinical-record .table td, 
-          .clinical-record .table th {
-            padding: 0.5rem;
-            font-size: 0.9rem;
-          }
-          
-          @media print {
-            .modal-header, .modal-footer {
-              display: none !important;
-            }
-            
-            .modal-body {
-              padding: 0 !important;
-            }
-            
-            .clinical-record {
-              font-size: 12px;
-            }
-            
-            .clinical-record h6 {
-              font-size: 14px;
-              page-break-after: avoid;
-            }
-            
-            .section {
-              page-break-inside: avoid;
-              margin-bottom: 1rem;
-            }
-          }
-        `}
-      </style>
+      {/* Backdrop del modal */}
+      {showDeleteModal && (
+        <div className="modal-backdrop fade show"></div>
+      )}
+
+      {/* Modal de credenciales temporales */}
+      <div className={`modal fade ${showCredentialsModal ? 'show' : ''}`} 
+           style={{ display: showCredentialsModal ? 'block' : 'none' }}
+           tabIndex={-1}>
+        <div className="modal-dialog modal-dialog-centered modal-lg">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title d-flex align-items-center">
+                <MdLock className="text-success me-2" size={22} />
+                <span className="d-none d-sm-inline">Paciente Registrado Exitosamente</span>
+                <span className="d-sm-none">Registro Exitoso</span>
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setShowCredentialsModal(false)}
+              ></button>
+            </div>
+            <div className="modal-body">
+              <div className="alert alert-success">
+                <div className="d-flex align-items-center">
+                  <MdCheckCircle className="text-success me-2" size={20} />
+                  <div>
+                    <span className="d-none d-sm-inline">El paciente ha sido registrado exitosamente. Se han generado credenciales temporales.</span>
+                    <span className="d-sm-none">Paciente registrado. Credenciales generadas.</span>
+                  </div>
+                </div>
+              </div>
+              
+              {temporaryCredentials && (
+                <div className="card mobile-card">
+                  <div className="card-header bg-light">
+                    <h6 className="mb-0 text-dark d-flex align-items-center">
+                      <MdLock className="text-primary me-2" size={18} />
+                      Credenciales Temporales
+                    </h6>
+                  </div>
+                  <div className="card-body mobile-form">
+                    <div className="row">
+                      <div className="col-12 mb-3">
+                        <label className="form-label small-text-mobile">
+                          <strong>Email:</strong>
+                        </label>
+                        <div className="input-group">
+                          <input 
+                            type="text" 
+                            className="form-control" 
+                            value={temporaryCredentials.email}
+                            readOnly
+                          />
+                          <button 
+                            className="btn btn-outline-secondary"
+                            onClick={() => navigator.clipboard.writeText(temporaryCredentials.email)}
+                            title="Copiar email"
+                          >
+                            <MdContentCopy size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="col-12 mb-3">
+                        <label className="form-label small-text-mobile">
+                          <strong>Contraseña Temporal:</strong>
+                        </label>
+                        <div className="input-group">
+                          <input 
+                            type="text" 
+                            className="form-control" 
+                            value={temporaryCredentials.temporary_password}
+                            readOnly
+                          />
+                          <button 
+                            className="btn btn-outline-secondary"
+                            onClick={() => navigator.clipboard.writeText(temporaryCredentials.temporary_password)}
+                            title="Copiar contraseña"
+                          >
+                            <MdContentCopy size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="col-12">
+                        <div className="alert alert-warning">
+                          <div className="d-flex align-items-center small-text-mobile">
+                            <MdWarning className="text-warning me-2" size={16} />
+                            <div>
+                              <span className="d-none d-sm-inline">Esta contraseña expira el: {new Date(temporaryCredentials.expires_at).toLocaleString('es-MX')}</span>
+                              <span className="d-sm-none">Expira: {new Date(temporaryCredentials.expires_at).toLocaleDateString('es-MX')}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="alert alert-info mt-3">
+                <div className="d-flex align-items-start">
+                  <MdWarning className="text-info me-2 mt-1" size={18} />
+                  <div>
+                    <strong>Importante:</strong><br />
+                    <span className="d-none d-sm-inline">Comparte estas credenciales con el paciente de forma segura. 
+                    El paciente deberá cambiar su contraseña en el primer inicio de sesión.</span>
+                    <span className="d-sm-none">Comparte estas credenciales de forma segura.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer d-grid">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => setShowCredentialsModal(false)}
+              >
+                <MdCheckCircle className="me-2" size={16} />
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Backdrop del modal de credenciales */}
+      {showCredentialsModal && (
+        <div className="modal-backdrop fade show"></div>
+      )}
     </div>
   );
 };

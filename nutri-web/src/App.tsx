@@ -9,7 +9,7 @@ import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
-import AdminDashboard from './pages/AdminDashboard';
+// import AdminDashboard from './pages/AdminDashboard';
 import AppointmentsPage from './pages/AppointmentsPage';
 import PatientsPage from './pages/PatientsPage';
 import DietPlansPage from './pages/DietPlansPage';
@@ -18,6 +18,7 @@ import ProgressTrackingPage from './pages/ProgressTrackingPage';
 import ReportsPage from './pages/ReportsPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
+import ClinicalRecordsPage from './pages/ClinicalRecordsPage';
 
 const App: React.FC = () => {
   return (
@@ -31,9 +32,10 @@ const App: React.FC = () => {
           {/* Rutas protegidas con layout */}
           <Route path="/" element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            {/* <Route path="/admin" element={<AdminDashboard />} /> */}
             <Route path="/appointments" element={<AppointmentsPage />} />
             <Route path="/patients" element={<PatientsPage />} />
+            <Route path="/patients/:patientId/clinical-records" element={<ClinicalRecordsPage />} />
             <Route path="/diet-plans" element={<DietPlansPage />} />
             <Route path="/messages" element={<MessagingPage />} />
             <Route path="/progress" element={<ProgressTrackingPage />} />

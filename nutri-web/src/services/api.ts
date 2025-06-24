@@ -5,6 +5,7 @@ import type { ApiResponse } from '../types';
 class ApiService {
   private api: AxiosInstance;
   private token: string | null = null;
+  private requestQueue: Map<string, Promise<any>> = new Map();
 
   constructor() {
     this.api = axios.create({
@@ -78,8 +79,25 @@ class ApiService {
 
   // Generic API methods
   async get<T>(url: string, params?: object): Promise<ApiResponse<T>> {
-    const response: AxiosResponse<ApiResponse<T>> = await this.api.get(url, { params });
-    return response.data;
+    const requestKey = `GET:${url}:${JSON.stringify(params || {})}`;
+    
+    // Si ya hay una petición idéntica en progreso, esperarla
+    if (this.requestQueue.has(requestKey)) {
+      console.log('🔄 Reusing existing request for:', requestKey);
+      return this.requestQueue.get(requestKey)!;
+    }
+    
+    // Crear nueva petición
+    const requestPromise = this.api.get(url, { params }).then(response => {
+      this.requestQueue.delete(requestKey);
+      return response.data;
+    }).catch(error => {
+      this.requestQueue.delete(requestKey);
+      throw error;
+    });
+    
+    this.requestQueue.set(requestKey, requestPromise);
+    return requestPromise;
   }
 
   async post<T>(url: string, data?: object): Promise<ApiResponse<T>> {

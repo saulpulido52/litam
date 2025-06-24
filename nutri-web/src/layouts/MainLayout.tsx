@@ -90,22 +90,23 @@ const MainLayout: React.FC = () => {
       {/* Sidebar Overlay for mobile */}
       {sidebarOpen && isMobile && (
         <div
-          className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
-          style={{ zIndex: 1040 }}
+          className="sidebar-overlay"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <div 
-        className={`h-100 bg-white shadow-lg ${isMobile ? 'position-fixed' : 'position-relative'}`}
+        className={`h-100 bg-white shadow-lg ${
+          isMobile 
+            ? `sidebar-mobile ${sidebarOpen ? 'open' : ''}` 
+            : 'position-relative'
+        }`}
         style={{ 
-          width: '280px', 
+          width: isMobile ? '280px' : '280px', 
+          maxWidth: isMobile ? '80vw' : '280px',
           zIndex: 1050,
-          transform: isMobile 
-            ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') 
-            : 'translateX(0)',
-          transition: 'transform 0.3s ease-in-out'
+          ...(isMobile ? {} : { zIndex: 'auto' })
         }}
       >
         {/* Sidebar Header */}
@@ -130,7 +131,7 @@ const MainLayout: React.FC = () => {
             <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
               <User size={24} className="text-primary" />
             </div>
-            <div>
+            <div className={isMobile ? 'text-truncate-mobile' : ''}>
               <div className="fw-semibold small">{user?.first_name} {user?.last_name}</div>
               <div className="text-muted small">Nutriólogo Profesional</div>
             </div>
@@ -174,14 +175,14 @@ const MainLayout: React.FC = () => {
           <div className="d-grid gap-2">
             <Link 
               to="/settings" 
-              className="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center"
+              className={`btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center ${isMobile ? 'btn-mobile' : ''}`}
             >
               <Settings size={16} className="me-2" />
               Configuración
             </Link>
             <button
               onClick={handleLogout}
-              className="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center"
+              className={`btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center ${isMobile ? 'btn-mobile' : ''}`}
             >
               <LogOut size={16} className="me-2" />
               Cerrar Sesión
@@ -191,9 +192,9 @@ const MainLayout: React.FC = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-grow-1 d-flex flex-column">
+      <div className={`flex-grow-1 d-flex flex-column ${isMobile ? 'main-content-mobile' : ''}`}>
         {/* Top Header */}
-        <header className="bg-white shadow-sm border-bottom py-3 px-4">
+        <header className={`bg-white shadow-sm border-bottom py-3 px-4 ${isMobile ? 'header-mobile mobile-header' : ''}`}>
           <div className="d-flex align-items-center justify-content-between">
             <div className="d-flex align-items-center">
               {isMobile && (
@@ -205,7 +206,7 @@ const MainLayout: React.FC = () => {
                 </button>
               )}
               <div>
-                <h1 className="h4 mb-0 text-dark">
+                <h1 className={`h4 mb-0 text-dark ${isMobile ? 'd-none d-sm-block' : ''}`}>
                   {navigation.find(item => item.href === location.pathname)?.name || 
                    (location.pathname === '/settings' ? 'Configuración' :
                     location.pathname === '/admin' ? 'Panel Administrativo' :
@@ -213,7 +214,7 @@ const MainLayout: React.FC = () => {
                     location.pathname === '/messages' ? 'Mensajería' :
                     location.pathname === '/progress' ? 'Seguimiento de Progreso' : 'Dashboard')}
                 </h1>
-                <small className="text-muted">Plataforma Nutricional Profesional</small>
+                <small className={`text-muted ${isMobile ? 'd-none' : ''}`}>Plataforma Nutricional Profesional</small>
               </div>
             </div>
 
@@ -221,7 +222,7 @@ const MainLayout: React.FC = () => {
               {/* Notifications */}
               <div className="position-relative dropdown">
                 <button 
-                  className="btn btn-outline-secondary position-relative"
+                  className={`btn btn-outline-secondary position-relative ${isMobile ? 'btn-mobile' : ''}`}
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
                 >
@@ -231,7 +232,7 @@ const MainLayout: React.FC = () => {
                     <span className="visually-hidden">notificaciones no leídas</span>
                   </span>
                 </button>
-                <ul className="dropdown-menu dropdown-menu-end" style={{ minWidth: '300px' }}>
+                <ul className="dropdown-menu dropdown-menu-end" style={{ minWidth: isMobile ? '280px' : '300px' }}>
                   <li className="dropdown-header">
                     <div className="d-flex justify-content-between align-items-center">
                       <span>Notificaciones</span>
@@ -293,7 +294,7 @@ const MainLayout: React.FC = () => {
               {/* User Profile Dropdown */}
               <div className="dropdown">
                 <button
-                  className="btn btn-outline-primary dropdown-toggle d-flex align-items-center"
+                  className={`btn btn-outline-primary dropdown-toggle d-flex align-items-center ${isMobile ? 'btn-mobile' : ''}`}
                   type="button"
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
@@ -301,7 +302,7 @@ const MainLayout: React.FC = () => {
                   <div className="bg-primary bg-opacity-10 rounded-circle p-1 me-2">
                     <User size={16} className="text-primary" />
                   </div>
-                  <span className="me-1">{user?.first_name}</span>
+                  <span className={`me-1 ${isMobile ? 'd-none d-sm-inline' : ''}`}>{user?.first_name}</span>
                 </button>
                 <ul className="dropdown-menu dropdown-menu-end">
                   <li>
@@ -330,7 +331,7 @@ const MainLayout: React.FC = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-grow-1 overflow-auto bg-light">
+        <main className={`flex-grow-1 overflow-auto bg-light ${isMobile ? 'content-with-mobile-header' : ''}`}>
           <Outlet />
         </main>
       </div>
