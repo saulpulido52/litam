@@ -118,6 +118,11 @@ const LoginPage: React.FC = () => {
     }));
   };
 
+  // Botones para autocompletar credenciales de prueba
+  const fillNutri1 = () => setLoginState(prev => ({ ...prev, email: 'dr.maria.gonzalez@demo.com', password: 'demo123', error: null, success: null }));
+  const fillNutri2 = () => setLoginState(prev => ({ ...prev, email: 'dr.juan.perez@demo.com', password: 'demo123', error: null, success: null }));
+  const fillNutri3 = () => setLoginState(prev => ({ ...prev, email: 'dra.carmen.rodriguez@demo.com', password: 'demo123', error: null, success: null }));
+
   return (
     <div className="bg-light min-vh-100 d-flex align-items-center">
       <Container>
@@ -134,6 +139,13 @@ const LoginPage: React.FC = () => {
             <Card className="nutri-card shadow-lg">
               <Card.Body className="p-4">
                 <Form onSubmit={handleSubmit}>
+                  {/* Botones de autocompletar credenciales */}
+                  <div className="d-flex justify-content-between mb-3">
+                    <Button variant="outline-secondary" size="sm" onClick={fillNutri1}>Nutri 1</Button>
+                    <Button variant="outline-secondary" size="sm" onClick={fillNutri2}>Nutri 2</Button>
+                    <Button variant="outline-secondary" size="sm" onClick={fillNutri3}>Nutri 3</Button>
+                  </div>
+
                   <Form.Group className="mb-3">
                     <Form.Label>Email</Form.Label>
                     <Form.Control

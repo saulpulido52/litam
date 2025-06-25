@@ -11,9 +11,22 @@ class NutritionistController {
                 return next(new AppError('Acceso denegado. Solo nutriólogos pueden ver este perfil.', 403));
             }
             const profile = await nutritionistService.getNutritionistProfile(req.user.id);
+            // Incluir datos del usuario base
+            const user = req.user;
             res.status(200).json({
                 status: 'success',
-                data: { profile },
+                data: {
+                    user: {
+                        id: user.id,
+                        email: user.email,
+                        first_name: user.first_name,
+                        last_name: user.last_name,
+                        phone: user.phone,
+                        age: user.age,
+                        gender: user.gender
+                    },
+                    profile
+                },
             });
         } catch (error: any) {
             if (error instanceof AppError) {

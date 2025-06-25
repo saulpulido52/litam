@@ -7,6 +7,7 @@ import {
     UpdateDietPlanDto,
     GenerateDietPlanAiDto,
     UpdateDietPlanStatusDto,
+    WeeklyPlanDto,
 } from '../../modules/diet_plans/diet_plan.dto';
 import { RoleName } from '../../database/entities/role.entity';
 import { DietPlanStatus } from '../../database/entities/diet_plan.entity';
@@ -68,6 +69,27 @@ class DietPlanController {
                 return next(error);
             }
             next(new AppError('Error al obtener el plan de dieta.', 500));
+        }
+    }
+
+    public async getMyDietPlans(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user || req.user.role.name !== RoleName.NUTRITIONIST) {
+                return next(new AppError('Acceso denegado. Solo nutriólogos pueden ver sus planes de dieta.', 403));
+            }
+            
+            const dietPlans = await dietPlanService.getDietPlansForNutritionist(req.user.id);
+            res.status(200).json({
+                status: 'success',
+                results: dietPlans.length,
+                data: { dietPlans },
+            });
+        } catch (error: any) {
+            console.error('Error en DietPlanController.getMyDietPlans:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener los planes de dieta del nutriólogo.', 500));
         }
     }
 
@@ -148,6 +170,29 @@ class DietPlanController {
         }
     }
 
+    public async addWeekToPlan(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user || req.user.role.name !== RoleName.NUTRITIONIST) {
+                return next(new AppError('Acceso denegado. Solo nutriólogos pueden agregar semanas a un plan de dieta.', 403));
+            }
+            const { id } = req.params;
+            const weekData = req.body as WeeklyPlanDto;
+
+            const updatedDietPlan = await dietPlanService.addWeekToPlan(id, weekData, req.user.id);
+            res.status(200).json({
+                status: 'success',
+                message: `Semana ${weekData.weekNumber} agregada al plan de dieta.`,
+                data: { dietPlan: updatedDietPlan },
+            });
+        } catch (error: any) {
+            console.error('Error en DietPlanController.addWeekToPlan:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al agregar semana al plan de dieta.', 500));
+        }
+    }
+
     public async deleteDietPlan(req: Request, res: Response, next: NextFunction) {
         try {
             if (!req.user || (req.user.role.name !== RoleName.NUTRITIONIST && req.user.role.name !== RoleName.ADMIN)) {
@@ -155,8 +200,9 @@ class DietPlanController {
             }
             const { id } = req.params;
             await dietPlanService.deleteDietPlan(id, req.user.id, req.user.role.name);
-            res.status(204).json({
+            res.status(200).json({
                 status: 'success',
+                message: 'Plan de dieta eliminado exitosamente.',
                 data: null,
             });
         } catch (error: any) {

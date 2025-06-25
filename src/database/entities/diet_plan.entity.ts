@@ -67,6 +67,16 @@ export class DietPlan {
     @Column({ type: 'jsonb', nullable: true })
     daily_macros_target: any | null; // Ej: { protein: 150, carbs: 200, fats: 50 }
 
+    // Campos para plan semanal
+    @Column({ type: 'boolean', default: true })
+    is_weekly_plan!: boolean; // Indica si es un plan semanal
+
+    @Column({ type: 'integer', default: 1 })
+    total_weeks!: number; // Número total de semanas del plan
+
+    @Column({ type: 'jsonb', nullable: true })
+    weekly_plans: any[] | null; // Array de planes semanales con estructura detallada
+
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at!: Date;
 

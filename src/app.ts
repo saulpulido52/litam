@@ -19,6 +19,7 @@ import educationalContentRoutes from './modules/educational_content/educational_
 import adminRoutes from './modules/admin/admin.routes';
 import messagingRoutes from './modules/messaging/message.routes';
 import clinicalRecordRoutes from './modules/clinical_records/clinical_record.routes';
+import dashboardRoutes from './modules/dashboard/dashboard.routes';
 import { AppError } from './utils/app.error';
 
 // Extensión de tipos para Request
@@ -160,6 +161,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/educational-content', educationalContentRoutes);
 app.use('/api/messages', messagingRoutes);
 app.use('/api/clinical-records', clinicalRecordRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Manejo de rutas no encontradas
 app.all('*', (req: Request, res: Response, next: NextFunction) => {

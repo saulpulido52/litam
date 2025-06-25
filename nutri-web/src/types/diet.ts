@@ -54,6 +54,41 @@ export interface DietPlan {
   meals?: Meal[];
   patient?: any; // PatientProfile
   nutritionist?: any; // NutritionistProfile
+  // Weekly plan fields
+  is_weekly_plan?: boolean;
+  total_weeks?: number;
+  weekly_plans?: WeeklyPlan[];
+}
+
+export interface WeeklyPlan {
+  week_number: number;
+  start_date: string;
+  end_date: string;
+  daily_calories_target: number;
+  daily_macros_target: {
+    protein: number;
+    carbohydrates: number;
+    fats: number;
+  };
+  meals: WeeklyMeal[];
+  notes?: string;
+}
+
+export interface WeeklyMeal {
+  day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  foods: WeeklyFood[];
+  notes?: string;
+}
+
+export interface WeeklyFood {
+  food_id: string;
+  food_name: string;
+  quantity_grams: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
 }
 
 export interface DietPlanSummary {
@@ -65,24 +100,67 @@ export interface DietPlanSummary {
   mealsCount: number;
 }
 
+// DTOs for API calls - matching backend expectations
 export interface CreateDietPlanDto {
-  patient_id: string;
+  patientId: string;
   name: string;
   description?: string;
-  target_calories?: number;
-  target_protein?: number;
-  target_carbs?: number;
-  target_fats?: number;
+  startDate: string; // YYYY-MM-DD
+  endDate: string;   // YYYY-MM-DD
+  dailyCaloriesTarget?: number;
+  dailyMacrosTarget?: {
+    protein?: number;
+    carbohydrates?: number;
+    fats?: number;
+  };
+  notes?: string;
+  isWeeklyPlan?: boolean;
+  totalWeeks?: number;
+  weeklyPlans?: WeeklyPlanDto[];
+}
+
+export interface WeeklyPlanDto {
+  weekNumber: number;
+  startDate: string;
+  endDate: string;
+  dailyCaloriesTarget: number;
+  dailyMacrosTarget: {
+    protein: number;
+    carbohydrates: number;
+    fats: number;
+  };
+  meals: WeeklyMealDto[];
   notes?: string;
 }
 
+export interface WeeklyMealDto {
+  day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  foods: WeeklyFoodDto[];
+  notes?: string;
+}
+
+export interface WeeklyFoodDto {
+  foodId: string;
+  foodName: string;
+  quantityGrams: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+}
+
 export interface GenerateAIDietDto {
-  patient_id: string;
+  patientId: string;
+  name: string;
   goal: 'weight_loss' | 'weight_gain' | 'maintenance' | 'muscle_gain';
-  dietary_restrictions?: string[];
+  startDate: string;
+  endDate: string;
+  totalWeeks: number;
+  dailyCaloriesTarget?: number;
+  dietaryRestrictions?: string[];
   allergies?: string[];
-  preferred_foods?: string[];
-  disliked_foods?: string[];
-  meals_per_day?: number;
-  target_calories?: number;
+  preferredFoods?: string[];
+  dislikedFoods?: string[];
+  notesForAI?: string;
 } 

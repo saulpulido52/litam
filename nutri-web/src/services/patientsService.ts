@@ -121,7 +121,18 @@ class PatientsService {
         is_active: backendPatient.user.is_active !== undefined ? backendPatient.user.is_active : true,
         created_at: backendPatient.created_at || backendPatient.user.created_at,
         updated_at: backendPatient.updated_at || backendPatient.user.updated_at,
-        profile: backendPatient.profile
+        profile: {
+          id: backendPatient.id, // 🎯 ID del perfil del paciente
+          height: backendPatient.height,
+          current_weight: backendPatient.current_weight,
+          target_weight: backendPatient.target_weight,
+          activity_level: backendPatient.activity_level,
+          medical_conditions: backendPatient.medical_conditions,
+          allergies: backendPatient.allergies,
+          objectives: backendPatient.objectives,
+          emergency_contact_name: backendPatient.emergency_contact_name,
+          emergency_contact_phone: backendPatient.emergency_contact_phone
+        }
       };
       
       console.log('✅ Paciente transformado:', transformed);

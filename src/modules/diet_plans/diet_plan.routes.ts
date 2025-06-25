@@ -7,7 +7,8 @@ import {
     CreateDietPlanDto,
     UpdateDietPlanDto,
     GenerateDietPlanAiDto,
-    UpdateDietPlanStatusDto, // Importar el nuevo DTO
+    UpdateDietPlanStatusDto,
+    WeeklyPlanDto,
 } from '../../modules/diet_plans/diet_plan.dto';
 import { RoleName } from '../../database/entities/role.entity';
 
@@ -24,6 +25,9 @@ router.get('/patient/:patientId', dietPlanController.getDietPlansForPatient);
 
 // Rutas solo para Nutriólogos (y Admin si se quiere dar ese permiso)
 router.use(authorize(RoleName.NUTRITIONIST)); // Las siguientes rutas son solo para nutriólogos
+
+// Obtener todos los planes de dieta del nutriólogo logueado
+router.get('/', dietPlanController.getMyDietPlans);
 
 // Crear un plan de dieta manualmente
 router.post(
@@ -49,14 +53,21 @@ router.patch(
 // Actualizar solo el estado de un plan de dieta
 router.patch(
     '/:id/status',
-    validateMiddleware(UpdateDietPlanStatusDto), // Usar el DTO para el estado
+    validateMiddleware(UpdateDietPlanStatusDto),
     dietPlanController.updateDietPlanStatus
+);
+
+// Agregar una semana a un plan de dieta existente
+router.post(
+    '/:id/weeks',
+    validateMiddleware(WeeklyPlanDto),
+    dietPlanController.addWeekToPlan
 );
 
 // Eliminar un plan de dieta
 router.delete(
     '/:id',
-    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN), // Autorización explícita para eliminar
+    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN),
     dietPlanController.deleteDietPlan
 );
 

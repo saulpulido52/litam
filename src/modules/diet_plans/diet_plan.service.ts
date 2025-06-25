@@ -13,6 +13,8 @@ import {
     MealDto,
     MealItemDto,
     GenerateDietPlanAiDto,
+    WeeklyPlanDto,
+    AddWeekToPlanDto,
 } from '../../modules/diet_plans/diet_plan.dto';
 import { AppError } from '../../utils/app.error';
 import { RoleName } from '../../database/entities/role.entity';
@@ -25,7 +27,7 @@ class DietPlanService {
     private foodRepository: Repository<Food>;
     private userRepository: Repository<User>;
     private patientProfileRepository: Repository<PatientProfile>;
-    private relationRepository: Repository<PatientNutritionistRelation>; // Añadido para la relación
+    private relationRepository: Repository<PatientNutritionistRelation>;
 
     constructor() {
         this.dietPlanRepository = AppDataSource.getRepository(DietPlan);
@@ -34,7 +36,22 @@ class DietPlanService {
         this.foodRepository = AppDataSource.getRepository(Food);
         this.userRepository = AppDataSource.getRepository(User);
         this.patientProfileRepository = AppDataSource.getRepository(PatientProfile);
-        this.relationRepository = AppDataSource.getRepository(PatientNutritionistRelation); // Inicializar
+        this.relationRepository = AppDataSource.getRepository(PatientNutritionistRelation);
+    }
+
+    // --- Utilidades para fechas semanales ---
+    private calculateWeekDates(startDate: string, weekNumber: number): { startDate: string; endDate: string } {
+        const start = new Date(startDate);
+        const weekStart = new Date(start);
+        weekStart.setDate(start.getDate() + (weekNumber - 1) * 7);
+        
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        
+        return {
+            startDate: weekStart.toISOString().split('T')[0],
+            endDate: weekEnd.toISOString().split('T')[0]
+        };
     }
 
     // --- Lógica de IA (Simulación Inicial) ---
@@ -84,16 +101,13 @@ class DietPlanService {
                     quantity = Math.floor(Math.random() * 200) + 50; // 50-250 gramos/ml
                 }
 
-                // Aquí se podría añadir lógica para evitar alergias, cumplir preferencias, etc.
-                // Ej: if (patientAllergies.includes(randomFood.name.toLowerCase())) continue;
-
                 mealItems.push({
                     foodId: randomFood.id,
                     quantity: quantity,
                 });
             }
 
-            if (mealItems.length > 0) { // Asegurarse de que al menos un item se añadió
+            if (mealItems.length > 0) {
                 meals.push({
                     name: mealNames[i],
                     order: i + 1,
@@ -105,9 +119,111 @@ class DietPlanService {
         return meals;
     }
 
+    // --- Generación de plan semanal con IA ---
+    private async generateWeeklyPlanWithAI(
+        patientId: string,
+        weekNumber: number,
+        startDate: string,
+        dailyCalories: number,
+        goal: string,
+        dietaryRestrictions?: string[],
+        allergies?: string[],
+        preferredFoods?: string[],
+        dislikedFoods?: string[]
+    ): Promise<WeeklyPlanDto> {
+        const weekDates = this.calculateWeekDates(startDate, weekNumber);
+        
+        // Calcular macros basados en calorías y objetivo
+        let proteinRatio = 0.3; // 30% por defecto
+        let carbsRatio = 0.45;  // 45% por defecto
+        let fatsRatio = 0.25;   // 25% por defecto
+
+        // Ajustar ratios según el objetivo
+        switch (goal) {
+            case 'weight_loss':
+                proteinRatio = 0.35; // Más proteína para preservar músculo
+                carbsRatio = 0.35;
+                fatsRatio = 0.30;
+                break;
+            case 'muscle_gain':
+                proteinRatio = 0.40; // Mucha más proteína
+                carbsRatio = 0.40;
+                fatsRatio = 0.20;
+                break;
+            case 'weight_gain':
+                proteinRatio = 0.25;
+                carbsRatio = 0.50; // Más carbohidratos
+                fatsRatio = 0.25;
+                break;
+        }
+
+        const dailyMacros = {
+            protein: Math.round(dailyCalories * proteinRatio / 4),
+            carbohydrates: Math.round(dailyCalories * carbsRatio / 4),
+            fats: Math.round(dailyCalories * fatsRatio / 9)
+        };
+
+        // Generar comidas para cada día de la semana
+        const meals: any[] = [];
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
+
+        for (const day of days) {
+            for (const mealType of mealTypes) {
+                // Generar 2-4 alimentos por comida
+                const foodCount = Math.floor(Math.random() * 3) + 2;
+                const foods: any[] = [];
+
+                for (let i = 0; i < foodCount; i++) {
+                    // Simular alimentos (en producción esto vendría de la base de datos)
+                    const mockFoods = [
+                        { id: 'food-1', name: 'Pollo', calories: 165, protein: 31, carbs: 0, fats: 3.6 },
+                        { id: 'food-2', name: 'Arroz integral', calories: 111, protein: 2.6, carbs: 23, fats: 0.9 },
+                        { id: 'food-3', name: 'Brócoli', calories: 34, protein: 2.8, carbs: 7, fats: 0.4 },
+                        { id: 'food-4', name: 'Aguacate', calories: 160, protein: 2, carbs: 9, fats: 15 },
+                        { id: 'food-5', name: 'Huevo', calories: 70, protein: 6, carbs: 0.6, fats: 5 },
+                        { id: 'food-6', name: 'Avena', calories: 68, protein: 2.4, carbs: 12, fats: 1.4 },
+                        { id: 'food-7', name: 'Salmón', calories: 208, protein: 25, carbs: 0, fats: 12 },
+                        { id: 'food-8', name: 'Quinoa', calories: 120, protein: 4.4, carbs: 22, fats: 1.9 }
+                    ];
+
+                    const randomFood = mockFoods[Math.floor(Math.random() * mockFoods.length)];
+                    const quantity = Math.floor(Math.random() * 150) + 50; // 50-200g
+                    
+                    foods.push({
+                        foodId: randomFood.id,
+                        foodName: randomFood.name,
+                        quantityGrams: quantity,
+                        calories: Math.round((randomFood.calories * quantity) / 100),
+                        protein: Math.round((randomFood.protein * quantity) / 100),
+                        carbs: Math.round((randomFood.carbs * quantity) / 100),
+                        fats: Math.round((randomFood.fats * quantity) / 100)
+                    });
+                }
+
+                meals.push({
+                    day,
+                    mealType,
+                    foods,
+                    notes: `${mealType} para ${day}`
+                });
+            }
+        }
+
+        return {
+            weekNumber,
+            startDate: weekDates.startDate,
+            endDate: weekDates.endDate,
+            dailyCaloriesTarget: dailyCalories,
+            dailyMacrosTarget: dailyMacros,
+            meals,
+            notes: `Semana ${weekNumber} generada por IA - Objetivo: ${goal}`
+        };
+    }
+
     // --- Métodos de CRUD para Diet Plans ---
 
-    // Crear un plan de dieta (Nutriólogo)
+    // Crear un plan de dieta semanal
     public async createDietPlan(dietPlanDto: CreateDietPlanDto, nutritionistId: string) {
         const nutritionist = await this.userRepository.findOne({
             where: { id: nutritionistId, role: { name: RoleName.NUTRITIONIST } },
@@ -134,6 +250,17 @@ class DietPlanService {
             throw new AppError('El nutriólogo no está vinculado activamente con este paciente.', 403);
         }
 
+        // Calcular macros si no están definidos
+        let dailyMacros = dietPlanDto.dailyMacrosTarget;
+        if (dietPlanDto.dailyCaloriesTarget && (!dailyMacros?.protein || !dailyMacros?.carbohydrates || !dailyMacros?.fats)) {
+            const calories = dietPlanDto.dailyCaloriesTarget;
+            dailyMacros = {
+                protein: Math.round(calories * 0.3 / 4), // 30% proteínas
+                carbohydrates: Math.round(calories * 0.45 / 4), // 45% carbohidratos
+                fats: Math.round(calories * 0.25 / 9) // 25% grasas
+            };
+        }
+
         const newDietPlan = this.dietPlanRepository.create({
             name: dietPlanDto.name,
             patient: patient,
@@ -142,27 +269,36 @@ class DietPlanService {
             start_date: new Date(dietPlanDto.startDate),
             end_date: new Date(dietPlanDto.endDate),
             daily_calories_target: dietPlanDto.dailyCaloriesTarget,
-            daily_macros_target: dietPlanDto.dailyMacrosTarget,
+            daily_macros_target: dailyMacros,
             generated_by_ia: dietPlanDto.generatedByIA || false,
             ia_version: dietPlanDto.iaVersion,
-            status: DietPlanStatus.DRAFT, // Siempre comienza como borrador
+            status: DietPlanStatus.DRAFT,
+            // Campos para plan semanal
+            is_weekly_plan: dietPlanDto.isWeeklyPlan || true,
+            total_weeks: dietPlanDto.totalWeeks || 1,
+            weekly_plans: dietPlanDto.weeklyPlans || []
         });
 
-        // Guardar primero el plan sin meals
+        // Guardar el plan
         await this.dietPlanRepository.save(newDietPlan);
 
+        // Si hay planes semanales, procesarlos
+        if (dietPlanDto.weeklyPlans && dietPlanDto.weeklyPlans.length > 0) {
+            newDietPlan.weekly_plans = dietPlanDto.weeklyPlans;
+            await this.dietPlanRepository.save(newDietPlan);
+        }
+
+        // Procesar comidas tradicionales si existen (para compatibilidad)
         if (dietPlanDto.meals && dietPlanDto.meals.length > 0) {
             newDietPlan.meals = [];
             for (const mealDto of dietPlanDto.meals) {
-                // Crear y guardar el meal solo (sin meal_items)
                 const newMeal = this.mealRepository.create({
                     name: mealDto.name,
                     order: mealDto.order,
                     diet_plan: newDietPlan,
                 });
-                await this.mealRepository.save(newMeal); // Guardar para obtener el ID
+                await this.mealRepository.save(newMeal);
 
-                // Ahora crear y guardar los meal_items con el meal ya guardado
                 newMeal.meal_items = [];
                 for (const itemDto of mealDto.mealItems) {
                     const food = await this.foodRepository.findOneBy({ id: itemDto.foodId });
@@ -177,7 +313,6 @@ class DietPlanService {
                     await this.mealItemRepository.save(newMealItem);
                     newMeal.meal_items.push(newMealItem);
                 }
-                // Recargar el meal con sus items
                 const savedMeal = await this.mealRepository.findOne({
                     where: { id: newMeal.id },
                     relations: ['meal_items', 'meal_items.food'],
@@ -186,7 +321,7 @@ class DietPlanService {
             }
         }
 
-        // Recargar el plan con meals y meal_items
+        // Recargar el plan completo
         const savedPlan = await this.dietPlanRepository.findOne({
             where: { id: newDietPlan.id },
             relations: [
@@ -200,7 +335,7 @@ class DietPlanService {
         return savedPlan;
     }
 
-    // Generar y crear un plan de dieta por IA (Nutriólogo)
+    // Generar plan de dieta con IA
     public async generateDietPlanByAI(generateDto: GenerateDietPlanAiDto, nutritionistId: string) {
         const nutritionist = await this.userRepository.findOne({
             where: { id: nutritionistId, role: { name: RoleName.NUTRITIONIST } },
@@ -227,71 +362,122 @@ class DietPlanService {
             throw new AppError('El nutriólogo no está vinculado activamente con este paciente.', 403);
         }
 
-        const generatedMeals = await this.generateBasicDietPlanMeals(
-            generateDto.patientId,
-            nutritionistId,
-            generateDto.notesForAI
-        );
-
-        const newDietPlan = this.dietPlanRepository.create({
-            name: generateDto.name,
-            patient: patient,
-            nutritionist: nutritionist,
-            notes: generateDto.notesForAI,
-            start_date: new Date(generateDto.startDate),
-            end_date: new Date(generateDto.endDate),
-            daily_calories_target: generateDto.dailyCaloriesTarget || 2000, // Default value if not provided
-            generated_by_ia: true,
-            ia_version: '1.0', // Versión inicial de la IA
-            status: DietPlanStatus.PENDING_REVIEW, // Generado por IA, necesita revisión
-        });
-
-        // Guardar primero el plan sin meals
-        await this.dietPlanRepository.save(newDietPlan);
-
-        newDietPlan.meals = [];
-        for (const mealDto of generatedMeals) {
-            const newMeal = this.mealRepository.create({
-                name: mealDto.name,
-                order: mealDto.order,
-                diet_plan: newDietPlan,
+        // Calcular calorías diarias si no se proporcionan
+        let dailyCalories = generateDto.dailyCaloriesTarget;
+        if (!dailyCalories) {
+            // Calcular basado en perfil del paciente
+            const patientProfile = await this.patientProfileRepository.findOne({
+                where: { user: { id: patient.id } }
             });
             
-            // Guardar la comida primero
-            const savedMeal = await this.mealRepository.save(newMeal);
-            savedMeal.meal_items = [];
-
-            for (const itemDto of mealDto.mealItems) {
-                const food = await this.foodRepository.findOneBy({ id: itemDto.foodId });
-                if (!food) {
-                    throw new AppError(`Alimento con ID ${itemDto.foodId} no encontrado durante generación IA.`, 500);
-                }
-                const newMealItem = this.mealItemRepository.create({
-                    food: food,
-                    quantity: itemDto.quantity,
-                    meal: savedMeal,
-                });
+            if (patientProfile) {
+                const weight = patientProfile.current_weight || 70;
+                const height = patientProfile.height || 170;
+                const age = 30;
+                const activityLevel = patientProfile.activity_level || 'sedentario';
                 
-                // Guardar el item de comida
-                const savedMealItem = await this.mealItemRepository.save(newMealItem);
-                savedMeal.meal_items.push(savedMealItem);
+                // Fórmula básica de Harris-Benedict
+                let bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+                
+                // Ajustar por nivel de actividad
+                const activityMultipliers = {
+                    'sedentario': 1.2,
+                    'ligero': 1.375,
+                    'moderado': 1.55,
+                    'activo': 1.725,
+                    'muy_activo': 1.9
+                };
+                
+                const multiplier = activityMultipliers[activityLevel as keyof typeof activityMultipliers] || 1.2;
+                dailyCalories = Math.round(bmr * multiplier);
+                
+                // Ajustar según objetivo
+                switch (generateDto.goal) {
+                    case 'weight_loss':
+                        dailyCalories = Math.round(dailyCalories * 0.85); // 15% déficit
+                        break;
+                    case 'weight_gain':
+                        dailyCalories = Math.round(dailyCalories * 1.15); // 15% superávit
+                        break;
+                    case 'muscle_gain':
+                        dailyCalories = Math.round(dailyCalories * 1.1); // 10% superávit
+                        break;
+                }
+            } else {
+                dailyCalories = 2000; // Valor por defecto
             }
-            newDietPlan.meals.push(savedMeal);
         }
 
-        // Recargar el plan con todas las relaciones
-        const savedPlan = await this.dietPlanRepository.findOne({
-            where: { id: newDietPlan.id },
-            relations: [
-                'patient',
-                'nutritionist',
-                'meals',
-                'meals.meal_items',
-                'meals.meal_items.food',
-            ],
+        // Crear el plan base
+        const createDto: CreateDietPlanDto = {
+            name: generateDto.name,
+            patientId: generateDto.patientId,
+            description: `Plan generado por IA - Objetivo: ${generateDto.goal}`,
+            startDate: generateDto.startDate,
+            endDate: generateDto.endDate,
+            dailyCaloriesTarget: dailyCalories,
+            notes: generateDto.notesForAI,
+            isWeeklyPlan: true,
+            totalWeeks: generateDto.totalWeeks,
+            generatedByIA: true,
+            iaVersion: '1.0',
+            weeklyPlans: []
+        };
+
+        // Generar planes semanales
+        const weeklyPlans: WeeklyPlanDto[] = [];
+        for (let week = 1; week <= generateDto.totalWeeks; week++) {
+            const weeklyPlan = await this.generateWeeklyPlanWithAI(
+                generateDto.patientId,
+                week,
+                generateDto.startDate,
+                dailyCalories,
+                generateDto.goal,
+                generateDto.dietaryRestrictions,
+                generateDto.allergies,
+                generateDto.preferredFoods,
+                generateDto.dislikedFoods
+            );
+            weeklyPlans.push(weeklyPlan);
+        }
+
+        createDto.weeklyPlans = weeklyPlans;
+
+        // Crear el plan usando el método existente
+        return await this.createDietPlan(createDto, nutritionistId);
+    }
+
+    // Agregar una semana a un plan existente
+    public async addWeekToPlan(dietPlanId: string, weekData: WeeklyPlanDto, nutritionistId: string) {
+        const dietPlan = await this.dietPlanRepository.findOne({
+            where: { id: dietPlanId },
+            relations: ['nutritionist']
         });
+
+        if (!dietPlan) {
+            throw new AppError('Plan de dieta no encontrado.', 404);
+        }
+
+        if (dietPlan.nutritionist.id !== nutritionistId) {
+            throw new AppError('No tienes permisos para modificar este plan de dieta.', 403);
+        }
+
+        // Verificar que la semana no exista ya
+        const existingWeeks = dietPlan.weekly_plans || [];
+        const weekExists = existingWeeks.some(week => week.weekNumber === weekData.weekNumber);
         
-        return savedPlan;
+        if (weekExists) {
+            throw new AppError(`La semana ${weekData.weekNumber} ya existe en este plan.`, 400);
+        }
+
+        // Agregar la nueva semana
+        existingWeeks.push(weekData);
+        dietPlan.weekly_plans = existingWeeks;
+        dietPlan.total_weeks = existingWeeks.length;
+
+        await this.dietPlanRepository.save(dietPlan);
+
+        return await this.getDietPlanById(dietPlanId, nutritionistId, RoleName.NUTRITIONIST);
     }
 
     // Obtener un plan de dieta por ID (Nutriólogo, Paciente, Admin)
@@ -361,6 +547,31 @@ class DietPlanService {
                 'meals.meal_items.food',
             ],
             order: { start_date: 'DESC' },
+        });
+
+        return dietPlans.map(plan => {
+            const { password_hash: patientHash, ...patientWithoutHash } = plan.patient;
+            const { password_hash: nutritionistHash, ...nutritionistWithoutHash } = plan.nutritionist;
+            return {
+                ...plan,
+                patient: patientWithoutHash,
+                nutritionist: nutritionistWithoutHash,
+            };
+        });
+    }
+
+    // Obtener todos los planes de dieta de un nutriólogo
+    public async getDietPlansForNutritionist(nutritionistId: string) {
+        const dietPlans = await this.dietPlanRepository.find({
+            where: { nutritionist: { id: nutritionistId } },
+            relations: [
+                'patient',
+                'nutritionist',
+                'meals',
+                'meals.meal_items',
+                'meals.meal_items.food',
+            ],
+            order: { created_at: 'DESC' },
         });
 
         return dietPlans.map(plan => {
