@@ -255,3 +255,7 @@ La implementación de la sección de progreso representa un **hito significativo
 - El código quedó listo para desarrollo y pruebas sin errores de tipado ni compilación.
 
 ---
+
+- [JUN 2024] Corrección del flujo de eliminación de planes de dieta: backend responde 200+JSON, frontend sin errores tras eliminar.
+
+---

@@ -25,6 +25,10 @@
   - Solucionados problemas de valores "N/A" y advertencias de React por datos faltantes.
 - 📋 **Documentación y referencias rápidas actualizadas:**
   - Se actualizaron los comandos de referencia y las credenciales de prueba para facilitar el testing multiusuario.
+- 🗑️ **Corrección del flujo de eliminación de planes de dieta:**
+  - El backend ahora responde con `200` y un objeto JSON tras eliminar un plan, en vez de `204 No Content`.
+  - El frontend y los hooks ya manejan correctamente la respuesta y no muestran errores tras eliminar un plan.
+  - Se creó y ejecutó un script de prueba automatizado para verificar el flujo completo de eliminación.
 
 ---
 
