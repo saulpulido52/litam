@@ -197,6 +197,30 @@ export class CreateDietPlanDto {
     @ValidateNested({ each: true })
     @Type(() => MealDto)
     meals?: MealDto[]; // Mantener para compatibilidad
+
+    // Nuevos campos que el frontend está enviando
+    @IsOptional()
+    @IsString({ message: 'El tipo de plan debe ser una cadena de texto.' })
+    planType?: string;
+
+    @IsOptional()
+    @IsString({ message: 'El período del plan debe ser una cadena de texto.' })
+    planPeriod?: string;
+
+    @IsOptional()
+    @IsNumber({}, { message: 'El número total de períodos debe ser un número.' })
+    @Min(1, { message: 'El número total de períodos debe ser mayor que 0.' })
+    totalPeriods?: number;
+
+    @IsOptional()
+    pathologicalRestrictions?: {
+        medicalConditions?: any[];
+        allergies?: any[];
+        intolerances?: any[];
+        medications?: any[];
+        specialConsiderations?: any[];
+        emergencyContacts?: any[];
+    };
 }
 
 // DTO para actualizar un Plan de Dieta

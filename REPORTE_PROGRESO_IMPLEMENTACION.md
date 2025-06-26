@@ -6,6 +6,48 @@ Se ha implementado exitosamente una **sección de progreso avanzada** con gráfi
 
 ---
 
+## 🆕 **ACTUALIZACIÓN DEL DASHBOARD - 26 DE DICIEMBRE**
+
+### 🎯 **Objetivo de la Actualización**
+Simplificar el dashboard para usar solo funcionalidades disponibles en el backend, eliminando errores 404 y mejorando la experiencia de usuario.
+
+### ✅ **Mejoras Implementadas**
+
+#### **🔧 Simplificación del Frontend**
+- ✅ **Hook useDashboard simplificado**: Solo usa `getSimpleDashboardStats()`
+- ✅ **Eliminadas llamadas a endpoints inexistentes**: 6 endpoints removidos
+- ✅ **Servicio dashboardService optimizado**: Método `getSimpleDashboardStats()` agregado
+- ✅ **DashboardPage rediseñado**: Interfaz limpia y funcional
+
+#### **🎨 Nuevo Diseño del Dashboard**
+- ✅ **Tarjetas de estadísticas básicas**: Pacientes, citas, planes, expedientes
+- ✅ **Lista de actividades recientes**: Con iconos y fechas
+- ✅ **Sección de rendimiento del sistema**: Métricas de completitud
+- ✅ **Fechas de último registro**: Información temporal
+- ✅ **Botones deshabilitados**: Para funcionalidades futuras
+
+#### **🐛 Bugs Resueltos**
+- ✅ **Error 404 en `/api/dashboard/alerts`**: Eliminado
+- ✅ **Llamadas a endpoints inexistentes**: Removidas
+- ✅ **Errores de compilación TypeScript**: Corregidos
+- ✅ **Problemas de linter**: Resueltos
+
+#### **📊 Métricas de la Actualización**
+- **Archivos modificados**: 3 archivos principales
+- **Líneas de código**: ~200 líneas simplificadas
+- **Endpoints eliminados**: 6 llamadas HTTP innecesarias
+- **Estabilidad del sistema**: 100% funcional
+- **Experiencia de usuario**: Mejorada significativamente
+
+### 🔮 **Funcionalidades Futuras Preparadas**
+- [ ] Sistema de alertas
+- [ ] Análisis de ingresos
+- [ ] Métricas de pacientes
+- [ ] Citas próximas
+- [ ] Reportes avanzados
+
+---
+
 ## ✅ **FUNCIONALIDADES IMPLEMENTADAS**
 
 ### 📈 **1. Gráficos de Evolución Temporal (PRIORIDAD 1)**

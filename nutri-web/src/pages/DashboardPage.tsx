@@ -1,15 +1,55 @@
-import React from 'react';
-import { Container, Row, Col, Card, Button, Alert, Badge } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Container, Row, Col, Card, Button, Alert, Badge, ProgressBar, ListGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useDashboard } from '../hooks/useDashboard';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { stats, profile, user, loading, error, refreshStats } = useDashboard();
+  const { 
+    stats, 
+    loading, 
+    refreshing, 
+    error, 
+    refreshStats
+  } = useDashboard();
+  const [showCharts, setShowCharts] = useState(false);
 
   const handleRefresh = async () => {
     await refreshStats();
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-MX', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getActivityIcon = (type: string) => {
+    const icons: { [key: string]: string } = {
+      appointment: 'fa-calendar-check',
+      patient: 'fa-user-plus',
+      diet_plan: 'fa-utensils',
+      clinical_record: 'fa-file-medical',
+      progress: 'fa-chart-line',
+      message: 'fa-comment'
+    };
+    return icons[type] || 'fa-info-circle';
+  };
+
+  const getActivityColor = (type: string) => {
+    const colors: { [key: string]: string } = {
+      appointment: 'primary',
+      patient: 'success',
+      diet_plan: 'warning',
+      clinical_record: 'info',
+      progress: 'secondary',
+      message: 'dark'
+    };
+    return colors[type] || 'secondary';
   };
 
   if (loading) {
@@ -36,134 +76,104 @@ const DashboardPage: React.FC = () => {
             <div className="d-flex justify-content-between align-items-start">
               <div>
                 <h2 className="nutri-primary mb-1">
-                  ¡Bienvenido, {user?.first_name || profile?.first_name ? `${user?.first_name || profile?.first_name} ${user?.last_name || profile?.last_name}` : 'Nutriólogo'}! 👋
+                  ¡Bienvenido, Nutriólogo! 👋
                 </h2>
                 <p className="text-muted mb-0">
-                  {profile?.specialties?.join(' • ') || 'Nutriólogo'} • {user?.email || 'Cargando...'}
+                  Panel de control simplificado
                 </p>
-                {profile && (
-                  <div className="mt-2">
-                    <Badge bg="success" className="me-2">
-                      {profile.years_of_experience} años de experiencia
-                    </Badge>
-                    <Badge bg="info" className="me-2">
-                      ${profile.consultation_fee} por consulta
-                    </Badge>
-                    {profile.is_verified && (
-                      <Badge bg="warning" text="dark">
-                        ✅ Verificado
-                      </Badge>
-                    )}
-                  </div>
-                )}
+                <div className="mt-2">
+                  <Badge bg="info" className="me-2">
+                    Versión Beta
+                  </Badge>
+                  <Badge bg="warning" text="dark">
+                    Funcionalidades limitadas
+                  </Badge>
+                </div>
               </div>
-              <div>
-                <Button variant="outline-primary" size="sm" onClick={handleRefresh}>
-                  <i className="fas fa-sync-alt me-1"></i>
-                  Actualizar
+              <div className="d-flex gap-2">
+                <Button 
+                  variant="outline-primary" 
+                  size="sm" 
+                  onClick={() => setShowCharts(!showCharts)}
+                  disabled
+                >
+                  <i className="fas fa-chart-line me-1"></i>
+                  Gráficos (Próximamente)
+                </Button>
+                <Button variant="outline-primary" size="sm" onClick={handleRefresh} disabled={refreshing}>
+                  <i className={`fas fa-sync-alt me-1 ${refreshing ? 'fa-spin' : ''}`}></i>
+                  {refreshing ? 'Actualizando...' : 'Actualizar'}
                 </Button>
               </div>
             </div>
           </Col>
         </Row>
 
-        {/* Stats Cards */}
+        {/* Main Stats Cards */}
         <Row className="mb-4">
           <Col md={3} className="mb-3">
-            <Card className="h-100 shadow-sm">
-              <Card.Body className="text-center">
-                <div className="fs-1 nutri-primary mb-2">👥</div>
-                <h3 className="nutri-primary">{stats?.total_patients || 0}</h3>
-                <p className="text-muted mb-0">Total Pacientes</p>
-                {stats?.new_patients_last_month && (
-                  <small className="text-success">
-                    +{stats.new_patients_last_month} este mes
-                  </small>
-                )}
+            <Card className="h-100 shadow-sm border-0">
+              <Card.Body className="text-center p-4">
+                <div className="fs-1 nutri-primary mb-3">👥</div>
+                <h3 className="nutri-primary mb-2">{stats?.total_patients || 0}</h3>
+                <p className="text-muted mb-2">Total Pacientes</p>
+                <div className="d-flex justify-content-between align-items-center">
+                  {stats?.weekly_summary?.new_patients && (
+                    <small className="text-success">
+                      +{stats.weekly_summary.new_patients} esta semana
+                    </small>
+                  )}
+                </div>
               </Card.Body>
             </Card>
           </Col>
 
           <Col md={3} className="mb-3">
-            <Card className="h-100 shadow-sm">
-              <Card.Body className="text-center">
-                <div className="fs-1 text-info mb-2">📅</div>
-                <h3 className="text-info">{stats?.appointments_today || 0}</h3>
-                <p className="text-muted mb-0">Citas Hoy</p>
-                {stats?.appointments_this_week && (
-                  <small className="text-info">
-                    {stats.appointments_this_week} esta semana
-                  </small>
+            <Card className="h-100 shadow-sm border-0">
+              <Card.Body className="text-center p-4">
+                <div className="fs-1 text-primary mb-3">📅</div>
+                <h3 className="text-primary mb-2">{stats?.total_appointments || 0}</h3>
+                <p className="text-muted mb-2">Total Citas</p>
+                <div className="d-flex justify-content-between align-items-center">
+                  {stats?.weekly_summary?.new_appointments && (
+                    <small className="text-success">
+                      +{stats.weekly_summary.new_appointments} esta semana
+                    </small>
+                  )}
+                </div>
+                {stats?.performance_metrics?.completion_rate && (
+                  <ProgressBar 
+                    now={stats.performance_metrics.completion_rate} 
+                    className="mt-2" 
+                    variant="primary"
+                    style={{ height: '4px' }}
+                  />
                 )}
+                <small className="text-muted">
+                  {stats?.performance_metrics?.completion_rate || 0}% completadas
+                </small>
               </Card.Body>
             </Card>
           </Col>
 
           <Col md={3} className="mb-3">
-            <Card className="h-100 shadow-sm">
-              <Card.Body className="text-center">
-                <div className="fs-1 text-success mb-2">🍎</div>
-                <h3 className="text-success">{stats?.active_diet_plans || 0}</h3>
-                <p className="text-muted mb-0">Planes Activos</p>
-                {stats?.total_diet_plans && (
-                  <small className="text-success">
-                    {stats.total_diet_plans} total
-                  </small>
-                )}
+            <Card className="h-100 shadow-sm border-0">
+              <Card.Body className="text-center p-4">
+                <div className="fs-1 text-warning mb-3">🍽️</div>
+                <h3 className="text-warning mb-2">{stats?.total_diet_plans || 0}</h3>
+                <p className="text-muted mb-2">Planes Nutricionales</p>
+                <small className="text-muted">Total creados</small>
               </Card.Body>
             </Card>
           </Col>
 
           <Col md={3} className="mb-3">
-            <Card className="h-100 shadow-sm">
-              <Card.Body className="text-center">
-                <div className="fs-1 text-warning mb-2">📋</div>
-                <h3 className="text-warning">{stats?.pending_appointments || 0}</h3>
-                <p className="text-muted mb-0">Pendientes</p>
-                {stats?.completed_appointments && (
-                  <small className="text-warning">
-                    {stats.completed_appointments} completadas
-                  </small>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Quick Actions */}
-        <Row className="mb-4">
-          <Col>
-            <Card className="shadow-sm">
-              <Card.Header>
-                <h5 className="mb-0">Acciones Rápidas</h5>
-              </Card.Header>
-              <Card.Body>
-                <Row>
-                  <Col md={3} className="mb-2">
-                    <Button variant="primary" className="w-100" onClick={() => navigate('/patients')}>
-                      <i className="fas fa-user-plus me-2"></i>
-                      Nuevo Paciente
-                    </Button>
-                  </Col>
-                  <Col md={3} className="mb-2">
-                    <Button variant="success" className="w-100" onClick={() => navigate('/diet-plans')}>
-                      <i className="fas fa-utensils me-2"></i>
-                      Crear Plan
-                    </Button>
-                  </Col>
-                  <Col md={3} className="mb-2">
-                    <Button variant="info" className="w-100" onClick={() => navigate('/appointments')}>
-                      <i className="fas fa-calendar-plus me-2"></i>
-                      Nueva Cita
-                    </Button>
-                  </Col>
-                  <Col md={3} className="mb-2">
-                    <Button variant="warning" className="w-100" onClick={() => navigate('/clinical-records')}>
-                      <i className="fas fa-file-medical me-2"></i>
-                      Expediente
-                    </Button>
-                  </Col>
-                </Row>
+            <Card className="h-100 shadow-sm border-0">
+              <Card.Body className="text-center p-4">
+                <div className="fs-1 text-info mb-3">📋</div>
+                <h3 className="text-info mb-2">{stats?.total_clinical_records || 0}</h3>
+                <p className="text-muted mb-2">Expedientes Clínicos</p>
+                <small className="text-muted">Total registrados</small>
               </Card.Body>
             </Card>
           </Col>
@@ -173,34 +183,157 @@ const DashboardPage: React.FC = () => {
         {stats?.recent_activities && stats.recent_activities.length > 0 && (
           <Row className="mb-4">
             <Col>
-              <Card className="shadow-sm">
-                <Card.Header>
-                  <h5 className="mb-0">Actividades Recientes</h5>
+              <Card className="shadow-sm border-0">
+                <Card.Header className="bg-light border-0">
+                  <h5 className="mb-0">
+                    <i className="fas fa-clock me-2"></i>
+                    Actividades Recientes
+                  </h5>
                 </Card.Header>
-                <Card.Body>
-                  <div className="list-group list-group-flush">
-                    {stats.recent_activities.slice(0, 5).map((activity: any) => (
-                      <div key={activity.id} className="list-group-item border-0 px-0">
-                        <div className="d-flex align-items-center">
-                          <div className="flex-shrink-0">
-                            <div className="bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
-                              <i className={`fas ${activity.icon} text-primary`}></i>
-                            </div>
-                          </div>
-                          <div className="flex-grow-1 ms-3">
-                            <h6 className="mb-1">{activity.title}</h6>
-                            <p className="text-muted mb-0 small">{activity.description}</p>
-                            <small className="text-muted">{activity.timestamp}</small>
-                          </div>
+                <Card.Body className="p-0">
+                  <ListGroup variant="flush">
+                    {stats.recent_activities.slice(0, 5).map((activity, index) => (
+                      <ListGroup.Item key={index} className="d-flex align-items-center py-3">
+                        <div className={`bg-${getActivityColor(activity.type)} rounded-circle d-flex align-items-center justify-content-center me-3`} style={{ width: '40px', height: '40px' }}>
+                          <i className={`fas ${getActivityIcon(activity.type)} text-white`}></i>
                         </div>
-                      </div>
+                        <div className="flex-grow-1">
+                          <p className="mb-1">{activity.description}</p>
+                          <small className="text-muted">{formatDate(activity.date)}</small>
+                        </div>
+                      </ListGroup.Item>
                     ))}
-                  </div>
+                  </ListGroup>
                 </Card.Body>
               </Card>
             </Col>
           </Row>
         )}
+
+        {/* System Performance */}
+        {stats?.system_performance && (
+          <Row className="mb-4">
+            <Col>
+              <Card className="shadow-sm border-0">
+                <Card.Header className="bg-light border-0">
+                  <h5 className="mb-0">
+                    <i className="fas fa-server me-2"></i>
+                    Estado del Sistema
+                  </h5>
+                </Card.Header>
+                <Card.Body>
+                  <Row>
+                    <Col md={3} className="text-center mb-3">
+                      <div className="text-muted mb-1">Último Paciente</div>
+                      <div className="fw-bold">
+                        {stats.system_performance.last_patient || 'N/A'}
+                      </div>
+                    </Col>
+                    <Col md={3} className="text-center mb-3">
+                      <div className="text-muted mb-1">Última Cita</div>
+                      <div className="fw-bold">
+                        {stats.system_performance.last_appointment || 'N/A'}
+                      </div>
+                    </Col>
+                    <Col md={3} className="text-center mb-3">
+                      <div className="text-muted mb-1">Último Plan</div>
+                      <div className="fw-bold">
+                        {stats.system_performance.last_diet_plan || 'N/A'}
+                      </div>
+                    </Col>
+                    <Col md={3} className="text-center mb-3">
+                      <div className="text-muted mb-1">Último Expediente</div>
+                      <div className="fw-bold">
+                        {stats.system_performance.last_clinical_record || 'N/A'}
+                      </div>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        )}
+
+        {/* Quick Actions */}
+        <Row className="mb-4">
+          <Col>
+            <Card className="shadow-sm border-0">
+              <Card.Header className="bg-light border-0">
+                <h5 className="mb-0">
+                  <i className="fas fa-bolt me-2"></i>
+                  Acciones Rápidas
+                </h5>
+              </Card.Header>
+              <Card.Body>
+                <Row>
+                  <Col md={3} className="mb-3">
+                    <Button 
+                      variant="outline-primary" 
+                      className="w-100" 
+                      onClick={() => navigate('/patients')}
+                    >
+                      <i className="fas fa-user-plus me-2"></i>
+                      Nuevo Paciente
+                    </Button>
+                  </Col>
+                  <Col md={3} className="mb-3">
+                    <Button 
+                      variant="outline-success" 
+                      className="w-100" 
+                      onClick={() => navigate('/appointments')}
+                    >
+                      <i className="fas fa-calendar-plus me-2"></i>
+                      Nueva Cita
+                    </Button>
+                  </Col>
+                  <Col md={3} className="mb-3">
+                    <Button 
+                      variant="outline-warning" 
+                      className="w-100" 
+                      onClick={() => navigate('/diet-plans')}
+                    >
+                      <i className="fas fa-utensils me-2"></i>
+                      Crear Plan
+                    </Button>
+                  </Col>
+                  <Col md={3} className="mb-3">
+                    <Button 
+                      variant="outline-info" 
+                      className="w-100" 
+                      onClick={() => navigate('/clinical-records')}
+                    >
+                      <i className="fas fa-clipboard-list me-2"></i>
+                      Expediente
+                    </Button>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Coming Soon Features */}
+        <Row>
+          <Col>
+            <Alert variant="info">
+              <Alert.Heading>
+                <i className="fas fa-info-circle me-2"></i>
+                Funcionalidades en Desarrollo
+              </Alert.Heading>
+              <p>
+                Estamos trabajando para agregar más funcionalidades al dashboard:
+              </p>
+              <ul className="mb-0">
+                <li>Gráficos y análisis detallados</li>
+                <li>Alertas y notificaciones</li>
+                <li>Análisis de ingresos</li>
+                <li>Métricas de rendimiento avanzadas</li>
+                <li>Próximas citas</li>
+                <li>Pacientes recientes</li>
+              </ul>
+            </Alert>
+          </Col>
+        </Row>
       </Container>
     </div>
   );

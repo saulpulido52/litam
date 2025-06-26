@@ -641,7 +641,10 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                       type="checkbox"
                       id="showPathologicalRestrictions"
                       checked={showPathologicalRestrictions}
-                      onChange={(e) => setShowPathologicalRestrictions(e.target.checked)}
+                      onChange={(e) => {
+                        console.log('Show pathological restrictions changed:', e.target.checked); // Debug
+                        setShowPathologicalRestrictions(e.target.checked);
+                      }}
                     />
                     <label className="form-check-label" htmlFor="showPathologicalRestrictions">
                       <strong>Mostrar y editar restricciones patológicas</strong>
@@ -1208,6 +1211,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                           id={goal}
                           checked={formData.nutritionalGoals?.secondaryGoals?.includes(goal) || false}
                           onChange={(e) => {
+                            console.log(`Goal ${goal} changed:`, e.target.checked); // Debug
                             const currentGoals = formData.nutritionalGoals?.secondaryGoals || [];
                             const updatedGoals = e.target.checked
                               ? [...currentGoals, goal]

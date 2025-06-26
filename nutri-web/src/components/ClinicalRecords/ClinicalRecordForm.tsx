@@ -372,13 +372,17 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                               id={checkboxId}
                               name={key}
                               checked={isChecked}
-                              onChange={(e) => handleInputChange('currentProblems', key, e.target.checked)}
+                              onChange={(e) => {
+                                console.log(`Checkbox ${key} changed:`, e.target.checked); // Debug
+                                handleInputChange('currentProblems', key, e.target.checked);
+                              }}
                               title={`Marcar si el paciente tiene ${label.toLowerCase()}`}
                               aria-label={`${label} - Marcar si el paciente tiene este problema`}
                             />
                             <label 
                               className="form-check-label" 
                               htmlFor={checkboxId}
+                              style={{ cursor: 'pointer', userSelect: 'none' }}
                             >
                               {label}
                             </label>
