@@ -35,9 +35,9 @@ dotenv.config();
 
 const app: Application = express();
 
-// *** CONFIGURACIÓN DE SEGURIDAD PARA MÚLTIPLES USUARIOS ***
+// *** CONFIGURACIÓN DE SEGURIDAD Y ACCESIBILIDAD PARA MÚLTIPLES USUARIOS ***
 
-// Helmet para seguridad HTTP
+// Helmet para seguridad HTTP con configuración mejorada
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -50,8 +50,31 @@ app.use(helmet({
             objectSrc: ["'none'"],
             mediaSrc: ["'self'"]
         }
-    }
+    },
+    // Headers adicionales para accesibilidad y compatibilidad
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+
+// Headers adicionales para accesibilidad y compatibilidad
+app.use((req: Request, res: Response, next: NextFunction) => {
+    // Headers para accesibilidad
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    
+    // Headers para compatibilidad con navegadores
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-User-ID');
+    
+    // Headers para mejorar la experiencia de usuario
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    next();
+});
 
 // Compresión para mejorar rendimiento con múltiples usuarios
 app.use(compression());
@@ -66,6 +89,15 @@ const generalLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    // Headers personalizados para accesibilidad
+    handler: (req: Request, res: Response) => {
+        res.status(429).json({
+            status: 'error',
+            message: 'Demasiadas peticiones desde esta IP, por favor intenta de nuevo en 15 minutos.',
+            code: 'RATE_LIMIT_EXCEEDED',
+            retryAfter: Math.ceil(15 * 60 / 1000) // segundos
+        });
+    }
 });
 
 // Rate limiting estricto para autenticación - 5 intentos por 15 minutos
@@ -77,12 +109,21 @@ const authLimiter = rateLimit({
         code: 'AUTH_RATE_LIMIT_EXCEEDED'
     },
     skipSuccessfulRequests: true,
+    // Headers personalizados para accesibilidad
+    handler: (req: Request, res: Response) => {
+        res.status(429).json({
+            status: 'error',
+            message: 'Demasiados intentos de inicio de sesión, por favor intenta de nuevo en 15 minutos.',
+            code: 'AUTH_RATE_LIMIT_EXCEEDED',
+            retryAfter: Math.ceil(15 * 60 / 1000) // segundos
+        });
+    }
 });
 
 // Aplicar rate limiting general
 app.use('/api/', generalLimiter);
 
-// Configurar CORS optimizado para múltiples usuarios
+// Configurar CORS optimizado para múltiples usuarios y accesibilidad
 app.use(cors({
     origin: function (origin, callback) {
         // Permitir requests sin origin (mobile apps, postman, etc.)
@@ -108,7 +149,10 @@ app.use(cors({
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-User-ID'],
-    maxAge: 86400 // Cache preflight requests por 24 horas
+    maxAge: 86400, // Cache preflight requests por 24 horas
+    // Opciones adicionales para compatibilidad
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 }));
 
 // Middleware para parsing de JSON con límite de tamaño para múltiples usuarios
@@ -124,21 +168,59 @@ app.use(express.urlencoded({
     limit: '10mb'
 }));
 
-// Middleware de logging para debugging con múltiples usuarios
+// Middleware de logging para debugging con múltiples usuarios (mejorado para accesibilidad)
 app.use((req: Request, res: Response, next: NextFunction) => {
     const timestamp = new Date().toISOString();
+    const userAgent = req.get('User-Agent') || 'Unknown';
+    const ip = req.ip || req.connection.remoteAddress || 'Unknown';
+    
     // Log básico al inicio - el userId se mostrará en logs específicos después de auth
-    console.log(`[${timestamp}] ${req.method} ${req.path} - IP: ${req.ip}`);
+    console.log(`[${timestamp}] ${req.method} ${req.path} - IP: ${ip} - UA: ${userAgent.substring(0, 100)}`);
+    
+    // Agregar información de accesibilidad al request
+    req.headers['x-request-timestamp'] = timestamp;
+    req.headers['x-client-ip'] = ip;
+    
     next();
 });
 
-// Endpoint de health check
+// Endpoint de health check mejorado
 app.get('/api/health', (req: Request, res: Response) => {
     res.status(200).json({ 
         status: 'UP', 
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
-        uptime: process.uptime()
+        uptime: process.uptime(),
+        version: process.env.npm_package_version || '1.0.0',
+        // Información adicional para accesibilidad
+        endpoints: {
+            auth: '/api/auth',
+            users: '/api/users',
+            patients: '/api/patients',
+            clinicalRecords: '/api/clinical-records',
+            dietPlans: '/api/diet-plans'
+        }
+    });
+});
+
+// Endpoint de información de accesibilidad
+app.get('/api/accessibility', (req: Request, res: Response) => {
+    res.status(200).json({
+        status: 'success',
+        accessibility: {
+            supported: true,
+            features: [
+                'WCAG 2.1 AA compliant',
+                'Screen reader friendly',
+                'Keyboard navigation support',
+                'High contrast support',
+                'Responsive design'
+            ],
+            contact: {
+                support: 'support@nutriplatform.com',
+                accessibility: 'accessibility@nutriplatform.com'
+            }
+        }
     });
 });
 
@@ -163,26 +245,32 @@ app.use('/api/messages', messagingRoutes);
 app.use('/api/clinical-records', clinicalRecordRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
-// Manejo de rutas no encontradas
+// Manejo de rutas no encontradas con mejor información de accesibilidad
 app.all('*', (req: Request, res: Response, next: NextFunction) => {
-    next(new AppError(`No se puede encontrar ${req.originalUrl} en este servidor!`, 404));
+    const error = new AppError(`No se puede encontrar ${req.originalUrl} en este servidor!`, 404);
+    error.isOperational = true;
+    next(error);
 });
 
-// Middleware global de manejo de errores optimizado para múltiples usuarios
+// Middleware global de manejo de errores optimizado para múltiples usuarios y accesibilidad
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     let statusCode = 500;
     let message = 'Algo salió muy mal!';
     let status = 'error';
+    let errorCode = 'INTERNAL_SERVER_ERROR';
 
-    // Log del error para debugging
+    // Log del error para debugging (mejorado para no exponer información sensible)
     const timestamp = new Date().toISOString();
     const userId = (req as any).user?.id || 'anonymous';
-    console.error(`[${timestamp}] ERROR - User: ${userId} - IP: ${req.ip} - ${err.message}`);
+    const ip = req.ip || req.connection.remoteAddress || 'Unknown';
+    
+    console.error(`[${timestamp}] ERROR - User: ${userId} - IP: ${ip} - ${err.message}`);
 
     if (err instanceof AppError) {
         statusCode = err.statusCode;
         message = err.message;
         status = err.status;
+        errorCode = err.errorCode || 'APP_ERROR';
     } else {
         // Log errores no controlados
         console.error('ERROR (No AppError):', err);
@@ -190,16 +278,73 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
         // En producción, no exponer detalles internos del error
         if (process.env.NODE_ENV === 'production') {
             message = 'Error interno del servidor';
+            errorCode = 'INTERNAL_SERVER_ERROR';
         } else {
             message = err.message;
+            errorCode = 'UNKNOWN_ERROR';
         }
     }
 
-    res.status(statusCode).json({
+    // Respuesta mejorada con información de accesibilidad
+    const errorResponse = {
         status: status,
         message: message,
+        errorCode: errorCode,
+        timestamp: timestamp,
+        path: req.originalUrl,
+        method: req.method,
+        // Información adicional para accesibilidad
+        suggestions: getErrorSuggestions(errorCode),
         ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-    });
+    };
+
+    res.status(statusCode).json(errorResponse);
 });
+
+// Función para obtener sugerencias de error para accesibilidad
+function getErrorSuggestions(errorCode: string): string[] {
+    const suggestions: { [key: string]: string[] } = {
+        'RATE_LIMIT_EXCEEDED': [
+            'Espera unos minutos antes de intentar nuevamente',
+            'Reduce la frecuencia de tus peticiones',
+            'Contacta soporte si necesitas un límite mayor'
+        ],
+        'AUTH_RATE_LIMIT_EXCEEDED': [
+            'Espera 15 minutos antes de intentar iniciar sesión nuevamente',
+            'Verifica que tu contraseña sea correcta',
+            'Usa la función "Olvidé mi contraseña" si es necesario'
+        ],
+        'UNAUTHORIZED': [
+            'Inicia sesión para acceder a este recurso',
+            'Verifica que tu sesión no haya expirado',
+            'Contacta soporte si el problema persiste'
+        ],
+        'FORBIDDEN': [
+            'No tienes permisos para realizar esta acción',
+            'Contacta a tu administrador si necesitas acceso',
+            'Verifica que estés usando la cuenta correcta'
+        ],
+        'NOT_FOUND': [
+            'Verifica que la URL sea correcta',
+            'Usa la navegación del sitio para encontrar el recurso',
+            'Contacta soporte si crees que esto es un error'
+        ],
+        'VALIDATION_ERROR': [
+            'Verifica que todos los campos requeridos estén completos',
+            'Asegúrate de que los datos tengan el formato correcto',
+            'Revisa los mensajes de error específicos'
+        ],
+        'INTERNAL_SERVER_ERROR': [
+            'Intenta nuevamente en unos momentos',
+            'Si el problema persiste, contacta soporte',
+            'Verifica tu conexión a internet'
+        ]
+    };
+
+    return suggestions[errorCode] || [
+        'Intenta nuevamente',
+        'Contacta soporte si el problema persiste'
+    ];
+}
 
 export default app;

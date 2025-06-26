@@ -115,15 +115,8 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
   };
 
   // Navegación entre pasos
-  const goToStep = (step: number) => {
-    if (step >= 1 && step <= steps.length) {
-      setCurrentStep(step);
-    }
-  };
-
   const nextStep = () => {
     if (currentStep < steps.length) {
-      markStepAsCompleted(currentStep);
       setCurrentStep(currentStep + 1);
     }
   };
@@ -168,13 +161,16 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
   }, [patientId, isEditing]);
 
   const handleInputChange = (section: string, field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: {
-        ...(prev[section as keyof typeof prev] as object),
-        [field]: value,
-      },
-    }));
+    setFormData(prev => {
+      const sectionData = prev[section as keyof typeof prev] as any;
+      return {
+        ...prev,
+        [section]: {
+          ...sectionData,
+          [field]: value,
+        },
+      };
+    });
   };
 
   const handleBasicChange = (field: string, value: any) => {
@@ -209,14 +205,14 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       consultationReason: formData.consultationReason || undefined,
 
       currentProblems: {
-        diarrhea: formData.currentProblems.diarrhea,
-        constipation: formData.currentProblems.constipation,
-        gastritis: formData.currentProblems.gastritis,
-        ulcer: formData.currentProblems.ulcer,
-        nausea: formData.currentProblems.nausea,
-        pyrosis: formData.currentProblems.pyrosis,
-        vomiting: formData.currentProblems.vomiting,
-        colitis: formData.currentProblems.colitis,
+        diarrhea: Boolean(formData.currentProblems.diarrhea),
+        constipation: Boolean(formData.currentProblems.constipation),
+        gastritis: Boolean(formData.currentProblems.gastritis),
+        ulcer: Boolean(formData.currentProblems.ulcer),
+        nausea: Boolean(formData.currentProblems.nausea),
+        pyrosis: Boolean(formData.currentProblems.pyrosis),
+        vomiting: Boolean(formData.currentProblems.vomiting),
+        colitis: Boolean(formData.currentProblems.colitis),
         mouthMechanics: formData.currentProblems.mouthMechanics || undefined,
         otherProblems: formData.currentProblems.otherProblems || undefined,
         observations: formData.currentProblems.observations || undefined,
@@ -231,20 +227,20 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       },
 
       bloodPressure: {
-        knowsBp: formData.bloodPressure.knowsBp,
+        knowsBp: Boolean(formData.bloodPressure.knowsBp),
         systolic: parseFloat(formData.bloodPressure.systolic as string) || undefined,
         diastolic: parseFloat(formData.bloodPressure.diastolic as string) || undefined,
         habitualBp: formData.bloodPressure.habitualBp || undefined,
       },
 
       dietaryHistory: {
-        receivedNutritionalGuidance: formData.dietaryHistory.receivedNutritionalGuidance,
+        receivedNutritionalGuidance: Boolean(formData.dietaryHistory.receivedNutritionalGuidance),
         whenReceived: formData.dietaryHistory.whenReceived || undefined,
         adherenceLevel: formData.dietaryHistory.adherenceLevel || undefined,
         preferredFoods: formData.dietaryHistory.preferredFoods ? formData.dietaryHistory.preferredFoods.split(',').map((f: string) => f.trim()) : undefined,
         dislikedFoods: formData.dietaryHistory.dislikedFoods ? formData.dietaryHistory.dislikedFoods.split(',').map((f: string) => f.trim()) : undefined,
         malestarAlergiaFoods: formData.dietaryHistory.malestarAlergiaFoods ? formData.dietaryHistory.malestarAlergiaFoods.split(',').map((f: string) => f.trim()) : undefined,
-        takesSupplements: formData.dietaryHistory.takesSupplements,
+        takesSupplements: Boolean(formData.dietaryHistory.takesSupplements),
         supplementDetails: formData.dietaryHistory.supplementDetails || undefined,
       },
 
@@ -261,41 +257,20 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       <div className="card">
         <div className="card-header">
           <h5 className="mb-0">
-            <i className="fas fa-clipboard-list me-2"></i>
+            <i className="fas fa-clipboard-list me-2" aria-hidden="true"></i>
             {isEditing ? 'Editar' : 'Nuevo'} Expediente Clínico
             <span className="text-muted"> - {patientName}</span>
           </h5>
         </div>
 
         <div className="card-body">
-          {/* Indicador de progreso */}
+          {/* Indicador de progreso minimalista con colores del sistema de expedientes */}
           <div className="progress-indicator mb-4">
-            <div className="d-flex flex-column flex-md-row justify-content-between align-items-center">
-              {steps.map((step, index) => (
-                <div key={step.id} className="d-flex align-items-center mb-2 mb-md-0">
-                  <div 
-                    className={`step-circle ${currentStep === step.id ? 'active' : ''} ${
-                      completedSteps.includes(step.id) ? 'completed' : ''
-                    } ${step.required ? 'required' : ''}`}
-                    onClick={() => goToStep(step.id)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {completedSteps.includes(step.id) ? (
-                      <i className="fas fa-check"></i>
-                    ) : (
-                      <span>{step.id}</span>
-                    )}
-                  </div>
-                  <div className="step-info ms-2">
-                    <div className="step-title d-none d-md-block">{step.title}</div>
-                    <div className="step-title d-md-none">{step.title.length > 15 ? step.title.substring(0, 15) + '...' : step.title}</div>
-                    {step.required && <small className="text-danger">*Requerido</small>}
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div className={`step-line d-none d-md-block ${completedSteps.includes(step.id) ? 'completed' : ''}`}></div>
-                  )}
-                </div>
-              ))}
+            <div className="current-step-circle">{currentStep}</div>
+            <div className="current-step-info">
+              <div className="step-title">{steps[currentStep - 1].title}</div>
+              <div className="step-counter">Paso {currentStep} de {steps.length}</div>
+              {steps[currentStep - 1].required && <small className="step-required">*Requerido</small>}
             </div>
           </div>
 
@@ -304,19 +279,23 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
             {currentStep === 1 && (
               <div className="step-content">
                 <h6 className="mb-3">
-                  <i className="fas fa-info-circle me-2"></i>
+                  <i className="fas fa-info-circle me-2" aria-hidden="true"></i>
                   Datos Básicos del Expediente
                 </h6>
                 
                 <div className="row">
                   <div className="col-12 col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">
+                      <label className="form-label" htmlFor="recordDate">
                         Fecha del Registro <span className="text-danger">*</span>
                       </label>
                       <input
                         type="date"
                         className="form-control"
+                        id="recordDate"
+                        name="recordDate"
+                        title="Fecha del Registro"
+                        aria-label="Fecha del Registro"
                         value={formData.recordDate}
                         onChange={(e) => handleBasicChange('recordDate', e.target.value)}
                         required
@@ -325,10 +304,14 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                   </div>
                   <div className="col-12 col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">Número de Expediente</label>
+                      <label className="form-label" htmlFor="expedientNumber">Número de Expediente</label>
                       <input
                         type="text"
                         className="form-control"
+                        id="expedientNumber"
+                        name="expedientNumber"
+                        title="Número de Expediente"
+                        aria-label="Número de Expediente"
                         value={formData.expedientNumber}
                         onChange={(e) => handleBasicChange('expedientNumber', e.target.value)}
                         placeholder="Ej: EXP-001"
@@ -338,11 +321,15 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">
+                  <label className="form-label" htmlFor="consultationReason">
                     Motivo de Consulta <span className="text-danger">*</span>
                   </label>
                   <textarea
                     className="form-control"
+                    id="consultationReason"
+                    name="consultationReason"
+                    title="Motivo de Consulta"
+                    aria-label="Motivo de Consulta"
                     rows={3}
                     value={formData.consultationReason}
                     onChange={(e) => handleBasicChange('consultationReason', e.target.value)}
@@ -357,7 +344,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
             {currentStep === 2 && (
               <div className="step-content">
                 <h6 className="mb-3">
-                  <i className="fas fa-exclamation-triangle me-2"></i>
+                  <i className="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>
                   Problemas Actuales del Paciente
                 </h6>
                 
@@ -373,27 +360,44 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                       { key: 'pyrosis', label: 'Pirosis' },
                       { key: 'vomiting', label: 'Vómito' },
                       { key: 'colitis', label: 'Colitis' },
-                    ].map(({ key, label }) => (
-                      <div key={key} className="col-6 col-md-3 mb-2">
-                        <div className="form-check">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={formData.currentProblems[key as keyof typeof formData.currentProblems] as boolean}
-                            onChange={(e) => handleInputChange('currentProblems', key, e.target.checked)}
-                          />
-                          <label className="form-check-label">{label}</label>
+                    ].map(({ key, label }) => {
+                      const checkboxId = `currentProblems-${key}`;
+                      const isChecked = Boolean(formData.currentProblems[key as keyof typeof formData.currentProblems]);
+                      return (
+                        <div key={key} className="col-6 col-md-3 mb-2">
+                          <div className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              id={checkboxId}
+                              name={key}
+                              checked={isChecked}
+                              onChange={(e) => handleInputChange('currentProblems', key, e.target.checked)}
+                              title={`Marcar si el paciente tiene ${label.toLowerCase()}`}
+                              aria-label={`${label} - Marcar si el paciente tiene este problema`}
+                            />
+                            <label 
+                              className="form-check-label" 
+                              htmlFor={checkboxId}
+                            >
+                              {label}
+                            </label>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">Mecánicos de la Boca</label>
+                  <label className="form-label" htmlFor="currentProblems-mouthMechanics">Mecánicos de la Boca</label>
                   <input
                     type="text"
                     className="form-control"
+                    id="currentProblems-mouthMechanics"
+                    name="currentProblems-mouthMechanics"
+                    title="Mecánicos de la Boca"
+                    aria-label="Mecánicos de la Boca"
                     value={formData.currentProblems.mouthMechanics}
                     onChange={(e) => handleInputChange('currentProblems', 'mouthMechanics', e.target.value)}
                     placeholder="Ej: Dificultad para masticar, problemas dentales..."
@@ -401,9 +405,13 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">Otros Problemas</label>
+                  <label className="form-label" htmlFor="currentProblems-otherProblems">Otros Problemas</label>
                   <textarea
                     className="form-control"
+                    id="currentProblems-otherProblems"
+                    name="currentProblems-otherProblems"
+                    title="Otros Problemas"
+                    aria-label="Otros Problemas"
                     rows={2}
                     value={formData.currentProblems.otherProblems}
                     onChange={(e) => handleInputChange('currentProblems', 'otherProblems', e.target.value)}
@@ -412,9 +420,13 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">Observaciones</label>
+                  <label className="form-label" htmlFor="currentProblems-observations">Observaciones</label>
                   <textarea
                     className="form-control"
+                    id="currentProblems-observations"
+                    name="currentProblems-observations"
+                    title="Observaciones"
+                    aria-label="Observaciones"
                     rows={2}
                     value={formData.currentProblems.observations}
                     onChange={(e) => handleInputChange('currentProblems', 'observations', e.target.value)}
@@ -428,18 +440,22 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
             {currentStep === 3 && (
               <div className="step-content">
                 <h6 className="mb-3">
-                  <i className="fas fa-ruler me-2"></i>
+                  <i className="fas fa-ruler me-2" aria-hidden="true"></i>
                   Mediciones Antropométricas
                 </h6>
                 
                 <div className="row">
                   <div className="col-12 col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">Peso Actual (kg)</label>
+                      <label className="form-label" htmlFor="anthropometricMeasurements-currentWeightKg">Peso Actual (kg)</label>
                       <input
                         type="number"
                         step="0.1"
                         className="form-control"
+                        id="anthropometricMeasurements-currentWeightKg"
+                        name="anthropometricMeasurements-currentWeightKg"
+                        title="Peso Actual (kg)"
+                        aria-label="Peso Actual en kilogramos"
                         value={formData.anthropometricMeasurements.currentWeightKg}
                         onChange={(e) => handleInputChange('anthropometricMeasurements', 'currentWeightKg', e.target.value)}
                       />
@@ -447,11 +463,15 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                   </div>
                   <div className="col-12 col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">Peso Habitual (kg)</label>
+                      <label className="form-label" htmlFor="anthropometricMeasurements-habitualWeightKg">Peso Habitual (kg)</label>
                       <input
                         type="number"
                         step="0.1"
                         className="form-control"
+                        id="anthropometricMeasurements-habitualWeightKg"
+                        name="anthropometricMeasurements-habitualWeightKg"
+                        title="Peso Habitual (kg)"
+                        aria-label="Peso Habitual en kilogramos"
                         value={formData.anthropometricMeasurements.habitualWeightKg}
                         onChange={(e) => handleInputChange('anthropometricMeasurements', 'habitualWeightKg', e.target.value)}
                       />
@@ -462,11 +482,15 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                 <div className="row">
                   <div className="col-12 col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">Estatura (m)</label>
+                      <label className="form-label" htmlFor="anthropometricMeasurements-heightM">Estatura (m)</label>
                       <input
                         type="number"
                         step="0.01"
                         className="form-control"
+                        id="anthropometricMeasurements-heightM"
+                        name="anthropometricMeasurements-heightM"
+                        title="Estatura (m)"
+                        aria-label="Estatura en metros"
                         value={formData.anthropometricMeasurements.heightM}
                         onChange={(e) => handleInputChange('anthropometricMeasurements', 'heightM', e.target.value)}
                       />
@@ -474,10 +498,14 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                   </div>
                   <div className="col-12 col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">IMC Calculado</label>
+                      <label className="form-label" htmlFor="anthropometricMeasurements-bmi">IMC Calculado</label>
                       <input
                         type="text"
                         className="form-control"
+                        id="anthropometricMeasurements-bmi"
+                        name="anthropometricMeasurements-bmi"
+                        title="IMC Calculado"
+                        aria-label="Índice de Masa Corporal calculado automáticamente"
                         value={calculateBMI() || ''}
                         readOnly
                         placeholder="Se calcula automáticamente"
@@ -489,11 +517,15 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                 <div className="row">
                   <div className="col-12 col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">Circunferencia de Cintura (cm)</label>
+                      <label className="form-label" htmlFor="anthropometricMeasurements-waistCircCm">Circunferencia de Cintura (cm)</label>
                       <input
                         type="number"
                         step="0.1"
                         className="form-control"
+                        id="anthropometricMeasurements-waistCircCm"
+                        name="anthropometricMeasurements-waistCircCm"
+                        title="Circunferencia de Cintura (cm)"
+                        aria-label="Circunferencia de Cintura en centímetros"
                         value={formData.anthropometricMeasurements.waistCircCm}
                         onChange={(e) => handleInputChange('anthropometricMeasurements', 'waistCircCm', e.target.value)}
                       />
@@ -501,11 +533,15 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                   </div>
                   <div className="col-12 col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">Circunferencia de Cadera (cm)</label>
+                      <label className="form-label" htmlFor="anthropometricMeasurements-hipCircCm">Circunferencia de Cadera (cm)</label>
                       <input
                         type="number"
                         step="0.1"
                         className="form-control"
+                        id="anthropometricMeasurements-hipCircCm"
+                        name="anthropometricMeasurements-hipCircCm"
+                        title="Circunferencia de Cadera (cm)"
+                        aria-label="Circunferencia de Cadera en centímetros"
                         value={formData.anthropometricMeasurements.hipCircCm}
                         onChange={(e) => handleInputChange('anthropometricMeasurements', 'hipCircCm', e.target.value)}
                       />
@@ -520,18 +556,31 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                       <input
                         className="form-check-input"
                         type="checkbox"
-                        checked={formData.bloodPressure.knowsBp}
+                        id="bloodPressure-knowsBp"
+                        name="knowsBp"
+                        checked={Boolean(formData.bloodPressure.knowsBp)}
                         onChange={(e) => handleInputChange('bloodPressure', 'knowsBp', e.target.checked)}
+                        title="Marcar si el paciente conoce su presión arterial"
+                        aria-label="Conoce su presión arterial - Marcar si el paciente conoce sus valores"
                       />
-                      <label className="form-check-label">Conoce su presión arterial</label>
+                      <label 
+                        className="form-check-label" 
+                        htmlFor="bloodPressure-knowsBp"
+                      >
+                        Conoce su presión arterial
+                      </label>
                     </div>
                   </div>
                   <div className="col-12 col-md-4">
                     <div className="mb-3">
-                      <label className="form-label">Sistólica</label>
+                      <label className="form-label" htmlFor="bloodPressure-systolic">Sistólica</label>
                       <input
                         type="number"
                         className="form-control"
+                        id="bloodPressure-systolic"
+                        name="bloodPressure-systolic"
+                        title="Sistólica"
+                        aria-label="Presión arterial sistólica"
                         value={formData.bloodPressure.systolic}
                         onChange={(e) => handleInputChange('bloodPressure', 'systolic', e.target.value)}
                         disabled={!formData.bloodPressure.knowsBp}
@@ -540,10 +589,14 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                   </div>
                   <div className="col-12 col-md-4">
                     <div className="mb-3">
-                      <label className="form-label">Diastólica</label>
+                      <label className="form-label" htmlFor="bloodPressure-diastolic">Diastólica</label>
                       <input
                         type="number"
                         className="form-control"
+                        id="bloodPressure-diastolic"
+                        name="bloodPressure-diastolic"
+                        title="Diastólica"
+                        aria-label="Presión arterial diastólica"
                         value={formData.bloodPressure.diastolic}
                         onChange={(e) => handleInputChange('bloodPressure', 'diastolic', e.target.value)}
                         disabled={!formData.bloodPressure.knowsBp}
@@ -558,7 +611,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
             {currentStep === 4 && (
               <div className="step-content">
                 <h6 className="mb-3">
-                  <i className="fas fa-utensils me-2"></i>
+                  <i className="fas fa-utensils me-2" aria-hidden="true"></i>
                   Historia Dietética
                 </h6>
                 
@@ -568,18 +621,31 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                       <input
                         className="form-check-input"
                         type="checkbox"
-                        checked={formData.dietaryHistory.receivedNutritionalGuidance}
+                        id="dietaryHistory-receivedNutritionalGuidance"
+                        name="receivedNutritionalGuidance"
+                        checked={Boolean(formData.dietaryHistory.receivedNutritionalGuidance)}
                         onChange={(e) => handleInputChange('dietaryHistory', 'receivedNutritionalGuidance', e.target.checked)}
+                        title="Marcar si el paciente ha recibido orientación nutricional previa"
+                        aria-label="Ha recibido orientación nutricional - Marcar si el paciente ha tenido orientación previa"
                       />
-                      <label className="form-check-label">Ha recibido orientación nutricional</label>
+                      <label 
+                        className="form-check-label" 
+                        htmlFor="dietaryHistory-receivedNutritionalGuidance"
+                      >
+                        Ha recibido orientación nutricional
+                      </label>
                     </div>
                   </div>
                   <div className="col-12 col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">¿Cuándo?</label>
+                      <label className="form-label" htmlFor="dietaryHistory-whenReceived">¿Cuándo?</label>
                       <input
                         type="text"
                         className="form-control"
+                        id="dietaryHistory-whenReceived"
+                        name="dietaryHistory-whenReceived"
+                        title="¿Cuándo?"
+                        aria-label="¿Cuándo recibió orientación nutricional?"
                         value={formData.dietaryHistory.whenReceived}
                         onChange={(e) => handleInputChange('dietaryHistory', 'whenReceived', e.target.value)}
                         disabled={!formData.dietaryHistory.receivedNutritionalGuidance}
@@ -590,9 +656,13 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">Nivel de Adherencia</label>
+                  <label className="form-label" htmlFor="dietaryHistory-adherenceLevel">Nivel de Adherencia</label>
                   <select
                     className="form-select"
+                    id="dietaryHistory-adherenceLevel"
+                    name="dietaryHistory-adherenceLevel"
+                    title="Nivel de Adherencia"
+                    aria-label="Seleccionar nivel de adherencia"
                     value={formData.dietaryHistory.adherenceLevel}
                     onChange={(e) => handleInputChange('dietaryHistory', 'adherenceLevel', e.target.value)}
                   >
@@ -608,10 +678,14 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                 <div className="row">
                   <div className="col-12 col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">Alimentos Preferidos</label>
+                      <label className="form-label" htmlFor="dietaryHistory-preferredFoods">Alimentos Preferidos</label>
                       <input
                         type="text"
                         className="form-control"
+                        id="dietaryHistory-preferredFoods"
+                        name="dietaryHistory-preferredFoods"
+                        title="Alimentos Preferidos"
+                        aria-label="Alimentos Preferidos"
                         value={formData.dietaryHistory.preferredFoods}
                         onChange={(e) => handleInputChange('dietaryHistory', 'preferredFoods', e.target.value)}
                         placeholder="Ej: Frutas, verduras, pescado..."
@@ -620,10 +694,14 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                   </div>
                   <div className="col-12 col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">Alimentos que No Le Gustan</label>
+                      <label className="form-label" htmlFor="dietaryHistory-dislikedFoods">Alimentos que No Le Gustan</label>
                       <input
                         type="text"
                         className="form-control"
+                        id="dietaryHistory-dislikedFoods"
+                        name="dietaryHistory-dislikedFoods"
+                        title="Alimentos que No Le Gustan"
+                        aria-label="Alimentos que No Le Gustan"
                         value={formData.dietaryHistory.dislikedFoods}
                         onChange={(e) => handleInputChange('dietaryHistory', 'dislikedFoods', e.target.value)}
                         placeholder="Ej: Brócoli, pescado..."
@@ -633,10 +711,14 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">Alimentos que Causan Malestar o Alergia</label>
+                  <label className="form-label" htmlFor="dietaryHistory-malestarAlergiaFoods">Alimentos que Causan Malestar o Alergia</label>
                   <input
                     type="text"
                     className="form-control"
+                    id="dietaryHistory-malestarAlergiaFoods"
+                    name="dietaryHistory-malestarAlergiaFoods"
+                    title="Alimentos que Causan Malestar o Alergia"
+                    aria-label="Alimentos que Causan Malestar o Alergia"
                     value={formData.dietaryHistory.malestarAlergiaFoods}
                     onChange={(e) => handleInputChange('dietaryHistory', 'malestarAlergiaFoods', e.target.value)}
                     placeholder="Ej: Lácteos, gluten, mariscos..."
@@ -649,18 +731,31 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                       <input
                         className="form-check-input"
                         type="checkbox"
-                        checked={formData.dietaryHistory.takesSupplements}
+                        id="dietaryHistory-takesSupplements"
+                        name="takesSupplements"
+                        checked={Boolean(formData.dietaryHistory.takesSupplements)}
                         onChange={(e) => handleInputChange('dietaryHistory', 'takesSupplements', e.target.checked)}
+                        title="Marcar si el paciente toma suplementos"
+                        aria-label="Toma suplementos - Marcar si el paciente consume suplementos nutricionales"
                       />
-                      <label className="form-check-label">Toma suplementos</label>
+                      <label 
+                        className="form-check-label" 
+                        htmlFor="dietaryHistory-takesSupplements"
+                      >
+                        Toma suplementos
+                      </label>
                     </div>
                   </div>
                   <div className="col-12 col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">Detalles de Suplementos</label>
+                      <label className="form-label" htmlFor="dietaryHistory-supplementDetails">Detalles de Suplementos</label>
                       <input
                         type="text"
                         className="form-control"
+                        id="dietaryHistory-supplementDetails"
+                        name="dietaryHistory-supplementDetails"
+                        title="Detalles de Suplementos"
+                        aria-label="Detalles de Suplementos"
                         value={formData.dietaryHistory.supplementDetails}
                         onChange={(e) => handleInputChange('dietaryHistory', 'supplementDetails', e.target.value)}
                         disabled={!formData.dietaryHistory.takesSupplements}
@@ -676,16 +771,20 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
             {currentStep === 5 && (
               <div className="step-content">
                 <h6 className="mb-3">
-                  <i className="fas fa-stethoscope me-2"></i>
+                  <i className="fas fa-stethoscope me-2" aria-hidden="true"></i>
                   Diagnóstico y Plan Nutricional
                 </h6>
                 
                 <div className="mb-3">
-                  <label className="form-label">
+                  <label className="form-label" htmlFor="nutritionalDiagnosis">
                     Diagnóstico Nutricional <span className="text-danger">*</span>
                   </label>
                   <textarea
                     className="form-control"
+                    id="nutritionalDiagnosis"
+                    name="nutritionalDiagnosis"
+                    title="Diagnóstico Nutricional"
+                    aria-label="Diagnóstico Nutricional"
                     rows={4}
                     value={formData.nutritionalDiagnosis}
                     onChange={(e) => handleBasicChange('nutritionalDiagnosis', e.target.value)}
@@ -695,11 +794,15 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">
+                  <label className="form-label" htmlFor="nutritionalPlanAndManagement">
                     Plan y Manejo Nutricional <span className="text-danger">*</span>
                   </label>
                   <textarea
                     className="form-control"
+                    id="nutritionalPlanAndManagement"
+                    name="nutritionalPlanAndManagement"
+                    title="Plan y Manejo Nutricional"
+                    aria-label="Plan y Manejo Nutricional"
                     rows={4}
                     value={formData.nutritionalPlanAndManagement}
                     onChange={(e) => handleBasicChange('nutritionalPlanAndManagement', e.target.value)}
@@ -709,9 +812,13 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">Notas de Evolución y Seguimiento</label>
+                  <label className="form-label" htmlFor="evolutionAndFollowUpNotes">Notas de Evolución y Seguimiento</label>
                   <textarea
                     className="form-control"
+                    id="evolutionAndFollowUpNotes"
+                    name="evolutionAndFollowUpNotes"
+                    title="Notas de Evolución y Seguimiento"
+                    aria-label="Notas de Evolución y Seguimiento"
                     rows={3}
                     value={formData.evolutionAndFollowUpNotes}
                     onChange={(e) => handleBasicChange('evolutionAndFollowUpNotes', e.target.value)}
@@ -729,8 +836,10 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                     type="button"
                     className="btn btn-outline-secondary"
                     onClick={prevStep}
+                    title="Ir al paso anterior"
+                    aria-label="Ir al paso anterior"
                   >
-                    <i className="fas fa-arrow-left me-1"></i>
+                    <i className="fas fa-arrow-left me-1" aria-hidden="true"></i>
                     Anterior
                   </button>
                 )}
@@ -742,9 +851,11 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                     type="button"
                     className="btn btn-primary"
                     onClick={nextStep}
+                    title="Ir al siguiente paso"
+                    aria-label="Ir al siguiente paso"
                   >
                     Siguiente
-                    <i className="fas fa-arrow-right ms-1"></i>
+                    <i className="fas fa-arrow-right ms-1" aria-hidden="true"></i>
                   </button>
                 )}
                 
@@ -753,6 +864,8 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                     type="submit"
                     className="btn btn-success"
                     disabled={loading}
+                    title={isEditing ? "Actualizar expediente clínico" : "Crear expediente clínico"}
+                    aria-label={isEditing ? "Actualizar expediente clínico" : "Crear expediente clínico"}
                   >
                     {loading ? (
                       <>
@@ -761,7 +874,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                       </>
                     ) : (
                       <>
-                        <i className="fas fa-save me-1"></i>
+                        <i className="fas fa-save me-1" aria-hidden="true"></i>
                         {isEditing ? 'Actualizar' : 'Crear'} Expediente
                       </>
                     )}
@@ -772,8 +885,10 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                   type="button"
                   className="btn btn-outline-danger"
                   onClick={onCancel}
+                  title="Cancelar y volver"
+                  aria-label="Cancelar y volver"
                 >
-                  <i className="fas fa-times me-1"></i>
+                  <i className="fas fa-times me-1" aria-hidden="true"></i>
                   Cancelar
                 </button>
               </div>
@@ -787,92 +902,113 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
           max-width: 100%;
         }
         
+        /* Indicador de progreso minimalista con colores del sistema de expedientes */
         .progress-indicator {
-          background: #f8f9fa;
-          padding: 1rem;
-          border-radius: 0.5rem;
-          border: 1px solid #dee2e6;
+          padding: 20px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 12px;
+          box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+          margin: 20px auto;
+          max-width: 400px;
+          text-align: center;
+          position: relative;
+          overflow: hidden;
         }
         
-        .step-circle {
-          width: 40px;
-          height: 40px;
+        .progress-indicator::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+          pointer-events: none;
+        }
+        
+        @media (min-width: 768px) {
+          .progress-indicator {
+            padding: 30px;
+            max-width: 500px;
+          }
+        }
+        
+        .current-step-circle {
+          width: 60px;
+          height: 60px;
           border-radius: 50%;
           display: flex;
-          align-items: center;
           justify-content: center;
-          background: #e9ecef;
-          border: 2px solid #dee2e6;
-          font-weight: bold;
-          color: #6c757d;
-          transition: all 0.3s ease;
+          align-items: center;
+          font-weight: 700;
+          font-size: 1.8em;
+          background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+          color: #ffffff;
+          border: 3px solid #ffffff;
+          box-shadow: 0 5px 15px rgba(255, 107, 107, 0.5);
+          margin: 0 auto 15px auto;
+          transition: all 0.3s ease-in-out;
+          flex-shrink: 0;
+          position: relative;
+          z-index: 1;
+          -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
         }
         
-        .step-circle.active {
-          background: #007bff;
-          border-color: #007bff;
-          color: white;
+        .current-step-info {
+          position: relative;
+          z-index: 1;
         }
         
-        .step-circle.completed {
-          background: #28a745;
-          border-color: #28a745;
-          color: white;
-        }
-        
-        .step-circle.required {
-          border-color: #dc3545;
-        }
-        
-        .step-info {
-          min-width: 120px;
-        }
-        
-        .step-title {
+        .current-step-info .step-title {
+          font-size: 1.4em;
           font-weight: 600;
-          font-size: 0.9rem;
-          color: #495057;
+          color: #ffffff;
+          margin-bottom: 5px;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
-        .step-line {
-          width: 60px;
-          height: 2px;
-          background: #dee2e6;
-          margin: 0 1rem;
-          transition: background 0.3s ease;
+        .current-step-info .step-counter {
+          font-size: 0.9em;
+          color: rgba(255, 255, 255, 0.9);
+          margin-bottom: 5px;
         }
         
-        .step-line.completed {
-          background: #28a745;
+        .current-step-info .step-required {
+          color: #ff7675;
+          font-weight: 500;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        @media (max-width: 767.98px) {
+          .current-step-circle {
+            width: 50px;
+            height: 50px;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+          }
+          .current-step-info .step-title {
+            font-size: 1.2em;
+          }
+          .current-step-info .step-counter {
+            font-size: 0.8em;
+          }
         }
         
         .step-content {
           min-height: 300px;
+          background: #ffffff;
+          border-radius: 15px;
+          padding: 2rem;
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+          margin-top: 1.5rem;
         }
         
         /* Responsive adjustments */
         @media (max-width: 768px) {
           .progress-indicator {
-            padding: 0.75rem;
-          }
-          
-          .step-circle {
-            width: 35px;
-            height: 35px;
-            font-size: 0.9rem;
-          }
-          
-          .step-info {
-            min-width: 100px;
-          }
-          
-          .step-title {
-            font-size: 0.8rem;
-          }
-          
-          .step-line {
-            width: 30px;
-            margin: 0 0.5rem;
+            padding: 1.5rem 1rem;
+            border-radius: 15px;
           }
           
           .form-label {
@@ -894,31 +1030,14 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
           
           .step-content {
             min-height: 250px;
+            padding: 1.5rem;
           }
         }
         
         @media (max-width: 576px) {
           .progress-indicator {
-            padding: 0.5rem;
-          }
-          
-          .step-circle {
-            width: 30px;
-            height: 30px;
-            font-size: 0.8rem;
-          }
-          
-          .step-info {
-            min-width: 80px;
-          }
-          
-          .step-title {
-            font-size: 0.75rem;
-          }
-          
-          .step-line {
-            width: 20px;
-            margin: 0 0.25rem;
+            padding: 1rem 0.75rem;
+            border-radius: 12px;
           }
           
           .form-label {
@@ -940,6 +1059,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
           
           .step-content {
             min-height: 200px;
+            padding: 1rem;
           }
           
           /* Stack buttons vertically on very small screens */
@@ -970,15 +1090,120 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
           }
         }
         
-        /* Better checkbox layout on mobile */
+        /* Ensure checkboxes are clickable and accessible */
+        .form-check-input {
+          cursor: pointer;
+          width: 1.2em;
+          height: 1.2em;
+          border: 2px solid #6c757d;
+          border-radius: 0.25em;
+          background-color: #fff;
+          transition: all 0.15s ease-in-out;
+          margin: 0;
+          flex-shrink: 0;
+        }
+        
+        .form-check-input:checked {
+          background-color: #007bff;
+          border-color: #007bff;
+        }
+        
+        .form-check-input:focus {
+          outline: 0;
+          box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+          border-color: #80bdff;
+        }
+        
+        .form-check-input:hover {
+          border-color: #007bff;
+          transform: scale(1.05);
+        }
+        
+        .form-check-input:active {
+          transform: scale(0.95);
+        }
+        
+        .form-check-label {
+          cursor: pointer;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+          margin-left: 0.5rem;
+          line-height: 1.4;
+          font-size: 0.9rem;
+          flex: 1;
+          margin-bottom: 0;
+          padding-top: 0.1rem;
+        }
+        
+        /* Improve checkbox spacing and layout */
+        .form-check {
+          display: flex;
+          align-items: flex-start;
+          margin-bottom: 0.75rem;
+          padding: 0.5rem;
+          border-radius: 0.375rem;
+          transition: background-color 0.15s ease-in-out;
+        }
+        
+        .form-check:hover {
+          background-color: rgba(0, 123, 255, 0.05);
+        }
+        
+        .form-check-input {
+          margin-right: 0.5rem;
+          margin-top: 0.1rem;
+        }
+        
+        /* Ensure proper touch targets on mobile */
         @media (max-width: 768px) {
-          .form-check {
-            margin-bottom: 0.75rem;
+          .form-check-input {
+            width: 1.4em;
+            height: 1.4em;
+            min-width: 1.4em;
+            min-height: 1.4em;
           }
           
           .form-check-label {
             font-size: 0.9rem;
             line-height: 1.3;
+            padding-top: 0.05rem;
+          }
+          
+          .form-check {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            min-height: 44px;
+          }
+        }
+        
+        /* Ensure checkboxes work on all browsers */
+        .form-check-input::-ms-check {
+          display: none;
+        }
+        
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+          .form-check-input {
+            border-width: 3px;
+          }
+          
+          .form-check-input:checked {
+            background-color: #000;
+            border-color: #000;
+          }
+        }
+        
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+          .form-check-input,
+          .form-check {
+            transition: none;
+          }
+          
+          .form-check-input:hover {
+            transform: none;
           }
         }
         
@@ -986,6 +1211,110 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         @media (max-width: 768px) {
           textarea.form-control {
             min-height: 80px;
+          }
+        }
+        
+        /* Fix text-size-adjust compatibility - Remove problematic properties */
+        .form-control, .form-select, .btn, .form-label {
+          /* Remove problematic text-size-adjust properties */
+        }
+        
+        /* Fix text-align compatibility - Use standard properties */
+        .text-center {
+          text-align: center !important;
+        }
+        
+        /* Remove problematic color-adjust properties */
+        @media print {
+          .btn, .form-control, .form-select {
+            /* Remove problematic print-color-adjust properties */
+          }
+        }
+        
+        /* Ensure proper focus indicators for accessibility */
+        .form-control:focus,
+        .form-select:focus,
+        .btn:focus {
+          outline: 2px solid #007bff;
+          outline-offset: 2px;
+        }
+        
+        /* Improve button accessibility */
+        .btn {
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .btn:focus {
+          box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        
+        /* Ensure proper contrast for accessibility */
+        .form-label {
+          color: #495057;
+          font-weight: 500;
+        }
+        
+        .text-danger {
+          color: #dc3545 !important;
+        }
+        
+        /* Improve form field spacing on mobile */
+        @media (max-width: 768px) {
+          .mb-3 {
+            margin-bottom: 1rem !important;
+          }
+          
+          .row {
+            margin-left: -0.5rem;
+            margin-right: -0.5rem;
+          }
+          
+          .col-12, .col-6, .col-md-6, .col-md-4 {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+          }
+        }
+        
+        /* Ensure all form fields have proper accessibility */
+        .form-control:not([id]),
+        .form-select:not([id]),
+        .form-check-input:not([id]) {
+          border: 2px solid #dc3545;
+        }
+        
+        /* Improve button text accessibility */
+        .btn:not([title]):not([aria-label]) {
+          border: 2px solid #dc3545;
+        }
+        
+        /* Ensure proper text alignment */
+        .text-center {
+          text-align: center !important;
+        }
+        
+        .text-left {
+          text-align: left !important;
+        }
+        
+        .text-right {
+          text-align: right !important;
+        }
+        
+        /* Improve mobile compatibility */
+        @media (max-width: 768px) {
+          .btn {
+            min-height: 44px;
+            min-width: 44px;
+          }
+          
+          .form-control, .form-select {
+            min-height: 44px;
+          }
+          
+          .form-check-input {
+            min-width: 44px;
+            min-height: 44px;
           }
         }
       `}</style>

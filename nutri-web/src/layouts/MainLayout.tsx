@@ -17,12 +17,63 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
+// Tipos para las notificaciones
+interface Notification {
+  id: string;
+  type: 'appointment' | 'patient' | 'reminder' | 'system';
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+  icon: React.ComponentType<any>;
+  iconColor: string;
+  bgColor: string;
+}
+
 const MainLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, isLoading, logout } = useAuth();
+
+  // Estado para las notificaciones
+  const [notifications, setNotifications] = useState<Notification[]>([
+    {
+      id: '1',
+      type: 'appointment',
+      title: 'Nueva cita programada',
+      message: 'María González - Mañana 9:00 AM',
+      time: 'Hace 5 minutos',
+      read: false,
+      icon: Calendar,
+      iconColor: 'text-primary',
+      bgColor: 'bg-primary bg-opacity-10'
+    },
+    {
+      id: '2',
+      type: 'patient',
+      title: 'Nuevo paciente registrado',
+      message: 'Carlos Mendoza se registró',
+      time: 'Hace 1 hora',
+      read: false,
+      icon: Users,
+      iconColor: 'text-success',
+      bgColor: 'bg-success bg-opacity-10'
+    },
+    {
+      id: '3',
+      type: 'reminder',
+      title: 'Recordatorio',
+      message: 'Actualizar plan de Ana López',
+      time: 'Hace 2 horas',
+      read: false,
+      icon: Bell,
+      iconColor: 'text-warning',
+      bgColor: 'bg-warning bg-opacity-10'
+    }
+  ]);
 
   // Detectar cambios de tamaño de pantalla
   useEffect(() => {
@@ -57,12 +108,84 @@ const MainLayout: React.FC = () => {
     { name: 'Mensajes', href: '/messages', icon: MessageCircle },
     { name: 'Progreso', href: '/progress', icon: TrendingUp },
     { name: 'Reportes', href: '/reports', icon: BarChart3 },
+    { name: 'Notificaciones', href: '/notifications', icon: Bell },
     { name: 'Perfil', href: '/profile', icon: User },
   ];
 
   const handleLogout = async () => {
-    await logout();
+    try {
+      await logout();
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
+
+  // Funciones para manejar notificaciones
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const markNotificationAsRead = (notificationId: string) => {
+    setNotifications(prev => 
+      prev.map(notification => 
+        notification.id === notificationId 
+          ? { ...notification, read: true }
+          : notification
+      )
+    );
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(prev => 
+      prev.map(notification => ({ ...notification, read: true }))
+    );
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    markNotificationAsRead(notification.id);
+    
+    // Navegar según el tipo de notificación
+    switch (notification.type) {
+      case 'appointment':
+        navigate('/appointments');
+        break;
+      case 'patient':
+        navigate('/patients');
+        break;
+      case 'reminder':
+        navigate('/diet-plans');
+        break;
+      default:
+        navigate('/notifications');
+    }
+    
+    setNotificationsOpen(false);
+  };
+
+  const handleNotificationsToggle = () => {
+    setNotificationsOpen(!notificationsOpen);
+  };
+
+  const handleNotificationsClose = () => {
+    setNotificationsOpen(false);
+  };
+
+  // Cerrar notificaciones al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.notifications-dropdown')) {
+        setNotificationsOpen(false);
+      }
+    };
+
+    if (notificationsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [notificationsOpen]);
 
   // Mostrar loading mientras se verifica la autenticación
   if (isLoading) {
@@ -220,75 +343,101 @@ const MainLayout: React.FC = () => {
 
             <div className="d-flex align-items-center gap-3">
               {/* Notifications */}
-              <div className="position-relative dropdown">
+              <div className="position-relative dropdown notifications-dropdown">
                 <button 
                   className={`btn btn-outline-secondary position-relative ${isMobile ? 'btn-mobile' : ''}`}
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
+                  onClick={handleNotificationsToggle}
+                  aria-expanded={notificationsOpen}
                 >
                   <Bell size={18} />
-                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
-                    3
-                    <span className="visually-hidden">notificaciones no leídas</span>
-                  </span>
+                  {unreadCount > 0 && (
+                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
+                      {unreadCount}
+                      <span className="visually-hidden">notificaciones no leídas</span>
+                    </span>
+                  )}
                 </button>
-                <ul className="dropdown-menu dropdown-menu-end" style={{ minWidth: isMobile ? '280px' : '300px' }}>
-                  <li className="dropdown-header">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span>Notificaciones</span>
-                      <span className="badge bg-primary">3 nuevas</span>
-                    </div>
-                  </li>
-                  <li><hr className="dropdown-divider" /></li>
-                  <li>
-                    <div className="dropdown-item">
-                      <div className="d-flex">
-                        <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
-                          <Calendar size={16} className="text-primary" />
-                        </div>
-                        <div className="flex-grow-1">
-                          <div className="fw-medium">Nueva cita programada</div>
-                          <div className="text-muted small">María González - Mañana 9:00 AM</div>
-                          <div className="text-muted small">Hace 5 minutos</div>
-                        </div>
+                
+                {notificationsOpen && (
+                  <ul className="dropdown-menu dropdown-menu-end show" style={{ 
+                    minWidth: isMobile ? '280px' : '300px',
+                    position: 'absolute',
+                    inset: '0px 0px auto auto',
+                    margin: '0px',
+                    transform: 'translate3d(0px, 39px, 0px)',
+                    zIndex: 1000
+                  }}>
+                    <li className="dropdown-header">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <span>Notificaciones</span>
+                        {unreadCount > 0 && (
+                          <div className="d-flex align-items-center gap-2">
+                            <span className="badge bg-primary">{unreadCount} nuevas</span>
+                            <button 
+                              className="btn btn-link btn-sm p-0 text-decoration-none"
+                              onClick={markAllAsRead}
+                              title="Marcar todas como leídas"
+                            >
+                              <small>Marcar todas</small>
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="dropdown-item">
-                      <div className="d-flex">
-                        <div className="bg-success bg-opacity-10 rounded-circle p-2 me-3">
-                          <Users size={16} className="text-success" />
+                    </li>
+                    <li><hr className="dropdown-divider" /></li>
+                    
+                    {notifications.length === 0 ? (
+                      <li>
+                        <div className="dropdown-item text-center text-muted py-3">
+                          <Bell size={24} className="mb-2" />
+                          <div>No hay notificaciones</div>
                         </div>
-                        <div className="flex-grow-1">
-                          <div className="fw-medium">Nuevo paciente registrado</div>
-                          <div className="text-muted small">Carlos Mendoza se registró</div>
-                          <div className="text-muted small">Hace 1 hora</div>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="dropdown-item">
-                      <div className="d-flex">
-                        <div className="bg-warning bg-opacity-10 rounded-circle p-2 me-3">
-                          <Bell size={16} className="text-warning" />
-                        </div>
-                        <div className="flex-grow-1">
-                          <div className="fw-medium">Recordatorio</div>
-                          <div className="text-muted small">Actualizar plan de Ana López</div>
-                          <div className="text-muted small">Hace 2 horas</div>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                  <li><hr className="dropdown-divider" /></li>
-                  <li>
-                    <Link className="dropdown-item text-center" to="/notifications">
-                      Ver todas las notificaciones
-                    </Link>
-                  </li>
-                </ul>
+                      </li>
+                    ) : (
+                      notifications.map((notification) => {
+                        const Icon = notification.icon;
+                        return (
+                          <li key={notification.id}>
+                            <div 
+                              className={`dropdown-item ${!notification.read ? 'bg-light' : ''}`}
+                              onClick={() => handleNotificationClick(notification)}
+                              style={{ cursor: 'pointer' }}
+                            >
+                              <div className="d-flex">
+                                <div className={`${notification.bgColor} rounded-circle p-2 me-3`}>
+                                  <Icon size={16} className={notification.iconColor} />
+                                </div>
+                                <div className="flex-grow-1">
+                                  <div className={`fw-medium ${!notification.read ? 'fw-bold' : ''}`}>
+                                    {notification.title}
+                                  </div>
+                                  <div className="text-muted small">{notification.message}</div>
+                                  <div className="text-muted small">{notification.time}</div>
+                                </div>
+                                {!notification.read && (
+                                  <div className="ms-2">
+                                    <div className="bg-primary rounded-circle" style={{ width: '8px', height: '8px' }}></div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </li>
+                        );
+                      })
+                    )}
+                    
+                    <li><hr className="dropdown-divider" /></li>
+                    <li>
+                      <Link 
+                        className="dropdown-item text-center" 
+                        to="/notifications"
+                        onClick={handleNotificationsClose}
+                      >
+                        Ver todas las notificaciones
+                      </Link>
+                    </li>
+                  </ul>
+                )}
               </div>
 
               {/* User Profile Dropdown */}

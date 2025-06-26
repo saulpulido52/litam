@@ -475,6 +475,20 @@ export interface CreateDietPlanDto {
     cheatDaysPerWeek?: number;
     freeMealsPerWeek?: number;
   };
+  
+  // Configuración de comidas
+  mealConfiguration?: {
+    mealsPerDay?: number;
+    planType?: string;
+    mealTiming?: string;
+    portionSize?: string;
+  };
+  
+  // Objetivos nutricionales
+  nutritionalGoals?: {
+    primaryGoal?: string;
+    secondaryGoals?: string[];
+  };
 }
 
 // Nuevas interfaces DTO para restricciones patológicas

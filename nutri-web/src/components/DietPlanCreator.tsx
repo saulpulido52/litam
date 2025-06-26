@@ -407,14 +407,12 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
         </div>
 
         <div className="card-body">
-          {/* Indicador de progreso simplificado - Solo muestra el paso actual */}
+          {/* Indicador de progreso minimalista - solo muestra el paso actual */}
           <div className="progress-indicator mb-4">
-            <div className="d-flex justify-content-center align-items-center">
-              <div className="current-step-display">
-                <div className="step-number">{currentStep}</div>
-                <div className="step-title">{steps[currentStep - 1].title}</div>
-                <div className="step-subtitle">de {steps.length} pasos</div>
-              </div>
+            <div className="current-step-circle">{currentStep}</div>
+            <div className="current-step-info">
+              <div className="step-title">{steps[currentStep - 1].title}</div>
+              <div className="step-counter">Paso {currentStep} de {steps.length}</div>
             </div>
           </div>
 
@@ -654,17 +652,664 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                   </div>
 
                   {showPathologicalRestrictions && (
-                    <div className="alert alert-warning">
-                      <AlertTriangle className="me-2" size={16} />
-                      <strong>Modo de edición activado:</strong> Puedes agregar, modificar o eliminar restricciones según sea necesario.
-                    </div>
+                    <>
+                      <div className="alert alert-warning">
+                        <AlertTriangle className="me-2" size={16} />
+                        <strong>Modo de edición activado:</strong> Puedes agregar, modificar o eliminar restricciones según sea necesario.
+                      </div>
+
+                      {/* Condiciones Médicas */}
+                      <div className="card mb-4">
+                        <div className="card-header">
+                          <h6 className="mb-0">
+                            <i className="fas fa-heartbeat me-2"></i>
+                            Condiciones Médicas
+                          </h6>
+                        </div>
+                        <div className="card-body">
+                          {pathologicalRestrictions.medicalConditions.map((condition, index) => (
+                            <div key={index} className="row mb-3 p-3 border rounded">
+                              <div className="col-md-4">
+                                <label className="form-label">Condición</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  value={condition.name}
+                                  onChange={(e) => {
+                                    const updated = [...pathologicalRestrictions.medicalConditions];
+                                    updated[index].name = e.target.value;
+                                    setPathologicalRestrictions({...pathologicalRestrictions, medicalConditions: updated});
+                                  }}
+                                  placeholder="Ej: Diabetes, Hipertensión"
+                                />
+                              </div>
+                              <div className="col-md-3">
+                                <label className="form-label">Categoría</label>
+                                <select
+                                  className="form-select"
+                                  value={condition.category}
+                                  onChange={(e) => {
+                                    const updated = [...pathologicalRestrictions.medicalConditions];
+                                    updated[index].category = e.target.value as any;
+                                    setPathologicalRestrictions({...pathologicalRestrictions, medicalConditions: updated});
+                                  }}
+                                >
+                                  <option value="condition">Condición</option>
+                                  <option value="disease">Enfermedad</option>
+                                  <option value="syndrome">Síndrome</option>
+                                </select>
+                              </div>
+                              <div className="col-md-3">
+                                <label className="form-label">Severidad</label>
+                                <select
+                                  className="form-select"
+                                  value={condition.severity}
+                                  onChange={(e) => {
+                                    const updated = [...pathologicalRestrictions.medicalConditions];
+                                    updated[index].severity = e.target.value as any;
+                                    setPathologicalRestrictions({...pathologicalRestrictions, medicalConditions: updated});
+                                  }}
+                                >
+                                  <option value="mild">Leve</option>
+                                  <option value="moderate">Moderada</option>
+                                  <option value="severe">Severa</option>
+                                </select>
+                              </div>
+                              <div className="col-md-2 d-flex align-items-end">
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-danger btn-sm"
+                                  onClick={() => {
+                                    const updated = pathologicalRestrictions.medicalConditions.filter((_, i) => i !== index);
+                                    setPathologicalRestrictions({...pathologicalRestrictions, medicalConditions: updated});
+                                  }}
+                                >
+                                  <i className="fas fa-trash"></i>
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            className="btn btn-outline-primary btn-sm"
+                            onClick={() => {
+                              const newCondition = {
+                                name: '',
+                                category: 'condition' as const,
+                                severity: 'moderate' as const,
+                                dietaryImplications: [],
+                                restrictedFoods: [],
+                                recommendedFoods: [],
+                                monitoringRequirements: [],
+                                emergencyInstructions: ''
+                              };
+                              setPathologicalRestrictions({
+                                ...pathologicalRestrictions,
+                                medicalConditions: [...pathologicalRestrictions.medicalConditions, newCondition]
+                              });
+                            }}
+                          >
+                            <i className="fas fa-plus me-1"></i>
+                            Agregar Condición
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Alergias */}
+                      <div className="card mb-4">
+                        <div className="card-header">
+                          <h6 className="mb-0">
+                            <i className="fas fa-exclamation-triangle me-2"></i>
+                            Alergias
+                          </h6>
+                        </div>
+                        <div className="card-body">
+                          {pathologicalRestrictions.allergies.map((allergy, index) => (
+                            <div key={index} className="row mb-3 p-3 border rounded">
+                              <div className="col-md-3">
+                                <label className="form-label">Alergeno</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  value={allergy.allergen}
+                                  onChange={(e) => {
+                                    const updated = [...pathologicalRestrictions.allergies];
+                                    updated[index].allergen = e.target.value;
+                                    setPathologicalRestrictions({...pathologicalRestrictions, allergies: updated});
+                                  }}
+                                  placeholder="Ej: Gluten, Lactosa"
+                                />
+                              </div>
+                              <div className="col-md-2">
+                                <label className="form-label">Tipo</label>
+                                <select
+                                  className="form-select"
+                                  value={allergy.type}
+                                  onChange={(e) => {
+                                    const updated = [...pathologicalRestrictions.allergies];
+                                    updated[index].type = e.target.value as any;
+                                    setPathologicalRestrictions({...pathologicalRestrictions, allergies: updated});
+                                  }}
+                                >
+                                  <option value="food">Alimento</option>
+                                  <option value="medication">Medicamento</option>
+                                  <option value="environmental">Ambiental</option>
+                                </select>
+                              </div>
+                              <div className="col-md-2">
+                                <label className="form-label">Severidad</label>
+                                <select
+                                  className="form-select"
+                                  value={allergy.severity}
+                                  onChange={(e) => {
+                                    const updated = [...pathologicalRestrictions.allergies];
+                                    updated[index].severity = e.target.value as any;
+                                    setPathologicalRestrictions({...pathologicalRestrictions, allergies: updated});
+                                  }}
+                                >
+                                  <option value="mild">Leve</option>
+                                  <option value="moderate">Moderada</option>
+                                  <option value="severe">Severa</option>
+                                </select>
+                              </div>
+                              <div className="col-md-3">
+                                <label className="form-label">Síntomas</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  value={allergy.symptoms.join(', ')}
+                                  onChange={(e) => {
+                                    const updated = [...pathologicalRestrictions.allergies];
+                                    updated[index].symptoms = e.target.value.split(',').map(s => s.trim()).filter(s => s);
+                                    setPathologicalRestrictions({...pathologicalRestrictions, allergies: updated});
+                                  }}
+                                  placeholder="Ej: Urticaria, Dificultad respiratoria"
+                                />
+                              </div>
+                              <div className="col-md-2 d-flex align-items-end">
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-danger btn-sm"
+                                  onClick={() => {
+                                    const updated = pathologicalRestrictions.allergies.filter((_, i) => i !== index);
+                                    setPathologicalRestrictions({...pathologicalRestrictions, allergies: updated});
+                                  }}
+                                >
+                                  <i className="fas fa-trash"></i>
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            className="btn btn-outline-primary btn-sm"
+                            onClick={() => {
+                              const newAllergy = {
+                                allergen: '',
+                                type: 'food' as const,
+                                severity: 'moderate' as const,
+                                symptoms: [],
+                                crossReactions: [],
+                                emergencyMedication: '',
+                                avoidanceInstructions: ''
+                              };
+                              setPathologicalRestrictions({
+                                ...pathologicalRestrictions,
+                                allergies: [...pathologicalRestrictions.allergies, newAllergy]
+                              });
+                            }}
+                          >
+                            <i className="fas fa-plus me-1"></i>
+                            Agregar Alergia
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Medicamentos */}
+                      <div className="card mb-4">
+                        <div className="card-header">
+                          <h6 className="mb-0">
+                            <i className="fas fa-pills me-2"></i>
+                            Medicamentos
+                          </h6>
+                        </div>
+                        <div className="card-body">
+                          {pathologicalRestrictions.medications.map((medication, index) => (
+                            <div key={index} className="row mb-3 p-3 border rounded">
+                              <div className="col-md-3">
+                                <label className="form-label">Medicamento</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  value={medication.name}
+                                  onChange={(e) => {
+                                    const updated = [...pathologicalRestrictions.medications];
+                                    updated[index].name = e.target.value;
+                                    setPathologicalRestrictions({...pathologicalRestrictions, medications: updated});
+                                  }}
+                                  placeholder="Ej: Metformina, Enalapril"
+                                />
+                              </div>
+                              <div className="col-md-3">
+                                <label className="form-label">Dosis</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  value={medication.dosage}
+                                  onChange={(e) => {
+                                    const updated = [...pathologicalRestrictions.medications];
+                                    updated[index].dosage = e.target.value;
+                                    setPathologicalRestrictions({...pathologicalRestrictions, medications: updated});
+                                  }}
+                                  placeholder="Ej: 500mg"
+                                />
+                              </div>
+                              <div className="col-md-3">
+                                <label className="form-label">Frecuencia</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  value={medication.frequency}
+                                  onChange={(e) => {
+                                    const updated = [...pathologicalRestrictions.medications];
+                                    updated[index].frequency = e.target.value;
+                                    setPathologicalRestrictions({...pathologicalRestrictions, medications: updated});
+                                  }}
+                                  placeholder="Ej: 2 veces al día"
+                                />
+                              </div>
+                              <div className="col-md-3 d-flex align-items-end">
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-danger btn-sm"
+                                  onClick={() => {
+                                    const updated = pathologicalRestrictions.medications.filter((_, i) => i !== index);
+                                    setPathologicalRestrictions({...pathologicalRestrictions, medications: updated});
+                                  }}
+                                >
+                                  <i className="fas fa-trash"></i>
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            className="btn btn-outline-primary btn-sm"
+                            onClick={() => {
+                              const newMedication = {
+                                name: '',
+                                dosage: '',
+                                frequency: '',
+                                foodInteractions: [],
+                                timingRequirements: ''
+                              };
+                              setPathologicalRestrictions({
+                                ...pathologicalRestrictions,
+                                medications: [...pathologicalRestrictions.medications, newMedication]
+                              });
+                            }}
+                          >
+                            <i className="fas fa-plus me-1"></i>
+                            Agregar Medicamento
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Consideraciones Especiales */}
+                      <div className="card mb-4">
+                        <div className="card-header">
+                          <h6 className="mb-0">
+                            <i className="fas fa-clipboard-list me-2"></i>
+                            Consideraciones Especiales
+                          </h6>
+                        </div>
+                        <div className="card-body">
+                          <div className="mb-3">
+                            <label className="form-label">Notas adicionales</label>
+                            <textarea
+                              className="form-control"
+                              rows={4}
+                              value={pathologicalRestrictions.specialConsiderations.join('\n')}
+                              onChange={(e) => {
+                                const considerations = e.target.value.split('\n').filter(line => line.trim());
+                                setPathologicalRestrictions({
+                                  ...pathologicalRestrictions,
+                                  specialConsiderations: considerations
+                                });
+                              }}
+                              placeholder="Agrega cualquier consideración especial que deba tenerse en cuenta al crear el plan nutricional..."
+                            ></textarea>
+                            <small className="text-muted">
+                              Cada línea será tratada como una consideración separada
+                            </small>
+                          </div>
+                        </div>
+                      </div>
+                    </>
                   )}
                 </>
               )}
             </div>
           )}
 
-          {/* Navegación */}
+          {/* Paso 4: Configuración de Comidas */}
+          {currentStep === 4 && (
+            <div className="step-content">
+              <h6 className="mb-3">
+                <Settings size={16} className="me-2" />
+                Configuración de Comidas
+              </h6>
+              
+              <div className="row">
+                <div className="col-md-6 mb-3">
+                  <label className="form-label">Número de Comidas por Día</label>
+                  <select 
+                    className="form-select"
+                    value={formData.mealConfiguration?.mealsPerDay || 3}
+                    onChange={(e) => setFormData({
+                      ...formData, 
+                      mealConfiguration: {
+                        ...formData.mealConfiguration,
+                        mealsPerDay: parseInt(e.target.value)
+                      }
+                    })}
+                  >
+                    <option value={3}>3 comidas (Desayuno, Almuerzo, Cena)</option>
+                    <option value={4}>4 comidas (Desayuno, Almuerzo, Merienda, Cena)</option>
+                    <option value={5}>5 comidas (Desayuno, Colación, Almuerzo, Merienda, Cena)</option>
+                    <option value={6}>6 comidas (Desayuno, Colación, Almuerzo, Merienda, Cena, Snack)</option>
+                  </select>
+                </div>
+                <div className="col-md-6 mb-3">
+                  <label className="form-label">Tipo de Plan</label>
+                  <select 
+                    className="form-select"
+                    value={formData.mealConfiguration?.planType || 'balanced'}
+                    onChange={(e) => setFormData({
+                      ...formData, 
+                      mealConfiguration: {
+                        ...formData.mealConfiguration,
+                        planType: e.target.value
+                      }
+                    })}
+                  >
+                    <option value="balanced">Equilibrado</option>
+                    <option value="low-carb">Bajo en Carbohidratos</option>
+                    <option value="high-protein">Alto en Proteínas</option>
+                    <option value="mediterranean">Mediterráneo</option>
+                    <option value="vegetarian">Vegetariano</option>
+                    <option value="vegan">Vegano</option>
+                    <option value="keto">Cetogénico</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="row">
+                <div className="col-md-6 mb-3">
+                  <label className="form-label">Horario de Comidas</label>
+                  <select 
+                    className="form-select"
+                    value={formData.mealConfiguration?.mealTiming || 'flexible'}
+                    onChange={(e) => setFormData({
+                      ...formData, 
+                      mealConfiguration: {
+                        ...formData.mealConfiguration,
+                        mealTiming: e.target.value
+                      }
+                    })}
+                  >
+                    <option value="flexible">Flexible</option>
+                    <option value="fixed">Horarios Fijos</option>
+                    <option value="intermittent">Ayuno Intermitente</option>
+                  </select>
+                </div>
+                <div className="col-md-6 mb-3">
+                  <label className="form-label">Tamaño de Porciones</label>
+                  <select 
+                    className="form-select"
+                    value={formData.mealConfiguration?.portionSize || 'standard'}
+                    onChange={(e) => setFormData({
+                      ...formData, 
+                      mealConfiguration: {
+                        ...formData.mealConfiguration,
+                        portionSize: e.target.value
+                      }
+                    })}
+                  >
+                    <option value="standard">Estándar</option>
+                    <option value="small">Porciones Pequeñas</option>
+                    <option value="large">Porciones Grandes</option>
+                    <option value="custom">Personalizado</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="alert alert-info">
+                <i className="fas fa-info-circle me-2"></i>
+                <strong>Configuración automática:</strong> El sistema generará automáticamente las comidas basándose en estas preferencias y las restricciones del paciente.
+              </div>
+            </div>
+          )}
+
+          {/* Paso 5: Objetivos Nutricionales */}
+          {currentStep === 5 && (
+            <div className="step-content">
+              <h6 className="mb-3">
+                <i className="fas fa-bullseye me-2"></i>
+                Objetivos Nutricionales
+              </h6>
+              
+              <div className="row">
+                <div className="col-md-6 mb-3">
+                  <label className="form-label">Calorías Diarias Objetivo</label>
+                  <div className="input-group">
+                    <input 
+                      type="number" 
+                      className="form-control" 
+                      placeholder="2000"
+                      min="800"
+                      max="5000"
+                      value={formData.dailyCaloriesTarget}
+                      onChange={(e) => setFormData({...formData, dailyCaloriesTarget: parseInt(e.target.value) || 2000})}
+                    />
+                    <span className="input-group-text">kcal</span>
+                  </div>
+                  <small className="text-muted">Rango recomendado: 800-5000 kcal</small>
+                </div>
+                <div className="col-md-6 mb-3">
+                  <label className="form-label">Objetivo Principal</label>
+                  <select 
+                    className="form-select"
+                    value={formData.nutritionalGoals?.primaryGoal || 'weight_loss'}
+                    onChange={(e) => setFormData({
+                      ...formData, 
+                      nutritionalGoals: {
+                        ...formData.nutritionalGoals,
+                        primaryGoal: e.target.value
+                      }
+                    })}
+                  >
+                    <option value="weight_loss">Pérdida de Peso</option>
+                    <option value="weight_gain">Ganancia de Peso</option>
+                    <option value="maintenance">Mantenimiento</option>
+                    <option value="muscle_gain">Ganancia de Masa Muscular</option>
+                    <option value="health_improvement">Mejora de Salud</option>
+                    <option value="sports_performance">Rendimiento Deportivo</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="row">
+                <div className="col-md-4 mb-3">
+                  <label className="form-label">Proteínas (g)</label>
+                  <input 
+                    type="number" 
+                    className="form-control" 
+                    placeholder="150"
+                    min="20"
+                    max="400"
+                    value={formData.dailyMacrosTarget?.protein || 150}
+                    onChange={(e) => setFormData({
+                      ...formData, 
+                      dailyMacrosTarget: {
+                        ...formData.dailyMacrosTarget,
+                        protein: parseInt(e.target.value) || 150
+                      }
+                    })}
+                  />
+                </div>
+                <div className="col-md-4 mb-3">
+                  <label className="form-label">Carbohidratos (g)</label>
+                  <input 
+                    type="number" 
+                    className="form-control" 
+                    placeholder="200"
+                    min="20"
+                    max="600"
+                    value={formData.dailyMacrosTarget?.carbohydrates || 200}
+                    onChange={(e) => setFormData({
+                      ...formData, 
+                      dailyMacrosTarget: {
+                        ...formData.dailyMacrosTarget,
+                        carbohydrates: parseInt(e.target.value) || 200
+                      }
+                    })}
+                  />
+                </div>
+                <div className="col-md-4 mb-3">
+                  <label className="form-label">Grasas (g)</label>
+                  <input 
+                    type="number" 
+                    className="form-control" 
+                    placeholder="67"
+                    min="20"
+                    max="200"
+                    value={formData.dailyMacrosTarget?.fats || 67}
+                    onChange={(e) => setFormData({
+                      ...formData, 
+                      dailyMacrosTarget: {
+                        ...formData.dailyMacrosTarget,
+                        fats: parseInt(e.target.value) || 67
+                      }
+                    })}
+                  />
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label">Objetivos Secundarios</label>
+                <div className="row">
+                  {['control_blood_sugar', 'reduce_cholesterol', 'improve_digestion', 'increase_energy', 'better_sleep'].map((goal) => (
+                    <div key={goal} className="col-md-6 mb-2">
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id={goal}
+                          checked={formData.nutritionalGoals?.secondaryGoals?.includes(goal) || false}
+                          onChange={(e) => {
+                            const currentGoals = formData.nutritionalGoals?.secondaryGoals || [];
+                            const updatedGoals = e.target.checked
+                              ? [...currentGoals, goal]
+                              : currentGoals.filter(g => g !== goal);
+                            setFormData({
+                              ...formData,
+                              nutritionalGoals: {
+                                ...formData.nutritionalGoals,
+                                secondaryGoals: updatedGoals
+                              }
+                            });
+                          }}
+                        />
+                        <label className="form-check-label" htmlFor={goal}>
+                          {goal === 'control_blood_sugar' && 'Control de Azúcar en Sangre'}
+                          {goal === 'reduce_cholesterol' && 'Reducir Colesterol'}
+                          {goal === 'improve_digestion' && 'Mejorar Digestión'}
+                          {goal === 'increase_energy' && 'Aumentar Energía'}
+                          {goal === 'better_sleep' && 'Mejorar Sueño'}
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Paso 6: Revisión y Creación */}
+          {currentStep === 6 && (
+            <div className="step-content">
+              <h6 className="mb-3">
+                <i className="fas fa-check-circle me-2"></i>
+                Revisión y Creación
+              </h6>
+              
+              <div className="row">
+                <div className="col-md-6">
+                  <div className="card mb-3">
+                    <div className="card-header">
+                      <h6 className="mb-0">Información Básica</h6>
+                    </div>
+                    <div className="card-body">
+                      <p><strong>Paciente:</strong> {selectedPatient ? `${selectedPatient.user.first_name} ${selectedPatient.user.last_name}` : 'No seleccionado'}</p>
+                      <p><strong>Nombre del Plan:</strong> {formData.name || 'No especificado'}</p>
+                      <p><strong>Descripción:</strong> {formData.description || 'No especificada'}</p>
+                      <p><strong>Fecha de Inicio:</strong> {formData.startDate || 'No especificada'}</p>
+                      <p><strong>Fecha de Fin:</strong> {formData.endDate || 'Calculada automáticamente'}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="col-md-6">
+                  <div className="card mb-3">
+                    <div className="card-header">
+                      <h6 className="mb-0">Configuración</h6>
+                    </div>
+                    <div className="card-body">
+                      <p><strong>Tipo de Plan:</strong> {getPlanTypeLabel()}</p>
+                      <p><strong>Duración:</strong> {formData.totalPeriods} {getPeriodLabel()}</p>
+                      <p><strong>Calorías Objetivo:</strong> {formData.dailyCaloriesTarget} kcal</p>
+                      <p><strong>Macronutrientes:</strong> P: {formData.dailyMacrosTarget?.protein || 150}g, C: {formData.dailyMacrosTarget?.carbohydrates || 200}g, G: {formData.dailyMacrosTarget?.fats || 67}g</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="row">
+                <div className="col-md-6">
+                  <div className="card mb-3">
+                    <div className="card-header">
+                      <h6 className="mb-0">Restricciones Patológicas</h6>
+                    </div>
+                    <div className="card-body">
+                      <p><strong>Condiciones Médicas:</strong> {pathologicalRestrictions.medicalConditions.length}</p>
+                      <p><strong>Alergias:</strong> {pathologicalRestrictions.allergies.length}</p>
+                      <p><strong>Medicamentos:</strong> {pathologicalRestrictions.medications.length}</p>
+                      <p><strong>Consideraciones:</strong> {pathologicalRestrictions.specialConsiderations.length}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="col-md-6">
+                  <div className="card mb-3">
+                    <div className="card-header">
+                      <h6 className="mb-0">Notas Adicionales</h6>
+                    </div>
+                    <div className="card-body">
+                      <p>{formData.notes || 'No hay notas adicionales'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="alert alert-success">
+                <i className="fas fa-check-circle me-2"></i>
+                <strong>¡Todo listo!</strong> Revisa la información anterior y procede a crear el plan nutricional.
+              </div>
+            </div>
+          )}
+
+          {/* Navegación entre pasos */}
           <div className="d-flex justify-content-between mt-4">
             <div>
               {currentStep > 1 && (
@@ -673,232 +1318,133 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                   className="btn btn-outline-secondary"
                   onClick={() => setCurrentStep(currentStep - 1)}
                 >
-                  Anterior
+                  ← Anterior
                 </button>
               )}
             </div>
             
-            <div className="d-flex gap-2">
+            <div>
               {currentStep < steps.length && (
                 <button
                   type="button"
                   className="btn btn-primary"
                   onClick={() => setCurrentStep(currentStep + 1)}
                 >
-                  Siguiente
+                  Siguiente →
                 </button>
               )}
-              
-              {currentStep === steps.length && (
-                <>
-                  {onGenerateAI && (
-                    <button
-                      type="button"
-                      className="btn btn-outline-success"
-                      onClick={handleGenerateAI}
-                      disabled={loading}
-                    >
-                      <Plus size={16} className="me-1" />
-                      Generar con IA
-                    </button>
-                  )}
+            </div>
+          </div>
+
+          {/* Botones de acción finales */}
+          <div className="d-flex justify-content-center gap-3 mt-4">
+            {currentStep === steps.length && (
+              <>
+                {onGenerateAI && (
                   <button
                     type="button"
-                    className="btn btn-success"
-                    onClick={handleSubmit}
+                    className="btn btn-outline-success"
+                    onClick={handleGenerateAI}
                     disabled={loading}
                   >
-                    {loading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Creando...
-                      </>
-                    ) : (
-                      <>
-                        <Calendar size={16} className="me-1" />
-                        Crear Plan
-                      </>
-                    )}
+                    <Plus size={16} className="me-1" />
+                    Generar con IA
                   </button>
-                </>
-              )}
-              
-              <button
-                type="button"
-                className="btn btn-outline-danger"
-                onClick={onCancel}
-                disabled={loading}
-              >
-                Cancelar
-              </button>
-            </div>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-success"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Creando...
+                    </>
+                  ) : (
+                    <>
+                      <Calendar size={16} className="me-1" />
+                      Crear Plan
+                    </>
+                  )}
+                </button>
+              </>
+            )}
+            
+            <button
+              type="button"
+              className="btn btn-outline-danger"
+              onClick={onCancel}
+              disabled={loading}
+            >
+              Cancelar
+            </button>
           </div>
         </div>
       </div>
 
       <style>{`
-        .diet-plan-creator {
-          max-width: 100%;
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
         }
-        
         .progress-indicator {
-          background: #f8f9fa;
-          padding: 1.5rem;
-          border-radius: 0.75rem;
-          border: 1px solid #e9ecef;
-          text-align: center;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin: 20px auto;
+            max-width: 400px;
+            text-align: center;
+        }
+        @media (min-width: 768px) {
+            .progress-indicator {
+                padding: 30px;
+                max-width: 500px;
+            }
+        }
+        .current-step-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.8em;
+            background-color: #0d6efd;
+            color: #ffffff;
+            border: 3px solid #0d6efd;
+            box-shadow: 0 5px 15px rgba(13, 109, 253, 0.5);
+            margin: 0 auto 15px auto;
+            transition: all 0.3s ease-in-out;
+            flex-shrink: 0;
+        }
+        .current-step-info .step-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #343a40;
+            margin-bottom: 5px;
+        }
+        .current-step-info .step-counter {
+            font-size: 0.9em;
+            color: #6c757d;
         }
         
-        .current-step-display {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.5rem;
-        }
-        
-        .step-number {
-          width: 60px;
-          height: 60px;
-          border-radius: 50%;
-          background: #007bff;
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.5rem;
-          font-weight: bold;
-          box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
-        }
-        
-        .step-title {
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: #495057;
-          margin: 0;
-        }
-        
-        .step-subtitle {
-          font-size: 0.9rem;
-          color: #6c757d;
-          margin: 0;
-        }
-        
-        .step-content {
-          min-height: 300px;
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-          .progress-indicator {
-            padding: 1rem;
-          }
-          
-          .step-number {
-            width: 50px;
-            height: 50px;
-            font-size: 1.25rem;
-          }
-          
-          .step-title {
-            font-size: 1.1rem;
-          }
-          
-          .step-subtitle {
-            font-size: 0.85rem;
-          }
-          
-          .step-content {
-            min-height: 250px;
-          }
-        }
-        
-        @media (max-width: 576px) {
-          .progress-indicator {
-            padding: 0.75rem;
-          }
-          
-          .step-number {
-            width: 45px;
-            height: 45px;
-            font-size: 1.1rem;
-          }
-          
-          .step-title {
-            font-size: 1rem;
-          }
-          
-          .step-subtitle {
-            font-size: 0.8rem;
-          }
-          
-          .step-content {
-            min-height: 200px;
-          }
-        }
-        
-        /* Form field improvements */
-        .form-label {
-          font-weight: 500;
-          color: #495057;
-        }
-        
-        .form-control:focus,
-        .form-select:focus {
-          border-color: #007bff;
-          box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-        }
-        
-        .btn-primary {
-          background-color: #007bff;
-          border-color: #007bff;
-        }
-        
-        .btn-primary:hover {
-          background-color: #0056b3;
-          border-color: #0056b3;
-        }
-        
-        .btn-outline-secondary:hover {
-          background-color: #6c757d;
-          border-color: #6c757d;
-        }
-        
-        /* Card improvements */
-        .card {
-          border: 1px solid #e9ecef;
-          border-radius: 0.75rem;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .card-header {
-          background-color: #f8f9fa;
-          border-bottom: 1px solid #e9ecef;
-          border-radius: 0.75rem 0.75rem 0 0 !important;
-        }
-        
-        /* Animation for step transitions */
-        .step-content {
-          animation: fadeIn 0.3s ease-in;
-        }
-        
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        /* Focus styles for accessibility */
-        .step-number:focus,
-        .btn:focus,
-        .form-control:focus,
-        .form-select:focus {
-          outline: 2px solid #212529;
-          outline-offset: 2px;
+        @media (max-width: 767.98px) {
+            .current-step-circle {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5em;
+                margin-bottom: 10px;
+            }
+            .current-step-info .step-title {
+                font-size: 1.2em;
+            }
+            .current-step-info .step-counter {
+                font-size: 0.8em;
+            }
         }
       `}</style>
     </div>

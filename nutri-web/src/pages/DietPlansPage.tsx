@@ -152,89 +152,12 @@ const TempDietPlanCreator: React.FC<{
         </div>
 
         <div className="card-body">
-          {/* Indicador de pasos */}
+          {/* Indicador de progreso minimalista - solo muestra el paso actual */}
           <div className="progress-indicator mb-4">
-            {/* Versión desktop */}
-            <div className="d-none d-md-flex justify-content-between">
-              {steps.map((step, index) => (
-                <div key={step.id} className="d-flex align-items-center">
-                  <div 
-                    className={`step-circle ${currentStep === step.id ? 'active' : ''} ${
-                      currentStep > step.id ? 'completed' : ''
-                    }`}
-                    onClick={() => setCurrentStep(step.id)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {currentStep > step.id ? (
-                      <span>✓</span>
-                    ) : (
-                      <span>{step.id}</span>
-                    )}
-                  </div>
-                  <div className="step-info ms-2">
-                    <div className="step-title">{step.title}</div>
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div className={`step-line ${currentStep > step.id ? 'completed' : ''}`}></div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Versión mobile */}
-            <div className="d-md-none">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div className="d-flex align-items-center">
-                  <div 
-                    className={`step-circle-mobile ${currentStep === 1 ? 'active' : ''} ${
-                      currentStep > 1 ? 'completed' : ''
-                    }`}
-                    onClick={() => setCurrentStep(1)}
-                  >
-                    {currentStep > 1 ? '✓' : '1'}
-                  </div>
-                  <div className="step-line-mobile"></div>
-                  <div 
-                    className={`step-circle-mobile ${currentStep === 2 ? 'active' : ''} ${
-                      currentStep > 2 ? 'completed' : ''
-                    }`}
-                    onClick={() => setCurrentStep(2)}
-                  >
-                    {currentStep > 2 ? '✓' : '2'}
-                  </div>
-                </div>
-              </div>
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div className="d-flex align-items-center">
-                  <div 
-                    className={`step-circle-mobile ${currentStep === 3 ? 'active' : ''} ${
-                      currentStep > 3 ? 'completed' : ''
-                    }`}
-                    onClick={() => setCurrentStep(3)}
-                  >
-                    {currentStep > 3 ? '✓' : '3'}
-                  </div>
-                  <div className="step-line-mobile"></div>
-                  <div 
-                    className={`step-circle-mobile ${currentStep === 4 ? 'active' : ''} ${
-                      currentStep > 4 ? 'completed' : ''
-                    }`}
-                    onClick={() => setCurrentStep(4)}
-                  >
-                    {currentStep > 4 ? '✓' : '4'}
-                  </div>
-                </div>
-              </div>
-              
-              {/* Título del paso actual en mobile */}
-              <div className="text-center">
-                <h6 className="mb-0 text-primary fw-bold">
-                  {steps[currentStep - 1]?.title}
-                </h6>
-                <small className="text-muted">
-                  Paso {currentStep} de {steps.length}
-                </small>
-              </div>
+            <div className="current-step-circle">{currentStep}</div>
+            <div className="current-step-info">
+              <div className="step-title">{steps[currentStep - 1].title}</div>
+              <div className="step-counter">Paso {currentStep} de {steps.length}</div>
             </div>
           </div>
 
@@ -618,13 +541,62 @@ const TempDietPlanCreator: React.FC<{
           max-width: 100%;
         }
         .progress-indicator {
-          background: #fff;
-          padding: 1.5rem;
-          border-radius: 1rem;
-          border: 1px solid #dee2e6;
-          box-shadow: none;
+          padding: 20px;
+          background-color: #ffffff;
+          border-radius: 12px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+          margin: 20px auto;
+          max-width: 400px;
+          text-align: center;
         }
-        /* Desktop styles */
+        @media (min-width: 768px) {
+          .progress-indicator {
+            padding: 30px;
+            max-width: 500px;
+          }
+        }
+        .current-step-circle {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          font-weight: 700;
+          font-size: 1.8em;
+          background-color: #0d6efd;
+          color: #ffffff;
+          border: 3px solid #0d6efd;
+          box-shadow: 0 5px 15px rgba(13, 109, 253, 0.5);
+          margin: 0 auto 15px auto;
+          transition: all 0.3s ease-in-out;
+          flex-shrink: 0;
+        }
+        .current-step-info .step-title {
+          font-size: 1.4em;
+          font-weight: 600;
+          color: #343a40;
+          margin-bottom: 5px;
+        }
+        .current-step-info .step-counter {
+          font-size: 0.9em;
+          color: #6c757d;
+        }
+        
+        @media (max-width: 767.98px) {
+          .current-step-circle {
+            width: 50px;
+            height: 50px;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+          }
+          .current-step-info .step-title {
+            font-size: 1.2em;
+          }
+          .current-step-info .step-counter {
+            font-size: 0.8em;
+          }
+        }
         .step-circle {
           width: 45px;
           height: 45px;
@@ -765,21 +737,6 @@ const TempDietPlanCreator: React.FC<{
             padding: 1rem;
             border-radius: 0.75rem;
           }
-          .step-circle {
-            width: 40px;
-            height: 40px;
-            font-size: 0.9rem;
-          }
-          .step-info {
-            min-width: 120px;
-          }
-          .step-title {
-            font-size: 0.8rem;
-          }
-          .step-line {
-            width: 60px;
-            margin: 0 0.75rem;
-          }
           .step-content {
             min-height: 300px;
             padding: 0.75rem 0;
@@ -814,15 +771,6 @@ const TempDietPlanCreator: React.FC<{
             padding: 0.5rem 0.75rem;
             font-size: 0.85rem;
           }
-          .step-circle-mobile {
-            width: 30px;
-            height: 30px;
-            font-size: 0.75rem;
-          }
-          .step-line-mobile {
-            width: 30px;
-            margin: 0 0.25rem;
-          }
         }
         .step-content {
           animation: fadeInUp 0.3s ease-out;
@@ -837,8 +785,6 @@ const TempDietPlanCreator: React.FC<{
             transform: translateY(0);
           }
         }
-        .step-circle:focus,
-        .step-circle-mobile:focus,
         .btn:focus,
         .form-control:focus,
         .form-select:focus {
