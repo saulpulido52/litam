@@ -39,7 +39,15 @@ class ApiService {
     this.api.interceptors.response.use(
       (response) => response,
       (error) => {
-        console.log('🚨 API Error Response:', error.response?.status, error.response?.data);
+        console.group('🚨 API Error Details');
+        console.log('Status:', error.response?.status);
+        console.log('URL:', error.config?.url);
+        console.log('Method:', error.config?.method?.toUpperCase());
+        console.log('Request Data:', error.config?.data);
+        console.log('Response Data:', error.response?.data);
+        console.log('Error Message:', error.message);
+        console.groupEnd();
+        
         if (error.response?.status === 401) {
           console.log('🚨 401 Unauthorized - Token may be invalid or missing');
           this.clearToken();

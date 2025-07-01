@@ -119,6 +119,7 @@ const LoginPage: React.FC = () => {
   };
 
   // Botones para autocompletar credenciales de prueba
+  const fillDefaultAdmin = () => setLoginState(prev => ({ ...prev, email: 'nutri.admin@sistema.com', password: 'nutri123', error: null, success: null }));
   const fillNutri1 = () => setLoginState(prev => ({ ...prev, email: 'dr.maria.gonzalez@demo.com', password: 'demo123', error: null, success: null }));
   const fillNutri2 = () => setLoginState(prev => ({ ...prev, email: 'dr.juan.perez@demo.com', password: 'demo123', error: null, success: null }));
   const fillNutri3 = () => setLoginState(prev => ({ ...prev, email: 'dra.carmen.rodriguez@demo.com', password: 'demo123', error: null, success: null }));
@@ -140,10 +141,18 @@ const LoginPage: React.FC = () => {
               <Card.Body className="p-4">
                 <Form onSubmit={handleSubmit}>
                   {/* Botones de autocompletar credenciales */}
-                  <div className="d-flex justify-content-between mb-3">
-                    <Button variant="outline-secondary" size="sm" onClick={fillNutri1}>Nutri 1</Button>
-                    <Button variant="outline-secondary" size="sm" onClick={fillNutri2}>Nutri 2</Button>
-                    <Button variant="outline-secondary" size="sm" onClick={fillNutri3}>Nutri 3</Button>
+                  <div className="mb-3">
+                    <p className="text-muted small mb-2 text-center">⚡ Acceso rápido:</p>
+                    <div className="d-grid gap-2 mb-2">
+                      <Button variant="success" size="sm" onClick={fillDefaultAdmin}>
+                        🥗 Admin Sistema (Por Defecto)
+                      </Button>
+                    </div>
+                    <div className="d-flex justify-content-between">
+                      <Button variant="outline-secondary" size="sm" onClick={fillNutri1}>Nutri 1</Button>
+                      <Button variant="outline-secondary" size="sm" onClick={fillNutri2}>Nutri 2</Button>
+                      <Button variant="outline-secondary" size="sm" onClick={fillNutri3}>Nutri 3</Button>
+                    </div>
                   </div>
 
                   <Form.Group className="mb-3">
@@ -241,17 +250,38 @@ const LoginPage: React.FC = () => {
               </Card.Body>
             </Card>
 
-            {/* Credenciales de prueba */}
-            <Card className="mt-3 border-info">
-              <Card.Header className="bg-info text-white text-center">
-                🔑 Credenciales de Prueba
+            {/* Credenciales del Nutricionista Por Defecto */}
+            <Card className="mt-3 border-success">
+              <Card.Header className="bg-success text-white text-center">
+                🥗 Nutricionista Por Defecto (Recomendado)
               </Card.Header>
               <Card.Body className="text-center">
                 <p className="mb-1">
-                  <strong>Email:</strong> nutritionist@demo.com
+                  <strong>Email:</strong> nutri.admin@sistema.com
+                </p>
+                <p className="mb-1">
+                  <strong>Password:</strong> nutri123
+                </p>
+                <small className="text-muted">
+                  ⚠️ Cambia la contraseña después del primer login
+                </small>
+              </Card.Body>
+            </Card>
+
+            {/* Otras credenciales de prueba */}
+            <Card className="mt-2 border-secondary">
+              <Card.Header className="bg-secondary text-white text-center">
+                🔑 Otras Credenciales de Prueba
+              </Card.Header>
+              <Card.Body className="text-center">
+                <p className="mb-1">
+                  <strong>Demo:</strong> nutritionist@demo.com / demo123
+                </p>
+                <p className="mb-1">
+                  <strong>María:</strong> dr.maria.gonzalez@demo.com / demo123
                 </p>
                 <p className="mb-0">
-                  <strong>Password:</strong> demo123
+                  <strong>Juan:</strong> dr.juan.perez@demo.com / demo123
                 </p>
               </Card.Body>
             </Card>

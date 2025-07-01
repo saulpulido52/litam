@@ -2,6 +2,9 @@
 import app from './app';
 import { AppDataSource } from './database/data-source';
 import { Role, RoleName } from './database/entities/role.entity';
+import { User } from './database/entities/user.entity';
+import { NutritionistProfile } from './database/entities/nutritionist_profile.entity';
+import bcrypt from 'bcrypt';
 import http from 'http'; // Importar módulo http de Node.js
 import { Server as SocketIOServer } from 'socket.io'; // Importar Server de socket.io
 
@@ -264,6 +267,10 @@ async function initializeDatabase() {
         }
 
         const roleRepository = AppDataSource.getRepository(Role);
+        const userRepository = AppDataSource.getRepository(User);
+        const nutritionistProfileRepository = AppDataSource.getRepository(NutritionistProfile);
+
+        // 1. Crear roles básicos
         const rolesToSeed: RoleName[] = [RoleName.PATIENT, RoleName.NUTRITIONIST, RoleName.ADMIN];
 
         for (const roleName of rolesToSeed) {
@@ -275,7 +282,59 @@ async function initializeDatabase() {
             }
         }
 
-        console.log('Base de datos inicializada y roles verificados');
+        // 2. Crear nutriólogo por defecto
+        const nutritionistRole = await roleRepository.findOneBy({ name: RoleName.NUTRITIONIST });
+        if (!nutritionistRole) {
+            throw new Error('No se pudo encontrar el rol de nutricionista');
+        }
+
+        const defaultNutritionistEmail = 'nutri.admin@sistema.com';
+        let defaultNutritionist = await userRepository.findOne({ 
+            where: { email: defaultNutritionistEmail },
+            relations: ['role']
+        });
+
+        if (!defaultNutritionist) {
+            // Crear nutriólogo por defecto
+            const hashedPassword = await bcrypt.hash('nutri123', 12);
+            
+            defaultNutritionist = userRepository.create({
+                email: defaultNutritionistEmail,
+                password_hash: hashedPassword,
+                first_name: 'Dr. Sistema',
+                last_name: 'Nutricional',
+                age: 35,
+                gender: 'other',
+                role: nutritionistRole,
+                is_active: true
+            });
+            await userRepository.save(defaultNutritionist);
+
+            // Crear perfil completo del nutriólogo
+            const nutritionistProfile = nutritionistProfileRepository.create({
+                user: defaultNutritionist,
+                license_number: 'SYS-00001',
+                specialties: ['Nutrición Clínica', 'Nutrición General', 'Control de Peso'],
+                years_of_experience: 10,
+                education: ['Sistema de Nutrición - Administrador por Defecto'],
+                certifications: ['Certificación Administrador Sistema'],
+                languages: ['Español'],
+                consultation_fee: 0,
+                bio: 'Nutriólogo administrador por defecto del sistema. Puedes cambiar estos datos desde tu perfil.',
+                is_verified: true
+            });
+            await nutritionistProfileRepository.save(nutritionistProfile);
+
+            console.log('🥗 Nutriólogo por defecto creado:');
+            console.log(`   📧 Email: ${defaultNutritionistEmail}`);
+            console.log(`   🔑 Contraseña: nutri123`);
+            console.log(`   👤 Nombre: Dr. Sistema Nutricional`);
+            console.log(`   ⚠️  ¡CAMBIA LA CONTRASEÑA DESPUÉS DEL PRIMER LOGIN!`);
+        } else {
+            console.log('ℹ️  Nutriólogo por defecto ya existe');
+        }
+
+        console.log('Base de datos inicializada, roles verificados y nutriólogo por defecto listo');
     } catch (err) {
         console.error('Error during Data Source initialization or seeding:', err);
         process.exit(1);

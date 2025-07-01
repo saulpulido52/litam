@@ -25,7 +25,7 @@ import {
 import type { DietPlan, CreateDietPlanDto, GenerateAIDietDto, PlanType, PlanPeriod } from '../types/diet';
 import { useDietPlans } from '../hooks/useDietPlans';
 import { usePatients } from '../hooks/usePatients';
-import { useClinicalRecords } from '../hooks/useClinicalRecords';
+import { clinicalRecordsService } from '../services/clinicalRecordsService';
 import { Button, Modal, Alert } from 'react-bootstrap';
 import DietPlanViewer from '../components/DietPlanViewer';
 import DietPlanQuickCreate from '../components/DietPlanQuickCreate';
@@ -63,7 +63,8 @@ const DietPlansPage: React.FC = () => {
   } = useDietPlans();
   
   const { patients } = usePatients();
-  const { records: clinicalRecords, loadPatientRecords } = useClinicalRecords();
+  const [allClinicalRecords, setAllClinicalRecords] = useState<any[]>([]);
+  const [loadingClinicalRecords, setLoadingClinicalRecords] = useState(false);
   
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -80,18 +81,50 @@ const DietPlansPage: React.FC = () => {
   // Load all diet plans and clinical records for the nutritionist on mount
   useEffect(() => {
     fetchAllDietPlans();
-    loadAllClinicalRecords();
-  }, [fetchAllDietPlans]);
+    if (patients.length > 0) {
+      loadAllClinicalRecords();
+    }
+  }, [fetchAllDietPlans, patients.length]);
 
   // Load clinical records for all patients
   const loadAllClinicalRecords = async () => {
     try {
-      // Cargar expedientes para todos los pacientes
+      setLoadingClinicalRecords(true);
+      console.log('🔄 Cargando expedientes clínicos para todos los pacientes...');
+      const allRecords: any[] = [];
+      
+      // Cargar expedientes para todos los pacientes secuencialmente
       for (const patient of patients) {
-        await loadPatientRecords(patient.id);
+        try {
+          console.log(`📋 Cargando expedientes para paciente: ${patient.first_name} ${patient.last_name} (${patient.email})`);
+          const patientRecords = await clinicalRecordsService.getPatientRecords(patient.id);
+          console.log(`✅ Expedientes encontrados para ${patient.first_name}: ${patientRecords.length}`);
+          
+          // Agregar los expedientes a la lista acumulativa
+          allRecords.push(...patientRecords);
+        } catch (error) {
+          console.warn(`⚠️ Error cargando expedientes para paciente ${patient.first_name}:`, error);
+        }
       }
+      
+      console.log(`📊 Total de expedientes clínicos cargados: ${allRecords.length}`);
+      setAllClinicalRecords(allRecords);
+      
+      // Debug: Mostrar información detallada de los expedientes cargados
+      allRecords.forEach((record, index) => {
+        console.log(`📋 Expediente ${index + 1}:`, {
+          patient: `${record.patient?.first_name} ${record.patient?.last_name}`,
+          email: record.patient?.email,
+          date: record.record_date,
+          diagnosis: record.nutritional_diagnosis,
+          allergies: record.pathological_antecedents?.allergies
+        });
+      });
+      
     } catch (error) {
-      console.error('Error loading clinical records:', error);
+      console.error('❌ Error loading clinical records:', error);
+    } finally {
+      setLoadingClinicalRecords(false);
     }
   };
 
@@ -919,7 +952,8 @@ const DietPlansPage: React.FC = () => {
           <NutritionalCardSimple
             dietPlan={editingPlan || undefined}
             patient={editingPlan ? patients.find(p => p.id === editingPlan.patient_id) || patients[0] : patients[0]}
-            clinicalRecord={editingPlan ? clinicalRecords.find(r => r.patient?.id === editingPlan.patient_id) : undefined}
+            patients={patients}
+            clinicalRecords={allClinicalRecords}
             mode={editingPlan ? 'edit' : 'create'}
             onSave={editingPlan ? handleUpdateDietPlan : handleCreateDietPlan}
             onClose={() => {
