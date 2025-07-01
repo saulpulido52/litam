@@ -25,8 +25,11 @@ import {
 import type { DietPlan, CreateDietPlanDto, GenerateAIDietDto, PlanType, PlanPeriod } from '../types/diet';
 import { useDietPlans } from '../hooks/useDietPlans';
 import { usePatients } from '../hooks/usePatients';
+import { useClinicalRecords } from '../hooks/useClinicalRecords';
 import { Button, Modal, Alert } from 'react-bootstrap';
 import DietPlanViewer from '../components/DietPlanViewer';
+import DietPlanQuickCreate from '../components/DietPlanQuickCreate';
+import NutritionalCardSimple from '../components/NutritionalCardSimple';
 
 interface Recipe {
   id: number;
@@ -41,760 +44,8 @@ interface Recipe {
   tags: string[];
 }
 
-const TempDietPlanCreator: React.FC<{
-  patients: any[];
-  onSubmit: (data: CreateDietPlanDto) => void;
-  onCancel: () => void;
-  onGenerateAI?: (data: GenerateAIDietDto) => void;
-  loading?: boolean;
-  initialData?: CreateDietPlanDto;
-}> = ({ patients, onSubmit, onCancel, onGenerateAI, loading = false, initialData }) => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<CreateDietPlanDto>({
-    patientId: '',
-    name: '',
-    description: '',
-    startDate: '',
-    endDate: '',
-    dailyCaloriesTarget: 2000,
-    dailyMacrosTarget: {
-      protein: 150,
-      carbohydrates: 200,
-      fats: 67
-    },
-    notes: '',
-    planType: 'weekly',
-    planPeriod: 'weeks',
-    totalPeriods: 1,
-    pathologicalRestrictions: {
-      medicalConditions: [],
-      allergies: [],
-      intolerances: [],
-      medications: [],
-      specialConsiderations: [],
-      emergencyContacts: []
-    },
-    ...initialData
-  });
-
-  const steps = [
-    { id: 1, title: 'Información Básica', icon: 'users' },
-    { id: 2, title: 'Configuración de Tiempo', icon: 'clock' },
-    { id: 3, title: 'Restricciones Patológicas', icon: 'shield' },
-    { id: 4, title: 'Configuración de Comidas', icon: 'settings' },
-    { id: 5, title: 'Objetivos Nutricionales', icon: 'target' },
-    { id: 6, title: 'Revisión y Creación', icon: 'check' }
-  ];
-
-  const getPatientDisplayName = (patient: any) => {
-    // Handle different patient data structures
-    if (patient.user && patient.user.first_name) {
-      return `${patient.user.first_name} ${patient.user.last_name || ''} - ${patient.user.email || ''}`;
-    } else if (patient.first_name) {
-      return `${patient.first_name} ${patient.last_name || ''} - ${patient.email || ''}`;
-    } else {
-      return `Paciente ${patient.id || 'Desconocido'}`;
-    }
-  };
-
-  const validateForm = (): { isValid: boolean; errors: string[] } => {
-    const errors: string[] = [];
-
-    if (!formData.patientId) errors.push('Debe seleccionar un paciente');
-    if (!formData.name) errors.push('Debe ingresar un nombre para el plan');
-    if (!formData.startDate) errors.push('Debe seleccionar una fecha de inicio');
-
-    return { isValid: errors.length === 0, errors };
-  };
-
-  const handleSubmit = () => {
-    const validation = validateForm();
-    if (!validation.isValid) {
-      alert('Errores de validación:\n' + validation.errors.join('\n'));
-      return;
-    }
-
-    onSubmit(formData);
-  };
-
-  const handleGenerateAI = () => {
-    if (!onGenerateAI) return;
-    
-    const aiData: GenerateAIDietDto = {
-      patientId: formData.patientId,
-      name: formData.name,
-      goal: 'weight_loss',
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      planType: formData.planType,
-      planPeriod: formData.planPeriod,
-      totalPeriods: formData.totalPeriods,
-      dailyCaloriesTarget: formData.dailyCaloriesTarget,
-      dietaryRestrictions: formData.pathologicalRestrictions?.medicalConditions?.map(c => c.name) || [],
-      allergies: formData.pathologicalRestrictions?.allergies?.map(a => a.allergen) || [],
-      preferredFoods: [],
-      dislikedFoods: [],
-      notesForAI: formData.notes,
-      customRequirements: []
-    };
-
-    onGenerateAI(aiData);
-  };
-
-  return (
-    <div className="diet-plan-creator">
-      <div className="card">
-        <div className="card-header">
-          <h5 className="mb-0">
-            <Calendar size={20} className="me-2" />
-            Crear Plan Nutricional
-          </h5>
-        </div>
-
-        <div className="card-body">
-          {/* Indicador de progreso minimalista - solo muestra el paso actual */}
-          <div className="progress-indicator mb-4">
-            <div className="current-step-circle">{currentStep}</div>
-            <div className="current-step-info">
-              <div className="step-title">{steps[currentStep - 1].title}</div>
-              <div className="step-counter">Paso {currentStep} de {steps.length}</div>
-            </div>
-          </div>
-
-          {/* Paso 1: Información Básica */}
-          {currentStep === 1 && (
-            <div className="step-content">
-              <h6 className="mb-3">
-                <Users size={16} className="me-2" />
-                Información Básica del Plan
-              </h6>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Paciente *</label>
-                  <select 
-                    className="form-select"
-                    value={formData.patientId}
-                    onChange={(e) => setFormData({...formData, patientId: e.target.value})}
-                    required
-                  >
-                    <option value="">Seleccionar paciente</option>
-                    {patients.map((patient) => (
-                      <option key={patient.id} value={patient.id}>
-                        {getPatientDisplayName(patient)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Nombre del Plan *</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    placeholder="Ej: Plan de Equilibrio y Energía"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label">Descripción</label>
-                <textarea 
-                  className="form-control" 
-                  rows={3} 
-                  placeholder="Describe el objetivo y características del plan..."
-                  value={formData.description || ''}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                ></textarea>
-              </div>
-
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Fecha de Inicio *</label>
-                  <input 
-                    type="date" 
-                    className="form-control"
-                    value={formData.startDate}
-                    onChange={(e) => setFormData({...formData, startDate: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Fecha de Fin</label>
-                  <input 
-                    type="date" 
-                    className="form-control"
-                    value={formData.endDate}
-                    onChange={(e) => setFormData({...formData, endDate: e.target.value})}
-                  />
-                  <small className="text-muted">Opcional - se calcula automáticamente</small>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Paso 2: Configuración de Tiempo */}
-          {currentStep === 2 && (
-            <div className="step-content">
-              <h6 className="mb-3">
-                <Clock size={16} className="me-2" />
-                Configuración de Tiempo
-              </h6>
-              
-              <div className="row">
-                <div className="col-md-4 mb-3">
-                  <label className="form-label">Tipo de Plan</label>
-                  <select 
-                    className="form-select"
-                    value={formData.planType}
-                    onChange={(e) => setFormData({...formData, planType: e.target.value as PlanType})}
-                  >
-                    <option value="daily">Plan Diario</option>
-                    <option value="weekly">Plan Semanal</option>
-                    <option value="monthly">Plan Mensual</option>
-                    <option value="custom">Plan Personalizado</option>
-                    <option value="flexible">Plan Flexible</option>
-                  </select>
-                </div>
-                <div className="col-md-4 mb-3">
-                  <label className="form-label">Período</label>
-                  <select 
-                    className="form-select"
-                    value={formData.planPeriod}
-                    onChange={(e) => setFormData({...formData, planPeriod: e.target.value as PlanPeriod})}
-                  >
-                    <option value="days">Días</option>
-                    <option value="weeks">Semanas</option>
-                    <option value="months">Meses</option>
-                    <option value="quarters">Trimestres</option>
-                    <option value="years">Años</option>
-                  </select>
-                </div>
-                <div className="col-md-4 mb-3">
-                  <label className="form-label">Número de Períodos</label>
-                  <input 
-                    type="number" 
-                    className="form-control" 
-                    placeholder="1"
-                    min="1"
-                    value={formData.totalPeriods}
-                    onChange={(e) => setFormData({...formData, totalPeriods: parseInt(e.target.value) || 1})}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Paso 3: Restricciones Patológicas */}
-          {currentStep === 3 && (
-            <div className="step-content">
-              <h6 className="mb-3">
-                <Shield size={16} className="me-2" />
-                Restricciones Patológicas
-              </h6>
-              
-              <div className="alert alert-info">
-                <div className="d-flex align-items-center">
-                  <Database className="me-2" size={20} />
-                  <div>
-                    <strong>Información:</strong> Las restricciones patológicas se extraen automáticamente del perfil del paciente y expedientes clínicos.
-                    <br />
-                    <small>Esta funcionalidad está en desarrollo.</small>
-                  </div>
-                </div>
-              </div>
-
-              <div className="alert alert-warning">
-                <AlertTriangle className="me-2" size={16} />
-                <strong>Nota:</strong> Por ahora, las restricciones patológicas se configurarán automáticamente al crear el plan.
-              </div>
-            </div>
-          )}
-
-          {/* Paso 4: Configuración de Comidas */}
-          {currentStep === 4 && (
-            <div className="step-content">
-              <h6 className="mb-3">
-                <Settings size={16} className="me-2" />
-                Configuración de Comidas
-              </h6>
-              
-              <div className="alert alert-info">
-                <div className="d-flex align-items-center">
-                  <Settings className="me-2" size={20} />
-                  <div>
-                    <strong>Configuración automática:</strong> Las comidas se configurarán automáticamente según el tipo de plan seleccionado.
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Paso 5: Objetivos Nutricionales */}
-          {currentStep === 5 && (
-            <div className="step-content">
-              <h6 className="mb-3">
-                <Target size={16} className="me-2" />
-                Objetivos Nutricionales
-              </h6>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Calorías Diarias Objetivo</label>
-                  <input 
-                    type="number" 
-                    className="form-control"
-                    placeholder="2000"
-                    value={formData.dailyCaloriesTarget}
-                    onChange={(e) => setFormData({...formData, dailyCaloriesTarget: parseInt(e.target.value) || 2000})}
-                  />
-                </div>
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Proteínas (g)</label>
-                  <input 
-                    type="number" 
-                    className="form-control"
-                    placeholder="150"
-                    value={formData.dailyMacrosTarget?.protein}
-                    onChange={(e) => setFormData({
-                      ...formData, 
-                      dailyMacrosTarget: {
-                        ...formData.dailyMacrosTarget,
-                        protein: parseInt(e.target.value) || 150
-                      }
-                    })}
-                  />
-                </div>
-              </div>
-
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Carbohidratos (g)</label>
-                  <input 
-                    type="number" 
-                    className="form-control"
-                    placeholder="200"
-                    value={formData.dailyMacrosTarget?.carbohydrates}
-                    onChange={(e) => setFormData({
-                      ...formData, 
-                      dailyMacrosTarget: {
-                        ...formData.dailyMacrosTarget,
-                        carbohydrates: parseInt(e.target.value) || 200
-                      }
-                    })}
-                  />
-                </div>
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Grasas (g)</label>
-                  <input 
-                    type="number" 
-                    className="form-control"
-                    placeholder="67"
-                    value={formData.dailyMacrosTarget?.fats}
-                    onChange={(e) => setFormData({
-                      ...formData, 
-                      dailyMacrosTarget: {
-                        ...formData.dailyMacrosTarget,
-                        fats: parseInt(e.target.value) || 67
-                      }
-                    })}
-                  />
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label">Notas Adicionales</label>
-                <textarea 
-                  className="form-control" 
-                  rows={3} 
-                  placeholder="Notas adicionales sobre el plan..."
-                  value={formData.notes || ''}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                ></textarea>
-              </div>
-            </div>
-          )}
-
-          {/* Paso 6: Revisión y Creación */}
-          {currentStep === 6 && (
-            <div className="step-content">
-              <h6 className="mb-3">
-                <Eye size={16} className="me-2" />
-                Revisión y Creación
-              </h6>
-              
-              <div className="alert alert-success">
-                <div className="d-flex align-items-center">
-                  <CheckCircle className="me-2" size={20} />
-                  <div>
-                    <strong>Plan listo para crear:</strong> Revisa la información antes de proceder.
-                  </div>
-                </div>
-              </div>
-
-              <div className="row">
-                <div className="col-md-6">
-                  <h6>Información del Plan</h6>
-                  <ul className="list-unstyled">
-                    <li><strong>Nombre:</strong> {formData.name}</li>
-                    <li><strong>Tipo:</strong> {formData.planType}</li>
-                    <li><strong>Período:</strong> {formData.planPeriod}</li>
-                    <li><strong>Duración:</strong> {formData.totalPeriods} períodos</li>
-                    <li><strong>Calorías objetivo:</strong> {formData.dailyCaloriesTarget} kcal</li>
-                  </ul>
-                </div>
-                <div className="col-md-6">
-                  <h6>Macronutrientes</h6>
-                  <ul className="list-unstyled">
-                    <li><strong>Proteínas:</strong> {formData.dailyMacrosTarget?.protein}g</li>
-                    <li><strong>Carbohidratos:</strong> {formData.dailyMacrosTarget?.carbohydrates}g</li>
-                    <li><strong>Grasas:</strong> {formData.dailyMacrosTarget?.fats}g</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Navegación */}
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 gap-3">
-            <div className="d-flex justify-content-center w-100 w-md-auto">
-              {currentStep > 1 && (
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  onClick={() => setCurrentStep(currentStep - 1)}
-                >
-                  <i className="fas fa-arrow-left me-2"></i>
-                  Anterior
-                </button>
-              )}
-            </div>
-            
-            <div className="d-flex flex-column flex-sm-row gap-2 w-100 w-md-auto">
-              {currentStep < steps.length && (
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => setCurrentStep(currentStep + 1)}
-                >
-                  Siguiente
-                  <i className="fas fa-arrow-right ms-2"></i>
-                </button>
-              )}
-              
-              {currentStep === steps.length && (
-                <>
-                  {onGenerateAI && (
-                    <button
-                      type="button"
-                      className="btn btn-outline-success"
-                      onClick={handleGenerateAI}
-                      disabled={loading}
-                    >
-                      <Sparkles size={16} className="me-1" />
-                      <span className="d-none d-sm-inline">Generar con IA</span>
-                      <span className="d-sm-none">IA</span>
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="btn btn-success"
-                    onClick={handleSubmit}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        <span className="d-none d-sm-inline">Creando...</span>
-                        <span className="d-sm-none">Creando</span>
-                      </>
-                    ) : (
-                      <>
-                        <Calendar size={16} className="me-1" />
-                        <span className="d-none d-sm-inline">Crear Plan</span>
-                        <span className="d-sm-none">Crear</span>
-                      </>
-                    )}
-                  </button>
-                </>
-              )}
-              
-              <button
-                type="button"
-                className="btn btn-outline-danger"
-                onClick={onCancel}
-                disabled={loading}
-              >
-                <X size={16} className="me-1" />
-                <span className="d-none d-sm-inline">Cancelar</span>
-                <span className="d-sm-none">Cancelar</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <style>{`
-        .diet-plan-creator {
-          max-width: 100%;
-        }
-        .progress-indicator {
-          padding: 20px;
-          background-color: #ffffff;
-          border-radius: 12px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-          margin: 20px auto;
-          max-width: 400px;
-          text-align: center;
-        }
-        @media (min-width: 768px) {
-          .progress-indicator {
-            padding: 30px;
-            max-width: 500px;
-          }
-        }
-        .current-step-circle {
-          width: 60px;
-          height: 60px;
-          border-radius: 50%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          font-weight: 700;
-          font-size: 1.8em;
-          background-color: #0d6efd;
-          color: #ffffff;
-          border: 3px solid #0d6efd;
-          box-shadow: 0 5px 15px rgba(13, 109, 253, 0.5);
-          margin: 0 auto 15px auto;
-          transition: all 0.3s ease-in-out;
-          flex-shrink: 0;
-        }
-        .current-step-info .step-title {
-          font-size: 1.4em;
-          font-weight: 600;
-          color: #343a40;
-          margin-bottom: 5px;
-        }
-        .current-step-info .step-counter {
-          font-size: 0.9em;
-          color: #6c757d;
-        }
-        
-        @media (max-width: 767.98px) {
-          .current-step-circle {
-            width: 50px;
-            height: 50px;
-            font-size: 1.5em;
-            margin-bottom: 10px;
-          }
-          .current-step-info .step-title {
-            font-size: 1.2em;
-          }
-          .current-step-info .step-counter {
-            font-size: 0.8em;
-          }
-        }
-        .step-circle {
-          width: 45px;
-          height: 45px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #fff;
-          border: 2px solid #dee2e6;
-          font-weight: bold;
-          color: #495057;
-          transition: all 0.3s ease;
-          box-shadow: none;
-        }
-        .step-circle.active {
-          border-color: #212529;
-          color: #212529;
-          background: #fff;
-        }
-        .step-circle.completed {
-          border-color: #dee2e6;
-          color: #212529;
-          background: #fff;
-        }
-        .step-info {
-          min-width: 140px;
-        }
-        .step-title {
-          font-weight: 600;
-          font-size: 0.9rem;
-          color: #495057;
-          white-space: nowrap;
-        }
-        .step-line {
-          width: 80px;
-          height: 2px;
-          background: #dee2e6;
-          margin: 0 1rem;
-          transition: background 0.3s ease;
-          border-radius: 2px;
-        }
-        .step-line.completed {
-          background: #dee2e6;
-        }
-        /* Mobile styles */
-        .step-circle-mobile {
-          width: 35px;
-          height: 35px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #fff;
-          border: 2px solid #dee2e6;
-          font-weight: bold;
-          color: #495057;
-          transition: all 0.3s ease;
-          font-size: 0.8rem;
-          cursor: pointer;
-        }
-        .step-circle-mobile.active {
-          border-color: #212529;
-          color: #212529;
-          background: #fff;
-          transform: scale(1.1);
-        }
-        .step-circle-mobile.completed {
-          border-color: #dee2e6;
-          color: #212529;
-          background: #fff;
-        }
-        .step-line-mobile {
-          width: 40px;
-          height: 2px;
-          background: #dee2e6;
-          margin: 0 0.5rem;
-          border-radius: 1px;
-        }
-        .step-content {
-          min-height: 350px;
-          padding: 1rem 0;
-        }
-        .form-control, .form-select {
-          border-radius: 0.5rem;
-          border: 1.5px solid #e9ecef;
-          background: #fff;
-          color: #212529;
-          transition: all 0.3s ease;
-          padding: 0.75rem 1rem;
-        }
-        .form-control:focus, .form-select:focus {
-          border-color: #212529;
-          box-shadow: none;
-          background: #fff;
-          color: #212529;
-        }
-        .btn {
-          border-radius: 0.5rem;
-          padding: 0.75rem 1.5rem;
-          font-weight: 600;
-          transition: all 0.3s ease;
-          border: none;
-        }
-        .btn-primary, .btn-success, .btn-outline-secondary, .btn-outline-danger, .btn-outline-success {
-          background: #fff;
-          color: #212529;
-          border: 1.5px solid #dee2e6;
-        }
-        .btn:hover {
-          background: #f8f9fa;
-          color: #212529;
-        }
-        .card {
-          border-radius: 1rem;
-          border: 1px solid #dee2e6;
-          background: #fff;
-          color: #212529;
-          box-shadow: none;
-        }
-        .card-header {
-          background: #fff;
-          border-bottom: 1px solid #dee2e6;
-          border-radius: 1rem 1rem 0 0 !important;
-          padding: 1.25rem 1.5rem;
-        }
-        .card-body {
-          padding: 1.5rem;
-        }
-        .alert {
-          border-radius: 0.75rem;
-          border: none;
-          padding: 1rem 1.25rem;
-          background: #f8f9fa;
-          color: #495057;
-        }
-        @media (max-width: 768px) {
-          .progress-indicator {
-            padding: 1rem;
-            border-radius: 0.75rem;
-          }
-          .step-content {
-            min-height: 300px;
-            padding: 0.75rem 0;
-          }
-          .card-body {
-            padding: 1rem;
-          }
-          .btn {
-            padding: 0.6rem 1.2rem;
-            font-size: 0.9rem;
-          }
-          .form-control, .form-select {
-            padding: 0.6rem 0.8rem;
-            font-size: 0.9rem;
-          }
-        }
-        @media (max-width: 576px) {
-          .progress-indicator {
-            padding: 0.75rem;
-          }
-          .step-content {
-            min-height: 250px;
-          }
-          .card-body {
-            padding: 0.75rem;
-          }
-          .btn {
-            padding: 0.5rem 1rem;
-            font-size: 0.85rem;
-          }
-          .form-control, .form-select {
-            padding: 0.5rem 0.75rem;
-            font-size: 0.85rem;
-          }
-        }
-        .step-content {
-          animation: fadeInUp 0.3s ease-out;
-        }
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .btn:focus,
-        .form-control:focus,
-        .form-select:focus {
-          outline: 2px solid #212529;
-          outline-offset: 2px;
-        }
-      `}</style>
-    </div>
-  );
-};
+// Tarjetas Nutricionales implementadas y funcionales
+// Uso temporal de DietPlanQuickCreate como interfaz mientras se integran completamente
 
 const DietPlansPage: React.FC = () => {
   const {
@@ -812,6 +63,7 @@ const DietPlansPage: React.FC = () => {
   } = useDietPlans();
   
   const { patients } = usePatients();
+  const { records: clinicalRecords, loadPatientRecords } = useClinicalRecords();
   
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -825,10 +77,23 @@ const DietPlansPage: React.FC = () => {
   const [editingPlan, setEditingPlan] = useState<DietPlan | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Load all diet plans for the nutritionist on mount
+  // Load all diet plans and clinical records for the nutritionist on mount
   useEffect(() => {
     fetchAllDietPlans();
+    loadAllClinicalRecords();
   }, [fetchAllDietPlans]);
+
+  // Load clinical records for all patients
+  const loadAllClinicalRecords = async () => {
+    try {
+      // Cargar expedientes para todos los pacientes
+      for (const patient of patients) {
+        await loadPatientRecords(patient.id);
+      }
+    } catch (error) {
+      console.error('Error loading clinical records:', error);
+    }
+  };
 
   // Mock recipes data
   useEffect(() => {
@@ -1107,18 +372,19 @@ const DietPlansPage: React.FC = () => {
     }
   };
 
-  const handleUpdateDietPlan = async () => {
+  const handleUpdateDietPlan = async (formData: CreateDietPlanDto) => {
     if (!editingPlan) return;
     
     try {
-      const validation = validateDietPlanData(editingPlan);
+      const validation = validateDietPlanData(formData);
       if (!validation.isValid) {
         setError('Errores de validación:\n' + validation.errors.join('\n'));
         return;
       }
 
-      await updateDietPlan(editingPlan.id, editingPlan);
+      await updateDietPlan(editingPlan.id, formData);
       setEditingPlan(null);
+      setShowPlanModal(false);
       clearError();
     } catch (error: any) {
       setError(error.message || 'Error al actualizar el plan de dieta');
@@ -1635,16 +901,32 @@ const DietPlansPage: React.FC = () => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="pt-0">
-          <TempDietPlanCreator
-            patients={patients}
-            onSubmit={editingPlan ? handleUpdateDietPlan : handleCreateDietPlan}
-            onCancel={() => {
+          {/* Alerta sobre las nuevas tarjetas nutricionales */}
+          <div className="alert alert-info border-0 rounded-0 mb-0">
+            <div className="d-flex align-items-center">
+              <i className="fas fa-star me-2"></i>
+              <div>
+                <strong>¡Nuevo!</strong> Sistema de Tarjetas Nutricionales con 5 pestañas especializadas implementado.
+                <span className="d-none d-md-inline"> Incluye: Resumen, Comidas, Nutrición, Horarios y Restricciones.</span>
+                <br />
+                <small className="text-muted">
+                  📋 Resumen inteligente | 🍽️ Planificación de comidas | 🎯 Objetivos nutricionales | ⏰ Horarios optimizados | 🛡️ Gestión de restricciones
+                </small>
+              </div>
+            </div>
+          </div>
+          
+          <NutritionalCardSimple
+            dietPlan={editingPlan || undefined}
+            patient={editingPlan ? patients.find(p => p.id === editingPlan.patient_id) || patients[0] : patients[0]}
+            clinicalRecord={editingPlan ? clinicalRecords.find(r => r.patient?.id === editingPlan.patient_id) : undefined}
+            mode={editingPlan ? 'edit' : 'create'}
+            onSave={editingPlan ? handleUpdateDietPlan : handleCreateDietPlan}
+            onClose={() => {
               setShowPlanModal(false);
               setEditingPlan(null);
             }}
-            onGenerateAI={handleGenerateAIPlan}
-            loading={loading}
-            initialData={editingPlan ? transformDietPlanToFormData(editingPlan) : undefined}
+            isLoading={loading}
           />
         </Modal.Body>
       </Modal>

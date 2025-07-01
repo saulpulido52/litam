@@ -28,8 +28,8 @@ export class CurrentProblemsDto {
     @IsOptional() @IsBoolean() pyrosis?: boolean;
     @IsOptional() @IsBoolean() vomiting?: boolean;
     @IsOptional() @IsBoolean() colitis?: boolean;
-    @IsOptional() @IsString() @Length(0, 255) mouthMechanics?: string;
-    @IsOptional() @IsString() @Length(0, 500) otherProblems?: string;
+    @IsOptional() @IsString() @Length(0, 255) mouth_mechanics?: string;
+    @IsOptional() @IsString() @Length(0, 500) other_problems?: string;
     @IsOptional() @IsString() @Length(0, 1000) observations?: string;
 }
 
@@ -38,7 +38,7 @@ export class DiagnosedDiseasesDto {
     @IsOptional() @IsString() @Length(0, 255) diseaseName?: string;
     @IsOptional() @IsString() @Length(0, 100) sinceWhen?: string;
     @IsOptional() @IsBoolean() takesMedication?: boolean;
-    @IsOptional() @IsArray() @IsString({ each: true }) medicationsList?: string[];
+    @IsOptional() @IsArray() @IsString({ each: true }) medications_list?: string[];
     @IsOptional() @IsBoolean() hasImportantDisease?: boolean;
     @IsOptional() @IsString() @Length(0, 255) importantDiseaseName?: string;
     @IsOptional() @IsBoolean() takesSpecialTreatment?: boolean;
@@ -89,8 +89,8 @@ export class ConsumptionHabitsDto {
 export class BloodPressureDto {
     @IsOptional() @IsBoolean() knowsBp?: boolean;
     @IsOptional() @IsString() @Length(0, 50) habitualBp?: string;
-    @IsOptional() @IsNumber() @Min(0) @Max(300) systolic?: number;
-    @IsOptional() @IsNumber() @Min(0) @Max(200) diastolic?: number;
+    @IsOptional() @IsNumber() @Min(50, { message: 'La presión sistólica debe ser al menos 50 mmHg.' }) @Max(250, { message: 'La presión sistólica no puede exceder 250 mmHg.' }) systolic?: number;
+    @IsOptional() @IsNumber() @Min(30, { message: 'La presión diastólica debe ser al menos 30 mmHg.' }) @Max(150, { message: 'La presión diastólica no puede exceder 150 mmHg.' }) diastolic?: number;
 }
 
 export class DietaryHistoryDto {

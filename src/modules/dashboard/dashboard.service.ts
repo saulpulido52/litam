@@ -9,7 +9,7 @@ import { PatientProfile } from '../../database/entities/patient_profile.entity';
 import { NutritionistProfile } from '../../database/entities/nutritionist_profile.entity';
 import { PaymentTransaction } from '../../database/entities/payment_transaction.entity';
 import { AppError } from '../../utils/app.error';
-import { Between, MoreThanOrEqual, LessThanOrEqual, MoreThan, Equal } from 'typeorm';
+import { Between, MoreThanOrEqual, LessThanOrEqual, MoreThan, Equal, In } from 'typeorm';
 
 export interface SimpleDashboardStats {
   total_patients: number;
@@ -43,44 +43,166 @@ export class DashboardService {
   private clinicalRecordRepository = AppDataSource.getRepository(ClinicalRecord);
   private paymentRepository = AppDataSource.getRepository(PaymentTransaction);
 
-  async getSimpleDashboardStats(): Promise<SimpleDashboardStats> {
+  async getSimpleDashboardStats(nutritionistId: string): Promise<SimpleDashboardStats> {
     // Buscar el rol de paciente
     const patientRole = await this.roleRepository.findOneByOrFail({ name: RoleName.PATIENT });
 
-    // Totales
-    const total_patients = await this.userRepository.count({ where: { role: { id: patientRole.id } } });
-    const total_appointments = await this.appointmentRepository.count();
-    const total_diet_plans = await this.dietPlanRepository.count();
-    const total_clinical_records = await this.clinicalRecordRepository.count();
+    // 🎯 FILTRADO POR NUTRIÓLOGO: Solo pacientes de este nutriólogo
+    const myPatientRelations = await this.relationRepository.find({
+      where: { 
+        nutritionist: { id: nutritionistId },
+        status: RelationshipStatus.ACTIVE 
+      },
+      relations: ['patient']
+    });
 
-    // Actividades recientes (últimos 5 de cada uno)
-    const recent_patients = await this.userRepository.find({ where: { role: { id: patientRole.id } }, order: { created_at: 'DESC' }, take: 5 });
-    const recent_appointments = await this.appointmentRepository.find({ order: { created_at: 'DESC' }, take: 5 });
-    const recent_diet_plans = await this.dietPlanRepository.find({ order: { created_at: 'DESC' }, take: 5 });
-    const recent_clinical_records = await this.clinicalRecordRepository.find({ order: { created_at: 'DESC' }, take: 5 });
+    const patientUserIds = myPatientRelations.map(rel => rel.patient.id);
 
-    const recent_activities: Array<{ type: string; id: string; date: string; description: string }> = [
-      ...recent_patients.map(p => ({ type: 'patient', id: p.id, date: p.created_at.toISOString(), description: `${p.first_name || ''} ${p.last_name || ''}`.trim() })),
-      ...recent_appointments.map(a => ({ type: 'appointment', id: a.id, date: a.created_at.toISOString(), description: a.status })),
-      ...recent_diet_plans.map(d => ({ type: 'diet_plan', id: d.id, date: d.created_at.toISOString(), description: d.name || 'Plan de dieta' })),
-      ...recent_clinical_records.map(c => ({ type: 'clinical_record', id: c.id, date: c.created_at.toISOString(), description: c.expedient_number || 'Expediente' })),
-    ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+    // Totales filtrados por pacientes del nutriólogo
+    const total_patients = patientUserIds.length;
+    
+    // Solo citas que involucren a este nutriólogo
+    const total_appointments = await this.appointmentRepository.count({ 
+      where: { nutritionist: { id: nutritionistId } } 
+    });
+    
+    // Solo planes de dieta de este nutriólogo
+    const total_diet_plans = await this.dietPlanRepository.count({ 
+      where: { nutritionist: { id: nutritionistId } } 
+    });
+    
+    // Solo expedientes clínicos de este nutriólogo
+    const total_clinical_records = await this.clinicalRecordRepository.count({ 
+      where: { nutritionist: { id: nutritionistId } } 
+    });
 
-    // Resumen semanal
+    // 🎯 ACTIVIDADES RECIENTES FILTRADAS: Solo del nutriólogo actual
+    let recent_activities: Array<{ type: string; id: string; date: string; description: string }> = [];
+
+    // Pacientes recientes (sus pacientes)
+    if (patientUserIds.length > 0) {
+      const recent_patients = await this.userRepository.find({ 
+        where: { 
+          role: { id: patientRole.id },
+          id: patientUserIds.length > 0 ? In(patientUserIds) : undefined
+        }, 
+        order: { created_at: 'DESC' }, 
+        take: 3 
+      });
+      
+      recent_activities.push(
+        ...recent_patients.map(p => ({ 
+          type: 'patient', 
+          id: p.id, 
+          date: p.created_at.toISOString(), 
+          description: `Nuevo paciente: ${p.first_name || ''} ${p.last_name || ''}`.trim() 
+        }))
+      );
+    }
+
+    // Citas recientes (del nutriólogo)
+    const recent_appointments = await this.appointmentRepository.find({ 
+      where: { nutritionist: { id: nutritionistId } },
+      order: { created_at: 'DESC' }, 
+      take: 3 
+    });
+    
+    recent_activities.push(
+      ...recent_appointments.map(a => ({ 
+        type: 'appointment', 
+        id: a.id, 
+        date: a.created_at.toISOString(), 
+        description: `Cita ${a.status === AppointmentStatus.COMPLETED ? 'completada' : a.status === AppointmentStatus.SCHEDULED ? 'programada' : a.status}` 
+      }))
+    );
+
+    // Planes de dieta recientes (del nutriólogo)
+    const recent_diet_plans = await this.dietPlanRepository.find({ 
+      where: { nutritionist: { id: nutritionistId } },
+      order: { created_at: 'DESC' }, 
+      take: 3 
+    });
+    
+    recent_activities.push(
+      ...recent_diet_plans.map(d => ({ 
+        type: 'diet_plan', 
+        id: d.id, 
+        date: d.created_at.toISOString(), 
+        description: `Plan nutricional: ${d.name || 'Plan de dieta'}` 
+      }))
+    );
+
+    // Expedientes clínicos recientes (del nutriólogo)
+    const recent_clinical_records = await this.clinicalRecordRepository.find({ 
+      where: { nutritionist: { id: nutritionistId } },
+      order: { created_at: 'DESC' }, 
+      take: 3 
+    });
+    
+    recent_activities.push(
+      ...recent_clinical_records.map(c => ({ 
+        type: 'clinical_record', 
+        id: c.id, 
+        date: c.created_at.toISOString(), 
+        description: `Expediente: ${c.expedient_number || 'Registro clínico'}` 
+      }))
+    );
+
+    // Ordenar actividades por fecha (más recientes primero) y tomar las últimas 10
+    recent_activities = recent_activities
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 10);
+
+    // 🎯 RESUMEN SEMANAL FILTRADO: Solo actividades del nutriólogo
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    const new_patients = await this.userRepository.count({ where: { role: { id: patientRole.id }, created_at: MoreThan(oneWeekAgo) } });
-    const new_appointments = await this.appointmentRepository.count({ where: { created_at: MoreThan(oneWeekAgo) } });
+    
+    // Nuevos pacientes en relaciones activas de este nutriólogo
+    const new_patients = await this.relationRepository.count({ 
+      where: { 
+        nutritionist: { id: nutritionistId },
+        status: RelationshipStatus.ACTIVE,
+        requested_at: MoreThan(oneWeekAgo) 
+      } 
+    });
+    
+    // Nuevas citas de este nutriólogo
+    const new_appointments = await this.appointmentRepository.count({ 
+      where: { 
+        nutritionist: { id: nutritionistId },
+        created_at: MoreThan(oneWeekAgo) 
+      } 
+    });
 
-    // Métricas de rendimiento
-    const total_completed = await this.appointmentRepository.count({ where: { status: AppointmentStatus.COMPLETED } });
+    // 🎯 MÉTRICAS DE RENDIMIENTO FILTRADAS: Solo del nutriólogo
+    const total_completed = await this.appointmentRepository.count({ 
+      where: { 
+        nutritionist: { id: nutritionistId },
+        status: AppointmentStatus.COMPLETED 
+      } 
+    });
     const completion_rate = total_appointments > 0 ? Math.round((total_completed / total_appointments) * 100) : 0;
 
-    // Rendimiento del sistema (último registro)
-    const last_patient = recent_patients[0]?.created_at?.toISOString() || null;
-    const last_appointment = recent_appointments[0]?.created_at?.toISOString() || null;
-    const last_diet_plan = recent_diet_plans[0]?.created_at?.toISOString() || null;
-    const last_clinical_record = recent_clinical_records[0]?.created_at?.toISOString() || null;
+    // 🎯 RENDIMIENTO DEL SISTEMA FILTRADO: Últimos registros del nutriólogo
+    const last_patient_relation = await this.relationRepository.findOne({
+      where: { nutritionist: { id: nutritionistId } },
+      order: { requested_at: 'DESC' }
+    });
+    
+    const last_appointment = await this.appointmentRepository.findOne({
+      where: { nutritionist: { id: nutritionistId } },
+      order: { created_at: 'DESC' }
+    });
+    
+    const last_diet_plan = await this.dietPlanRepository.findOne({
+      where: { nutritionist: { id: nutritionistId } },
+      order: { created_at: 'DESC' }
+    });
+    
+    const last_clinical_record = await this.clinicalRecordRepository.findOne({
+      where: { nutritionist: { id: nutritionistId } },
+      order: { created_at: 'DESC' }
+    });
 
     return {
       total_patients,
@@ -90,7 +212,12 @@ export class DashboardService {
       recent_activities,
       weekly_summary: { new_patients, new_appointments },
       performance_metrics: { completion_rate },
-      system_performance: { last_patient, last_appointment, last_diet_plan, last_clinical_record },
+      system_performance: { 
+        last_patient: last_patient_relation?.requested_at?.toISOString() || null,
+        last_appointment: last_appointment?.created_at?.toISOString() || null,
+        last_diet_plan: last_diet_plan?.created_at?.toISOString() || null,
+        last_clinical_record: last_clinical_record?.created_at?.toISOString() || null,
+      },
     };
   }
 } 

@@ -254,6 +254,52 @@ export class ClinicalRecord {
     @Column({ type: 'varchar', length: 255, nullable: true })
     graph_url: string | null; // URL de la gráfica (si se genera una imagen)
 
+    // 📄 NUEVOS CAMPOS PARA DOCUMENTOS
+    @Column({ type: 'jsonb', nullable: true })
+    laboratory_documents: {
+        id: string;
+        filename: string;
+        original_name: string;
+        file_path: string;
+        file_url: string;
+        file_size: number;
+        upload_date: Date;
+        uploaded_by: 'patient' | 'nutritionist';
+        description?: string;
+        lab_date?: Date;
+    }[] | null;
+
+    @Column({ type: 'jsonb', nullable: true })
+    document_metadata: {
+        last_pdf_generated?: Date;
+        pdf_version?: number;
+        total_attachments?: number;
+    } | null;
+
+    // 💊 INTERACCIONES FÁRMACO-NUTRIENTE
+    @Column({ type: 'jsonb', nullable: true })
+    drug_nutrient_interactions: {
+        id: string;
+        medication: {
+            id: string;
+            name: string;
+            generic_name?: string;
+            dosage?: string;
+            frequency?: string;
+        };
+        nutrients_affected: string[];
+        interaction_type: 'absorption' | 'metabolism' | 'excretion' | 'antagonism';
+        severity: 'low' | 'moderate' | 'high' | 'critical';
+        description: string;
+        recommendations: string[];
+        timing_considerations?: string;
+        foods_to_avoid?: string[];
+        foods_to_increase?: string[];
+        monitoring_required?: boolean;
+        created_date: Date;
+        updated_date: Date;
+    }[] | null;
+
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at!: Date;
 

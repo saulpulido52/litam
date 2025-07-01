@@ -27,6 +27,9 @@ export class DietPlan {
     @Column({ type: 'varchar', length: 255, nullable: false })
     name!: string; // Ej: 'Plan Semanal de Pérdida de Peso (Semana 1)'
 
+    @Column({ type: 'text', nullable: true })
+    description: string | null; // Descripción detallada del plan nutricional
+
     @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE'  })
     @JoinColumn({ name: 'patient_user_id' })
     patient!: User;

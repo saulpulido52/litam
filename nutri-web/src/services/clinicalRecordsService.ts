@@ -265,6 +265,196 @@ class ClinicalRecordsService {
     });
   }
 
+  // === DOCUMENTOS DE LABORATORIO ===
+
+  // Subir documento de laboratorio
+  async uploadLaboratoryDocument(
+    recordId: string,
+    file: File,
+    description?: string,
+    labDate?: string
+  ): Promise<{ message: string; document: any }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (description) {
+      formData.append('description', description);
+    }
+    if (labDate) {
+      formData.append('labDate', labDate);
+    }
+
+    const response = await apiService.post<{ message: string; document: any }>(
+      `${this.baseUrl}/${recordId}/laboratory-documents`,
+      formData
+    );
+
+    if (response.status !== 'success' || !response.data) {
+      throw new Error(response.message || 'Error al subir el documento');
+    }
+
+    return response.data;
+  }
+
+  // Obtener documentos de laboratorio
+  async getLaboratoryDocuments(recordId: string): Promise<any[]> {
+    const response = await apiService.get<{ documents: any[] }>(
+      `${this.baseUrl}/${recordId}/laboratory-documents`
+    );
+
+    if (response.status !== 'success' || !response.data?.documents) {
+      throw new Error(response.message || 'Error al obtener documentos de laboratorio');
+    }
+
+    return response.data.documents;
+  }
+
+  // Eliminar documento de laboratorio
+  async deleteLaboratoryDocument(
+    recordId: string,
+    documentId: string
+  ): Promise<{ message: string }> {
+    const response = await apiService.delete<{ message: string }>(
+      `${this.baseUrl}/${recordId}/laboratory-documents/${documentId}`
+    );
+
+    if (response.status !== 'success' || !response.data) {
+      throw new Error(response.message || 'Error al eliminar el documento');
+    }
+
+    return response.data;
+  }
+
+  // Generar PDF del expediente
+  async generateExpedientePDF(recordId: string): Promise<Blob> {
+    try {
+      console.log('🔄 Requesting PDF generation for record:', recordId);
+      
+      // Obtener el token del apiService
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error('Token de autenticación no encontrado. Por favor, inicia sesión nuevamente.');
+      }
+
+      // Usar URL relativa sin /api para que funcione el proxy de Vite
+      const relativeURL = `${this.baseUrl}/${recordId}/generate-pdf`;
+      
+      console.log('🔄 Making request to:', relativeURL);
+      
+      const response = await fetch(relativeURL, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/pdf',
+        },
+      });
+
+      console.log('📡 Response status:', response.status, response.statusText);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+        }
+        const errorText = await response.text();
+        console.error('❌ Server error response:', errorText);
+        throw new Error(`Error ${response.status}: ${errorText || 'Error al generar PDF'}`);
+      }
+
+      const blob = await response.blob();
+      console.log('✅ PDF generated successfully, size:', blob.size, 'bytes');
+      return blob;
+    } catch (error: any) {
+      console.error('❌ PDF generation error:', error);
+      throw new Error(error.message || 'Error al generar el PDF del expediente');
+    }
+  }
+
+  // === INTERACCIONES FÁRMACO-NUTRIENTE ===
+
+  // Agregar interacción fármaco-nutriente
+  async addDrugNutrientInteraction(
+    recordId: string,
+    interaction: {
+      medicationId: string;
+      nutrientsAffected: string[];
+      interactionType: 'absorption' | 'metabolism' | 'excretion' | 'antagonism';
+      severity: 'low' | 'moderate' | 'high' | 'critical';
+      description: string;
+      recommendations: string[];
+      timingConsiderations?: string;
+      foodsToAvoid?: string[];
+      foodsToIncrease?: string[];
+      monitoringRequired?: boolean;
+    }
+  ): Promise<{ message: string; interaction: any }> {
+    const response = await apiService.post<{ message: string; interaction: any }>(
+      `${this.baseUrl}/${recordId}/drug-nutrient-interactions`,
+      interaction
+    );
+
+    if (response.status !== 'success' || !response.data) {
+      throw new Error(response.message || 'Error al agregar la interacción fármaco-nutriente');
+    }
+
+    return response.data;
+  }
+
+  // Actualizar interacción fármaco-nutriente
+  async updateDrugNutrientInteraction(
+    recordId: string,
+    interactionId: string,
+    updates: {
+      nutrientsAffected?: string[];
+      interactionType?: 'absorption' | 'metabolism' | 'excretion' | 'antagonism';
+      severity?: 'low' | 'moderate' | 'high' | 'critical';
+      description?: string;
+      recommendations?: string[];
+      timingConsiderations?: string;
+      foodsToAvoid?: string[];
+      foodsToIncrease?: string[];
+      monitoringRequired?: boolean;
+    }
+  ): Promise<{ message: string; interaction: any }> {
+    const response = await apiService.patch<{ message: string; interaction: any }>(
+      `${this.baseUrl}/${recordId}/drug-nutrient-interactions/${interactionId}`,
+      updates
+    );
+
+    if (response.status !== 'success' || !response.data) {
+      throw new Error(response.message || 'Error al actualizar la interacción fármaco-nutriente');
+    }
+
+    return response.data;
+  }
+
+  // Eliminar interacción fármaco-nutriente
+  async deleteDrugNutrientInteraction(
+    recordId: string,
+    interactionId: string
+  ): Promise<{ message: string }> {
+    const response = await apiService.delete<{ message: string }>(
+      `${this.baseUrl}/${recordId}/drug-nutrient-interactions/${interactionId}`
+    );
+
+    if (response.status !== 'success' || !response.data) {
+      throw new Error(response.message || 'Error al eliminar la interacción fármaco-nutriente');
+    }
+
+    return response.data;
+  }
+
+  // Obtener interacciones fármaco-nutriente
+  async getDrugNutrientInteractions(recordId: string): Promise<any[]> {
+    const response = await apiService.get<{ interactions: any[] }>(
+      `${this.baseUrl}/${recordId}/drug-nutrient-interactions`
+    );
+
+    if (response.status !== 'success' || !response.data?.interactions) {
+      throw new Error(response.message || 'Error al obtener interacciones fármaco-nutriente');
+    }
+
+    return response.data.interactions;
+  }
+
   // Obtener expedientes más recientes
   async getRecentRecords(): Promise<ClinicalRecord[]> {
     try {

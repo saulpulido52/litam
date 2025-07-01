@@ -24,6 +24,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
   // Estados para el flujo paso a paso
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   
   const [formData, setFormData] = useState({
     recordDate: record?.record_date?.split('T')[0] || new Date().toISOString().split('T')[0],
@@ -40,8 +41,8 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       pyrosis: record?.current_problems?.pyrosis || false,
       vomiting: record?.current_problems?.vomiting || false,
       colitis: record?.current_problems?.colitis || false,
-      mouthMechanics: record?.current_problems?.mouthMechanics || '',
-      otherProblems: record?.current_problems?.otherProblems || '',
+      mouth_mechanics: record?.current_problems?.mouth_mechanics || '',
+      other_problems: record?.current_problems?.other_problems || '',
       observations: record?.current_problems?.observations || '',
     },
 
@@ -74,6 +75,49 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       supplementDetails: record?.dietary_history?.supplement_details || '',
     },
 
+    // Enfermedades diagnosticadas
+    diagnosedDiseases: {
+      hasDisease: record?.diagnosed_diseases?.has_disease || false,
+      diseaseName: record?.diagnosed_diseases?.disease_name || '',
+      sinceWhen: record?.diagnosed_diseases?.since_when || '',
+      takesMedication: record?.diagnosed_diseases?.takes_medication || false,
+      medicationsList: record?.diagnosed_diseases?.medications_list?.join(', ') || '',
+      hasImportantDisease: record?.diagnosed_diseases?.has_important_disease || false,
+      importantDiseaseName: record?.diagnosed_diseases?.important_disease_name || '',
+      takesSpecialTreatment: record?.diagnosed_diseases?.takes_special_treatment || false,
+      specialTreatmentDetails: record?.diagnosed_diseases?.special_treatment_details || '',
+      hasSurgery: record?.diagnosed_diseases?.has_surgery || false,
+      surgeryDetails: record?.diagnosed_diseases?.surgery_details || '',
+    },
+
+    // Antecedentes Familiares
+    familyMedicalHistory: {
+      obesity: record?.family_medical_history?.obesity || false,
+      diabetes: record?.family_medical_history?.diabetes || false,
+      hta: record?.family_medical_history?.hta || false,
+      cancer: record?.family_medical_history?.cancer || false,
+      hypoHyperthyroidism: record?.family_medical_history?.hypo_hyperthyroidism || false,
+      dyslipidemia: record?.family_medical_history?.dyslipidemia || false,
+      otherHistory: record?.family_medical_history?.other_history || '',
+    },
+
+    // Estilo de Vida
+    activityLevelDescription: record?.activity_level_description || '',
+    physicalExercise: {
+      performsExercise: record?.physical_exercise?.performs_exercise || false,
+      type: record?.physical_exercise?.type || '',
+      frequency: record?.physical_exercise?.frequency || '',
+      duration: record?.physical_exercise?.duration || '',
+      sinceWhen: record?.physical_exercise?.since_when || '',
+    },
+    consumptionHabits: {
+      alcohol: record?.consumption_habits?.alcohol || '',
+      tobacco: record?.consumption_habits?.tobacco || '',
+      coffee: record?.consumption_habits?.coffee || '',
+      otherSubstances: record?.consumption_habits?.other_substances || '',
+    },
+    waterConsumptionLiters: record?.water_consumption_liters || '',
+
     // Diagnóstico y plan
     nutritionalDiagnosis: record?.nutritional_diagnosis || '',
     nutritionalPlanAndManagement: record?.nutritional_plan_and_management || '',
@@ -84,9 +128,12 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
   const steps = [
     { id: 1, title: 'Datos Básicos', icon: 'fas fa-info-circle', required: true },
     { id: 2, title: 'Problemas Actuales', icon: 'fas fa-exclamation-triangle', required: false },
-    { id: 3, title: 'Mediciones', icon: 'fas fa-ruler', required: false },
-    { id: 4, title: 'Historia Dietética', icon: 'fas fa-utensils', required: false },
-    { id: 5, title: 'Diagnóstico y Plan', icon: 'fas fa-stethoscope', required: true },
+    { id: 3, title: 'Enfermedades y Medicamentos', icon: 'fas fa-pills', required: false },
+    { id: 4, title: 'Antecedentes Familiares', icon: 'fas fa-users', required: false },
+    { id: 5, title: 'Estilo de Vida', icon: 'fas fa-running', required: false },
+    { id: 6, title: 'Mediciones', icon: 'fas fa-ruler', required: false },
+    { id: 7, title: 'Historia Dietética', icon: 'fas fa-utensils', required: false },
+    { id: 8, title: 'Diagnóstico y Plan', icon: 'fas fa-stethoscope', required: true },
   ];
 
   // Validación por pasos
@@ -96,11 +143,17 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         return !!(formData.recordDate && formData.consultationReason);
       case 2: // Problemas Actuales
         return true; // Opcional
-      case 3: // Mediciones
+      case 3: // Enfermedades y Medicamentos
         return true; // Opcional
-      case 4: // Historia Dietética
+      case 4: // Antecedentes Familiares
         return true; // Opcional
-      case 5: // Diagnóstico y Plan
+      case 5: // Estilo de Vida
+        return true; // Opcional
+      case 6: // Mediciones
+        return true; // Opcional
+      case 7: // Historia Dietética
+        return true; // Opcional
+      case 8: // Diagnóstico y Plan
         return !!(formData.nutritionalDiagnosis && formData.nutritionalPlanAndManagement);
       default:
         return false;
@@ -160,6 +213,24 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
     }));
   }, [patientId, isEditing]);
 
+  const validateBloodPressure = (systolic: number, diastolic: number): string[] => {
+    const errors: string[] = [];
+    
+    if (diastolic >= systolic) {
+      errors.push(`La presión diastólica (${diastolic}) no puede ser mayor o igual que la sistólica (${systolic})`);
+    }
+    
+    if (systolic > 200 || diastolic > 120) {
+      errors.push(`Valores anormalmente altos (${systolic}/${diastolic}). Por favor verifica.`);
+    }
+    
+    if (systolic < 60 || diastolic < 40) {
+      errors.push(`Valores anormalmente bajos (${systolic}/${diastolic}). Por favor verifica.`);
+    }
+    
+    return errors;
+  };
+
   const handleInputChange = (section: string, field: string, value: any) => {
     setFormData(prev => {
       const sectionData = prev[section as keyof typeof prev] as any;
@@ -171,6 +242,28 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         },
       };
     });
+
+    // Validar presión arterial en tiempo real
+    if (section === 'bloodPressure' && (field === 'systolic' || field === 'diastolic')) {
+      const currentBP = { ...formData.bloodPressure };
+      currentBP[field] = value;
+      
+      const systolic = parseFloat(currentBP.systolic as string) || 0;
+      const diastolic = parseFloat(currentBP.diastolic as string) || 0;
+      
+      if (systolic > 0 && diastolic > 0) {
+        const bpErrors = validateBloodPressure(systolic, diastolic);
+        setValidationErrors(prev => ({
+          ...prev,
+          bloodPressure: bpErrors.length > 0 ? bpErrors[0] : ''
+        }));
+      } else {
+        setValidationErrors(prev => ({
+          ...prev,
+          bloodPressure: ''
+        }));
+      }
+    }
   };
 
   const handleBasicChange = (field: string, value: any) => {
@@ -213,8 +306,8 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         pyrosis: Boolean(formData.currentProblems.pyrosis),
         vomiting: Boolean(formData.currentProblems.vomiting),
         colitis: Boolean(formData.currentProblems.colitis),
-        mouthMechanics: formData.currentProblems.mouthMechanics || undefined,
-        otherProblems: formData.currentProblems.otherProblems || undefined,
+        mouth_mechanics: formData.currentProblems.mouth_mechanics || undefined,
+        other_problems: formData.currentProblems.other_problems || undefined,
         observations: formData.currentProblems.observations || undefined,
       },
 
@@ -243,6 +336,50 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         takesSupplements: Boolean(formData.dietaryHistory.takesSupplements),
         supplementDetails: formData.dietaryHistory.supplementDetails || undefined,
       },
+
+      diagnosedDiseases: {
+        hasDisease: Boolean(formData.diagnosedDiseases.hasDisease),
+        diseaseName: formData.diagnosedDiseases.diseaseName || undefined,
+        sinceWhen: formData.diagnosedDiseases.sinceWhen || undefined,
+        takesMedication: Boolean(formData.diagnosedDiseases.takesMedication),
+        medications_list: formData.diagnosedDiseases.medicationsList 
+          ? formData.diagnosedDiseases.medicationsList.split(',').map((m: string) => m.trim()).filter(m => m.length > 0)
+          : undefined,
+        hasImportantDisease: Boolean(formData.diagnosedDiseases.hasImportantDisease),
+        importantDiseaseName: formData.diagnosedDiseases.importantDiseaseName || undefined,
+        takesSpecialTreatment: Boolean(formData.diagnosedDiseases.takesSpecialTreatment),
+        specialTreatmentDetails: formData.diagnosedDiseases.specialTreatmentDetails || undefined,
+        hasSurgery: Boolean(formData.diagnosedDiseases.hasSurgery),
+        surgeryDetails: formData.diagnosedDiseases.surgeryDetails || undefined,
+      },
+
+      // Antecedentes Familiares
+      familyMedicalHistory: {
+        obesity: Boolean(formData.familyMedicalHistory.obesity),
+        diabetes: Boolean(formData.familyMedicalHistory.diabetes),
+        hta: Boolean(formData.familyMedicalHistory.hta),
+        cancer: Boolean(formData.familyMedicalHistory.cancer),
+        hypoHyperthyroidism: Boolean(formData.familyMedicalHistory.hypoHyperthyroidism),
+        dyslipidemia: Boolean(formData.familyMedicalHistory.dyslipidemia),
+        otherHistory: formData.familyMedicalHistory.otherHistory || undefined,
+      },
+
+      // Estilo de Vida
+      activityLevelDescription: formData.activityLevelDescription || undefined,
+      physicalExercise: {
+        performsExercise: Boolean(formData.physicalExercise.performsExercise),
+        type: formData.physicalExercise.type || undefined,
+        frequency: formData.physicalExercise.frequency || undefined,
+        duration: formData.physicalExercise.duration || undefined,
+        sinceWhen: formData.physicalExercise.sinceWhen || undefined,
+      },
+      consumptionHabits: {
+        alcohol: formData.consumptionHabits.alcohol || undefined,
+        tobacco: formData.consumptionHabits.tobacco || undefined,
+        coffee: formData.consumptionHabits.coffee || undefined,
+        otherSubstances: formData.consumptionHabits.otherSubstances || undefined,
+      },
+      waterConsumptionLiters: parseFloat(formData.waterConsumptionLiters as string) || undefined,
 
       nutritionalDiagnosis: formData.nutritionalDiagnosis || undefined,
       nutritionalPlanAndManagement: formData.nutritionalPlanAndManagement || undefined,
@@ -402,8 +539,8 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                     name="currentProblems-mouthMechanics"
                     title="Mecánicos de la Boca"
                     aria-label="Mecánicos de la Boca"
-                    value={formData.currentProblems.mouthMechanics}
-                    onChange={(e) => handleInputChange('currentProblems', 'mouthMechanics', e.target.value)}
+                                      value={formData.currentProblems.mouth_mechanics}
+                  onChange={(e) => handleInputChange('currentProblems', 'mouth_mechanics', e.target.value)}
                     placeholder="Ej: Dificultad para masticar, problemas dentales..."
                   />
                 </div>
@@ -417,8 +554,8 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                     title="Otros Problemas"
                     aria-label="Otros Problemas"
                     rows={2}
-                    value={formData.currentProblems.otherProblems}
-                    onChange={(e) => handleInputChange('currentProblems', 'otherProblems', e.target.value)}
+                                      value={formData.currentProblems.other_problems}
+                  onChange={(e) => handleInputChange('currentProblems', 'other_problems', e.target.value)}
                     placeholder="Describe otros problemas..."
                   />
                 </div>
@@ -440,8 +577,556 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
               </div>
             )}
 
-            {/* Paso 3: Mediciones */}
+            {/* Paso 3: Enfermedades y Medicamentos */}
             {currentStep === 3 && (
+              <div className="step-content">
+                <h6 className="mb-3">
+                  <i className="fas fa-pills me-2" aria-hidden="true"></i>
+                  Enfermedades Diagnosticadas y Medicamentos
+                </h6>
+                
+                <div className="row">
+                  <div className="col-12 col-md-6">
+                    <div className="form-check mb-3">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="diagnosedDiseases-hasDisease"
+                        name="hasDisease"
+                        checked={Boolean(formData.diagnosedDiseases.hasDisease)}
+                        onChange={(e) => handleInputChange('diagnosedDiseases', 'hasDisease', e.target.checked)}
+                        title="Marcar si el paciente tiene alguna enfermedad diagnosticada"
+                        aria-label="Tiene enfermedad diagnosticada"
+                      />
+                      <label 
+                        className="form-check-label" 
+                        htmlFor="diagnosedDiseases-hasDisease"
+                      >
+                        Tiene enfermedad diagnosticada
+                      </label>
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor="diagnosedDiseases-diseaseName">Nombre de la Enfermedad</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="diagnosedDiseases-diseaseName"
+                        name="diseaseName"
+                        title="Nombre de la Enfermedad"
+                        aria-label="Nombre de la Enfermedad"
+                        value={formData.diagnosedDiseases.diseaseName}
+                        onChange={(e) => handleInputChange('diagnosedDiseases', 'diseaseName', e.target.value)}
+                        disabled={!formData.diagnosedDiseases.hasDisease}
+                        placeholder="Ej: Diabetes, Hipertensión..."
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div className="col-12 col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor="diagnosedDiseases-sinceWhen">¿Desde cuándo?</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="diagnosedDiseases-sinceWhen"
+                        name="sinceWhen"
+                        title="¿Desde cuándo?"
+                        aria-label="¿Desde cuándo tiene la enfermedad?"
+                        value={formData.diagnosedDiseases.sinceWhen}
+                        onChange={(e) => handleInputChange('diagnosedDiseases', 'sinceWhen', e.target.value)}
+                        disabled={!formData.diagnosedDiseases.hasDisease}
+                        placeholder="Ej: Hace 2 años, Desde 2020..."
+                      />
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <div className="form-check mb-3 d-flex align-items-center" style={{ minHeight: '38px' }}>
+                      <input
+                        className="form-check-input me-2"
+                        type="checkbox"
+                        id="diagnosedDiseases-takesMedication"
+                        name="takesMedication"
+                        checked={Boolean(formData.diagnosedDiseases.takesMedication)}
+                        onChange={(e) => handleInputChange('diagnosedDiseases', 'takesMedication', e.target.checked)}
+                        disabled={!formData.diagnosedDiseases.hasDisease}
+                        title="Marcar si el paciente toma medicamentos"
+                        aria-label="Toma medicamentos"
+                      />
+                      <label 
+                        className="form-check-label" 
+                        htmlFor="diagnosedDiseases-takesMedication"
+                      >
+                        Toma medicamentos
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label" htmlFor="diagnosedDiseases-medicationsList">
+                    Lista de Medicamentos
+                    <small className="text-muted ms-2">(Separar con comas)</small>
+                  </label>
+                  <textarea
+                    className="form-control"
+                    id="diagnosedDiseases-medicationsList"
+                    name="medicationsList"
+                    title="Lista de Medicamentos"
+                    aria-label="Lista de Medicamentos que toma el paciente"
+                    rows={3}
+                    value={formData.diagnosedDiseases.medicationsList}
+                    onChange={(e) => handleInputChange('diagnosedDiseases', 'medicationsList', e.target.value)}
+                    disabled={!formData.diagnosedDiseases.takesMedication}
+                    placeholder="Ej: Metformina 500mg, Losartán 50mg, Aspirina 100mg"
+                  />
+                  <div className="form-text">
+                    Escriba cada medicamento separado por comas. Incluya la dosis si la conoce.
+                  </div>
+                </div>
+
+                <hr className="my-4" />
+
+                <h6 className="mb-3">Enfermedades Importantes</h6>
+                <div className="row">
+                  <div className="col-12 col-md-6">
+                    <div className="form-check mb-3">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="diagnosedDiseases-hasImportantDisease"
+                        name="hasImportantDisease"
+                        checked={Boolean(formData.diagnosedDiseases.hasImportantDisease)}
+                        onChange={(e) => handleInputChange('diagnosedDiseases', 'hasImportantDisease', e.target.checked)}
+                        title="Marcar si el paciente tiene alguna enfermedad importante"
+                        aria-label="Tiene enfermedad importante"
+                      />
+                      <label 
+                        className="form-check-label" 
+                        htmlFor="diagnosedDiseases-hasImportantDisease"
+                      >
+                        Tiene enfermedad importante
+                      </label>
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor="diagnosedDiseases-importantDiseaseName">Nombre de la Enfermedad Importante</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="diagnosedDiseases-importantDiseaseName"
+                        name="importantDiseaseName"
+                        title="Nombre de la Enfermedad Importante"
+                        aria-label="Nombre de la Enfermedad Importante"
+                        value={formData.diagnosedDiseases.importantDiseaseName}
+                        onChange={(e) => handleInputChange('diagnosedDiseases', 'importantDiseaseName', e.target.value)}
+                        disabled={!formData.diagnosedDiseases.hasImportantDisease}
+                        placeholder="Ej: Cáncer, Insuficiencia renal..."
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div className="col-12 col-md-6">
+                    <div className="form-check mb-3">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="diagnosedDiseases-takesSpecialTreatment"
+                        name="takesSpecialTreatment"
+                        checked={Boolean(formData.diagnosedDiseases.takesSpecialTreatment)}
+                        onChange={(e) => handleInputChange('diagnosedDiseases', 'takesSpecialTreatment', e.target.checked)}
+                        title="Marcar si el paciente lleva tratamiento especial"
+                        aria-label="Lleva tratamiento especial"
+                      />
+                      <label 
+                        className="form-check-label" 
+                        htmlFor="diagnosedDiseases-takesSpecialTreatment"
+                      >
+                        Lleva tratamiento especial
+                      </label>
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor="diagnosedDiseases-specialTreatmentDetails">Detalles del Tratamiento</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="diagnosedDiseases-specialTreatmentDetails"
+                        name="specialTreatmentDetails"
+                        title="Detalles del Tratamiento"
+                        aria-label="Detalles del Tratamiento Especial"
+                        value={formData.diagnosedDiseases.specialTreatmentDetails}
+                        onChange={(e) => handleInputChange('diagnosedDiseases', 'specialTreatmentDetails', e.target.value)}
+                        disabled={!formData.diagnosedDiseases.takesSpecialTreatment}
+                        placeholder="Ej: Quimioterapia, Diálisis..."
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div className="col-12 col-md-6">
+                    <div className="form-check mb-3">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="diagnosedDiseases-hasSurgery"
+                        name="hasSurgery"
+                        checked={Boolean(formData.diagnosedDiseases.hasSurgery)}
+                        onChange={(e) => handleInputChange('diagnosedDiseases', 'hasSurgery', e.target.checked)}
+                        title="Marcar si el paciente ha tenido cirugías"
+                        aria-label="Ha tenido cirugías"
+                      />
+                      <label 
+                        className="form-check-label" 
+                        htmlFor="diagnosedDiseases-hasSurgery"
+                      >
+                        Ha tenido cirugías
+                      </label>
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor="diagnosedDiseases-surgeryDetails">Detalles de Cirugías</label>
+                      <textarea
+                        className="form-control"
+                        id="diagnosedDiseases-surgeryDetails"
+                        name="surgeryDetails"
+                        title="Detalles de Cirugías"
+                        aria-label="Detalles de Cirugías"
+                        rows={2}
+                        value={formData.diagnosedDiseases.surgeryDetails}
+                        onChange={(e) => handleInputChange('diagnosedDiseases', 'surgeryDetails', e.target.value)}
+                        disabled={!formData.diagnosedDiseases.hasSurgery}
+                        placeholder="Ej: Apendicectomía en 2019, Colecistectomía..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Paso 4: Antecedentes Familiares */}
+            {currentStep === 4 && (
+              <div className="step-content">
+                <h6 className="mb-3">
+                  <i className="fas fa-users me-2" aria-hidden="true"></i>
+                  Antecedentes Familiares
+                </h6>
+                
+                <div className="mb-4">
+                  <p className="text-muted">
+                    Marque las condiciones médicas que hayan presentado familiares directos (padres, hermanos, abuelos).
+                  </p>
+                  
+                  <div className="row">
+                    {[
+                      { key: 'obesity', label: 'Obesidad', color: 'bg-warning' },
+                      { key: 'diabetes', label: 'Diabetes', color: 'bg-danger' },
+                      { key: 'hta', label: 'Hipertensión (HTA)', color: 'bg-info' },
+                      { key: 'cancer', label: 'Cáncer', color: 'bg-dark' },
+                      { key: 'hypoHyperthyroidism', label: 'Problemas de Tiroides', color: 'bg-primary' },
+                      { key: 'dyslipidemia', label: 'Dislipidemia', color: 'bg-secondary' },
+                    ].map(({ key, label, color }) => {
+                      const checkboxId = `familyMedicalHistory-${key}`;
+                      const isChecked = Boolean(formData.familyMedicalHistory[key as keyof typeof formData.familyMedicalHistory]);
+                      return (
+                        <div key={key} className="col-6 col-md-4 mb-3">
+                          <div className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              id={checkboxId}
+                              name={key}
+                              checked={isChecked}
+                              onChange={(e) => {
+                                console.log(`Family history ${key} changed:`, e.target.checked); // Debug
+                                handleInputChange('familyMedicalHistory', key, e.target.checked);
+                              }}
+                              title={`Marcar si familiares han tenido ${label.toLowerCase()}`}
+                              aria-label={`${label} - Antecedentes familiares`}
+                            />
+                            <label 
+                              className="form-check-label" 
+                              htmlFor={checkboxId}
+                              style={{ cursor: 'pointer', userSelect: 'none' }}
+                            >
+                              <span className={`badge ${color} me-2`}></span>
+                              {label}
+                            </label>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label" htmlFor="familyMedicalHistory-otherHistory">
+                    Otros Antecedentes Familiares
+                  </label>
+                  <textarea
+                    className="form-control"
+                    id="familyMedicalHistory-otherHistory"
+                    name="familyMedicalHistory-otherHistory"
+                    title="Otros Antecedentes Familiares"
+                    aria-label="Otros antecedentes familiares no mencionados arriba"
+                    rows={3}
+                    value={formData.familyMedicalHistory.otherHistory}
+                    onChange={(e) => handleInputChange('familyMedicalHistory', 'otherHistory', e.target.value)}
+                    placeholder="Ej: Abuelo materno con enfermedad cardíaca, tía con artritis reumatoide, historial familiar de migrañas..."
+                  />
+                  <div className="form-text">
+                    Mencione cualquier otra condición médica relevante en la familia que no esté listada arriba.
+                  </div>
+                </div>
+
+                <div className="alert alert-info">
+                  <i className="fas fa-info-circle me-2"></i>
+                  <strong>Nota:</strong> La información sobre antecedentes familiares ayuda a identificar factores de riesgo genéticos y elaborar un plan nutricional más personalizado.
+                </div>
+              </div>
+            )}
+
+            {/* Paso 5: Estilo de Vida */}
+            {currentStep === 5 && (
+              <div className="step-content">
+                <h6 className="mb-3">
+                  <i className="fas fa-running me-2" aria-hidden="true"></i>
+                  Estilo de Vida del Paciente
+                </h6>
+                
+                {/* Nivel de Actividad */}
+                <div className="mb-4">
+                  <h6 className="mb-3">Nivel de Actividad</h6>
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="activityLevelDescription">Descripción del Nivel de Actividad</label>
+                    <textarea
+                      className="form-control"
+                      id="activityLevelDescription"
+                      name="activityLevelDescription"
+                      title="Descripción del Nivel de Actividad"
+                      aria-label="Descripción del nivel de actividad del paciente"
+                      rows={3}
+                      value={formData.activityLevelDescription}
+                      onChange={(e) => handleBasicChange('activityLevelDescription', e.target.value)}
+                      placeholder="Ej: Sedentario, trabajo de oficina, camina ocasionalmente..."
+                    />
+                  </div>
+                </div>
+
+                {/* Ejercicio Físico */}
+                <div className="mb-4">
+                  <h6 className="mb-3">Ejercicio Físico</h6>
+                  <div className="row">
+                    <div className="col-12 col-md-6">
+                      <div className="form-check mb-3">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id="physicalExercise-performsExercise"
+                          name="performsExercise"
+                          checked={Boolean(formData.physicalExercise.performsExercise)}
+                          onChange={(e) => handleInputChange('physicalExercise', 'performsExercise', e.target.checked)}
+                          title="Marcar si el paciente realiza ejercicio físico"
+                          aria-label="Realiza ejercicio físico"
+                        />
+                        <label 
+                          className="form-check-label" 
+                          htmlFor="physicalExercise-performsExercise"
+                        >
+                          ¿Realiza ejercicio físico?
+                        </label>
+                      </div>
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label" htmlFor="physicalExercise-type">Tipo de Ejercicio</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="physicalExercise-type"
+                          name="physicalExercise-type"
+                          title="Tipo de Ejercicio"
+                          aria-label="Tipo de ejercicio que realiza"
+                          value={formData.physicalExercise.type}
+                          onChange={(e) => handleInputChange('physicalExercise', 'type', e.target.value)}
+                          disabled={!formData.physicalExercise.performsExercise}
+                          placeholder="Ej: Caminar, correr, natación, gimnasio..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="row">
+                    <div className="col-12 col-md-4">
+                      <div className="mb-3">
+                        <label className="form-label" htmlFor="physicalExercise-frequency">Frecuencia</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="physicalExercise-frequency"
+                          name="physicalExercise-frequency"
+                          title="Frecuencia del Ejercicio"
+                          aria-label="Frecuencia con la que realiza ejercicio"
+                          value={formData.physicalExercise.frequency}
+                          onChange={(e) => handleInputChange('physicalExercise', 'frequency', e.target.value)}
+                          disabled={!formData.physicalExercise.performsExercise}
+                          placeholder="Ej: 3 veces por semana"
+                        />
+                      </div>
+                    </div>
+                    <div className="col-12 col-md-4">
+                      <div className="mb-3">
+                        <label className="form-label" htmlFor="physicalExercise-duration">Duración</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="physicalExercise-duration"
+                          name="physicalExercise-duration"
+                          title="Duración del Ejercicio"
+                          aria-label="Duración de cada sesión de ejercicio"
+                          value={formData.physicalExercise.duration}
+                          onChange={(e) => handleInputChange('physicalExercise', 'duration', e.target.value)}
+                          disabled={!formData.physicalExercise.performsExercise}
+                          placeholder="Ej: 45 minutos"
+                        />
+                      </div>
+                    </div>
+                    <div className="col-12 col-md-4">
+                      <div className="mb-3">
+                        <label className="form-label" htmlFor="physicalExercise-sinceWhen">¿Desde cuándo?</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="physicalExercise-sinceWhen"
+                          name="physicalExercise-sinceWhen"
+                          title="¿Desde cuándo realiza ejercicio?"
+                          aria-label="¿Desde cuándo realiza ejercicio?"
+                          value={formData.physicalExercise.sinceWhen}
+                          onChange={(e) => handleInputChange('physicalExercise', 'sinceWhen', e.target.value)}
+                          disabled={!formData.physicalExercise.performsExercise}
+                          placeholder="Ej: Hace 2 años"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hábitos de Consumo */}
+                <div className="mb-4">
+                  <h6 className="mb-3">Hábitos de Consumo</h6>
+                  <div className="row">
+                    <div className="col-12 col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label" htmlFor="consumptionHabits-alcohol">Consumo de Alcohol</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="consumptionHabits-alcohol"
+                          name="consumptionHabits-alcohol"
+                          title="Consumo de Alcohol"
+                          aria-label="Describe el consumo de alcohol"
+                          value={formData.consumptionHabits.alcohol}
+                          onChange={(e) => handleInputChange('consumptionHabits', 'alcohol', e.target.value)}
+                          placeholder="Ej: Social, fin de semana, nunca, diario..."
+                        />
+                      </div>
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label" htmlFor="consumptionHabits-tobacco">Consumo de Tabaco</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="consumptionHabits-tobacco"
+                          name="consumptionHabits-tobacco"
+                          title="Consumo de Tabaco"
+                          aria-label="Describe el consumo de tabaco"
+                          value={formData.consumptionHabits.tobacco}
+                          onChange={(e) => handleInputChange('consumptionHabits', 'tobacco', e.target.value)}
+                          placeholder="Ej: No fuma, 5 cigarrillos/día, dejó hace 1 año..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="row">
+                    <div className="col-12 col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label" htmlFor="consumptionHabits-coffee">Consumo de Café</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="consumptionHabits-coffee"
+                          name="consumptionHabits-coffee"
+                          title="Consumo de Café"
+                          aria-label="Describe el consumo de café"
+                          value={formData.consumptionHabits.coffee}
+                          onChange={(e) => handleInputChange('consumptionHabits', 'coffee', e.target.value)}
+                          placeholder="Ej: 2 tazas al día, no toma café, solo por la mañana..."
+                        />
+                      </div>
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label" htmlFor="consumptionHabits-otherSubstances">Otras Sustancias</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="consumptionHabits-otherSubstances"
+                          name="consumptionHabits-otherSubstances"
+                          title="Otras Sustancias"
+                          aria-label="Describe el consumo de otras sustancias"
+                          value={formData.consumptionHabits.otherSubstances}
+                          onChange={(e) => handleInputChange('consumptionHabits', 'otherSubstances', e.target.value)}
+                          placeholder="Ej: Té, bebidas energéticas, ninguna..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hidratación */}
+                <div className="mb-4">
+                  <h6 className="mb-3">Hidratación</h6>
+                  <div className="row">
+                    <div className="col-12 col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label" htmlFor="waterConsumptionLiters">Consumo de Agua (litros/día)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          max="10"
+                          className="form-control"
+                          id="waterConsumptionLiters"
+                          name="waterConsumptionLiters"
+                          title="Consumo de Agua (litros/día)"
+                          aria-label="Consumo diario de agua en litros"
+                          value={formData.waterConsumptionLiters}
+                          onChange={(e) => handleBasicChange('waterConsumptionLiters', e.target.value)}
+                          placeholder="Ej: 1.5"
+                        />
+                        <div className="form-text">
+                          Cantidad aproximada de agua pura que consume diariamente (no incluye otras bebidas)
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Paso 6: Mediciones */}
+            {currentStep === 6 && (
               <div className="step-content">
                 <h6 className="mb-3">
                   <i className="fas fa-ruler me-2" aria-hidden="true"></i>
@@ -580,11 +1265,14 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                       <label className="form-label" htmlFor="bloodPressure-systolic">Sistólica</label>
                       <input
                         type="number"
-                        className="form-control"
+                        className={`form-control ${validationErrors.bloodPressure ? 'is-invalid' : ''}`}
                         id="bloodPressure-systolic"
                         name="bloodPressure-systolic"
                         title="Sistólica"
                         aria-label="Presión arterial sistólica"
+                        min="50"
+                        max="250"
+                        placeholder="Ej: 120"
                         value={formData.bloodPressure.systolic}
                         onChange={(e) => handleInputChange('bloodPressure', 'systolic', e.target.value)}
                         disabled={!formData.bloodPressure.knowsBp}
@@ -596,11 +1284,14 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                       <label className="form-label" htmlFor="bloodPressure-diastolic">Diastólica</label>
                       <input
                         type="number"
-                        className="form-control"
+                        className={`form-control ${validationErrors.bloodPressure ? 'is-invalid' : ''}`}
                         id="bloodPressure-diastolic"
                         name="bloodPressure-diastolic"
                         title="Diastólica"
                         aria-label="Presión arterial diastólica"
+                        min="30"
+                        max="150"
+                        placeholder="Ej: 80"
                         value={formData.bloodPressure.diastolic}
                         onChange={(e) => handleInputChange('bloodPressure', 'diastolic', e.target.value)}
                         disabled={!formData.bloodPressure.knowsBp}
@@ -608,11 +1299,20 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                     </div>
                   </div>
                 </div>
+                {/* Mostrar error de validación de presión arterial */}
+                {validationErrors.bloodPressure && (
+                  <div className="alert alert-warning d-flex align-items-center mt-3" role="alert">
+                    <i className="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>
+                    <div>
+                      <strong>⚠️ Verificar Presión Arterial:</strong> {validationErrors.bloodPressure}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Paso 4: Historia Dietética */}
-            {currentStep === 4 && (
+            {/* Paso 7: Historia Dietética */}
+            {currentStep === 7 && (
               <div className="step-content">
                 <h6 className="mb-3">
                   <i className="fas fa-utensils me-2" aria-hidden="true"></i>
@@ -771,8 +1471,8 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
               </div>
             )}
 
-            {/* Paso 5: Diagnóstico y Plan */}
-            {currentStep === 5 && (
+            {/* Paso 8: Diagnóstico y Plan */}
+            {currentStep === 8 && (
               <div className="step-content">
                 <h6 className="mb-3">
                   <i className="fas fa-stethoscope me-2" aria-hidden="true"></i>

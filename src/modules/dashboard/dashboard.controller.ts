@@ -18,7 +18,7 @@ export class DashboardController {
         throw new AppError('Usuario no autenticado', 401);
       }
 
-      const stats = await this.dashboardService.getSimpleDashboardStats();
+      const stats = await this.dashboardService.getSimpleDashboardStats(nutritionistId);
       
       res.json({
         status: 'success',

@@ -100,22 +100,32 @@ const generalLimiter = rateLimit({
     }
 });
 
-// Rate limiting estricto para autenticación - 5 intentos por 15 minutos
+// Rate limiting para autenticación - RELAJADO PARA DESARROLLO
 const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 5, // máximo 5 intentos de login por ventana de tiempo
+    windowMs: process.env.NODE_ENV === 'production' ? 15 * 60 * 1000 : 5 * 60 * 1000, // 15 min en prod, 5 min en dev
+    max: process.env.NODE_ENV === 'production' ? 5 : 50, // 5 en producción, 50 en desarrollo
     message: {
-        error: 'Demasiados intentos de inicio de sesión, por favor intenta de nuevo en 15 minutos.',
+        error: 'Demasiados intentos de inicio de sesión, por favor intenta de nuevo en unos minutos.',
         code: 'AUTH_RATE_LIMIT_EXCEEDED'
     },
     skipSuccessfulRequests: true,
+    // En desarrollo, ser menos restrictivo
+    skip: (req: Request) => {
+        // Saltar rate limiting para localhost en desarrollo
+        if (process.env.NODE_ENV !== 'production') {
+            const ip = req.ip || req.connection.remoteAddress || '';
+            return ip.includes('127.0.0.1') || ip.includes('::1') || ip.includes('localhost');
+        }
+        return false;
+    },
     // Headers personalizados para accesibilidad
     handler: (req: Request, res: Response) => {
+        const retryAfter = process.env.NODE_ENV === 'production' ? Math.ceil(15 * 60 / 1000) : Math.ceil(5 * 60 / 1000);
         res.status(429).json({
             status: 'error',
-            message: 'Demasiados intentos de inicio de sesión, por favor intenta de nuevo en 15 minutos.',
+            message: 'Demasiados intentos de inicio de sesión, por favor intenta de nuevo en unos minutos.',
             code: 'AUTH_RATE_LIMIT_EXCEEDED',
-            retryAfter: Math.ceil(15 * 60 / 1000) // segundos
+            retryAfter: retryAfter
         });
     }
 });
@@ -183,6 +193,23 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     
     next();
 });
+
+// Servir archivos estáticos - PDFs generados y documentos de laboratorio
+app.use('/generated-pdfs', express.static('generated-pdfs', {
+    setHeaders: (res, path) => {
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline'); // Para mostrar en el navegador en lugar de descargar
+    }
+}));
+
+app.use('/uploads', express.static('uploads', {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.pdf')) {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'inline');
+        }
+    }
+}));
 
 // Endpoint de health check mejorado
 app.get('/api/health', (req: Request, res: Response) => {

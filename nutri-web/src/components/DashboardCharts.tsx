@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Row, Col, Badge } from 'react-bootstrap';
+import { Card, Row, Col } from 'react-bootstrap';
 
 interface DashboardChartsProps {
   stats: any;
@@ -21,18 +21,6 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
 
   const formatPercentage = (value: number) => {
     return `${value.toFixed(1)}%`;
-  };
-
-  const getTrendIcon = (current: number, previous: number) => {
-    if (current > previous) return '↗️';
-    if (current < previous) return '↘️';
-    return '→';
-  };
-
-  const getTrendColor = (current: number, previous: number) => {
-    if (current > previous) return 'success';
-    if (current < previous) return 'danger';
-    return 'secondary';
   };
 
   return (

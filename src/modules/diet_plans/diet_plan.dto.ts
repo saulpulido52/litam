@@ -257,6 +257,10 @@ export class UpdateDietPlanDto {
     dailyMacrosTarget?: { protein?: number; carbohydrates?: number; fats?: number };
 
     @IsOptional()
+    @IsBoolean({ message: 'isWeeklyPlan debe ser un booleano.' })
+    isWeeklyPlan?: boolean;
+
+    @IsOptional()
     @IsNumber({}, { message: 'El número total de semanas debe ser un número.' })
     @Min(1, { message: 'El número total de semanas debe ser mayor que 0.' })
     @Max(52, { message: 'El número total de semanas no puede exceder 52.' })

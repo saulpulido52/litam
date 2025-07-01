@@ -120,17 +120,51 @@ class DietPlansService {
     }
   }
 
+  // Transformar datos del formulario a formato de actualización
+  private transformFormDataToUpdateData(formData: any): any {
+    const updateData: any = {
+      name: formData.name,
+      description: formData.description || '',
+      notes: formData.notes || '',
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      dailyCaloriesTarget: formData.dailyCaloriesTarget,
+      dailyMacrosTarget: formData.dailyMacrosTarget,
+      totalWeeks: formData.totalWeeks,
+      isWeeklyPlan: formData.isWeeklyPlan,
+      weeklyPlans: formData.weeklyPlans,
+      status: formData.status
+    };
+
+    // Solo incluir campos que tienen valor para evitar sobrescribir con undefined
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
+
+    return updateData;
+  }
+
   // Actualizar un plan de dieta existente
-  async updateDietPlan(dietPlanId: string, updateData: Partial<DietPlan>): Promise<DietPlan> {
+  async updateDietPlan(dietPlanId: string, updateData: any): Promise<DietPlan> {
     try {
-      const response = await apiService.put<{ dietPlan: any }>(`/diet-plans/${dietPlanId}`, updateData);
+      console.log('🟢 dietPlansService - Actualizando plan con ID:', dietPlanId);
+      console.log('🟢 dietPlansService - Datos recibidos:', updateData);
+      
+      // Si los datos vienen del formulario (CreateDietPlanDto), transformarlos
+      const transformedData = this.transformFormDataToUpdateData(updateData);
+      console.log('🟢 dietPlansService - Datos transformados para actualización:', transformedData);
+      
+      const response = await apiService.patch<{ dietPlan: any }>(`/diet-plans/${dietPlanId}`, transformedData);
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error updating diet plan');
       }
       
+      console.log('🟢 dietPlansService - Respuesta de actualización:', response);
       return this.transformBackendPlan(response.data.dietPlan);
     } catch (error) {
-      console.error('Error updating diet plan:', error);
+      console.error('🔴 dietPlansService - Error updating diet plan:', error);
       throw error;
     }
   }

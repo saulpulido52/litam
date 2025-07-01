@@ -263,6 +263,7 @@ class DietPlanService {
 
         const newDietPlan = this.dietPlanRepository.create({
             name: dietPlanDto.name,
+            description: dietPlanDto.description,
             patient: patient,
             nutritionist: nutritionist,
             notes: dietPlanDto.notes,
@@ -605,10 +606,14 @@ class DietPlanService {
 
 
         if (updateDto.name !== undefined) dietPlan.name = updateDto.name;
+        if (updateDto.description !== undefined) dietPlan.description = updateDto.description;
         if (updateDto.notes !== undefined) dietPlan.notes = updateDto.notes;
         if (updateDto.startDate !== undefined) dietPlan.start_date = new Date(updateDto.startDate);
         if (updateDto.endDate !== undefined) dietPlan.end_date = new Date(updateDto.endDate);
         if (updateDto.dailyCaloriesTarget !== undefined) dietPlan.daily_calories_target = updateDto.dailyCaloriesTarget;
+        if (updateDto.isWeeklyPlan !== undefined) dietPlan.is_weekly_plan = updateDto.isWeeklyPlan;
+        if (updateDto.totalWeeks !== undefined) dietPlan.total_weeks = updateDto.totalWeeks;
+        if (updateDto.weeklyPlans !== undefined) dietPlan.weekly_plans = updateDto.weeklyPlans;
 
         if (updateDto.dailyMacrosTarget !== undefined) {
             const { protein, carbohydrates, fats } = updateDto.dailyMacrosTarget;

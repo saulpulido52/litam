@@ -1,4 +1,45 @@
 // Clinical Record Types
+
+// Tipos para documentos de laboratorio
+export interface LaboratoryDocument {
+  id: string;
+  filename: string;
+  original_name: string;
+  file_path: string;
+  file_url: string;
+  file_size: number;
+  upload_date: Date;
+  uploaded_by: 'patient' | 'nutritionist';
+  description?: string;
+  lab_date?: Date;
+}
+
+// Tipos para medicamentos
+export interface Medication {
+  id: string;
+  name: string;
+  generic_name?: string;
+  dosage?: string;
+  frequency?: string;
+}
+
+// Tipos para interacciones fármaco-nutriente
+export interface DrugNutrientInteraction {
+  id: string;
+  medication: Medication;
+  nutrients_affected: string[];
+  interaction_type: 'absorption' | 'metabolism' | 'excretion' | 'antagonism';
+  severity: 'low' | 'moderate' | 'high' | 'critical';
+  description: string;
+  recommendations: string[];
+  timing_considerations?: string;
+  foods_to_avoid?: string[];
+  foods_to_increase?: string[];
+  monitoring_required?: boolean;
+  created_date: Date;
+  updated_date: Date;
+}
+
 export interface ClinicalRecord {
   id: string;
   record_date: string;
@@ -29,8 +70,8 @@ export interface ClinicalRecord {
     pyrosis?: boolean;
     vomiting?: boolean;
     colitis?: boolean;
-    mouthMechanics?: string;
-    otherProblems?: string;
+    mouth_mechanics?: string;
+    other_problems?: string;
     observations?: string;
   };
 
@@ -215,6 +256,15 @@ export interface ClinicalRecord {
   evolution_and_follow_up_notes?: string;
   graph_url?: string;
 
+  // 📄 NUEVOS CAMPOS PARA DOCUMENTOS Y INTERACCIONES
+  laboratory_documents?: LaboratoryDocument[];
+  drug_nutrient_interactions?: DrugNutrientInteraction[];
+  document_metadata?: {
+    last_pdf_generated?: Date;
+    pdf_version?: number;
+    total_attachments?: number;
+  };
+
   created_at: string;
   updated_at: string;
 }
@@ -234,8 +284,8 @@ export interface CreateClinicalRecordDto {
     pyrosis?: boolean;
     vomiting?: boolean;
     colitis?: boolean;
-    mouthMechanics?: string;
-    otherProblems?: string;
+    mouth_mechanics?: string;
+    other_problems?: string;
     observations?: string;
   };
   diagnosedDiseases?: {
@@ -243,7 +293,7 @@ export interface CreateClinicalRecordDto {
     diseaseName?: string;
     sinceWhen?: string;
     takesMedication?: boolean;
-    medicationsList?: string[];
+    medications_list?: string[];
     hasImportantDisease?: boolean;
     importantDiseaseName?: string;
     takesSpecialTreatment?: boolean;

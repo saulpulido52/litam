@@ -1,8 +1,8 @@
 // check-db-structure.ts
 import 'dotenv/config';
 import { AppDataSource } from './src/database/data-source';
-import { Role, RoleName } from '@/database/entities/role.entity';
-import { User } from '@/database/entities/user.entity';
+import { Role, RoleName } from './src/database/entities/role.entity';
+import { User } from './src/database/entities/user.entity';
 
 async function checkDatabaseStructure() {
     try {

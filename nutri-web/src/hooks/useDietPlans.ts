@@ -21,7 +21,7 @@ interface UseDietPlansReturn {
   fetchAllDietPlans: () => Promise<void>;
   createDietPlan: (data: CreateDietPlanDto) => Promise<DietPlan>;
   generateDietPlanWithAI: (data: GenerateAIDietDto) => Promise<DietPlan>;
-  updateDietPlan: (id: string, data: Partial<DietPlan>) => Promise<DietPlan>;
+  updateDietPlan: (id: string, data: any) => Promise<DietPlan>;
   updateDietPlanStatus: (id: string, status: string) => Promise<DietPlan>;
   deleteDietPlan: (id: string) => Promise<void>;
   addWeekToPlan: (dietPlanId: string, weekData: WeeklyPlanDto) => Promise<DietPlan>;
@@ -118,11 +118,16 @@ export const useDietPlans = (): UseDietPlansReturn => {
     }
   }, []);
 
-  const updateDietPlan = useCallback(async (id: string, data: Partial<DietPlan>): Promise<DietPlan> => {
+  const updateDietPlan = useCallback(async (id: string, data: any): Promise<DietPlan> => {
     setLoading(true);
     setError(null);
     try {
+      console.log('🟢 useDietPlans - Actualizando plan con ID:', id);
+      console.log('🟢 useDietPlans - Datos para actualización:', data);
+      
       const updatedPlan = await dietPlansService.updateDietPlan(id, data);
+      
+      console.log('🟢 useDietPlans - Plan actualizado exitosamente:', updatedPlan);
       
       // Refrescar la lista completa desde el backend
       await fetchAllDietPlans();
@@ -130,6 +135,7 @@ export const useDietPlans = (): UseDietPlansReturn => {
       return updatedPlan;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error updating diet plan';
+      console.error('🔴 useDietPlans - Error actualizando plan:', err);
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {

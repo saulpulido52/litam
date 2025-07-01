@@ -1,0 +1,14 @@
+﻿REPORTE DE TESTS DE INDIVIDUALIZACION NUTRI-WEB
+================================================
+Fecha: 06/30/2025 16:14:18
+Duracion: 15.0 segundos
+
+RESULTADOS:
+- Tests unitarios: FALLARON
+- Tests integracion: FALLARON
+- Suites exitosas: 0/2
+
+VERIFICACIONES:
+- Separacion de datos por nutriologo: FAIL - Autenticacion y autorizacion API: FAIL - Sin exposicion de datos cruzados: FAIL - Tests automatizados funcionando: PASS
+
+ESTADO FINAL: PROBLEMAS DETECTADOS

@@ -178,9 +178,9 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
     // Extraer medicamentos del expediente
     if (record.diagnosed_diseases?.medications_list && record.diagnosed_diseases.medications_list.length > 0) {
       restrictions.medications = record.diagnosed_diseases.medications_list.map(medication => ({
-        name: medication,
-        dosage: '',
-        frequency: '',
+        name: medication.name,
+        dosage: medication.dosage || '',
+        frequency: medication.frequency || '',
         foodInteractions: [],
         timingRequirements: ''
       }));
