@@ -77,6 +77,55 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
   ];
 
   const handleSave = () => {
+    console.log('🚀 === INICIO CREACIÓN PLAN NUTRICIONAL ===');
+    console.log('📋 TODOS LOS INPUTS DEL FORMULARIO (planData completo):', {
+      // === DATOS BÁSICOS ===
+      name: planData.name,
+      description: planData.description,
+      patientId: planData.patientId,
+      startDate: planData.startDate,
+      endDate: planData.endDate,
+      notes: planData.notes,
+      
+      // === OBJETIVOS NUTRICIONALES ===
+      dailyCaloriesTarget: planData.dailyCaloriesTarget,
+      dailyMacrosTarget: {
+        protein: planData.dailyMacrosTarget?.protein,
+        carbohydrates: planData.dailyMacrosTarget?.carbohydrates,
+        fats: planData.dailyMacrosTarget?.fats
+      },
+      
+      // === CONFIGURACIÓN TEMPORAL ===
+      isWeeklyPlan: planData.isWeeklyPlan,
+      totalWeeks: planData.totalWeeks,
+      weeklyPlans: planData.weeklyPlans?.length || 0,
+      planType: planData.planType,
+      planPeriod: planData.planPeriod,
+      totalPeriods: planData.totalPeriods,
+      
+      // === DATOS NUTRICIONALES DETALLADOS (Los más importantes) ===
+      waterIntake: planData.waterIntake,
+      fiberTarget: planData.fiberTarget,
+      mealsPerDay: planData.mealsPerDay,
+      calorieDistribution: planData.calorieDistribution,
+      mealTimes: planData.mealTimes,
+      bedTime: planData.bedTime,
+      
+      // === ALERGIAS Y RESTRICCIONES MÉDICAS ===
+      foodAllergies: planData.foodAllergies,
+      foodIntolerances: planData.foodIntolerances,
+      medicalConditions: planData.medicalConditions,
+      medications: planData.medications,
+      
+      // === PREFERENCIAS DIETÉTICAS ===
+      isVegetarian: planData.isVegetarian,
+      isVegan: planData.isVegan,
+      isGlutenFree: planData.isGlutenFree,
+      isLactoseFree: planData.isLactoseFree,
+      isKeto: planData.isKeto,
+      isLowSodium: planData.isLowSodium
+    });
+    
     console.log('🔍 Validando datos antes de guardar:', {
       hasOnSave: !!onSave,
       patientId: planData.patientId,
@@ -111,11 +160,310 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
 
     console.log('💾 Guardando plan nutricional - datos validados correctamente');
     
-    const transformedData = {
-      ...planData,
-      // Usar el patientId del formulario, no el patient prop
-      patientId: planData.patientId
+    // Construir pathologicalRestrictions con estructura compatible con DietPlanViewer
+    const pathologicalRestrictions = {
+      // Información médica (snake_case para compatibilidad con viewer)
+      medical_conditions: planData.medicalConditions ? [
+        {
+          name: 'Condiciones médicas registradas',
+          category: 'medical',
+          severity: 'medium',
+          description: planData.medicalConditions,
+          dietary_implications: [],
+          restricted_foods: [],
+          recommended_foods: [],
+          monitoring_requirements: [],
+          emergency_instructions: ''
+        }
+      ] : [],
+      
+      // Alergias alimentarias
+      allergies: planData.foodAllergies ? [
+        {
+          allergen: planData.foodAllergies,
+          type: 'food',
+          severity: 'medium',
+          symptoms: [],
+          cross_reactions: [],
+          emergency_medication: '',
+          avoidance_instructions: `Evitar completamente: ${planData.foodAllergies}`
+        }
+      ] : [],
+      
+      // Intolerancias
+      intolerances: planData.foodIntolerances ? [
+        {
+          substance: planData.foodIntolerances,
+          type: 'food',
+          severity: 'mild',
+          symptoms: [],
+          threshold_amount: '',
+          alternatives: [],
+          preparation_notes: ''
+        }
+      ] : [],
+      
+      // Medicamentos
+      medications: planData.medications ? [
+        {
+          name: planData.medications,
+          dosage: 'Ver expediente clínico',
+          frequency: 'Según prescripción médica',
+          food_interactions: [],
+          timing_requirements: ''
+        }
+      ] : [],
+      
+      // Consideraciones especiales - SOLO preferencias dietéticas médicas
+      special_considerations: [
+        // SOLO preferencias dietéticas/médicas (NO configuración nutricional)
+        ...(planData.isVegetarian ? ['🌱 Dieta vegetariana'] : []),
+        ...(planData.isVegan ? ['🌿 Dieta vegana'] : []),
+        ...(planData.isGlutenFree ? ['🚫 Sin gluten'] : []),
+        ...(planData.isLactoseFree ? ['🥛 Sin lactosa'] : []),
+        ...(planData.isKeto ? ['🥑 Dieta cetogénica'] : []),
+        ...(planData.isLowSodium ? ['🧂 Bajo en sodio'] : [])
+      ].filter(item => item.length > 0),
+      
+      emergency_contacts: []
     };
+
+    // === GENERAR DATOS INTELIGENTES PARA COMPLETAR TODOS LOS TABS ===
+    
+    console.log('🧠 Generando datos inteligentes para completar pestañas...');
+    
+    // 1. MEAL_FREQUENCY - Frecuencia de comidas basada en mealsPerDay
+    const mealFrequency = {
+      breakfast: true,
+      morning_snack: (planData.mealsPerDay || 3) >= 4,
+      lunch: true,
+      afternoon_snack: (planData.mealsPerDay || 3) >= 5,
+      dinner: true,
+      evening_snack: (planData.mealsPerDay || 3) >= 6
+    };
+    
+    // 2. MEAL_TIMING - Horarios inteligentes basados en mealTimes o defaults + hora de dormir
+    const mealTiming = planData.mealTimes ? {
+      breakfast_time: planData.mealTimes.breakfast || '08:00',
+      lunch_time: planData.mealTimes.lunch || '13:00', 
+      dinner_time: planData.mealTimes.dinner || '19:00',
+      snack_times: [
+        planData.mealTimes.midMorning || '10:30',
+        planData.mealTimes.snack || '16:00'
+      ].filter(time => mealFrequency.morning_snack || mealFrequency.afternoon_snack),
+      bed_time: planData.bedTime || '22:00'
+    } : {
+      breakfast_time: '08:00',
+      lunch_time: '13:00',
+      dinner_time: '19:00',
+      snack_times: mealFrequency.morning_snack ? ['10:30', '16:00'] : [],
+      bed_time: planData.bedTime || '22:00'
+    };
+    
+    // 3. NUTRITIONAL_GOALS - Objetivos nutricionales específicos
+    const nutritionalGoals = {
+      water_intake_liters: planData.waterIntake || 2.5,
+      fiber_target_grams: planData.fiberTarget || 25,
+      calorie_distribution: planData.calorieDistribution || 'balanced',
+      meals_per_day: planData.mealsPerDay || 3
+    };
+    
+    // 4. FLEXIBILITY_SETTINGS - Configuración de flexibilidad inteligente
+    const flexibilitySettings = {
+      allow_meal_swapping: true,
+      allow_portion_adjustment: true,
+      allow_food_substitution: !planData.foodAllergies && !planData.medicalConditions, // Más restrictivo si hay alergias
+      cheat_days_per_week: planData.isKeto ? 0 : 1, // Sin días de trampa si es keto
+      free_meals_per_week: 2
+    };
+    
+    // 5. WEEKLY_PLANS - Generar estructura semanal básica
+    const weeklyPlans = [];
+    for (let week = 1; week <= (planData.totalWeeks || 1); week++) {
+      const startDate = new Date(planData.startDate);
+      startDate.setDate(startDate.getDate() + (week - 1) * 7);
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
+      
+      weeklyPlans.push({
+        week_number: week,
+        start_date: startDate.toISOString().split('T')[0],
+        end_date: endDate.toISOString().split('T')[0],
+        daily_calories_target: planData.dailyCaloriesTarget,
+        daily_macros_target: planData.dailyMacrosTarget,
+        meals: [], // Se llenarán posteriormente por el nutricionista
+        notes: `Semana ${week} - Plan generado automáticamente`
+      });
+    }
+    
+    console.log('✅ Datos inteligentes generados:', {
+      meal_frequency: mealFrequency,
+      meal_timing: mealTiming,
+      nutritional_goals: nutritionalGoals,
+      flexibility_settings: flexibilitySettings,
+      weekly_plans_count: weeklyPlans.length
+    });
+
+    // Filtrar solo los campos que acepta el backend según CreateDietPlanDto
+    const allowedFields = {
+      name: planData.name,
+      patientId: planData.patientId,
+      description: planData.description,
+      startDate: planData.startDate,
+      endDate: planData.endDate,
+      dailyCaloriesTarget: planData.dailyCaloriesTarget,
+      dailyMacrosTarget: planData.dailyMacrosTarget,
+      notes: planData.notes,
+      isWeeklyPlan: planData.isWeeklyPlan,
+      totalWeeks: planData.totalWeeks,
+      weeklyPlans: weeklyPlans, // Planes semanales generados
+      planType: planData.planType,
+      planPeriod: planData.planPeriod,
+      totalPeriods: planData.totalPeriods,
+      pathologicalRestrictions: pathologicalRestrictions,
+      // === NUEVOS CAMPOS PARA COMPLETAR TABS ===
+      mealFrequency: mealFrequency,
+      mealTiming: mealTiming,
+      nutritionalGoals: nutritionalGoals,
+      flexibilitySettings: flexibilitySettings
+    };
+    
+    // Remover campos undefined/null para limpiar el payload
+    const transformedData = Object.fromEntries(
+      Object.entries(allowedFields).filter(([_, value]) => value !== undefined && value !== null && value !== '')
+    );
+    
+    console.log('🛡️ PATHOLOGICAL RESTRICTIONS CONSTRUIDOS (compatible con DietPlanViewer):', {
+      medical_conditions: pathologicalRestrictions.medical_conditions,
+      allergies: pathologicalRestrictions.allergies,
+      intolerances: pathologicalRestrictions.intolerances,
+      medications: pathologicalRestrictions.medications,
+      special_considerations: pathologicalRestrictions.special_considerations,
+      totales: {
+        condiciones_medicas: pathologicalRestrictions.medical_conditions.length,
+        alergias: pathologicalRestrictions.allergies.length,
+        intolerancias: pathologicalRestrictions.intolerances.length,
+        medicamentos: pathologicalRestrictions.medications.length,
+        consideraciones_especiales: pathologicalRestrictions.special_considerations.length
+      }
+    });
+    
+    console.log('🎯 === LO QUE DEBERÍA APARECER EN "DETALLES DEL PLAN NUTRICIONAL" ===');
+    
+    console.log('📋 TAB RESUMEN - Información que se mostrará:', {
+      nombre: allowedFields.name,
+      descripcion: allowedFields.description || 'Sin descripción',
+      fechaInicio: allowedFields.startDate,
+      fechaFin: allowedFields.endDate,
+      duracion: `${allowedFields.totalWeeks} semana${allowedFields.totalWeeks !== 1 ? 's' : ''}`,
+      caloriasDiarias: allowedFields.dailyCaloriesTarget + ' kcal',
+      macronutrientes: {
+        proteinas: allowedFields.dailyMacrosTarget?.protein + 'g',
+        carbohidratos: allowedFields.dailyMacrosTarget?.carbohydrates + 'g',
+        grasas: allowedFields.dailyMacrosTarget?.fats + 'g'
+      },
+      notas: allowedFields.notes || 'Sin notas'
+    });
+    
+    console.log('🍽️ TAB COMIDAS - Contenido que se mostrará:', {
+      estado: '✅ COMPLETO CON DATOS INTELIGENTES',
+      cantidadSemanas: allowedFields.weeklyPlans.length,
+      primeraSemanaDatos: {
+        semana: allowedFields.weeklyPlans[0]?.week_number,
+        fechaInicio: allowedFields.weeklyPlans[0]?.start_date,
+        fechaFin: allowedFields.weeklyPlans[0]?.end_date,
+        calorias: allowedFields.weeklyPlans[0]?.daily_calories_target,
+        macros: allowedFields.weeklyPlans[0]?.daily_macros_target
+      },
+      nota: 'Estructura semanal generada automáticamente - nutricionista puede agregar comidas específicas después'
+    });
+    
+    console.log('🎯 TAB NUTRICIÓN - Contenido que se mostrará:', {
+      estado: '✅ COMPLETO CON DATOS INTELIGENTES',
+      objetivosNutricionales: {
+        ingestaAgua: `${allowedFields.nutritionalGoals.water_intake_liters}L diarios`,
+        objetivoFibra: `${allowedFields.nutritionalGoals.fiber_target_grams}g diarios`,
+        comidasPorDia: `${allowedFields.nutritionalGoals.meals_per_day} comidas`,
+        distribucionCalorica: allowedFields.nutritionalGoals.calorie_distribution
+      },
+      frecuenciaComidas: {
+        desayuno: allowedFields.mealFrequency.breakfast ? '✓' : '✗',
+        meriendaManana: allowedFields.mealFrequency.morning_snack ? '✓' : '✗',
+        almuerzo: allowedFields.mealFrequency.lunch ? '✓' : '✗',
+        meriendaTarde: allowedFields.mealFrequency.afternoon_snack ? '✓' : '✗',
+        cena: allowedFields.mealFrequency.dinner ? '✓' : '✗',
+        meriendaNoche: allowedFields.mealFrequency.evening_snack ? '✓' : '✗'
+      },
+      configuracionFlexibilidad: {
+        intercambioComidas: allowedFields.flexibilitySettings.allow_meal_swapping ? '✓' : '✗',
+        ajustePorciones: allowedFields.flexibilitySettings.allow_portion_adjustment ? '✓' : '✗',
+        sustitucionAlimentos: allowedFields.flexibilitySettings.allow_food_substitution ? '✓' : '✗',
+        diasTrampaSemanales: allowedFields.flexibilitySettings.cheat_days_per_week,
+        comidasLibresSemanales: allowedFields.flexibilitySettings.free_meals_per_week
+      }
+    });
+    
+    console.log('⏰ TAB HORARIOS - Contenido que se mostrará:', {
+      estado: '✅ COMPLETO CON DATOS INTELIGENTES',
+      horariosComidas: {
+        desayuno: allowedFields.mealTiming.breakfast_time,
+        almuerzo: allowedFields.mealTiming.lunch_time,
+        cena: allowedFields.mealTiming.dinner_time,
+        meriendas: allowedFields.mealTiming.snack_times
+      },
+      horaDormir: allowedFields.mealTiming.bed_time,
+      basadoEn: planData.mealTimes ? 'Horarios del formulario' : 'Horarios por defecto'
+    });
+    
+    console.log('🛡️ TAB RESTRICCIONES - Información que se mostrará:');
+    if (pathologicalRestrictions.medical_conditions.length > 0) {
+      console.log('🏥 CONDICIONES MÉDICAS que aparecerán:', pathologicalRestrictions.medical_conditions.map(condition => ({
+        nombre: condition.name,
+        descripcion: condition.description,
+        categoria: condition.category
+      })));
+    } else {
+      console.log('🏥 CONDICIONES MÉDICAS: Sin condiciones médicas registradas');
+    }
+    
+    if (pathologicalRestrictions.allergies.length > 0) {
+      console.log('🥜 ALERGIAS que aparecerán:', pathologicalRestrictions.allergies.map(allergy => ({
+        alérgeno: allergy.allergen,
+        tipo: allergy.type,
+        severidad: allergy.severity,
+        instrucciones: allergy.avoidance_instructions
+      })));
+    } else {
+      console.log('🥜 ALERGIAS: Sin alergias registradas');
+    }
+    
+    if (pathologicalRestrictions.intolerances.length > 0) {
+      console.log('🤧 INTOLERANCIAS que aparecerán:', pathologicalRestrictions.intolerances.map(intolerance => ({
+        sustancia: intolerance.substance,
+        tipo: intolerance.type,
+        severidad: intolerance.severity
+      })));
+    } else {
+      console.log('🤧 INTOLERANCIAS: Sin intolerancias registradas');
+    }
+    
+    if (pathologicalRestrictions.medications.length > 0) {
+      console.log('💊 MEDICAMENTOS que aparecerán:', pathologicalRestrictions.medications.map(medication => ({
+        nombre: medication.name,
+        dosis: medication.dosage,
+        frecuencia: medication.frequency
+      })));
+    } else {
+      console.log('💊 MEDICAMENTOS: Sin medicamentos registrados');
+    }
+    
+    if (pathologicalRestrictions.special_considerations.length > 0) {
+      console.log('✨ CONSIDERACIONES ESPECIALES que aparecerán:', pathologicalRestrictions.special_considerations);
+    } else {
+      console.log('✨ CONSIDERACIONES ESPECIALES: Sin consideraciones especiales');
+    }
+    
+    console.log('🎯 === FIN PREVISUALIZACIÓN DE DETALLES ===');
     
     console.log('📤 Enviando datos transformados:', JSON.stringify(transformedData, null, 2));
     
@@ -130,10 +478,22 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
     }
     
     try {
-      console.log('🚀 Llamando a onSave...');
+      console.log('🚀 Llamando a onSave con datos transformados...');
+      console.log('📤 PAYLOAD FINAL ENVIADO AL BACKEND:', JSON.stringify(transformedData, null, 2));
+      
       onSave(transformedData);
+      
+      console.log('✅ onSave ejecutado exitosamente');
+      console.log('🎯 INSTRUCCIONES PARA VER LOS DATOS GUARDADOS:');
+      console.log('1. Ve a la página de Planes Nutricionales');
+      console.log(`2. Busca el plan: "${transformedData.name}"`);
+      console.log('3. Haz clic en "Ver Detalles"');
+      console.log('4. Ve a la pestaña "🛡️ Restricciones" para ver toda la información guardada');
+      console.log('🚀 === FIN PROCESO DE GUARDADO ===');
+      
     } catch (error) {
-      console.error('❌ Error al ejecutar onSave:', error);
+      console.error('❌ ERROR AL EJECUTAR onSave:', error);
+      console.error('📋 DATOS QUE SE INTENTARON ENVIAR:', transformedData);
       alert('Error al guardar el plan: ' + (error as Error).message);
     }
   };

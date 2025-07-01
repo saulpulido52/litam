@@ -17,6 +17,17 @@ export function validateMiddleware<T extends object>(type: { new (): T }) {
             });
 
             if (errors.length > 0) {
+                console.log('🚨 === ERRORES DE VALIDACIÓN DETALLADOS ===');
+                console.log('📋 Campos enviados:', Object.keys(req.body));
+                console.log('❌ Errores encontrados:');
+                errors.forEach((error, index) => {
+                    console.log(`  ${index + 1}. Campo: ${error.property}`);
+                    console.log(`     Valor: ${JSON.stringify(error.value)}`);
+                    console.log(`     Restricciones:`, error.constraints);
+                    console.log(`     Hijos:`, error.children?.length || 0);
+                });
+                console.log('🚨 === FIN ERRORES DE VALIDACIÓN ===');
+
                 const errorMessages = errors.map(error => {
                     if (error.constraints) {
                         return Object.values(error.constraints);
@@ -45,7 +56,18 @@ export function validateMiddleware<T extends object>(type: { new (): T }) {
                         field: error.property,
                         constraints: error.constraints || {},
                         value: error.value
-                    }))
+                    })),
+                    // DEBUGGING: Datos adicionales
+                    debug: {
+                        receivedFields: Object.keys(req.body),
+                        totalErrors: errors.length,
+                        detailedErrors: errors.map(error => ({
+                            property: error.property,
+                            value: error.value,
+                            constraints: error.constraints,
+                            children: error.children?.length || 0
+                        }))
+                    }
                 });
             }
 

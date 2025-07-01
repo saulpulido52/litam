@@ -80,6 +80,23 @@ export class DietPlan {
     @Column({ type: 'jsonb', nullable: true })
     weekly_plans: any[] | null; // Array de planes semanales con estructura detallada
 
+    // Campo para restricciones patológicas
+    @Column({ type: 'jsonb', nullable: true })
+    pathological_restrictions: any | null; // Restricciones médicas, alergias, medicamentos, etc.
+
+    // === NUEVOS CAMPOS PARA COMPLETAR TABS ===
+    @Column({ type: 'jsonb', nullable: true })
+    meal_frequency: any | null; // Frecuencia de comidas (desayuno, almuerzo, etc.)
+
+    @Column({ type: 'jsonb', nullable: true })
+    meal_timing: any | null; // Horarios de comidas
+
+    @Column({ type: 'jsonb', nullable: true })
+    nutritional_goals: any | null; // Objetivos nutricionales (agua, fibra, distribución calórica)
+
+    @Column({ type: 'jsonb', nullable: true })
+    flexibility_settings: any | null; // Configuración de flexibilidad del plan
+
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at!: Date;
 

@@ -60,27 +60,87 @@ class DietPlansService {
   // Crear un nuevo plan de dieta
   async createDietPlan(dietPlanData: CreateDietPlanDto): Promise<DietPlan> {
     try {
-      console.log('🟢 dietPlansService - Enviando datos al backend:', dietPlanData);
+      console.log('🔥 === DIETPLANSSERVICE - INICIO CREACIÓN PLAN ===');
+      console.log('📨 Datos recibidos del frontend:', dietPlanData);
       
+             // Analizar específicamente pathologicalRestrictions
+      if (dietPlanData.pathologicalRestrictions) {
+        console.log('🛡️ pathologicalRestrictions detectado - enviando al backend:', {
+          tieneRestricciones: true,
+          condicionesMedicas: (dietPlanData.pathologicalRestrictions as any).medical_conditions?.length || 0,
+          alergias: dietPlanData.pathologicalRestrictions.allergies?.length || 0,
+          intolerancias: dietPlanData.pathologicalRestrictions.intolerances?.length || 0,
+          medicamentos: dietPlanData.pathologicalRestrictions.medications?.length || 0,
+          consideracionesEspeciales: (dietPlanData.pathologicalRestrictions as any).special_considerations?.length || 0,
+          contenidoCompleto: dietPlanData.pathologicalRestrictions
+        });
+      } else {
+        console.log('🚫 pathologicalRestrictions NO presente en los datos');
+      }
+      
+      console.log('🚀 Enviando solicitud POST a /diet-plans...');
       const response = await apiService.post<{ dietPlan: any }>('/diet-plans', dietPlanData);
       
-      console.log('🟢 dietPlansService - Respuesta del backend:', response);
+      console.log('✅ === RESPUESTA DEL BACKEND RECIBIDA ===');
+      console.log('📬 Response completa:', response);
+      
+      if (response.data?.dietPlan) {
+        console.log('🔍 Analizando plan creado en backend:');
+        console.log('🆔 ID del plan:', response.data.dietPlan.id);
+        console.log('📝 Nombre:', response.data.dietPlan.name);
+        console.log('👤 Paciente ID:', response.data.dietPlan.patient_id);
+        
+        // Verificar si se guardaron las restricciones patológicas
+        if (response.data.dietPlan.pathological_restrictions) {
+          console.log('✅ pathological_restrictions GUARDADO exitosamente en BD:');
+          const restrictions = response.data.dietPlan.pathological_restrictions;
+          console.log('📊 Contenido guardado:', {
+            condicionesMedicas: restrictions.medical_conditions?.length || 0,
+            alergias: restrictions.allergies?.length || 0,
+            intolerancias: restrictions.intolerances?.length || 0,
+            medicamentos: restrictions.medications?.length || 0,
+            consideracionesEspeciales: restrictions.special_considerations?.length || 0,
+            contenidoCompleto: restrictions
+          });
+        } else {
+          console.warn('⚠️ pathological_restrictions NO se guardó en la BD (campo null/undefined)');
+        }
+      }
       
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error creating diet plan');
       }
       
-      // Extraer dietPlan de la estructura anidada y transformar
-      return this.transformBackendPlan(response.data.dietPlan);
+      console.log('🎯 Transformando plan del backend al formato frontend...');
+      const transformedPlan = this.transformBackendPlan(response.data.dietPlan);
+      console.log('✅ Plan transformado exitosamente:', transformedPlan);
+      console.log('🔥 === DIETPLANSSERVICE - FIN CREACIÓN PLAN ===');
+      
+      return transformedPlan;
     } catch (error) {
-      console.error('Error creating diet plan:', error);
+      console.error('❌ === ERROR EN DIETPLANSSERVICE ===');
+      console.error('🔴 Error creating diet plan:', error);
+      
+      if (error && typeof error === 'object' && 'response' in error) {
+        console.error('🔴 Error response data:', (error as any).response?.data);
+        console.error('🔴 Error status:', (error as any).response?.status);
+        console.error('🔴 Error headers:', (error as any).response?.headers);
+      }
+      
       throw error;
     }
   }
 
   // Transformar plan del backend al formato del frontend
   private transformBackendPlan(backendPlan: any): DietPlan {
-    return {
+    console.log('🔄 Transformando plan del backend:', {
+      id: backendPlan.id,
+      name: backendPlan.name,
+      tieneRestricciones: !!backendPlan.pathological_restrictions,
+      restrictionsContent: backendPlan.pathological_restrictions
+    });
+    
+    const transformed = {
       id: backendPlan.id,
       patient_id: backendPlan.patient?.id || backendPlan.patient_id || backendPlan.patient_user_id,
       nutritionist_id: backendPlan.nutritionist?.id || backendPlan.nutritionist_id || backendPlan.nutritionist_user_id,
@@ -101,8 +161,27 @@ class DietPlansService {
       nutritionist: backendPlan.nutritionist,
       is_weekly_plan: backendPlan.is_weekly_plan,
       total_weeks: backendPlan.total_weeks,
-      weekly_plans: backendPlan.weekly_plans || []
+      weekly_plans: backendPlan.weekly_plans || [],
+      pathological_restrictions: backendPlan.pathological_restrictions, // Preservar restricciones patológicas
+      // === NUEVOS CAMPOS PARA COMPLETAR TABS ===
+      meal_frequency: backendPlan.meal_frequency,
+      meal_timing: backendPlan.meal_timing,
+      nutritional_goals: backendPlan.nutritional_goals,
+      flexibility_settings: backendPlan.flexibility_settings
     };
+    
+    console.log('✅ Plan transformado completamente:', {
+      ...transformed,
+      datosEstructurales: {
+        tieneRestricciones: !!transformed.pathological_restrictions,
+        tieneFrecuenciaComidas: !!transformed.meal_frequency,
+        tieneHorarios: !!transformed.meal_timing,
+        tieneObjetivosNutricionales: !!transformed.nutritional_goals,
+        tieneFlexibilidad: !!transformed.flexibility_settings,
+        planesSemanales: transformed.weekly_plans?.length || 0
+      }
+    });
+    return transformed;
   }
 
   // Generar plan de dieta con IA

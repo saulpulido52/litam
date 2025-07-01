@@ -277,15 +277,40 @@ class DietPlanService {
             // Campos para plan semanal
             is_weekly_plan: dietPlanDto.isWeeklyPlan || true,
             total_weeks: dietPlanDto.totalWeeks || 1,
-            weekly_plans: dietPlanDto.weeklyPlans || []
+            weekly_plans: dietPlanDto.weeklyPlans || [],
+            // Restricciones patológicas - Normalizar nombres de campos
+            pathological_restrictions: dietPlanDto.pathologicalRestrictions ? {
+                medical_conditions: dietPlanDto.pathologicalRestrictions.medical_conditions || dietPlanDto.pathologicalRestrictions.medicalConditions || [],
+                allergies: dietPlanDto.pathologicalRestrictions.allergies || [],
+                intolerances: dietPlanDto.pathologicalRestrictions.intolerances || [],
+                medications: dietPlanDto.pathologicalRestrictions.medications || [],
+                special_considerations: dietPlanDto.pathologicalRestrictions.special_considerations || dietPlanDto.pathologicalRestrictions.specialConsiderations || [],
+                emergency_contacts: dietPlanDto.pathologicalRestrictions.emergency_contacts || dietPlanDto.pathologicalRestrictions.emergencyContacts || []
+            } : null,
+            // === NUEVOS CAMPOS PARA COMPLETAR TABS ===
+            meal_frequency: dietPlanDto.mealFrequency || null,
+            meal_timing: dietPlanDto.mealTiming || null,
+            nutritional_goals: dietPlanDto.nutritionalGoals || null,
+            flexibility_settings: dietPlanDto.flexibilitySettings || null
         });
 
         // Guardar el plan
         await this.dietPlanRepository.save(newDietPlan);
 
-        // Si hay planes semanales, procesarlos
+        // Si hay planes semanales, procesarlos y normalizar nombres de campos
         if (dietPlanDto.weeklyPlans && dietPlanDto.weeklyPlans.length > 0) {
-            newDietPlan.weekly_plans = dietPlanDto.weeklyPlans;
+            // Normalizar nombres de campos de snake_case a estructura interna
+            const normalizedWeeklyPlans = dietPlanDto.weeklyPlans.map(plan => ({
+                week_number: plan.week_number || plan.weekNumber,
+                start_date: plan.start_date || plan.startDate,
+                end_date: plan.end_date || plan.endDate,
+                daily_calories_target: plan.daily_calories_target || plan.dailyCaloriesTarget,
+                daily_macros_target: plan.daily_macros_target || plan.dailyMacrosTarget,
+                meals: plan.meals || [],
+                notes: plan.notes
+            }));
+            
+            newDietPlan.weekly_plans = normalizedWeeklyPlans;
             await this.dietPlanRepository.save(newDietPlan);
         }
 
