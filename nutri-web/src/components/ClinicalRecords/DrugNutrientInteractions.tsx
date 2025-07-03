@@ -67,8 +67,8 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
   const [description, setDescription] = useState('');
   const [recommendations, setRecommendations] = useState<string[]>(['']);
   const [timingConsiderations, setTimingConsiderations] = useState('');
-  const [foodsToAvoid, setFoodsToAvoid] = useState<string[]>([]);
-  const [foodsToIncrease, setFoodsToIncrease] = useState<string[]>([]);
+  const [foodsToAvoidText, setFoodsToAvoidText] = useState<string>('');
+  const [foodsToIncreaseText, setFoodsToIncreaseText] = useState<string>('');
   const [monitoringRequired, setMonitoringRequired] = useState(false);
 
   // Opciones para los campos select
@@ -99,8 +99,8 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
     setDescription('');
     setRecommendations(['']);
     setTimingConsiderations('');
-    setFoodsToAvoid([]);
-    setFoodsToIncrease([]);
+    setFoodsToAvoidText('');
+    setFoodsToIncreaseText('');
     setMonitoringRequired(false);
   };
 
@@ -112,6 +112,14 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
 
     setLoading(true);
     try {
+      // Convertir texto a arrays para enviar al backend
+      const foodsToAvoidArray = foodsToAvoidText
+        ? foodsToAvoidText.split(',').map(s => s.trim()).filter(Boolean)
+        : [];
+      const foodsToIncreaseArray = foodsToIncreaseText
+        ? foodsToIncreaseText.split(',').map(s => s.trim()).filter(Boolean)
+        : [];
+
       const interactionData = {
         medicationId: selectedMedication.id,
         nutrientsAffected: nutrientsAffected,
@@ -120,8 +128,8 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
         description: description,
         recommendations: recommendations.filter(r => r.trim() !== ''),
         timingConsiderations: timingConsiderations || undefined,
-        foodsToAvoid: foodsToAvoid.length > 0 ? foodsToAvoid : undefined,
-        foodsToIncrease: foodsToIncrease.length > 0 ? foodsToIncrease : undefined,
+        foodsToAvoid: foodsToAvoidArray.length > 0 ? foodsToAvoidArray : undefined,
+        foodsToIncrease: foodsToIncreaseArray.length > 0 ? foodsToIncreaseArray : undefined,
         monitoringRequired: monitoringRequired
       };
 
@@ -212,8 +220,8 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
     setDescription(interaction.description);
     setRecommendations(interaction.recommendations);
     setTimingConsiderations(interaction.timing_considerations || '');
-    setFoodsToAvoid(interaction.foods_to_avoid || []);
-    setFoodsToIncrease(interaction.foods_to_increase || []);
+    setFoodsToAvoidText((interaction.foods_to_avoid || []).join(', '));
+    setFoodsToIncreaseText((interaction.foods_to_increase || []).join(', '));
     setMonitoringRequired(interaction.monitoring_required || false);
     setShowModal(true);
   };
@@ -505,8 +513,8 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
                 <Form.Group className="mb-3">
                   <Form.Label>Alimentos a Evitar</Form.Label>
                   <Form.Control
-                    value={foodsToAvoid.join(', ')}
-                    onChange={(e) => setFoodsToAvoid(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                    value={foodsToAvoidText}
+                    onChange={(e) => setFoodsToAvoidText(e.target.value)}
                     placeholder="Separar con comas..."
                   />
                 </Form.Group>
@@ -515,8 +523,8 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
                 <Form.Group className="mb-3">
                   <Form.Label>Alimentos a Aumentar</Form.Label>
                   <Form.Control
-                    value={foodsToIncrease.join(', ')}
-                    onChange={(e) => setFoodsToIncrease(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                    value={foodsToIncreaseText}
+                    onChange={(e) => setFoodsToIncreaseText(e.target.value)}
                     placeholder="Separar con comas..."
                   />
                 </Form.Group>
