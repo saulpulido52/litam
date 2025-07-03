@@ -286,6 +286,10 @@ class ClinicalRecordController {
      */
     public async uploadLaboratoryDocument(req: MulterRequest, res: Response, next: NextFunction) {
         try {
+            if (!req.user) {
+                return next(new AppError('Usuario no autenticado.', 401, 'UNAUTHORIZED'));
+            }
+
             const { recordId } = req.params;
             const { labDate, description } = req.body;
             const file = req.file; // Multer file
@@ -294,7 +298,8 @@ class ClinicalRecordController {
                 return res.status(400).json({
                     status: 'error',
                     message: 'No se ha proporcionado ningún archivo',
-                    errorCode: 'NO_FILE_PROVIDED'
+                    errorCode: 'NO_FILE_PROVIDED',
+                    timestamp: new Date().toISOString()
                 });
             }
 
@@ -303,15 +308,16 @@ class ClinicalRecordController {
                 return res.status(400).json({
                     status: 'error',
                     message: 'Solo se permiten archivos PDF',
-                    errorCode: 'INVALID_FILE_TYPE'
+                    errorCode: 'INVALID_FILE_TYPE',
+                    timestamp: new Date().toISOString()
                 });
             }
 
             const result = await clinicalRecordService.uploadLaboratoryDocument(
                 recordId,
                 file,
-                req.user!.id,
-                req.user!.role.name,
+                req.user.id,
+                req.user.role.name,
                 labDate,
                 description
             );
@@ -321,10 +327,17 @@ class ClinicalRecordController {
                 message: result.message,
                 data: {
                     document: result.document
-                }
+                },
+                timestamp: new Date().toISOString(),
+                recordId: recordId,
+                uploadedBy: req.user.id
             });
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            console.error('Error en ClinicalRecordController.uploadLaboratoryDocument:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al subir documento de laboratorio.', 500, 'UPLOAD_DOCUMENT_ERROR'));
         }
     }
 
@@ -398,12 +411,16 @@ class ClinicalRecordController {
      */
     public async getLaboratoryDocuments(req: Request, res: Response, next: NextFunction) {
         try {
+            if (!req.user) {
+                return next(new AppError('Usuario no autenticado.', 401, 'UNAUTHORIZED'));
+            }
+
             const { recordId } = req.params;
 
             const record = await clinicalRecordService.getClinicalRecordById(
                 recordId,
-                req.user!.id,
-                req.user!.role.name
+                req.user.id,
+                req.user.role.name
             );
 
             res.status(200).json({
@@ -413,10 +430,17 @@ class ClinicalRecordController {
                     documents: record.laboratory_documents || [],
                     total: record.laboratory_documents?.length || 0,
                     metadata: record.document_metadata
-                }
+                },
+                timestamp: new Date().toISOString(),
+                recordId: recordId,
+                requestedBy: req.user.id
             });
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            console.error('Error en ClinicalRecordController.getLaboratoryDocuments:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener documentos de laboratorio.', 500, 'GET_DOCUMENTS_ERROR'));
         }
     }
 

@@ -267,32 +267,86 @@ class ClinicalRecordsService {
 
   // === DOCUMENTOS DE LABORATORIO ===
 
-  // Subir documento de laboratorio
-  async uploadLaboratoryDocument(
-    recordId: string,
-    file: File,
-    description?: string,
+  // Generar PDF del expediente
+  public async generateExpedientePDF(recordId: string): Promise<Blob> {
+    try {
+      const response = await fetch(`/api/clinical-records/${recordId}/generate-pdf`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiService.getToken()}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Error al generar el PDF' }));
+        throw new Error(errorData.message || 'Error al generar el PDF');
+      }
+
+      return await response.blob();
+    } catch (error: any) {
+      console.error('Error in generateExpedientePDF:', error);
+      throw new Error(error.message || 'Error al generar el PDF del expediente');
+    }
+  }
+
+  // Upload documento de laboratorio
+  public async uploadLaboratoryDocument(
+    recordId: string, 
+    file: File, 
+    description?: string, 
     labDate?: string
-  ): Promise<{ message: string; document: any }> {
-    const formData = new FormData();
-    formData.append('file', file);
-    if (description) {
-      formData.append('description', description);
-    }
-    if (labDate) {
-      formData.append('labDate', labDate);
-    }
+  ): Promise<any> {
+    try {
+      const formData = new FormData();
+      formData.append('laboratory_pdf', file);
+      if (description) {
+        formData.append('description', description);
+      }
+      if (labDate) {
+        formData.append('labDate', new Date(labDate).toISOString());
+      }
 
-    const response = await apiService.post<{ message: string; document: any }>(
-      `${this.baseUrl}/${recordId}/laboratory-documents`,
-      formData
-    );
+      const response = await fetch(`/api/clinical-records/${recordId}/laboratory-documents`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiService.getToken()}`
+        },
+        body: formData
+      });
 
-    if (response.status !== 'success' || !response.data) {
-      throw new Error(response.message || 'Error al subir el documento');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al subir el documento');
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      console.error('Error in uploadLaboratoryDocument:', error);
+      throw new Error(error.message || 'Error al subir el documento de laboratorio');
     }
+  }
 
-    return response.data;
+  // Eliminar documento de laboratorio
+  public async deleteLaboratoryDocument(recordId: string, documentId: string): Promise<any> {
+    try {
+      const response = await fetch(`/api/clinical-records/${recordId}/laboratory-documents/${documentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${apiService.getToken()}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al eliminar el documento');
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      console.error('Error in deleteLaboratoryDocument:', error);
+      throw new Error(error.message || 'Error al eliminar el documento de laboratorio');
+    }
   }
 
   // Obtener documentos de laboratorio
@@ -306,66 +360,6 @@ class ClinicalRecordsService {
     }
 
     return response.data.documents;
-  }
-
-  // Eliminar documento de laboratorio
-  async deleteLaboratoryDocument(
-    recordId: string,
-    documentId: string
-  ): Promise<{ message: string }> {
-    const response = await apiService.delete<{ message: string }>(
-      `${this.baseUrl}/${recordId}/laboratory-documents/${documentId}`
-    );
-
-    if (response.status !== 'success' || !response.data) {
-      throw new Error(response.message || 'Error al eliminar el documento');
-    }
-
-    return response.data;
-  }
-
-  // Generar PDF del expediente
-  async generateExpedientePDF(recordId: string): Promise<Blob> {
-    try {
-      console.log('🔄 Requesting PDF generation for record:', recordId);
-      
-      // Obtener el token del apiService
-      const token = apiService.getToken();
-      if (!token) {
-        throw new Error('Token de autenticación no encontrado. Por favor, inicia sesión nuevamente.');
-      }
-
-      // Usar URL relativa sin /api para que funcione el proxy de Vite
-      const relativeURL = `${this.baseUrl}/${recordId}/generate-pdf`;
-      
-      console.log('🔄 Making request to:', relativeURL);
-      
-      const response = await fetch(relativeURL, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/pdf',
-        },
-      });
-
-      console.log('📡 Response status:', response.status, response.statusText);
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
-        }
-        const errorText = await response.text();
-        console.error('❌ Server error response:', errorText);
-        throw new Error(`Error ${response.status}: ${errorText || 'Error al generar PDF'}`);
-      }
-
-      const blob = await response.blob();
-      console.log('✅ PDF generated successfully, size:', blob.size, 'bytes');
-      return blob;
-    } catch (error: any) {
-      console.error('❌ PDF generation error:', error);
-      throw new Error(error.message || 'Error al generar el PDF del expediente');
-    }
   }
 
   // === INTERACCIONES FÁRMACO-NUTRIENTE ===

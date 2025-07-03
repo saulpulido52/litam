@@ -20,6 +20,7 @@ import {
   Calendar,
   FileDown
 } from 'lucide-react';
+import { clinicalRecordsService } from '../../services/clinicalRecordsService';
 
 interface LaboratoryDocument {
   id: string;
@@ -91,30 +92,12 @@ const LaboratoryDocuments: React.FC<LaboratoryDocumentsProps> = ({
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append('laboratory_pdf', selectedFile);
-      formData.append('description', description);
-      if (labDate) {
-        formData.append('labDate', new Date(labDate).toISOString());
-      }
-
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        throw new Error('No hay token de autenticación. Por favor, inicia sesión nuevamente.');
-      }
-
-      const response = await fetch(`/api/clinical-records/${recordId}/laboratory-documents`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al subir el documento');
-      }
+      await clinicalRecordsService.uploadLaboratoryDocument(
+        recordId,
+        selectedFile,
+        description,
+        labDate
+      );
 
       setSuccess('Documento de laboratorio subido exitosamente');
       setUploadDialogOpen(false);
@@ -135,23 +118,7 @@ const LaboratoryDocuments: React.FC<LaboratoryDocumentsProps> = ({
     }
 
     try {
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        throw new Error('No hay token de autenticación. Por favor, inicia sesión nuevamente.');
-      }
-
-      const response = await fetch(`/api/clinical-records/${recordId}/laboratory-documents/${documentId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al eliminar el documento');
-      }
-
+      await clinicalRecordsService.deleteLaboratoryDocument(recordId, documentId);
       setSuccess('Documento eliminado exitosamente');
       onDocumentsChange();
     } catch (error: any) {
@@ -164,41 +131,14 @@ const LaboratoryDocuments: React.FC<LaboratoryDocumentsProps> = ({
     setError(null);
 
     try {
-      // Obtener el token correcto del localStorage
-      const token = localStorage.getItem('access_token');
-      
-      if (!token) {
-        throw new Error('No hay token de autenticación. Por favor, inicia sesión nuevamente.');
-      }
-
-      const response = await fetch(`/api/clinical-records/${recordId}/generate-pdf`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Error al generar el PDF' }));
-        throw new Error(errorData.message || 'Error al generar el PDF');
-      }
-
-      // Obtener el PDF como blob
-      const pdfBlob = await response.blob();
+      // Usar el servicio para generar el PDF
+      const pdfBlob = await clinicalRecordsService.generateExpedientePDF(recordId);
       
       // Crear URL temporal para el blob
       const pdfUrl = window.URL.createObjectURL(pdfBlob);
       
-      // Obtener el nombre del archivo desde los headers si está disponible
-      const contentDisposition = response.headers.get('Content-Disposition');
-      let filename = 'expediente.pdf';
-      if (contentDisposition) {
-        const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-        if (match && match[1]) {
-          filename = match[1].replace(/['"]/g, '');
-        }
-      }
+      // Nombre del archivo
+      const filename = `expediente_${recordId}_${Date.now()}.pdf`;
       
       setSuccess('PDF del expediente generado exitosamente');
       
