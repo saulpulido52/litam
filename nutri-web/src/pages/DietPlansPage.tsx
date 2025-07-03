@@ -12,7 +12,8 @@ import {
   FileText,
   Download,
   Copy,
-  RefreshCw
+  RefreshCw,
+  Utensils
 } from 'lucide-react';
 import type { DietPlan, CreateDietPlanDto, PlanType } from '../types/diet';
 import { useDietPlans } from '../hooks/useDietPlans';
@@ -21,6 +22,7 @@ import { clinicalRecordsService } from '../services/clinicalRecordsService';
 import { Button, Modal, Alert } from 'react-bootstrap';
 import DietPlanViewer from '../components/DietPlanViewer';
 import NutritionalCardSimple from '../components/NutritionalCardSimple';
+import MealPlanner from '../components/MealPlanner';
 
 interface Recipe {
   id: number;
@@ -66,6 +68,8 @@ const DietPlansPage: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<DietPlan | null>(null);
   const [editingPlan, setEditingPlan] = useState<DietPlan | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [showMealPlanner, setShowMealPlanner] = useState(false);
+  const [selectedPlanForMeals, setSelectedPlanForMeals] = useState<DietPlan | null>(null);
 
   // Load all diet plans and clinical records for the nutritionist on mount
   useEffect(() => {
@@ -315,6 +319,33 @@ const DietPlansPage: React.FC = () => {
   const handleViewPlan = (plan: DietPlan) => {
     setSelectedPlan(plan);
     setShowPlanDetail(true);
+  };
+
+  const handleOpenMealPlanner = (plan: DietPlan) => {
+    setSelectedPlanForMeals(plan);
+    setShowMealPlanner(true);
+  };
+
+  const handleSaveMealPlan = async (weeklyPlans: any[]) => {
+    try {
+      // Aquí actualizarías el plan con las comidas planificadas
+      console.log('Guardando plan de comidas:', weeklyPlans);
+      
+      // Actualizar el plan en el backend
+      if (selectedPlanForMeals) {
+        const updatedPlan = {
+          ...selectedPlanForMeals,
+          weekly_plans: weeklyPlans
+        };
+        
+        await updateDietPlan(selectedPlanForMeals.id, updatedPlan);
+        setShowMealPlanner(false);
+        setSelectedPlanForMeals(null);
+      }
+    } catch (error) {
+      console.error('Error guardando plan de comidas:', error);
+      setError('Error al guardar el plan de comidas');
+    }
   };
 
   return (
@@ -617,6 +648,13 @@ const DietPlansPage: React.FC = () => {
                               <Edit size={14} />
                             </button>
                             <button 
+                              className="btn btn-outline-info"
+                              onClick={() => handleOpenMealPlanner(plan)}
+                              title="Planificar comidas"
+                            >
+                              <Utensils size={14} />
+                            </button>
+                            <button 
                               className="btn btn-outline-success"
                               onClick={() => handleDownloadPDF(plan)}
                               title="Descargar PDF"
@@ -690,6 +728,13 @@ const DietPlansPage: React.FC = () => {
                           >
                             <Edit size={14} className="me-1" />
                             Editar
+                          </button>
+                          <button
+                            className="btn btn-sm btn-outline-info flex-fill"
+                            onClick={() => handleOpenMealPlanner(plan)}
+                          >
+                            <Utensils size={14} className="me-1" />
+                            Planificar comidas
                           </button>
                           <button
                             className="btn btn-sm btn-outline-success flex-fill"
@@ -869,6 +914,19 @@ const DietPlansPage: React.FC = () => {
             </Button>
           </Modal.Footer>
         </Modal>
+      )}
+
+      {/* Modal del Planificador de Comidas */}
+      {selectedPlanForMeals && (
+        <MealPlanner
+          weeklyPlans={selectedPlanForMeals.weekly_plans || []}
+          onSave={handleSaveMealPlan}
+          onClose={() => {
+            setShowMealPlanner(false);
+            setSelectedPlanForMeals(null);
+          }}
+          isOpen={showMealPlanner}
+        />
       )}
     </div>
   );
