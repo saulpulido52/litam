@@ -1,120 +1,184 @@
 import React, { useState } from 'react';
 import NutritionalCard from './NutritionalCard';
-import { Patient } from '../types/patient';
-import { DietPlan } from '../types/diet';
-import { ClinicalRecord } from '../types/clinical-record';
+import type { Patient } from '../types/patient';
+import type { DietPlan } from '../types/diet';
+import type { ClinicalRecord } from '../types/clinical-record';
 
-// Datos de ejemplo para demostrar las tarjetas nutricionales
+// Ejemplo de paciente con datos realistas
 const examplePatient: Patient = {
-  id: 'patient-example-1',
+  id: 'patient-123',
   user: {
-    id: 'user-example-1',
-    email: 'juan.perez@email.com',
-    first_name: 'Juan Carlos',
-    last_name: 'Pérez González',
-    phone: '555-0123',
-    birth_date: '1985-03-15',
+    id: 'user-123',
+    email: 'lucia.hernandez@example.com',
+    first_name: 'Lucía',
+    last_name: 'Hernández',
+    phone: '+52 55 1234 5678',
+    birth_date: new Date('1985-03-15'),
     age: 39,
-    gender: 'male',
+    gender: 'female',
+    role: {
+      id: 'role-patient',
+      name: 'patient',
+    },
     is_active: true,
-    registration_type: 'nutritionist_created',
-    has_temporary_password: false,
-    requires_initial_setup: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    role: { id: 'role-1', name: 'patient' }
+    created_at: '2024-01-15T10:30:00Z',
+    updated_at: '2024-01-15T10:30:00Z',
   },
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  bmi_category: 'Sobrepeso',
-  age_calculated: 39
+  profile: {
+    user_id: 'user-123',
+    birth_date: '1985-03-15',
+    gender: 'female',
+    height: 165,
+    current_weight: 75.5,
+    target_weight: 65,
+    activity_level: 'moderately_active',
+    health_goals: ['Control de peso', 'Mejorar hábitos alimentarios'],
+    dietary_restrictions: ['Bajo en sodio'],
+    allergies: [],
+    medical_conditions: ['Prediabetes', 'Hipertensión leve'],
+    medications: ['Metformina 500mg', 'Losartán 50mg'],
+  }
 };
 
+// Ejemplo de historia clínica con datos realistas
 const exampleClinicalRecord: ClinicalRecord = {
-  id: 'clinical-example-1',
-  record_date: new Date().toISOString(),
-  expedient_number: 'EXP-2025-001',
-  consultation_reason: 'Control de peso y mejora de hábitos alimentarios',
-  current_problems: 'Sobrepeso, fatiga, digestión lenta',
-  diagnosed_diseases: 'Prediabetes, Hipertensión leve',
-  family_medical_history: {
-    diabetes: ['Padre'],
-    hypertension: ['Madre', 'Abuelo paterno'],
-    obesity: ['Hermana'],
-    cardiovascular: ['Abuelo materno']
+  id: 'record-456',
+  record_date: '2024-01-20',
+  patient: {
+    id: 'user-123',
+    email: 'lucia.hernandez@example.com',
+    first_name: 'Lucía',
+    last_name: 'Hernández',
+    age: 39,
+    gender: 'female',
   },
-  daily_activities: 'Trabajo de oficina, sedentario la mayor parte del día',
-  activity_level_description: 'Ejercicio 2-3 veces por semana',
-  physical_exercise: 'moderado',
-  consumption_habits: JSON.stringify({
-    alcohol: 'Ocasional',
+  nutritionist: {
+    id: 'nutritionist-789',
+    email: 'dra.martinez@example.com',
+    first_name: 'Ana',
+    last_name: 'Martínez',
+  },
+  expedient_number: 'EXP-2024-001',
+  consultation_reason: 'Control de peso y mejora de hábitos alimentarios',
+  current_problems: {
+    gastritis: true,
+    constipation: false,
+    nausea: false,
+    observations: 'Molestias ocasionales después de comidas pesadas'
+  },
+  diagnosed_diseases: {
+    has_disease: true,
+    disease_name: 'Prediabetes, Hipertensión leve',
+    since_when: '2 años',
+    takes_medication: true,
+    medications_list: ['Metformina 500mg', 'Losartán 50mg'],
+    has_important_disease: false,
+    has_surgery: false
+  },
+  family_medical_history: {
+    diabetes: true,
+    hta: true,
+    obesity: true,
+    cancer: false,
+    hypo_hyperthyroidism: false,
+    dyslipidemia: false,
+    other_history: 'Padre con diabetes tipo 2, madre con hipertensión'
+  },
+  daily_activities: {
+    wake_up: '06:00',
+    breakfast: '07:00',
+    lunch: '14:00',
+    dinner: '20:00',
+    sleep: '22:30',
+    other_hours: [
+      { hour: '10:00', activity: 'Trabajo de oficina' },
+      { hour: '16:00', activity: 'Snack y café' }
+    ]
+  },
+  physical_exercise: {
+    performs_exercise: true,
+    type: 'Caminata y yoga',
+    frequency: '3 veces por semana',
+    duration: '45 minutos',
+    since_when: '6 meses'
+  },
+  consumption_habits: {
+    alcohol: 'Ocasional (1-2 copas vino/semana)',
     tobacco: 'No',
-    caffeine: 'Sí, 2-3 tazas de café al día',
-    supplements: 'Vitamina D'
-  }),
-  anthropometric_measurements: {
-    weight: '85',
-    height_m: '1.75',
-    bmi: '27.8',
-    waist_circumference: '95',
-    body_fat_percentage: '22'
+    coffee: '2 tazas al día',
+    other_substances: 'Ninguna'
   },
   blood_pressure: {
-    systolic: '135',
-    diastolic: '85'
+    knows_bp: true,
+    habitual_bp: '135/85',
+    systolic: 135,
+    diastolic: 85
   },
-  biochemical_indicators: {
-    glucose: '105',
-    cholesterol_total: '220',
-    hdl: '45',
-    ldl: '160',
-    triglycerides: '180'
+  anthropometric_measurements: {
+    current_weight_kg: 75.5,
+    habitual_weight_kg: 68.0,
+    height_m: 1.65,
+    waist_circ_cm: 88,
+    hip_circ_cm: 102,
+    arm_circ_cm: 28
   },
-  nutritional_diagnosis: 'Sobrepeso grado I con riesgo cardiometabólico',
-  energy_nutrient_needs: 'Reducción calórica moderada (15%), aumento de proteínas',
-  water_consumption_liters: '2.0',
-  patient: examplePatient,
-  nutritionist: {
-    id: 'nutritionist-1',
-    email: 'nutricionista@ejemplo.com',
-    first_name: 'Dra. María',
-    last_name: 'García López',
-    phone: '555-0456',
-    role: { id: 'role-2', name: 'nutritionist' }
-  } as any,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString()
+  energy_nutrient_needs: {
+    get: 1650,
+    geb: 1420,
+    eta: 1650,
+    fa: 1.2,
+    total_calories: 1650
+  },
+  water_consumption_liters: 2.0,
+  created_at: '2024-01-20T09:15:00Z',
+  updated_at: '2024-01-20T09:15:00Z',
 };
 
+// Ejemplo de plan de dieta
 const exampleDietPlan: DietPlan = {
-  id: 'diet-plan-example-1',
-  name: 'Plan de Control de Peso - Enero 2025',
-  description: 'Plan nutricional diseñado para pérdida gradual de peso con enfoque en sostenibilidad',
-  patient: examplePatient,
-  nutritionist: {
-    id: 'nutritionist-1',
-    email: 'nutricionista@ejemplo.com',
-    first_name: 'Dra. María',
-    last_name: 'García López'
-  } as any,
-  meals: [],
-  generated_by_ia: false,
-  ia_version: null,
-  status: 'draft' as any,
-  notes: 'Paciente motivado. Horario de oficina requiere comidas portátiles.',
-  start_date: '2025-01-15',
-  end_date: '2025-02-12',
-  daily_calories_target: 2100,
-  daily_macros_target: {
-    protein: 150,
-    carbohydrates: 200,
-    fats: 70
-  },
-  is_weekly_plan: true,
-  total_weeks: 4,
-  weekly_plans: [],
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString()
+  id: 'diet-plan-789',
+  name: 'Plan de Control de Peso - Semana 1',
+  description: 'Plan nutricional personalizado para control de peso y manejo de prediabetes',
+  patient_id: 'patient-123',
+  nutritionist_id: 'nutritionist-789',
+  status: 'active',
+  start_date: '2024-01-22',
+  end_date: '2024-01-29',
+  target_calories: 1650,
+  notes: 'Enfoque en alimentos de bajo índice glicémico y control de porciones',
+  created_at: '2024-01-20T10:00:00Z',
+  updated_at: '2024-01-20T10:00:00Z',
+  meals: [
+    {
+      id: 'meal-1',
+      diet_plan_id: 'diet-plan-789',
+      type: 'breakfast',
+      name: 'Desayuno',
+      target_time: '07:00',
+      calories: 400,
+      protein: 25,
+      carbs: 45,
+      fats: 15,
+      meal_items: [
+        {
+          id: 'item-1',
+          meal_id: 'meal-1',
+          food_id: 'food-1',
+          quantity_grams: 100,
+          food: {
+            id: 'food-1',
+            name: 'Avena con frutos rojos',
+            category: 'cereales',
+            calories_per_100g: 250,
+            protein_per_100g: 8,
+            carbs_per_100g: 45,
+            fats_per_100g: 5,
+            is_active: true,
+          }
+        }
+      ]
+    }
+  ],
 };
 
 const NutritionalCardExample: React.FC = () => {
@@ -193,10 +257,10 @@ const NutritionalCardExample: React.FC = () => {
                           <strong>Teléfono:</strong> {examplePatient.user?.phone}
                         </div>
                         <div className="mb-2">
-                          <strong>IMC:</strong> {exampleClinicalRecord.anthropometric_measurements?.bmi} - {examplePatient.bmi_category}
+                          <strong>IMC:</strong> {exampleClinicalRecord.anthropometric_measurements?.current_weight_kg} kg
                         </div>
                         <div className="mb-2">
-                          <strong>Diagnóstico:</strong> {exampleClinicalRecord.nutritional_diagnosis}
+                          <strong>Diagnóstico:</strong> {exampleClinicalRecord.diagnosed_diseases?.disease_name}
                         </div>
                       </div>
                     </div>
@@ -213,15 +277,15 @@ const NutritionalCardExample: React.FC = () => {
                         <div className="small">
                           <div className="d-flex justify-content-between">
                             <span>Peso:</span>
-                            <strong>{exampleClinicalRecord.anthropometric_measurements?.weight} kg</strong>
+                            <strong>{exampleClinicalRecord.anthropometric_measurements?.current_weight_kg} kg</strong>
                           </div>
                           <div className="d-flex justify-content-between">
                             <span>Altura:</span>
-                            <strong>{(parseFloat(exampleClinicalRecord.anthropometric_measurements?.height_m || '0') * 100).toFixed(0)} cm</strong>
+                            <strong>{(((exampleClinicalRecord.anthropometric_measurements?.height_m || 0) as number) * 100).toFixed(0)} cm</strong>
                           </div>
                           <div className="d-flex justify-content-between">
                             <span>Presión:</span>
-                            <strong>{exampleClinicalRecord.blood_pressure?.systolic}/{exampleClinicalRecord.blood_pressure?.diastolic}</strong>
+                            <strong>{exampleClinicalRecord.blood_pressure?.habitual_bp}</strong>
                           </div>
                           <div className="d-flex justify-content-between">
                             <span>Glucosa:</span>

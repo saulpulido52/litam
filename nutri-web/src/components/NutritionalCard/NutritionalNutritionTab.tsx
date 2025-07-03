@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Patient } from '../../types/patient';
-import { ClinicalRecord } from '../../types/clinical-record';
+import type { ClinicalRecord } from '../../types/clinical-record';
 
 interface MacroTarget {
   protein: number;
@@ -33,25 +32,19 @@ interface NutritionalGoals {
 }
 
 interface NutritionalNutritionTabProps {
-  planData: any;
-  patient: Patient;
+  dietPlan: any;
   clinicalRecord?: ClinicalRecord;
-  mode: 'create' | 'edit' | 'view';
-  onUpdateData: (section: string, data: any) => void;
-  isLoading?: boolean;
+  onPlanDataChange: (data: any) => void;
 }
 
 const NutritionalNutritionTab: React.FC<NutritionalNutritionTabProps> = ({
-  planData,
-  patient,
+  dietPlan,
   clinicalRecord,
-  mode,
-  onUpdateData,
-  isLoading = false
+  onPlanDataChange
 }) => {
   const [nutritionalGoals, setNutritionalGoals] = useState<NutritionalGoals>({
-    dailyCalories: planData.dailyCaloriesTarget || 2000,
-    macroTargets: planData.dailyMacrosTarget || {
+    dailyCalories: dietPlan.dailyCaloriesTarget || 2000,
+    macroTargets: dietPlan.dailyMacrosTarget || {
       protein: 150,
       carbohydrates: 200,
       fats: 67
@@ -80,81 +73,52 @@ const NutritionalNutritionTab: React.FC<NutritionalNutritionTabProps> = ({
 
   // Cargar datos existentes
   useEffect(() => {
-    if (planData.nutritionalGoals) {
-      setNutritionalGoals(planData.nutritionalGoals);
+    if (dietPlan.nutritionalGoals) {
+      setNutritionalGoals(dietPlan.nutritionalGoals);
     }
-  }, [planData.nutritionalGoals]);
-
-  // Calcular macronutrientes basados en calorías y distribución
-  const calculateMacros = (calories: number, distribution: typeof macroDistribution) => {
-    return {
-      protein: Math.round((calories * distribution.protein / 100) / 4), // 4 kcal/g
-      carbohydrates: Math.round((calories * distribution.carbohydrates / 100) / 4), // 4 kcal/g
-      fats: Math.round((calories * distribution.fats / 100) / 9) // 9 kcal/g
-    };
-  };
+  }, [dietPlan.nutritionalGoals]);
 
   // Actualizar macronutrientes cuando cambie la distribución o calorías
-  const updateMacroTargets = (newCalories?: number, newDistribution?: typeof macroDistribution) => {
-    const calories = newCalories || nutritionalGoals.dailyCalories;
-    const distribution = newDistribution || macroDistribution;
-    
-    const newMacros = calculateMacros(calories, distribution);
+  const updateMacroTargets = (calories?: number) => {
+    const newCalories = calories || nutritionalGoals.dailyCalories;
     
     const updatedGoals = {
       ...nutritionalGoals,
-      dailyCalories: calories,
-      macroTargets: newMacros
+      dailyCalories: newCalories,
+      macroTargets: calculateMacrosFromDistribution(newCalories, {
+        protein: 25,
+        carbohydrates: 45, 
+        fats: 30
+      })
     };
     
     setNutritionalGoals(updatedGoals);
-    onUpdateData('nutritionalGoals', updatedGoals);
+    onPlanDataChange({ ...dietPlan, nutritionalGoals: updatedGoals });
   };
 
-  // Aplicar recomendaciones basadas en el expediente clínico
+  const calculateMacrosFromDistribution = (calories: number, distribution: any) => {
+    return {
+      protein: Math.round((calories * distribution.protein / 100) / 4),
+      carbohydrates: Math.round((calories * distribution.carbohydrates / 100) / 4),
+      fats: Math.round((calories * distribution.fats / 100) / 9)
+    };
+  };
+
+  // Aplicar recomendaciones médicas automáticamente
   const applyMedicalRecommendations = () => {
-    if (!clinicalRecord) return;
-
-    let adjustedGoals = { ...nutritionalGoals };
-    let adjustedDistribution = { ...macroDistribution };
-
-    // Ajustes basados en condiciones médicas
-    const diagnosis = clinicalRecord.nutritional_diagnosis?.toLowerCase() || '';
-    const diseases = clinicalRecord.diagnosed_diseases?.toLowerCase() || '';
-
-    // Diabetes - reducir carbohidratos, aumentar fibra
-    if (diseases.includes('diabetes')) {
-      adjustedDistribution = { protein: 25, carbohydrates: 40, fats: 35 };
-      adjustedGoals.micronutrients.fiber = 35;
-      adjustedGoals.micronutrients.sugar = 25;
-    }
-
-    // Hipertensión - reducir sodio
-    if (diseases.includes('hipertensión') || diseases.includes('hipertension')) {
-      adjustedGoals.micronutrients.sodium = 1500;
-    }
-
-    // Enfermedad renal - ajustar proteínas y sodio
-    if (diseases.includes('renal') || diseases.includes('riñón')) {
-      adjustedDistribution = { protein: 15, carbohydrates: 55, fats: 30 };
-      adjustedGoals.micronutrients.sodium = 1200;
-    }
-
-    // Sobrepeso/obesidad - aumentar proteínas, reducir carbohidratos
-    if (diagnosis.includes('sobrepeso') || diagnosis.includes('obesidad')) {
-      adjustedDistribution = { protein: 35, carbohydrates: 35, fats: 30 };
-      adjustedGoals.micronutrients.fiber = 30;
-    }
-
-    // Bajo peso - aumentar calorías y grasas saludables
-    if (diagnosis.includes('bajo peso')) {
-      adjustedGoals.dailyCalories = Math.round(adjustedGoals.dailyCalories * 1.2);
-      adjustedDistribution = { protein: 25, carbohydrates: 45, fats: 30 };
-    }
-
-    // Aplicar cambios
-    setMacroDistribution(adjustedDistribution);
-    updateMacroTargets(adjustedGoals.dailyCalories, adjustedDistribution);
+    if (!clinicalRecord?.diagnosed_diseases) return;
+    
+    const recommendations = {
+      dailyCalories: Math.max(1500, nutritionalGoals.dailyCalories * 0.9),
+      macroTargets: {
+        ...nutritionalGoals.macroTargets,
+        carbohydrates: Math.max(120, nutritionalGoals.macroTargets.carbohydrates * 0.8)
+      }
+    };
+    
+    const updatedGoals = { ...nutritionalGoals, ...recommendations };
+    setNutritionalGoals(updatedGoals);
+    onPlanDataChange({ ...dietPlan, nutritionalGoals: updatedGoals });
   };
 
   // Preset de distribuciones comunes
@@ -167,7 +131,7 @@ const NutritionalNutritionTab: React.FC<NutritionalNutritionTabProps> = ({
     { name: 'Para Diabetes', protein: 25, carbohydrates: 40, fats: 35 }
   ];
 
-  const isReadOnly = mode === 'view';
+  const isReadOnly = dietPlan.mode === 'view';
 
   return (
     <div className="nutritional-nutrition-tab">
@@ -200,7 +164,7 @@ const NutritionalNutritionTab: React.FC<NutritionalNutritionTabProps> = ({
                       min="1000"
                       max="5000"
                       step="50"
-                      disabled={isReadOnly || isLoading}
+                      disabled={isReadOnly}
                     />
                     <span className="input-group-text">kcal</span>
                   </div>
@@ -218,10 +182,10 @@ const NutritionalNutritionTab: React.FC<NutritionalNutritionTabProps> = ({
                           fats: preset.fats
                         };
                         setMacroDistribution(newDistribution);
-                        updateMacroTargets(undefined, newDistribution);
+                        updateMacroTargets(undefined);
                       }
                     }}
-                    disabled={isReadOnly || isLoading}
+                    disabled={isReadOnly}
                     defaultValue=""
                   >
                     <option value="">Seleccionar preset...</option>
@@ -257,9 +221,9 @@ const NutritionalNutritionTab: React.FC<NutritionalNutritionTabProps> = ({
                           fats: Math.round(remaining * 0.4)
                         };
                         setMacroDistribution(newDist);
-                        updateMacroTargets(undefined, newDist);
+                        updateMacroTargets(undefined);
                       }}
-                      disabled={isReadOnly || isLoading}
+                      disabled={isReadOnly}
                     />
                   </div>
                   <div className="text-center">
@@ -288,9 +252,9 @@ const NutritionalNutritionTab: React.FC<NutritionalNutritionTabProps> = ({
                           fats: Math.round(remaining * 0.5)
                         };
                         setMacroDistribution(newDist);
-                        updateMacroTargets(undefined, newDist);
+                        updateMacroTargets(undefined);
                       }}
-                      disabled={isReadOnly || isLoading}
+                      disabled={isReadOnly}
                     />
                   </div>
                   <div className="text-center">
@@ -319,9 +283,9 @@ const NutritionalNutritionTab: React.FC<NutritionalNutritionTabProps> = ({
                           fats
                         };
                         setMacroDistribution(newDist);
-                        updateMacroTargets(undefined, newDist);
+                        updateMacroTargets(undefined);
                       }}
-                      disabled={isReadOnly || isLoading}
+                      disabled={isReadOnly}
                     />
                   </div>
                   <div className="text-center">
@@ -388,11 +352,11 @@ const NutritionalNutritionTab: React.FC<NutritionalNutritionTabProps> = ({
                         }
                       };
                       setNutritionalGoals(updated);
-                      onUpdateData('nutritionalGoals', updated);
+                      onPlanDataChange({ ...dietPlan, nutritionalGoals: updated });
                     }}
                     min="10"
                     max="50"
-                    disabled={isReadOnly || isLoading}
+                    disabled={isReadOnly}
                   />
                 </div>
 
@@ -411,11 +375,11 @@ const NutritionalNutritionTab: React.FC<NutritionalNutritionTabProps> = ({
                         }
                       };
                       setNutritionalGoals(updated);
-                      onUpdateData('nutritionalGoals', updated);
+                      onPlanDataChange({ ...dietPlan, nutritionalGoals: updated });
                     }}
                     min="500"
                     max="3000"
-                    disabled={isReadOnly || isLoading}
+                    disabled={isReadOnly}
                   />
                 </div>
 
@@ -434,11 +398,11 @@ const NutritionalNutritionTab: React.FC<NutritionalNutritionTabProps> = ({
                         }
                       };
                       setNutritionalGoals(updated);
-                      onUpdateData('nutritionalGoals', updated);
+                      onPlanDataChange({ ...dietPlan, nutritionalGoals: updated });
                     }}
                     min="0"
                     max="100"
-                    disabled={isReadOnly || isLoading}
+                    disabled={isReadOnly}
                   />
                 </div>
 
@@ -457,11 +421,11 @@ const NutritionalNutritionTab: React.FC<NutritionalNutritionTabProps> = ({
                         }
                       };
                       setNutritionalGoals(updated);
-                      onUpdateData('nutritionalGoals', updated);
+                      onPlanDataChange({ ...dietPlan, nutritionalGoals: updated });
                     }}
                     min="500"
                     max="2000"
-                    disabled={isReadOnly || isLoading}
+                    disabled={isReadOnly}
                   />
                 </div>
               </div>
@@ -497,11 +461,11 @@ const NutritionalNutritionTab: React.FC<NutritionalNutritionTabProps> = ({
                           }
                         };
                         setNutritionalGoals(updated);
-                        onUpdateData('nutritionalGoals', updated);
+                        onPlanDataChange({ ...dietPlan, nutritionalGoals: updated });
                       }}
                       min="4"
                       max="15"
-                      disabled={isReadOnly || isLoading}
+                      disabled={isReadOnly}
                     />
                     <span className="input-group-text">vasos</span>
                   </div>
@@ -541,7 +505,11 @@ const NutritionalNutritionTab: React.FC<NutritionalNutritionTabProps> = ({
                 {clinicalRecord.diagnosed_diseases && (
                   <div className="mb-2">
                     <strong className="small">Condiciones:</strong>
-                    <div className="small text-muted">{clinicalRecord.diagnosed_diseases}</div>
+                    <div className="small text-muted">
+                      {typeof clinicalRecord.diagnosed_diseases === 'string' 
+                        ? clinicalRecord.diagnosed_diseases 
+                        : clinicalRecord.diagnosed_diseases?.disease_name || 'Ver expediente clínico'}
+                    </div>
                   </div>
                 )}
 
@@ -556,7 +524,6 @@ const NutritionalNutritionTab: React.FC<NutritionalNutritionTabProps> = ({
                   type="button"
                   className="btn btn-outline-primary btn-sm w-100"
                   onClick={applyMedicalRecommendations}
-                  disabled={isLoading}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-wand-2 me-1">
                     <path d="m21.64 3.64-8.9 8.9"></path>

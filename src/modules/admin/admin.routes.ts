@@ -41,5 +41,9 @@ router.route('/subscriptions/:id')
 // --- Gestión de Configuraciones (Placeholder) ---
 router.patch('/settings', validateMiddleware(AdminUpdateSettingsDto), adminController.updateGeneralSettings);
 
+// --- HERRAMIENTAS DE INTEGRIDAD DE DATOS ---
+router.get('/system/health', adminController.getSystemHealth);
+router.get('/system/integrity/diagnosis', adminController.diagnosisDataIntegrity);
+router.post('/system/integrity/repair', adminController.repairDataIntegrity);
 
 export default router;

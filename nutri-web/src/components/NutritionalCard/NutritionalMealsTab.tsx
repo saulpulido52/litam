@@ -1,15 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Patient } from '../../types/patient';
-import { ClinicalRecord } from '../../types/clinical-record';
-
-interface Food {
-  id: string;
-  name: string;
-  calories_per_100g: number;
-  protein_per_100g: number;
-  carbs_per_100g: number;
-  fats_per_100g: number;
-}
 
 interface MealItem {
   foodId: string;
@@ -32,21 +21,13 @@ interface Meal {
 }
 
 interface NutritionalMealsTabProps {
-  planData: any;
-  patient: Patient;
-  clinicalRecord?: ClinicalRecord;
-  mode: 'create' | 'edit' | 'view';
-  onUpdateData: (section: string, data: any) => void;
-  isLoading?: boolean;
+  dietPlan: any;
+  onPlanDataChange: (data: any) => void;
 }
 
 const NutritionalMealsTab: React.FC<NutritionalMealsTabProps> = ({
-  planData,
-  patient,
-  clinicalRecord,
-  mode,
-  onUpdateData,
-  isLoading = false
+  dietPlan,
+  onPlanDataChange
 }) => {
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [selectedDay, setSelectedDay] = useState('monday');
@@ -75,10 +56,10 @@ const NutritionalMealsTab: React.FC<NutritionalMealsTabProps> = ({
 
   // Cargar comidas existentes
   useEffect(() => {
-    if (planData.meals) {
-      setMeals(planData.meals);
+    if (dietPlan.meals) {
+      setMeals(dietPlan.meals);
     }
-  }, [planData.meals]);
+  }, [dietPlan.meals]);
 
   // Filtrar comidas por día seleccionado
   const dayMeals = meals.filter(meal => meal.day === selectedDay);
@@ -113,7 +94,7 @@ const NutritionalMealsTab: React.FC<NutritionalMealsTabProps> = ({
       : [...meals, meal];
     
     setMeals(updatedMeals);
-    onUpdateData('meals', updatedMeals);
+    onPlanDataChange({ ...dietPlan, meals: updatedMeals });
     setShowAddMealModal(false);
     setEditingMeal(null);
   };
@@ -122,7 +103,7 @@ const NutritionalMealsTab: React.FC<NutritionalMealsTabProps> = ({
   const deleteMeal = (mealId: string) => {
     const updatedMeals = meals.filter(m => m.id !== mealId);
     setMeals(updatedMeals);
-    onUpdateData('meals', updatedMeals);
+    onPlanDataChange({ ...dietPlan, meals: updatedMeals });
   };
 
   // Calcular totales del día
@@ -159,10 +140,9 @@ const NutritionalMealsTab: React.FC<NutritionalMealsTabProps> = ({
     const updatedMeals = [...filteredMeals, ...duplicatedMeals];
     
     setMeals(updatedMeals);
-    onUpdateData('meals', updatedMeals);
+    onPlanDataChange({ ...dietPlan, meals: updatedMeals });
   };
 
-  const isReadOnly = mode === 'view';
   const dayTotals = calculateDayTotals(selectedDay);
 
   return (
@@ -190,7 +170,7 @@ const NutritionalMealsTab: React.FC<NutritionalMealsTabProps> = ({
                     value={selectedWeek}
                     onChange={(e) => setSelectedWeek(parseInt(e.target.value))}
                   >
-                    {Array.from({ length: planData.totalWeeks || 4 }, (_, i) => (
+                    {Array.from({ length: dietPlan.totalWeeks || 4 }, (_, i) => (
                       <option key={i + 1} value={i + 1}>Semana {i + 1}</option>
                     ))}
                   </select>
@@ -276,29 +256,27 @@ const NutritionalMealsTab: React.FC<NutritionalMealsTabProps> = ({
               <h6 className="mb-0">
                 Comidas del {daysOfWeek.find(d => d.key === selectedDay)?.label}
               </h6>
-              {!isReadOnly && (
-                <div className="dropdown">
-                  <button className="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus me-1">
-                      <path d="M5 12h14"></path>
-                      <path d="M12 5v14"></path>
-                    </svg>
-                    Agregar Comida
-                  </button>
-                  <ul className="dropdown-menu">
-                    {mealTypes.map(mealType => (
-                      <li key={mealType.key}>
-                        <button 
-                          className="dropdown-item"
-                          onClick={() => addNewMeal(mealType.key)}
-                        >
-                          {mealType.icon} {mealType.label}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <div className="dropdown">
+                <button className="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus me-1">
+                    <path d="M5 12h14"></path>
+                    <path d="M12 5v14"></path>
+                  </svg>
+                  Agregar Comida
+                </button>
+                <ul className="dropdown-menu">
+                  {mealTypes.map(mealType => (
+                    <li key={mealType.key}>
+                      <button 
+                        className="dropdown-item"
+                        onClick={() => addNewMeal(mealType.key)}
+                      >
+                        {mealType.icon} {mealType.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
             <div className="card-body">
               {dayMeals.length === 0 ? (
@@ -309,14 +287,12 @@ const NutritionalMealsTab: React.FC<NutritionalMealsTabProps> = ({
                     <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Z"></path>
                   </svg>
                   <p className="text-muted mb-3">No hay comidas programadas para este día</p>
-                  {!isReadOnly && (
-                    <button 
-                      className="btn btn-outline-primary"
-                      onClick={() => addNewMeal('breakfast')}
-                    >
-                      Agregar Primera Comida
-                    </button>
-                  )}
+                  <button 
+                    className="btn btn-outline-primary"
+                    onClick={() => addNewMeal('breakfast')}
+                  >
+                    Agregar Primera Comida
+                  </button>
                 </div>
               ) : (
                 <div className="timeline">
@@ -325,7 +301,7 @@ const NutritionalMealsTab: React.FC<NutritionalMealsTabProps> = ({
                       const orderMap = { breakfast: 1, morning_snack: 2, lunch: 3, afternoon_snack: 4, dinner: 5, evening_snack: 6 };
                       return (orderMap[a.mealType] || 999) - (orderMap[b.mealType] || 999);
                     })
-                    .map((meal, index) => {
+                    .map((meal, _) => {
                       const mealTypeData = mealTypes.find(mt => mt.key === meal.mealType);
                       const mealTotals = meal.items.reduce((sum, item) => ({
                         calories: sum.calories + item.calories,
@@ -386,22 +362,20 @@ const NutritionalMealsTab: React.FC<NutritionalMealsTabProps> = ({
                               )}
                             </div>
                             
-                            {!isReadOnly && (
-                              <div className="dropdown">
-                                <button className="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-more-vertical">
-                                    <circle cx="12" cy="12" r="1"></circle>
-                                    <circle cx="12" cy="5" r="1"></circle>
-                                    <circle cx="12" cy="19" r="1"></circle>
-                                  </svg>
-                                </button>
-                                <ul className="dropdown-menu">
-                                  <li><button className="dropdown-item" onClick={() => editMeal(meal)}>Editar</button></li>
-                                  <li><hr className="dropdown-divider" /></li>
-                                  <li><button className="dropdown-item text-danger" onClick={() => deleteMeal(meal.id)}>Eliminar</button></li>
-                                </ul>
-                              </div>
-                            )}
+                            <div className="dropdown">
+                              <button className="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-more-vertical">
+                                  <circle cx="12" cy="12" r="1"></circle>
+                                  <circle cx="12" cy="5" r="1"></circle>
+                                  <circle cx="12" cy="19" r="1"></circle>
+                                </svg>
+                              </button>
+                              <ul className="dropdown-menu">
+                                <li><button className="dropdown-item" onClick={() => editMeal(meal)}>Editar</button></li>
+                                <li><hr className="dropdown-divider" /></li>
+                                <li><button className="dropdown-item text-danger" onClick={() => deleteMeal(meal.id)}>Eliminar</button></li>
+                              </ul>
+                            </div>
                           </div>
                         </div>
                       );
@@ -424,98 +398,72 @@ const NutritionalMealsTab: React.FC<NutritionalMealsTabProps> = ({
               </h6>
             </div>
             <div className="card-body">
-              {!isReadOnly && (
-                <>
-                  <div className="mb-3">
-                    <label className="form-label small">Duplicar comidas desde:</label>
-                    <select 
-                      className="form-select form-select-sm"
-                      onChange={(e) => {
-                        if (e.target.value && e.target.value !== selectedDay) {
-                          if (confirm(`¿Duplicar todas las comidas de ${daysOfWeek.find(d => d.key === e.target.value)?.label} a ${daysOfWeek.find(d => d.key === selectedDay)?.label}?`)) {
-                            duplicateDay(e.target.value, selectedDay);
-                          }
-                        }
-                        e.target.value = '';
-                      }}
-                      defaultValue=""
-                    >
-                      <option value="">Seleccionar día...</option>
-                      {daysOfWeek
-                        .filter(day => day.key !== selectedDay && meals.some(meal => meal.day === day.key))
-                        .map(day => (
-                          <option key={day.key} value={day.key}>{day.label}</option>
-                        ))}
-                    </select>
-                  </div>
-                  
-                  <div className="d-grid gap-2">
-                    <button 
-                      className="btn btn-outline-primary btn-sm"
-                      onClick={() => addNewMeal('breakfast')}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sunrise me-1">
-                        <path d="M12 2v8"></path>
-                        <path d="M4.93 10.93l1.41 1.41"></path>
-                        <path d="M2 18h2"></path>
-                        <path d="M20 18h2"></path>
-                        <path d="M19.07 10.93l-1.41 1.41"></path>
-                        <path d="M22 22H2"></path>
-                        <path d="M8 6l4-4 4 4"></path>
-                        <path d="M16 18a4 4 0 0 0-8 0"></path>
-                      </svg>
-                      Agregar Desayuno
-                    </button>
-                    <button 
-                      className="btn btn-outline-primary btn-sm"
-                      onClick={() => addNewMeal('lunch')}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sun me-1">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <path d="M12 1v2"></path>
-                        <path d="M12 21v2"></path>
-                        <path d="M4.22 4.22l1.42 1.42"></path>
-                        <path d="M18.36 18.36l1.42 1.42"></path>
-                        <path d="M1 12h2"></path>
-                        <path d="M21 12h2"></path>
-                        <path d="M4.22 19.78l1.42-1.42"></path>
-                        <path d="M18.36 5.64l1.42-1.42"></path>
-                      </svg>
-                      Agregar Comida
-                    </button>
-                    <button 
-                      className="btn btn-outline-primary btn-sm"
-                      onClick={() => addNewMeal('dinner')}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-moon me-1">
-                        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
-                      </svg>
-                      Agregar Cena
-                    </button>
-                  </div>
-                </>
-              )}
+              <div className="mb-3">
+                <label className="form-label small">Duplicar comidas desde:</label>
+                <select 
+                  className="form-select form-select-sm"
+                  onChange={(e) => {
+                    if (e.target.value && e.target.value !== selectedDay) {
+                      if (confirm(`¿Duplicar todas las comidas de ${daysOfWeek.find(d => d.key === e.target.value)?.label} a ${daysOfWeek.find(d => d.key === selectedDay)?.label}?`)) {
+                        duplicateDay(e.target.value, selectedDay);
+                      }
+                    }
+                    e.target.value = '';
+                  }}
+                  defaultValue=""
+                >
+                  <option value="">Seleccionar día...</option>
+                  {daysOfWeek
+                    .filter(day => day.key !== selectedDay && meals.some(meal => meal.day === day.key))
+                    .map(day => (
+                      <option key={day.key} value={day.key}>{day.label}</option>
+                    ))}
+                </select>
+              </div>
               
-              <hr />
-              
-              <div className="small">
-                <h6 className="small text-muted mb-2">RESUMEN NUTRICIONAL</h6>
-                <div className="d-flex justify-content-between mb-1">
-                  <span>Calorías:</span>
-                  <span className="fw-bold">{Math.round(dayTotals.calories)} kcal</span>
-                </div>
-                <div className="d-flex justify-content-between mb-1">
-                  <span>Proteínas:</span>
-                  <span className="fw-bold text-danger">{Math.round(dayTotals.protein)} g</span>
-                </div>
-                <div className="d-flex justify-content-between mb-1">
-                  <span>Carbohidratos:</span>
-                  <span className="fw-bold text-warning">{Math.round(dayTotals.carbs)} g</span>
-                </div>
-                <div className="d-flex justify-content-between">
-                  <span>Grasas:</span>
-                  <span className="fw-bold text-success">{Math.round(dayTotals.fats)} g</span>
-                </div>
+              <div className="d-grid gap-2">
+                <button 
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={() => addNewMeal('breakfast')}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sunrise me-1">
+                    <path d="M12 2v8"></path>
+                    <path d="M4.93 10.93l1.41 1.41"></path>
+                    <path d="M2 18h2"></path>
+                    <path d="M20 18h2"></path>
+                    <path d="M19.07 10.93l-1.41 1.41"></path>
+                    <path d="M22 22H2"></path>
+                    <path d="M8 6l4-4 4 4"></path>
+                    <path d="M16 18a4 4 0 0 0-8 0"></path>
+                  </svg>
+                  Agregar Desayuno
+                </button>
+                <button 
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={() => addNewMeal('lunch')}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sun me-1">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <path d="M12 1v2"></path>
+                    <path d="M12 21v2"></path>
+                    <path d="M4.22 4.22l1.42 1.42"></path>
+                    <path d="M18.36 18.36l1.42 1.42"></path>
+                    <path d="M1 12h2"></path>
+                    <path d="M21 12h2"></path>
+                    <path d="M4.22 19.78l1.42-1.42"></path>
+                    <path d="M18.36 5.64l1.42-1.42"></path>
+                  </svg>
+                  Agregar Comida
+                </button>
+                <button 
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={() => addNewMeal('dinner')}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-moon me-1">
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                  </svg>
+                  Agregar Cena
+                </button>
               </div>
             </div>
           </div>
@@ -531,7 +479,6 @@ const NutritionalMealsTab: React.FC<NutritionalMealsTabProps> = ({
             setShowAddMealModal(false);
             setEditingMeal(null);
           }}
-          isLoading={isLoading}
         />
       )}
     </div>
@@ -543,8 +490,7 @@ const MealEditorModal: React.FC<{
   meal: Meal;
   onSave: (meal: Meal) => void;
   onClose: () => void;
-  isLoading: boolean;
-}> = ({ meal, onSave, onClose, isLoading }) => {
+}> = ({ meal, onSave, onClose }) => {
   const [editedMeal, setEditedMeal] = useState(meal);
 
   const handleSave = () => {
@@ -605,7 +551,7 @@ const MealEditorModal: React.FC<{
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancelar
             </button>
-            <button type="button" className="btn btn-primary" onClick={handleSave} disabled={isLoading}>
+            <button type="button" className="btn btn-primary" onClick={handleSave}>
               Guardar Comida
             </button>
           </div>

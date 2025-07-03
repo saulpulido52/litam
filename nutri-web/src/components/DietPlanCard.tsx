@@ -2,18 +2,15 @@ import React from 'react';
 import { 
   Calendar, 
   Clock, 
-  Target, 
-  Users, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Copy, 
+  Users,
+  CheckCircle2,
+  Edit,
+  Eye,
+  Copy,
   Download,
   PlayCircle,
-  PauseCircle,
   Archive,
-  CheckCircle2,
-  AlertTriangle
+  Trash2
 } from 'lucide-react';
 import type { DietPlan } from '../types/diet';
 

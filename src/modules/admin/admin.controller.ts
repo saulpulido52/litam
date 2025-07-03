@@ -180,6 +180,61 @@ class AdminController {
             next(new AppError('Error al actualizar la configuración general.', 500));
         }
     }
+
+    // --- HERRAMIENTAS DE INTEGRIDAD DE DATOS ---
+    
+    public async getSystemHealth(req: Request, res: Response, next: NextFunction) {
+        try {
+            const healthData = await adminService.getSystemHealth();
+            res.status(200).json({
+                status: 'success',
+                data: healthData,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.getSystemHealth:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener métricas de salud del sistema.', 500));
+        }
+    }
+
+    public async diagnosisDataIntegrity(req: Request, res: Response, next: NextFunction) {
+        try {
+            const diagnosis = await adminService.diagnosisDataIntegrity();
+            res.status(200).json({
+                status: 'success',
+                message: 'Diagnóstico de integridad de datos completado.',
+                data: diagnosis,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.diagnosisDataIntegrity:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al ejecutar diagnóstico de integridad de datos.', 500));
+        }
+    }
+
+    public async repairDataIntegrity(req: Request, res: Response, next: NextFunction) {
+        try {
+            // Obtener el parámetro dryRun de la query (por defecto true para seguridad)
+            const dryRun = req.query.dryRun !== 'false'; // Solo se ejecuta si explícitamente se pasa dryRun=false
+            
+            const repairResult = await adminService.repairDataIntegrity(dryRun);
+            res.status(200).json({
+                status: 'success',
+                message: repairResult.message,
+                data: repairResult,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.repairDataIntegrity:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al ejecutar reparación de integridad de datos.', 500));
+        }
+    }
 }
 
 export default new AdminController();

@@ -1,73 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { Patient } from '../../types/patient';
-import { ClinicalRecord } from '../../types/clinical-record';
-
-interface MealSchedule {
-  mealType: string;
-  mealName: string;
-  scheduledTime: string;
-  duration: number; // en minutos
-  isFlexible: boolean;
-  alternativeTimes?: string[];
-  notes?: string;
-  icon: string;
-}
-
-interface DailySchedule {
-  wakeUpTime: string;
-  bedTime: string;
-  mealsSchedule: MealSchedule[];
-  exerciseTime?: string;
-  exerciseDuration?: number;
-  supplementTimes: {
-    name: string;
-    time: string;
-    withMeal: boolean;
-  }[];
-  waterReminders: string[];
-  notes?: string;
-}
+import { useState } from 'react';
 
 interface NutritionalScheduleTabProps {
-  planData: any;
-  patient: Patient;
-  clinicalRecord?: ClinicalRecord;
-  mode: 'create' | 'edit' | 'view';
-  onUpdateData: (section: string, data: any) => void;
-  isLoading?: boolean;
+  dietPlan: any;
+  onPlanDataChange: (data: any) => void;
 }
 
-const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
-  planData,
-  patient,
-  clinicalRecord,
-  mode,
-  onUpdateData,
-  isLoading = false
-}) => {
-  const [schedule, setSchedule] = useState<DailySchedule>({
+export default function NutritionalScheduleTab({
+  dietPlan,
+  onPlanDataChange
+}: NutritionalScheduleTabProps) {
+  const [schedule, setSchedule] = useState({
     wakeUpTime: '07:00',
     bedTime: '22:00',
-    mealsSchedule: [
-      { mealType: 'breakfast', mealName: 'Desayuno', scheduledTime: '07:30', duration: 20, isFlexible: false, icon: '🌅' },
-      { mealType: 'morning_snack', mealName: 'Colación Matutina', scheduledTime: '10:00', duration: 10, isFlexible: true, icon: '☕' },
-      { mealType: 'lunch', mealName: 'Comida', scheduledTime: '14:00', duration: 30, isFlexible: false, icon: '🍽️' },
-      { mealType: 'afternoon_snack', mealName: 'Colación Vespertina', scheduledTime: '17:00', duration: 10, isFlexible: true, icon: '🥪' },
-      { mealType: 'dinner', mealName: 'Cena', scheduledTime: '20:00', duration: 25, isFlexible: false, icon: '🌙' }
-    ],
+    mealsSchedule: [{
+      mealType: 'breakfast',
+      mealName: 'Desayuno',
+      scheduledTime: '08:00',
+      duration: 30,
+      isFlexible: false,
+      icon: '🍳',
+      notes: ''
+    }],
+    exerciseTime: '',
+    exerciseDuration: 0,
     supplementTimes: [],
-    waterReminders: ['08:00', '10:00', '12:00', '15:00', '18:00', '20:00']
+    waterReminders: ['08:00', '12:00', '16:00', '20:00']
   });
 
-  const [selectedDay, setSelectedDay] = useState('weekday'); // weekday, weekend
+  // Schedule type configuration removed - using simplified approach
   const [showTimeAnalysis, setShowTimeAnalysis] = useState(false);
 
   // Cargar horarios existentes
-  useEffect(() => {
-    if (planData.mealSchedules) {
-      setSchedule(planData.mealSchedules);
-    }
-  }, [planData.mealSchedules]);
+  if (dietPlan.mealSchedules) {
+    setSchedule(dietPlan.mealSchedules);
+  }
 
   // Aplicar horarios típicos según el perfil del paciente
   const applyLifestyleSchedule = (lifestyleType: string) => {
@@ -76,44 +42,44 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
         wakeUpTime: '06:30',
         bedTime: '23:00',
         mealsSchedule: [
-          { mealType: 'breakfast', mealName: 'Desayuno', scheduledTime: '07:00', duration: 15, isFlexible: false, icon: '🌅' },
-          { mealType: 'morning_snack', mealName: 'Colación Matutina', scheduledTime: '10:30', duration: 10, isFlexible: true, icon: '☕' },
-          { mealType: 'lunch', mealName: 'Comida', scheduledTime: '13:00', duration: 25, isFlexible: true, icon: '🍽️' },
-          { mealType: 'afternoon_snack', mealName: 'Colación Vespertina', scheduledTime: '16:00', duration: 10, isFlexible: true, icon: '🥪' },
-          { mealType: 'dinner', mealName: 'Cena', scheduledTime: '19:30', duration: 25, isFlexible: false, icon: '🌙' }
+          { mealType: 'breakfast', mealName: 'Desayuno', scheduledTime: '07:00', duration: 15, isFlexible: false, icon: '🌅', notes: '' },
+          { mealType: 'morning_snack', mealName: 'Colación Matutina', scheduledTime: '10:30', duration: 10, isFlexible: true, icon: '☕', notes: '' },
+          { mealType: 'lunch', mealName: 'Comida', scheduledTime: '13:00', duration: 25, isFlexible: true, icon: '🍽️', notes: '' },
+          { mealType: 'afternoon_snack', mealName: 'Colación Vespertina', scheduledTime: '16:00', duration: 10, isFlexible: true, icon: '🥪', notes: '' },
+          { mealType: 'dinner', mealName: 'Cena', scheduledTime: '19:30', duration: 25, isFlexible: false, icon: '🌙', notes: '' }
         ]
       },
       office_worker: {
         wakeUpTime: '06:00',
         bedTime: '22:30',
         mealsSchedule: [
-          { mealType: 'breakfast', mealName: 'Desayuno', scheduledTime: '06:30', duration: 20, isFlexible: false, icon: '🌅' },
-          { mealType: 'morning_snack', mealName: 'Colación Matutina', scheduledTime: '09:30', duration: 10, isFlexible: true, icon: '☕' },
-          { mealType: 'lunch', mealName: 'Comida', scheduledTime: '13:00', duration: 45, isFlexible: false, icon: '🍽️' },
-          { mealType: 'afternoon_snack', mealName: 'Colación Vespertina', scheduledTime: '16:00', duration: 10, isFlexible: true, icon: '🥪' },
-          { mealType: 'dinner', mealName: 'Cena', scheduledTime: '19:00', duration: 30, isFlexible: false, icon: '🌙' }
+          { mealType: 'breakfast', mealName: 'Desayuno', scheduledTime: '06:30', duration: 20, isFlexible: false, icon: '🌅', notes: '' },
+          { mealType: 'morning_snack', mealName: 'Colación Matutina', scheduledTime: '09:30', duration: 10, isFlexible: true, icon: '☕', notes: '' },
+          { mealType: 'lunch', mealName: 'Comida', scheduledTime: '13:00', duration: 45, isFlexible: false, icon: '🍽️', notes: '' },
+          { mealType: 'afternoon_snack', mealName: 'Colación Vespertina', scheduledTime: '16:00', duration: 10, isFlexible: true, icon: '🥪', notes: '' },
+          { mealType: 'dinner', mealName: 'Cena', scheduledTime: '19:00', duration: 30, isFlexible: false, icon: '🌙', notes: '' }
         ]
       },
       shift_worker: {
         wakeUpTime: '05:00',
         bedTime: '21:00',
         mealsSchedule: [
-          { mealType: 'breakfast', mealName: 'Desayuno', scheduledTime: '05:30', duration: 20, isFlexible: false, icon: '🌅' },
-          { mealType: 'morning_snack', mealName: 'Colación Matutina', scheduledTime: '08:00', duration: 10, isFlexible: true, icon: '☕' },
-          { mealType: 'lunch', mealName: 'Comida', scheduledTime: '11:30', duration: 30, isFlexible: false, icon: '🍽️' },
-          { mealType: 'afternoon_snack', mealName: 'Colación Vespertina', scheduledTime: '15:00', duration: 10, isFlexible: true, icon: '🥪' },
-          { mealType: 'dinner', mealName: 'Cena', scheduledTime: '17:30', duration: 25, isFlexible: false, icon: '🌙' }
+          { mealType: 'breakfast', mealName: 'Desayuno', scheduledTime: '05:30', duration: 20, isFlexible: false, icon: '🌅', notes: '' },
+          { mealType: 'morning_snack', mealName: 'Colación Matutina', scheduledTime: '08:00', duration: 10, isFlexible: true, icon: '☕', notes: '' },
+          { mealType: 'lunch', mealName: 'Comida', scheduledTime: '11:30', duration: 30, isFlexible: false, icon: '🍽️', notes: '' },
+          { mealType: 'afternoon_snack', mealName: 'Colación Vespertina', scheduledTime: '15:00', duration: 10, isFlexible: true, icon: '🥪', notes: '' },
+          { mealType: 'dinner', mealName: 'Cena', scheduledTime: '17:30', duration: 25, isFlexible: false, icon: '🌙', notes: '' }
         ]
       },
       homemaker: {
         wakeUpTime: '07:00',
         bedTime: '22:00',
         mealsSchedule: [
-          { mealType: 'breakfast', mealName: 'Desayuno', scheduledTime: '07:30', duration: 25, isFlexible: true, icon: '🌅' },
-          { mealType: 'morning_snack', mealName: 'Colación Matutina', scheduledTime: '10:00', duration: 15, isFlexible: true, icon: '☕' },
-          { mealType: 'lunch', mealName: 'Comida', scheduledTime: '13:30', duration: 35, isFlexible: true, icon: '🍽️' },
-          { mealType: 'afternoon_snack', mealName: 'Colación Vespertina', scheduledTime: '16:30', duration: 15, isFlexible: true, icon: '🥪' },
-          { mealType: 'dinner', mealName: 'Cena', scheduledTime: '19:30', duration: 30, isFlexible: true, icon: '🌙' }
+          { mealType: 'breakfast', mealName: 'Desayuno', scheduledTime: '07:30', duration: 25, isFlexible: true, icon: '🌅', notes: '' },
+          { mealType: 'morning_snack', mealName: 'Colación Matutina', scheduledTime: '10:00', duration: 15, isFlexible: true, icon: '☕', notes: '' },
+          { mealType: 'lunch', mealName: 'Comida', scheduledTime: '13:30', duration: 35, isFlexible: true, icon: '🍽️', notes: '' },
+          { mealType: 'afternoon_snack', mealName: 'Colación Vespertina', scheduledTime: '16:30', duration: 15, isFlexible: true, icon: '🥪', notes: '' },
+          { mealType: 'dinner', mealName: 'Cena', scheduledTime: '19:30', duration: 30, isFlexible: true, icon: '🌙', notes: '' }
         ]
       }
     };
@@ -125,7 +91,7 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
         ...preset
       };
       setSchedule(updatedSchedule);
-      onUpdateData('mealSchedules', updatedSchedule);
+      onPlanDataChange({ ...dietPlan, mealSchedules: updatedSchedule });
     }
   };
 
@@ -161,7 +127,7 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
       )
     };
     setSchedule(updatedSchedule);
-    onUpdateData('mealSchedules', updatedSchedule);
+    onPlanDataChange({ ...dietPlan, mealSchedules: updatedSchedule });
   };
 
   // Agregar recordatorio de agua
@@ -172,7 +138,7 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
       waterReminders: [...schedule.waterReminders, newTime].sort()
     };
     setSchedule(updatedSchedule);
-    onUpdateData('mealSchedules', updatedSchedule);
+    onPlanDataChange({ ...dietPlan, mealSchedules: updatedSchedule });
   };
 
   // Eliminar recordatorio de agua
@@ -182,11 +148,12 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
       waterReminders: schedule.waterReminders.filter((_, i) => i !== index)
     };
     setSchedule(updatedSchedule);
-    onUpdateData('mealSchedules', updatedSchedule);
+    onPlanDataChange({ ...dietPlan, mealSchedules: updatedSchedule });
   };
 
-  const isReadOnly = mode === 'view';
   const timingGaps = analyzeTimingGaps();
+
+  // Meal schedule management simplified for better type safety
 
   return (
     <div className="nutritional-schedule-tab">
@@ -222,9 +189,8 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
                     onChange={(e) => {
                       const updatedSchedule = { ...schedule, wakeUpTime: e.target.value };
                       setSchedule(updatedSchedule);
-                      onUpdateData('mealSchedules', updatedSchedule);
+                      onPlanDataChange({ ...dietPlan, mealSchedules: updatedSchedule });
                     }}
-                    disabled={isReadOnly || isLoading}
                   />
                 </div>
                 <div className="col-md-4">
@@ -236,9 +202,8 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
                     onChange={(e) => {
                       const updatedSchedule = { ...schedule, bedTime: e.target.value };
                       setSchedule(updatedSchedule);
-                      onUpdateData('mealSchedules', updatedSchedule);
+                      onPlanDataChange({ ...dietPlan, mealSchedules: updatedSchedule });
                     }}
-                    disabled={isReadOnly || isLoading}
                   />
                 </div>
                 <div className="col-md-4">
@@ -250,7 +215,6 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
                         applyLifestyleSchedule(e.target.value);
                       }
                     }}
-                    disabled={isReadOnly || isLoading}
                     defaultValue=""
                   >
                     <option value="">Seleccionar preset...</option>
@@ -273,9 +237,8 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
                     onChange={(e) => {
                       const updatedSchedule = { ...schedule, exerciseTime: e.target.value };
                       setSchedule(updatedSchedule);
-                      onUpdateData('mealSchedules', updatedSchedule);
+                      onPlanDataChange({ ...dietPlan, mealSchedules: updatedSchedule });
                     }}
-                    disabled={isReadOnly || isLoading}
                   />
                 </div>
                 <div className="col-md-6">
@@ -286,14 +249,13 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
                       className="form-control"
                       value={schedule.exerciseDuration || ''}
                       onChange={(e) => {
-                        const updatedSchedule = { ...schedule, exerciseDuration: parseInt(e.target.value) || undefined };
+                        const updatedSchedule = { ...schedule, exerciseDuration: parseInt(e.target.value) || 0 };
                         setSchedule(updatedSchedule);
-                        onUpdateData('mealSchedules', updatedSchedule);
+                        onPlanDataChange({ ...dietPlan, mealSchedules: updatedSchedule });
                       }}
                       min="15"
                       max="180"
                       step="15"
-                      disabled={isReadOnly || isLoading}
                     />
                     <span className="input-group-text">min</span>
                   </div>
@@ -329,7 +291,7 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
               {/* Timeline visual */}
               <div className="timeline-container mb-4">
                 <div className="timeline-line position-relative">
-                  {schedule.mealsSchedule.map((meal, index) => {
+                  {schedule.mealsSchedule.map((meal, _) => {
                     const timePosition = ((parseInt(meal.scheduledTime.split(':')[0]) * 60 + parseInt(meal.scheduledTime.split(':')[1])) / (24 * 60)) * 100;
                     
                     return (
@@ -353,7 +315,7 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
 
               {/* Configuración detallada de cada comida */}
               <div className="row">
-                {schedule.mealsSchedule.map((meal, index) => (
+                {schedule.mealsSchedule.map((meal, _) => (
                   <div key={meal.mealType} className="col-12 mb-3">
                     <div className="border rounded p-3">
                       <div className="row align-items-center">
@@ -376,7 +338,6 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
                             className="form-control form-control-sm"
                             value={meal.scheduledTime}
                             onChange={(e) => updateMealSchedule(meal.mealType, 'scheduledTime', e.target.value)}
-                            disabled={isReadOnly || isLoading}
                           />
                         </div>
 
@@ -391,7 +352,6 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
                               min="5"
                               max="60"
                               step="5"
-                              disabled={isReadOnly || isLoading}
                             />
                             <span className="input-group-text">min</span>
                           </div>
@@ -405,7 +365,6 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
                               type="checkbox"
                               checked={meal.isFlexible}
                               onChange={(e) => updateMealSchedule(meal.mealType, 'isFlexible', e.target.checked)}
-                              disabled={isReadOnly || isLoading}
                             />
                             <label className="form-check-label small">
                               {meal.isFlexible ? 'Flexible' : 'Fijo'}
@@ -421,7 +380,6 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
                             value={meal.notes || ''}
                             onChange={(e) => updateMealSchedule(meal.mealType, 'notes', e.target.value)}
                             placeholder="Ej: Después del ejercicio, en oficina..."
-                            disabled={isReadOnly || isLoading}
                           />
                         </div>
                       </div>
@@ -478,19 +436,17 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
                 </svg>
                 Recordatorios de Hidratación
               </h6>
-              {!isReadOnly && (
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-primary"
-                  onClick={addWaterReminder}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus me-1">
-                    <path d="M5 12h14"></path>
-                    <path d="M12 5v14"></path>
-                  </svg>
-                  Agregar
-                </button>
-              )}
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-primary"
+                onClick={addWaterReminder}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus me-1">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5v14"></path>
+                </svg>
+                Agregar
+              </button>
             </div>
             <div className="card-body">
               <div className="row">
@@ -507,19 +463,16 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
                           updatedReminders[index] = e.target.value;
                           const updatedSchedule = { ...schedule, waterReminders: updatedReminders.sort() };
                           setSchedule(updatedSchedule);
-                          onUpdateData('mealSchedules', updatedSchedule);
+                          onPlanDataChange({ ...dietPlan, mealSchedules: updatedSchedule });
                         }}
-                        disabled={isReadOnly || isLoading}
                       />
-                      {!isReadOnly && (
-                        <button
-                          type="button"
-                          className="btn btn-outline-danger btn-sm"
-                          onClick={() => removeWaterReminder(index)}
-                        >
-                          ×
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={() => removeWaterReminder(index)}
+                      >
+                        ×
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -632,11 +585,11 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
               <div className="small">
                 <div className="d-flex justify-content-between mb-1">
                   <span>Primera comida:</span>
-                  <span className="fw-bold">{Math.min(...schedule.mealsSchedule.map(m => m.scheduledTime)).replace(':', ':')}</span>
+                  <span className="fw-bold">{schedule.mealsSchedule.length > 0 ? schedule.mealsSchedule.map(m => m.scheduledTime).sort()[0] : 'N/A'}</span>
                 </div>
                 <div className="d-flex justify-content-between mb-1">
                   <span>Última comida:</span>
-                  <span className="fw-bold">{Math.max(...schedule.mealsSchedule.map(m => m.scheduledTime)).replace(':', ':')}</span>
+                  <span className="fw-bold">{schedule.mealsSchedule.length > 0 ? schedule.mealsSchedule.map(m => m.scheduledTime).sort().reverse()[0] : 'N/A'}</span>
                 </div>
                 <div className="d-flex justify-content-between mb-1">
                   <span>Tiempo total alimentación:</span>
@@ -660,6 +613,4 @@ const NutritionalScheduleTab: React.FC<NutritionalScheduleTabProps> = ({
       </div>
     </div>
   );
-};
-
-export default NutritionalScheduleTab; 
+} 

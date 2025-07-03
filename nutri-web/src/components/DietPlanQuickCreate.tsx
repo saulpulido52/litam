@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Calendar, 
   Clock, 
@@ -30,7 +30,7 @@ interface DietPlanQuickCreateProps {
   editingPlan?: DietPlan;
 }
 
-const DietPlanQuickCreate: React.FC<DietPlanQuickCreateProps> = ({
+export default function DietPlanQuickCreate({
   patients,
   onSubmit,
   onCancel,
@@ -42,7 +42,7 @@ const DietPlanQuickCreate: React.FC<DietPlanQuickCreateProps> = ({
   mode = 'create',
   clinicalRecords = [],
   editingPlan
-}) => {
+}: DietPlanQuickCreateProps) {
   const [formData, setFormData] = useState<CreateDietPlanDto>({
     patientId: editingPlan?.patient_id || '',
     name: editingPlan?.name || '',
@@ -65,9 +65,9 @@ const DietPlanQuickCreate: React.FC<DietPlanQuickCreateProps> = ({
   });
 
   const [errors, setErrors] = useState<string[]>([]);
-  const [showAIOptions, setShowAIOptions] = useState(false);
   const [selectedPatientRecord, setSelectedPatientRecord] = useState<ClinicalRecord | null>(null);
   const [showClinicalInfo, setShowClinicalInfo] = useState(false);
+
 
   // Si estamos duplicando, prellenar con datos del plan original
   useEffect(() => {
@@ -728,6 +728,4 @@ const DietPlanQuickCreate: React.FC<DietPlanQuickCreateProps> = ({
       </div>
     </div>
   );
-};
-
-export default DietPlanQuickCreate; 
+} 

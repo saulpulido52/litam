@@ -250,7 +250,7 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
       snack_times: [
         planData.mealTimes.midMorning || '10:30',
         planData.mealTimes.snack || '16:00'
-      ].filter(time => mealFrequency.morning_snack || mealFrequency.afternoon_snack),
+      ].filter((_) => mealFrequency.morning_snack || mealFrequency.afternoon_snack),
       bed_time: planData.bedTime || '22:00'
     } : {
       breakfast_time: '08:00',

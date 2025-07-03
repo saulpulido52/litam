@@ -37,21 +37,27 @@ const NutritionalCard: React.FC<NutritionalCardProps> = ({
   isLoading = false
 }) => {
   const [activeTab, setActiveTab] = useState<TabKey>('summary');
-  const [planData, setPlanData] = useState<any>({
+  const [planData, setPlanData] = useState({
     // Datos básicos del plan
     name: dietPlan?.name || '',
     description: dietPlan?.description || '',
     notes: dietPlan?.notes || '',
     startDate: dietPlan?.start_date ? new Date(dietPlan.start_date).toISOString().split('T')[0] : '',
     endDate: dietPlan?.end_date ? new Date(dietPlan.end_date).toISOString().split('T')[0] : '',
-    dailyCaloriesTarget: dietPlan?.daily_calories_target || 2000,
+    dailyCaloriesTarget: dietPlan?.target_calories || 2000,
     
-    // Datos de macronutrientes
-    dailyMacrosTarget: dietPlan?.daily_macros_target || {
-      protein: 150,
-      carbohydrates: 200,
-      fats: 67
-    },
+    // Datos de macronutrientes  
+    dailyMacrosTarget: dietPlan?.target_protein 
+      ? {
+          protein: dietPlan.target_protein,
+          carbohydrates: dietPlan.target_carbs || 200,
+          fats: dietPlan.target_fats || 67
+        }
+      : {
+          protein: 150,
+          carbohydrates: 200,
+          fats: 67
+        },
     
     // Configuración del plan
     isWeeklyPlan: dietPlan?.is_weekly_plan ?? true,
@@ -59,15 +65,15 @@ const NutritionalCard: React.FC<NutritionalCardProps> = ({
     weeklyPlans: dietPlan?.weekly_plans || [],
     
     // Datos específicos de cada pestaña
-    meals: [],
+    meals: dietPlan?.meals || [],
     mealSchedules: {},
     nutritionalGoals: {},
     restrictions: {
       allergies: [],
       intolerances: [],
       medicalConditions: [],
-      medications: [],
-      specialConsiderations: []
+      dietaryRestrictions: [],
+      emergencyContacts: []
     }
   });
 
@@ -134,9 +140,13 @@ const NutritionalCard: React.FC<NutritionalCardProps> = ({
     }
   ];
 
-  // Función para actualizar datos del plan
-  const updatePlanData = (section: string, data: any) => {
-    setPlanData(prev => ({
+  const handleTabChange = (newActiveTab: TabKey) => {
+    setActiveTab(newActiveTab);
+  };
+
+  const handleDataUpdate = (section: string, data: any) => {
+    console.log(`🔄 Updating ${section}:`, data);
+    setPlanData((prev: any) => ({
       ...prev,
       [section]: data
     }));
@@ -239,7 +249,7 @@ const NutritionalCard: React.FC<NutritionalCardProps> = ({
                 <li key={tab.key} className="nav-item">
                   <button 
                     className={`nav-link ${activeTab === tab.key ? 'active' : ''}`}
-                    onClick={() => setActiveTab(tab.key)}
+                    onClick={() => handleTabChange(tab.key)}
                     disabled={isLoading}
                   >
                     {tab.icon}
@@ -256,7 +266,7 @@ const NutritionalCard: React.FC<NutritionalCardProps> = ({
                 patient={patient}
                 clinicalRecord={clinicalRecord}
                 mode={mode}
-                onUpdateData={updatePlanData}
+                onUpdateData={handleDataUpdate}
                 isLoading={isLoading}
               />
             </div>

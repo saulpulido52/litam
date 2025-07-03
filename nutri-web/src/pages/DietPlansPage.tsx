@@ -1,34 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Calendar, 
-  Clock, 
-  Target, 
-  Users, 
-  FileText, 
-  Download, 
-  Edit, 
-  Trash2, 
   Plus, 
   Search, 
-  Filter,
+  Filter, 
+  Calendar, 
+  Target, 
+  Clock, 
   Eye,
-  Settings,
-  Shield,
-  AlertTriangle,
-  Database,
-  CheckCircle,
-  Sparkles,
-  X,
+  Edit,
+  Trash2,
+  FileText,
+  Download,
   Copy,
   RefreshCw
 } from 'lucide-react';
-import type { DietPlan, CreateDietPlanDto, GenerateAIDietDto, PlanType, PlanPeriod } from '../types/diet';
+import type { DietPlan, CreateDietPlanDto, PlanType } from '../types/diet';
 import { useDietPlans } from '../hooks/useDietPlans';
 import { usePatients } from '../hooks/usePatients';
 import { clinicalRecordsService } from '../services/clinicalRecordsService';
 import { Button, Modal, Alert } from 'react-bootstrap';
 import DietPlanViewer from '../components/DietPlanViewer';
-import DietPlanQuickCreate from '../components/DietPlanQuickCreate';
 import NutritionalCardSimple from '../components/NutritionalCardSimple';
 
 interface Recipe {
@@ -55,7 +46,6 @@ const DietPlansPage: React.FC = () => {
     stats,
     fetchAllDietPlans,
     createDietPlan,
-    generateDietPlanWithAI,
     updateDietPlan,
     deleteDietPlan,
     clearError,
@@ -64,7 +54,6 @@ const DietPlansPage: React.FC = () => {
   
   const { patients } = usePatients();
   const [allClinicalRecords, setAllClinicalRecords] = useState<any[]>([]);
-  const [loadingClinicalRecords, setLoadingClinicalRecords] = useState(false);
   
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -89,7 +78,6 @@ const DietPlansPage: React.FC = () => {
   // Load clinical records for all patients
   const loadAllClinicalRecords = async () => {
     try {
-      setLoadingClinicalRecords(true);
       console.log('🔄 Cargando expedientes clínicos para todos los pacientes...');
       const allRecords: any[] = [];
       
@@ -123,8 +111,6 @@ const DietPlansPage: React.FC = () => {
       
     } catch (error) {
       console.error('❌ Error loading clinical records:', error);
-    } finally {
-      setLoadingClinicalRecords(false);
     }
   };
 
@@ -256,129 +242,7 @@ const DietPlansPage: React.FC = () => {
     return plan.patient?.first_name || 'Paciente';
   };
 
-  const transformDietPlanToFormData = (plan: DietPlan): CreateDietPlanDto => {
-    return {
-      patientId: plan.patient_id,
-      name: plan.name,
-      description: plan.description || '',
-      startDate: plan.start_date || '',
-      endDate: plan.end_date || '',
-      dailyCaloriesTarget: plan.target_calories || 0,
-      dailyMacrosTarget: {
-        protein: plan.target_protein || 0,
-        carbohydrates: plan.target_carbs || 0,
-        fats: plan.target_fats || 0
-      },
-      notes: plan.notes || '',
-      planType: plan.plan_type || 'weekly',
-      planPeriod: plan.plan_period || 'weeks',
-      totalPeriods: plan.total_periods || plan.total_weeks || 1,
-      isWeeklyPlan: plan.is_weekly_plan || true,
-      totalWeeks: plan.total_weeks || 1,
-      weeklyPlans: plan.weekly_plans?.map(wp => ({
-        weekNumber: wp.week_number,
-        startDate: wp.start_date,
-        endDate: wp.end_date,
-        dailyCaloriesTarget: wp.daily_calories_target,
-        dailyMacrosTarget: wp.daily_macros_target,
-        meals: wp.meals.map(m => ({
-          day: m.day,
-          mealType: m.meal_type,
-          foods: m.foods.map(f => ({
-            foodId: f.food_id,
-            foodName: f.food_name,
-            quantityGrams: f.quantity_grams,
-            calories: f.calories,
-            protein: f.protein,
-            carbs: f.carbs,
-            fats: f.fats
-          })),
-          notes: m.notes
-        })),
-        notes: wp.notes
-      })) || [],
-      periodPlans: plan.period_plans?.map(pp => ({
-        periodNumber: pp.period_number,
-        startDate: pp.start_date,
-        endDate: pp.end_date,
-        dailyCaloriesTarget: pp.daily_calories_target,
-        dailyMacrosTarget: pp.daily_macros_target,
-        meals: pp.meals.map(m => ({
-          day: m.day,
-          dayNumber: m.day_number,
-          mealType: m.meal_type,
-          foods: m.foods.map(f => ({
-            foodId: f.food_id,
-            foodName: f.food_name,
-            quantityGrams: f.quantity_grams,
-            calories: f.calories,
-            protein: f.protein,
-            carbs: f.carbs,
-            fats: f.fats,
-            preparationNotes: f.preparation_notes,
-            alternatives: f.alternatives
-          })),
-          notes: m.notes,
-          targetTime: m.target_time,
-          mealName: m.meal_name
-        })),
-        notes: pp.notes,
-        periodName: pp.period_name
-      })) || [],
-      pathologicalRestrictions: plan.pathological_restrictions ? {
-        medicalConditions: plan.pathological_restrictions.medical_conditions?.map(mc => ({
-          name: mc.name,
-          category: mc.category,
-          severity: mc.severity,
-          description: mc.description,
-          dietaryImplications: mc.dietary_implications || [],
-          restrictedFoods: mc.restricted_foods || [],
-          recommendedFoods: mc.recommended_foods || [],
-          monitoringRequirements: mc.monitoring_requirements || [],
-          emergencyInstructions: mc.emergency_instructions || ''
-        })) || [],
-        allergies: plan.pathological_restrictions.allergies?.map(a => ({
-          allergen: a.allergen,
-          type: a.type,
-          severity: a.severity,
-          symptoms: a.symptoms || [],
-          crossReactions: a.cross_reactions || [],
-          emergencyMedication: a.emergency_medication || '',
-          avoidanceInstructions: a.avoidance_instructions
-        })) || [],
-        intolerances: plan.pathological_restrictions.intolerances?.map(i => ({
-          substance: i.substance,
-          type: i.type,
-          severity: i.severity,
-          symptoms: i.symptoms || [],
-          thresholdAmount: i.threshold_amount || '',
-          alternatives: i.alternatives || [],
-          preparationNotes: i.preparation_notes || ''
-        })) || [],
-        medications: plan.pathological_restrictions.medications?.map(m => ({
-          name: m.name,
-          dosage: m.dosage,
-          frequency: m.frequency,
-          foodInteractions: m.food_interactions || [],
-          timingRequirements: m.timing_requirements || ''
-        })) || [],
-        specialConsiderations: plan.pathological_restrictions.special_considerations || [],
-        emergencyContacts: plan.pathological_restrictions.emergency_contacts?.map(ec => ({
-          name: ec.name,
-          relationship: ec.relationship,
-          phone: ec.phone,
-          isPrimary: ec.is_primary
-        })) || []
-      } : {
-        medicalConditions: [],
-        allergies: [],
-        intolerances: [],
-        medications: [],
-        specialConsiderations: [],
-        emergencyContacts: []
-      }
-    };
-  };
+
 
   const validateDietPlanData = (data: any): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
@@ -435,15 +299,7 @@ const DietPlansPage: React.FC = () => {
     }
   };
 
-  const handleGenerateAIPlan = async (aiData: GenerateAIDietDto) => {
-    try {
-      await generateDietPlanWithAI(aiData);
-      setShowAIModal(false);
-      clearError();
-    } catch (error: any) {
-      setError(error.message || 'Error al generar plan con IA');
-    }
-  };
+
 
   const handleDownloadPDF = async (plan: DietPlan) => {
     // Implementar descarga de PDF

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Patient } from '../../types/patient';
-import { ClinicalRecord } from '../../types/clinical-record';
+import type { Patient } from '../../types/patient';
+import type { ClinicalRecord } from '../../types/clinical-record';
 
 interface NutritionalSummaryTabProps {
   planData: any;
@@ -28,6 +28,12 @@ const NutritionalSummaryTab: React.FC<NutritionalSummaryTabProps> = ({
     dailyCaloriesTarget: planData.dailyCaloriesTarget || 2000,
     totalWeeks: planData.totalWeeks || 4,
     isWeeklyPlan: planData.isWeeklyPlan ?? true
+  });
+
+  const [bmiInfo, setBmiInfo] = useState({
+    value: 0,
+    category: '',
+    ideal: 0
   });
 
   // Actualizar datos cuando cambien los props
@@ -71,9 +77,9 @@ const NutritionalSummaryTab: React.FC<NutritionalSummaryTabProps> = ({
     const anthropometric = clinicalRecord.anthropometric_measurements;
     let recommendedCalories = 2000;
 
-    if (anthropometric?.weight && anthropometric?.height_m) {
-      const weight = parseFloat(anthropometric.weight);
-      const heightM = parseFloat(anthropometric.height_m);
+    if (anthropometric?.current_weight_kg && anthropometric?.height_m) {
+      const weight = anthropometric.current_weight_kg;
+      const heightM = anthropometric.height_m;
       const age = patient.user?.age || 30;
       
       // Fórmula Harris-Benedict para hombres/mujeres
@@ -104,6 +110,14 @@ const NutritionalSummaryTab: React.FC<NutritionalSummaryTabProps> = ({
       } else if (diagnosis.includes('bajo peso')) {
         recommendedCalories = Math.round(recommendedCalories * 1.15); // 15% superávit
       }
+
+             const bmi = weight / (heightM ** 2);
+       
+       setBmiInfo({
+         value: bmi,
+         category: bmi < 18.5 ? 'Bajo peso' : bmi > 25 ? 'Sobrepeso' : 'Normal',
+         ideal: heightM * heightM * 22 // Peso ideal aproximado
+       });
     }
 
     // Generar descripción personalizada
@@ -122,18 +136,7 @@ const NutritionalSummaryTab: React.FC<NutritionalSummaryTabProps> = ({
     onUpdateData('summary', updatedData);
   };
 
-  // Calcular IMC si hay datos antropométricos
-  const calculateBMI = () => {
-    if (!clinicalRecord?.anthropometric_measurements) return null;
-    const { weight, height_m } = clinicalRecord.anthropometric_measurements;
-    if (weight && height_m) {
-      const bmi = parseFloat(weight) / (parseFloat(height_m) ** 2);
-      return bmi.toFixed(1);
-    }
-    return null;
-  };
-
-  const bmi = calculateBMI();
+  // BMI calculation available via calculateBMI() function
   const isReadOnly = mode === 'view';
 
   return (
@@ -284,17 +287,17 @@ const NutritionalSummaryTab: React.FC<NutritionalSummaryTabProps> = ({
                     <div className="small">
                       <div className="d-flex justify-content-between">
                         <span>Peso:</span>
-                        <strong>{clinicalRecord.anthropometric_measurements.weight} kg</strong>
+                        <strong>{clinicalRecord.anthropometric_measurements.current_weight_kg} kg</strong>
                       </div>
                       <div className="d-flex justify-content-between">
                         <span>Altura:</span>
-                        <strong>{(parseFloat(clinicalRecord.anthropometric_measurements.height_m || '0') * 100).toFixed(0)} cm</strong>
+                                                  <strong>{(((clinicalRecord.anthropometric_measurements.height_m || 0) as number) * 100).toFixed(0)} cm</strong>
                       </div>
-                      {bmi && (
+                      {bmiInfo.value && (
                         <div className="d-flex justify-content-between">
                           <span>IMC:</span>
-                          <strong className={`${parseFloat(bmi) < 18.5 ? 'text-warning' : parseFloat(bmi) > 25 ? 'text-danger' : 'text-success'}`}>
-                            {bmi}
+                                                     <strong className={`${bmiInfo.value < 18.5 ? 'text-warning' : bmiInfo.value > 25 ? 'text-danger' : 'text-success'}`}>
+                            {bmiInfo.value.toFixed(1)}
                           </strong>
                         </div>
                       )}
@@ -315,7 +318,11 @@ const NutritionalSummaryTab: React.FC<NutritionalSummaryTabProps> = ({
                   <div className="mb-3">
                     <h6 className="text-primary mb-2">Actividad Física</h6>
                     <div className="small">
-                      <span className="badge bg-secondary">{clinicalRecord.physical_exercise}</span>
+                      <span className="badge bg-secondary">
+                        {typeof clinicalRecord.physical_exercise === 'object' 
+                          ? (clinicalRecord.physical_exercise?.type || 'No especificado')
+                          : (clinicalRecord.physical_exercise || 'No especificado')}
+                      </span>
                     </div>
                   </div>
                 )}

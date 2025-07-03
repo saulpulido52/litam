@@ -3,8 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import clinicalRecordService from './clinical_record.service';
 import { AppError } from '../../utils/app.error';
 import { CreateUpdateClinicalRecordDto } from './clinical_record.dto';
-import { RoleName } from '@/database/entities/role.entity';
-import { validateMiddleware } from '@/middleware/validation.middleware';
+import { RoleName } from '../../database/entities/role.entity';
+import { validateMiddleware } from '../../middleware/validation.middleware';
 
 // Interfaz para Request con file de multer
 interface MulterRequest extends Request {
