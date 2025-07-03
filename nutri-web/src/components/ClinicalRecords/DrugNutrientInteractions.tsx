@@ -12,6 +12,7 @@ import {
   ListGroup
 } from 'react-bootstrap';
 import { Plus, Edit2, Trash2, AlertTriangle, Pill, Clock } from 'lucide-react';
+import { clinicalRecordsService } from '../../services/clinicalRecordsService';
 
 // Interfaces para medicamentos
 interface Medication {
@@ -48,6 +49,7 @@ interface DrugNutrientInteractionsProps {
 }
 
 const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
+  recordId,
   interactions,
   medications,
   onInteractionsChange,
@@ -111,33 +113,39 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
     setLoading(true);
     try {
       const interactionData = {
-        medication: selectedMedication,
-        nutrients_affected: nutrientsAffected,
-        interaction_type: interactionType,
-        severity: severity,
+        medicationId: selectedMedication.id,
+        nutrientsAffected: nutrientsAffected,
+        interactionType: interactionType as 'absorption' | 'metabolism' | 'excretion' | 'antagonism',
+        severity: severity as 'low' | 'moderate' | 'high' | 'critical',
         description: description,
         recommendations: recommendations.filter(r => r.trim() !== ''),
-        timing_considerations: timingConsiderations,
-        foods_to_avoid: foodsToAvoid,
-        foods_to_increase: foodsToIncrease,
-        monitoring_required: monitoringRequired
+        timingConsiderations: timingConsiderations || undefined,
+        foodsToAvoid: foodsToAvoid.length > 0 ? foodsToAvoid : undefined,
+        foodsToIncrease: foodsToIncrease.length > 0 ? foodsToIncrease : undefined,
+        monitoringRequired: monitoringRequired
       };
 
       if (editingInteraction) {
         // Actualizar interacción existente
-        console.log('Actualizando interacción:', interactionData);
+        await clinicalRecordsService.updateDrugNutrientInteraction(
+          recordId,
+          editingInteraction.id,
+          interactionData
+        );
+        console.log('✅ Interacción actualizada exitosamente');
       } else {
         // Crear nueva interacción
-        console.log('Creando nueva interacción:', interactionData);
+        await clinicalRecordsService.addDrugNutrientInteraction(recordId, interactionData);
+        console.log('✅ Nueva interacción creada exitosamente');
       }
 
       setShowModal(false);
       resetForm();
       setEditingInteraction(null);
       onInteractionsChange();
-    } catch (error) {
-      console.error('Error al guardar interacción:', error);
-      alert('Error al guardar la interacción');
+    } catch (error: any) {
+      console.error('❌ Error al guardar interacción:', error);
+      alert(error.message || 'Error al guardar la interacción');
     } finally {
       setLoading(false);
     }
@@ -150,12 +158,12 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
 
     setLoading(true);
     try {
-      // TODO: Implementar llamada al API
-      console.log('Eliminando interacción:', interactionId);
+      await clinicalRecordsService.deleteDrugNutrientInteraction(recordId, interactionId);
+      console.log('✅ Interacción eliminada exitosamente');
       onInteractionsChange();
-    } catch (error) {
-      console.error('Error al eliminar interacción:', error);
-      alert('Error al eliminar la interacción');
+    } catch (error: any) {
+      console.error('❌ Error al eliminar interacción:', error);
+      alert(error.message || 'Error al eliminar la interacción');
     } finally {
       setLoading(false);
     }
