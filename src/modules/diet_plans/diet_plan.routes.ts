@@ -71,4 +71,11 @@ router.delete(
     dietPlanController.deleteDietPlan
 );
 
+// 📋 Generar PDF del planificador de comidas
+router.get(
+    '/:id/generate-meal-planner-pdf',
+    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN, RoleName.PATIENT),
+    dietPlanController.generateMealPlannerPDF
+);
+
 export default router;

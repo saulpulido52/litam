@@ -105,8 +105,14 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
   };
 
   const handleSave = async () => {
-    if (!selectedMedication || !interactionType || !severity || !description) {
+    if (!interactionType || !severity || !description) {
       alert('Por favor completa todos los campos obligatorios');
+      return;
+    }
+
+    // Si no hay medicamento seleccionado, no permitir guardar
+    if (!selectedMedication) {
+      alert('Por favor selecciona un medicamento o "Sin medicamentos"');
       return;
     }
 
@@ -386,11 +392,21 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
                   <Form.Select 
                     value={selectedMedication?.id || ''}
                     onChange={(e) => {
+                      if (e.target.value === 'no_medication') {
+                        // Crear un medicamento especial para "Sin medicamentos"
+                        setSelectedMedication({
+                          id: 'no_medication',
+                          name: 'Sin medicamentos',
+                          generic_name: 'No aplica'
+                        });
+                      } else {
                       const med = medications.find(m => m.id === e.target.value);
                       setSelectedMedication(med || null);
+                      }
                     }}
                   >
                     <option value="">Seleccionar medicamento...</option>
+                    <option value="no_medication">Sin medicamentos</option>
                     {medications.map(med => (
                       <option key={med.id} value={med.id}>
                         {med.name} {med.generic_name ? `(${med.generic_name})` : ''}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, Target, FileText, Download, Edit, X, Settings, RotateCcw, Shield, AlertTriangle, Heart } from 'lucide-react';
+import { Clock, Target, FileText, Download, Edit, X, Settings, RotateCcw, Shield, AlertTriangle, Heart, Eye } from 'lucide-react';
 import type { DietPlan } from '../types/diet';
+import MealPlannerViewer from './MealPlannerViewer';
 
 interface DietPlanViewerProps {
   plan: DietPlan;
@@ -15,7 +16,8 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
   onDownload,
   onClose
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'meals' | 'nutrition' | 'schedule' | 'restrictions'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'nutrition' | 'schedule' | 'restrictions'>('overview');
+  const [showMealPlannerViewer, setShowMealPlannerViewer] = useState(false);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
@@ -41,6 +43,8 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
       default: return 'Plan';
     }
   };
+
+
 
   const getStatusLabel = (status: string) => {
     const statusConfig = {
@@ -68,6 +72,25 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
     } catch (error) {
       return 'N/A';
     }
+  };
+
+  // Calcular total de comidas planificadas
+  const getTotalMealsCount = () => {
+    if (!plan.weekly_plans) return 0;
+    return plan.weekly_plans.reduce((total, week) => {
+      return total + (week.meals?.length || 0);
+    }, 0);
+  };
+
+  // Calcular total de calorías planificadas
+  const getTotalCaloriesPlanned = () => {
+    if (!plan.weekly_plans) return 0;
+    return plan.weekly_plans.reduce((total, week) => {
+      const weekCalories = week.meals?.reduce((weekTotal, meal) => {
+        return weekTotal + (meal.total_calories || 0);
+      }, 0) || 0;
+      return total + weekCalories;
+    }, 0);
   };
 
   const renderOverview = () => (
@@ -120,6 +143,34 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
         <div className="mb-3">
           <strong>Grasas:</strong> {plan.target_fats ? `${plan.target_fats}g` : 'N/A'}
         </div>
+        
+        {/* Información de comidas planificadas */}
+        {plan.weekly_plans && plan.weekly_plans.length > 0 && (
+          <div className="mt-4">
+            <h6 className="mb-2">🍽️ Comidas Planificadas</h6>
+            <div className="row">
+              <div className="col-6">
+                <div className="text-center p-2 bg-light rounded">
+                  <div className="fw-bold text-primary">{getTotalMealsCount()}</div>
+                  <small className="text-muted">Comidas</small>
+                </div>
+              </div>
+              <div className="col-6">
+                <div className="text-center p-2 bg-light rounded">
+                  <div className="fw-bold text-success">{getTotalCaloriesPlanned()} kcal</div>
+                  <small className="text-muted">Total</small>
+                </div>
+              </div>
+            </div>
+            <button 
+              className="btn btn-outline-primary btn-sm mt-2 w-100"
+              onClick={() => setShowMealPlannerViewer(true)}
+            >
+              <Eye size={14} className="me-1" />
+              Ver Detalles de Comidas
+            </button>
+          </div>
+        )}
         
         {plan.notes && (
           <div className="mt-4">
@@ -279,193 +330,204 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
     </div>
   );
 
-  const renderWeeklyMeals = () => {
-    if (!plan.weekly_plans || plan.weekly_plans.length === 0) {
-      return (
-        <div className="text-center py-4">
-          <p className="text-muted">No hay planes semanales configurados para este plan</p>
-        </div>
-      );
-    }
+  // Función comentada ya que se eliminó la pestaña de comidas
+  // const renderWeeklyMeals = () => {
+  //   if (!plan.weekly_plans || plan.weekly_plans.length === 0) {
+  //     return (
+  //       <div className="text-center py-4">
+  //         <div className="alert alert-info">
+  //           <h6>📋 Plan de Comidas</h6>
+  //           <p className="mb-3">No hay comidas planificadas para este plan nutricional.</p>
+  //           <p className="text-muted small">
+  //             Las comidas se pueden agregar usando el planificador de comidas.
+  //           </p>
+  //         </div>
+  //       </div>
+  //     );
+  //   }
 
-    return plan.weekly_plans.map((weekPlan, weekIndex) => (
-      <div key={weekIndex} className="card mb-3">
-        <div className="card-header">
-          <h6 className="mb-0">
-            <Calendar size={16} className="me-2" />
-            Semana {weekPlan.week_number}
-            <small className="text-muted ms-2">
-              ({formatDate(weekPlan.start_date)} - {formatDate(weekPlan.end_date)})
-            </small>
-          </h6>
-        </div>
-        <div className="card-body">
-          <div className="row mb-3">
-            <div className="col-md-3">
-              <strong>Calorías diarias:</strong> {formatCalories(weekPlan.daily_calories_target)}
-            </div>
-            <div className="col-md-3">
-              <strong>Proteínas:</strong> {weekPlan.daily_macros_target.protein}g
-            </div>
-            <div className="col-md-3">
-              <strong>Carbohidratos:</strong> {weekPlan.daily_macros_target.carbohydrates}g
-            </div>
-            <div className="col-md-3">
-              <strong>Grasas:</strong> {weekPlan.daily_macros_target.fats}g
-            </div>
-          </div>
-          
-          {weekPlan.meals && weekPlan.meals.length > 0 ? (
-            <div className="table-responsive">
-              <table className="table table-sm">
-                <thead>
-                  <tr>
-                    <th>Día</th>
-                    <th>Tipo</th>
-                    <th>Alimentos</th>
-                    <th>Calorías</th>
-                    <th>Notas</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {weekPlan.meals.map((meal, mealIndex) => (
-                    <tr key={mealIndex}>
-                      <td>
-                        <span className="badge bg-light text-dark">
-                          {meal.day}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="badge bg-primary">
-                          {meal.meal_type}
-                        </span>
-                      </td>
-                      <td>
-                        {meal.foods.map((food, foodIndex) => (
-                          <div key={foodIndex} className="small">
-                            {food.food_name} ({food.quantity_grams}g)
-                          </div>
-                        ))}
-                      </td>
-                      <td>
-                        {meal.foods.reduce((total, food) => total + food.calories, 0)} kcal
-                      </td>
-                      <td>
-                        <small className="text-muted">{meal.notes || '-'}</small>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-muted">No hay comidas planificadas para esta semana</p>
-          )}
-          
-          {weekPlan.notes && (
-            <div className="mt-3">
-              <strong>Notas de la semana:</strong>
-              <p className="text-muted mb-0">{weekPlan.notes}</p>
-            </div>
-          )}
-        </div>
-      </div>
-    ));
-  };
+  //   return (
+  //     <div>
+  //       {/* Resumen de comidas planificadas */}
+  //       <div className="row mb-4">
+  //         <div className="col-md-3">
+  //           <div className="card text-center">
+  //             <div className="card-body">
+  //               <h4 className="text-primary">{plan.weekly_plans.length}</h4>
+  //               <small className="text-muted">Semanas</small>
+  //             </div>
+  //           </div>
+  //         </div>
+  //         <div className="col-md-3">
+  //           <div className="card text-center">
+  //             <div className="card-body">
+  //               <h4 className="text-success">{getTotalMealsCount()}</h4>
+  //               <small className="text-muted">Comidas</small>
+  //             </div>
+  //           </div>
+  //         </div>
+  //         <div className="col-md-3">
+  //           <div className="card text-center">
+  //             <div className="card-body">
+  //               <h4 className="text-warning">{getTotalCaloriesPlanned()}</h4>
+  //               <small className="text-muted">Calorías Totales</small>
+  //             </div>
+  //           </div>
+  //         </div>
+  //         <div className="col-md-3">
+  //           <div className="card text-center">
+  //             <div className="card-body">
+  //               <button 
+  //                 className="btn btn-primary btn-sm"
+  //                 onClick={() => setShowMealPlannerViewer(true)}
+  //               >
+  //                 <Eye size={14} className="me-1" />
+  //                 Ver Detalles
+  //               </button>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       </div>
 
-  const renderPeriodMeals = () => {
-    if (!plan.period_plans || plan.period_plans.length === 0) {
-      return (
-        <div className="text-center py-4">
-          <p className="text-muted">No hay períodos planificados para este plan</p>
-        </div>
-      );
-    }
+  //       {/* Lista de semanas con comidas */}
+  //       {plan.weekly_plans.map((weekPlan, weekIndex) => (
+  //         <div key={weekIndex} className="card mb-3">
+  //           <div className="card-header">
+  //             <h6 className="mb-0">
+  //               <Calendar size={16} className="me-2" />
+  //               Semana {weekPlan.week_number}
+  //               <small className="text-muted ms-2">
+  //                 ({formatDate(weekPlan.start_date)} - {formatDate(weekPlan.end_date)})
+  //               </small>
+  //               {weekPlan.meals && weekPlan.meals.length > 0 && (
+  //                 <span className="badge bg-success ms-2">
+  //                   {weekPlan.meals.length} comidas
+  //                 </span>
+  //               )}
+  //             </h6>
+  //           </div>
+  //           <div className="card-body">
+  //             <div className="row mb-3">
+  //               <div className="col-md-3">
+  //                 <strong>Calorías diarias:</strong> {formatCalories(weekPlan.daily_calories_target)}
+  //               </div>
+  //               <div className="col-md-3">
+  //                 <strong>Proteínas:</strong> {weekPlan.daily_macros_target.protein}g
+  //               </div>
+  //               <div className="col-md-3">
+  //                 <strong>Carbohidratos:</strong> {weekPlan.daily_macros_target.carbohydrates}g
+  //               </div>
+  //               <div className="col-md-3">
+  //                 <strong>Grasas:</strong> {weekPlan.daily_macros_target.fats}g
+  //               </div>
+  //             </div>
+              
+  //             {weekPlan.meals && weekPlan.meals.length > 0 ? (
+  //               <div className="table-responsive">
+  //                 <table className="table table-sm">
+  //                   <thead>
+  //                     <tr>
+  //                       <th>Día</th>
+  //                       <th>Tipo</th>
+  //                       <th>Hora</th>
+  //                       <th>Descripción</th>
+  //                       <th>Calorías</th>
+  //                       <th>Macronutrientes</th>
+  //                       <th>Notas</th>
+  //                       </tr>
+  //                     </thead>
+  //                     <tbody>
+  //                       {weekPlan.meals.map((meal, mealIndex) => (
+  //                         <tr key={mealIndex}>
+  //                           <td>
+  //                             <span className="badge bg-light text-dark">
+  //                               {meal.day}
+  //                             </span>
+  //                           </td>
+  //                           <td>
+  //                             <span className="badge bg-primary">
+  //                               {getMealTypeLabel(meal.meal_type)}
+  //                             </span>
+  //                           </td>
+  //                           <td>
+  //                             <small className="text-muted">{meal.meal_time || '-'}</small>
+  //                           </td>
+  //                           <td>
+  //                             {meal.meal_description ? (
+  //                               <div className="small">
+  //                               {meal.meal_description}
+  //                             </div>
+  //                           ) : meal.foods && meal.foods.length > 0 ? (
+  //                             <div>
+  //                               {meal.foods.map((food, foodIndex) => (
+  //                                 <div key={foodIndex} className="small">
+  //                                 {food.food_name} ({food.quantity_grams}g)
+  //                               </div>
+  //                             ))}
+  //                           </div>
+  //                         ) : (
+  //                           <span className="text-muted">Sin descripción</span>
+  //                         )}
+  //                       </td>
+  //                       <td>
+  //                         <span className="fw-bold text-primary">
+  //                           {meal.total_calories || (meal.foods ? meal.foods.reduce((total, food) => total + food.calories, 0) : 0)} kcal
+  //                         </span>
+  //                       </td>
+  //                       <td>
+  //                         <div className="small">
+  //                         <div>P: {meal.total_protein || 0}g</div>
+  //                         <div>C: {meal.total_carbs || 0}g</div>
+  //                         <div>G: {meal.total_fats || 0}g</div>
+  //                       </div>
+  //                     </td>
+  //                     <td>
+  //                       <small className="text-muted">{meal.notes || '-'}</small>
+  //                     </td>
+  //                   </tr>
+  //                 ))}
+  //               </tbody>
+  //             </table>
+  //           </div>
+  //         ) : (
+  //           <div className="text-center py-3">
+  //             <p className="text-muted">No hay comidas planificadas para este plan</p>
+  //           </div>
+  //         )}
+              
+  //         {weekPlan.notes && (
+  //           <div className="mt-3">
+  //           <strong>Notas de la semana:</strong>
+  //           <p className="text-muted mb-0">{weekPlan.notes}</p>
+  //         </div>
+  //       )}
+  //     </div>
+  //   </div>
+  // ))}
+  //   </div>
+  // );
+  // };
 
-    return plan.period_plans.map((periodPlan, periodIndex) => (
-      <div key={periodIndex} className="card mb-3">
-        <div className="card-header">
-          <h6 className="mb-0">
-            <Calendar size={16} className="me-2" />
-            {periodPlan.period_name || `Período ${periodPlan.period_number}`}
-            <small className="text-muted ms-2">
-              ({formatDate(periodPlan.start_date)} - {formatDate(periodPlan.end_date)})
-            </small>
-          </h6>
-        </div>
-        <div className="card-body">
-          <div className="row mb-3">
-            <div className="col-md-3">
-              <strong>Calorías diarias:</strong> {formatCalories(periodPlan.daily_calories_target)}
-            </div>
-            <div className="col-md-3">
-              <strong>Proteínas:</strong> {periodPlan.daily_macros_target.protein}g
-            </div>
-            <div className="col-md-3">
-              <strong>Carbohidratos:</strong> {periodPlan.daily_macros_target.carbohydrates}g
-            </div>
-            <div className="col-md-3">
-              <strong>Grasas:</strong> {periodPlan.daily_macros_target.fats}g
-            </div>
-          </div>
-          
-          {periodPlan.meals && periodPlan.meals.length > 0 ? (
-            <div className="table-responsive">
-              <table className="table table-sm">
-                <thead>
-                  <tr>
-                    <th>Día</th>
-                    <th>Tipo</th>
-                    <th>Alimentos</th>
-                    <th>Calorías</th>
-                    <th>Notas</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {periodPlan.meals.map((meal, mealIndex) => (
-                    <tr key={mealIndex}>
-                      <td>
-                        <span className="badge bg-light text-dark">
-                          {meal.day || `Día ${meal.day_number}`}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="badge bg-primary">
-                          {meal.meal_type}
-                        </span>
-                      </td>
-                      <td>
-                        {meal.foods.map((food, foodIndex) => (
-                          <div key={foodIndex} className="small">
-                            {food.food_name} ({food.quantity_grams}g)
-                          </div>
-                        ))}
-                      </td>
-                      <td>
-                        {meal.foods.reduce((total, food) => total + food.calories, 0)} kcal
-                      </td>
-                      <td>
-                        <small className="text-muted">{meal.notes || '-'}</small>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-muted">No hay comidas planificadas para este período</p>
-          )}
-          
-          {periodPlan.notes && (
-            <div className="mt-3">
-              <strong>Notas del período:</strong>
-              <p className="text-muted mb-0">{periodPlan.notes}</p>
-            </div>
-          )}
-        </div>
-      </div>
-    ));
-  };
+  // Función comentada ya que se eliminó la pestaña de comidas
+  // const renderPeriodMeals = () => {
+  //   if (!plan.period_plans || plan.period_plans.length === 0) {
+  //     return (
+  //       <div className="text-center py-4">
+  //         <p className="text-muted">No hay períodos planificados para este plan</p>
+  //       </div>
+  //     );
+  //   }
+
+  //   return plan.period_plans.map((periodPlan: any, periodIndex: number) => (
+  //     <div key={periodIndex} className="card mb-3">
+  //       <div className="card-header">
+  //         <h6 className="mb-0">
+  //           <Calendar size={16} className="me-2" />
+  //           {periodPlan.period_name || `Período ${periodPlan.period_number}`}
+  //           <small className="text-muted ms-2">
+  //             ({formatDate(periodPlan.start_date)} - {formatDate(periodPlan.end_date)})
+  //           </small>
+
 
   const renderPathologicalRestrictions = () => {
     if (!plan.pathological_restrictions) {
@@ -904,15 +966,6 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
             </li>
             <li className="nav-item">
               <button 
-                className={`nav-link ${activeTab === 'meals' ? 'active' : ''}`}
-                onClick={() => setActiveTab('meals')}
-              >
-                <Calendar size={16} className="me-1" />
-                Comidas
-              </button>
-            </li>
-            <li className="nav-item">
-              <button 
                 className={`nav-link ${activeTab === 'nutrition' ? 'active' : ''}`}
                 onClick={() => setActiveTab('nutrition')}
               >
@@ -942,11 +995,6 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
 
           {/* Tab Content */}
           {activeTab === 'overview' && renderOverview()}
-          {activeTab === 'meals' && (
-            <div>
-              {plan.plan_type === 'flexible' || plan.plan_type === 'custom' ? renderPeriodMeals() : renderWeeklyMeals()}
-            </div>
-          )}
           {activeTab === 'nutrition' && (
             <div>
               {renderMealConfiguration()}
@@ -961,6 +1009,14 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
           {activeTab === 'restrictions' && renderPathologicalRestrictions()}
         </div>
       </div>
+
+      {/* Modal del visualizador de comidas */}
+      {showMealPlannerViewer && (
+        <MealPlannerViewer
+          dietPlanId={plan.id}
+          onClose={() => setShowMealPlannerViewer(false)}
+        />
+      )}
     </div>
   );
 };

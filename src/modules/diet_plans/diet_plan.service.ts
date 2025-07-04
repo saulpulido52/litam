@@ -800,6 +800,282 @@ class DietPlanService {
         await this.dietPlanRepository.remove(dietPlan);
         return { message: 'Plan de dieta eliminado con éxito.' };
     }
+
+    /**
+     * 📋 GENERAR PDF DEL PLANIFICADOR DE COMIDAS (FORMATO PROFESIONAL Y COMPACTO)
+     */
+    public async generateMealPlannerPDF(dietPlanId: string, requesterId: string, requesterRole: RoleName) {
+        try {
+            // Obtener plan completo con relaciones
+            const dietPlan = await this.dietPlanRepository.findOne({
+                where: { id: dietPlanId },
+                relations: [
+                    'patient',
+                    'nutritionist',
+                    'meals',
+                    'meals.meal_items',
+                    'meals.meal_items.food',
+                ],
+            });
+
+            if (!dietPlan) {
+                throw new AppError('Plan de dieta no encontrado.', 404);
+            }
+
+            // Verificar permisos
+            if (requesterRole === RoleName.NUTRITIONIST && dietPlan.nutritionist.id !== requesterId) {
+                throw new AppError('No tienes permiso para generar PDF de este plan.', 403);
+            }
+
+            // Importar PDFKit dinámicamente
+            const PDFDocument = require('pdfkit');
+            const fs = require('fs').promises;
+            const path = require('path');
+            
+            // Crear directorio para PDFs generados
+            const pdfDir = path.join(process.cwd(), 'generated-pdfs');
+            await fs.mkdir(pdfDir, { recursive: true });
+            
+            const pdfFilename = `planificador-comidas_${dietPlanId}_${Date.now()}.pdf`;
+            const pdfPath = path.join(pdfDir, pdfFilename);
+            
+            // Crear documento PDF
+            const doc = new PDFDocument({ 
+                margin: 40,
+                size: 'A4',
+                info: {
+                    Title: `Planificador de Comidas - ${dietPlan.name}`,
+                    Author: `Dr./Dra. ${dietPlan.nutritionist.first_name} ${dietPlan.nutritionist.last_name}`,
+                    Subject: 'Planificador de Comidas Nutricional',
+                    Creator: 'NutriWeb - Sistema de Gestión Nutricional'
+                }
+            });
+            
+            const stream = require('fs').createWriteStream(pdfPath);
+            doc.pipe(stream);
+            
+            // HEADER PROFESIONAL
+            this.addMealPlannerPDFHeaderProfessional(doc, dietPlan);
+            // Compactar: no addPage aquí
+            this.addMealPlannerPatientInfoSection(doc, dietPlan);
+            this.addMealPlannerPlanInfoSection(doc, dietPlan);
+            // Tabla de comidas compacta
+            this.addMealPlannerWeeklyMealsTableCompact(doc, dietPlan);
+            // FOOTER
+            this.addMealPlannerPDFFooter(doc, dietPlan);
+            // Finalizar documento
+            doc.end();
+            return new Promise<{ pdf_path: string; filename: string }>((resolve, reject) => {
+                stream.on('finish', () => {
+                    console.log(`✅ PDF del planificador de comidas generado: ${pdfFilename}`);
+                    resolve({ pdf_path: pdfPath, filename: pdfFilename });
+                });
+                stream.on('error', reject);
+            });
+        } catch (error) {
+            console.error('❌ Error generando PDF del planificador de comidas:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * HEADER profesional (sin emojis)
+     */
+    private addMealPlannerPDFHeaderProfessional(doc: any, dietPlan: any) {
+        // Fondo superior
+        doc.rect(40, 40, 515, 80)
+           .fillAndStroke('#1e3a8a', '#1e40af');
+        // Logo simulado
+        doc.circle(70, 70, 12)
+           .fillAndStroke('#ffffff', '#ffffff');
+        doc.moveTo(65, 70).lineTo(75, 70).strokeColor('#1e3a8a').lineWidth(2).stroke();
+        doc.moveTo(70, 65).lineTo(70, 75).strokeColor('#1e3a8a').lineWidth(2).stroke();
+        // Título principal
+        doc.fontSize(18).font('Helvetica-Bold')
+           .fillColor('#ffffff')
+           .text('NUTRIWEB', 95, 55);
+        doc.fontSize(12).font('Helvetica')
+           .fillColor('#e0e7ff')
+           .text('Sistema de Gestión Nutricional', 95, 75);
+        doc.fontSize(14).font('Helvetica-Bold')
+           .fillColor('#ffffff')
+           .text('PLANIFICADOR DE COMIDAS', 95, 95);
+        // Caja de info
+        const infoY = 140;
+        doc.rect(40, infoY, 515, 60)
+           .fillAndStroke('#f8fafc', '#e2e8f0');
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af');
+        doc.text('PACIENTE', 50, infoY + 10);
+        doc.fontSize(10).font('Helvetica').fillColor('#374151')
+           .text(`${dietPlan.patient.first_name} ${dietPlan.patient.last_name}`, 50, infoY + 25);
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af')
+           .text('NUTRIÓLOGO', 50, infoY + 40);
+        doc.fontSize(10).font('Helvetica').fillColor('#374151')
+           .text(`Dr./Dra. ${dietPlan.nutritionist.first_name} ${dietPlan.nutritionist.last_name}`, 50, infoY + 55);
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af')
+           .text('FECHA DE INICIO', 350, infoY + 10);
+        doc.fontSize(10).font('Helvetica').fillColor('#374151')
+           .text(new Date(dietPlan.start_date).toLocaleDateString('es-ES'), 350, infoY + 25);
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af')
+           .text('FECHA DE FIN', 350, infoY + 40);
+        doc.fontSize(10).font('Helvetica').fillColor('#374151')
+           .text(new Date(dietPlan.end_date).toLocaleDateString('es-ES'), 350, infoY + 55);
+        doc.y = infoY + 80;
+        doc.moveDown(0.5);
+    }
+
+    /**
+     * 1. DATOS GENERALES DEL PACIENTE
+     */
+    private addMealPlannerPatientInfoSection(doc: any, dietPlan: any) {
+        const patient = dietPlan.patient;
+        const patientData: Record<string, string> = {
+            'Nombre Completo': `${patient.first_name} ${patient.last_name}`,
+            'Email': patient.email,
+            'Edad': patient.age ? `${patient.age} años` : 'N/A',
+            'Género': patient.gender || 'N/A',
+            'Teléfono': patient.phone || 'N/A'
+        };
+        this.addPDFSection(doc, '1. DATOS GENERALES DEL PACIENTE', patientData, false);
+    }
+
+    /**
+     * 2. DATOS DEL PLAN NUTRICIONAL
+     */
+    private addMealPlannerPlanInfoSection(doc: any, dietPlan: any) {
+        const planData: Record<string, string> = {
+            'Nombre del Plan': dietPlan.name,
+            'Estado': dietPlan.status,
+            'Duración': dietPlan.total_weeks ? `${dietPlan.total_weeks} semana(s)` : 'N/A',
+            'Calorías diarias objetivo': dietPlan.daily_calories_target ? `${dietPlan.daily_calories_target} kcal` : 'N/A',
+            'Proteínas': dietPlan.daily_macros_target?.protein ? `${dietPlan.daily_macros_target.protein} g` : 'N/A',
+            'Carbohidratos': dietPlan.daily_macros_target?.carbohydrates ? `${dietPlan.daily_macros_target.carbohydrates} g` : 'N/A',
+            'Grasas': dietPlan.daily_macros_target?.fats ? `${dietPlan.daily_macros_target.fats} g` : 'N/A',
+            'Notas': dietPlan.notes || 'N/A'
+        };
+        this.addPDFSection(doc, '2. DATOS DEL PLAN NUTRICIONAL', planData, false);
+    }
+
+    /**
+     * 3. PLANIFICACIÓN DE COMIDAS POR SEMANA (TABLA)
+     */
+    private addMealPlannerWeeklyMealsTableCompact(doc: any, dietPlan: any) {
+        if (!dietPlan.weekly_plans || dietPlan.weekly_plans.length === 0) {
+            doc.moveDown(1);
+            doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e40af')
+               .text('3. PLANIFICACIÓN DE COMIDAS', { align: 'left' });
+            doc.moveDown(0.5);
+            doc.fontSize(10).font('Helvetica').fillColor('#374151')
+               .text('No hay comidas planificadas para este plan.');
+            return;
+        }
+        dietPlan.weekly_plans.forEach((weekPlan: any, weekIndex: number) => {
+            doc.moveDown(1);
+            doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e40af')
+               .text(`3. PLANIFICACIÓN DE COMIDAS - SEMANA ${weekPlan.week_number}`, { align: 'left' });
+            doc.moveDown(0.2);
+            doc.fontSize(10).font('Helvetica-Bold').fillColor('#374151')
+               .text(`Período: ${new Date(weekPlan.start_date).toLocaleDateString('es-ES')} - ${new Date(weekPlan.end_date).toLocaleDateString('es-ES')}`);
+            doc.moveDown(0.2);
+            // Tabla de comidas
+            const tableTop = doc.y;
+            // Ajustar anchos: dejar más ancho para notas y descripción
+            const colWidths = [50, 50, 40, 120, 45, 45, 45, 45, 120];
+            const headers = ['Día', 'Tipo', 'Hora', 'Descripción', 'Calorías', 'Proteínas', 'Carbohidratos', 'Grasas', 'Notas'];
+            let x = 50;
+            headers.forEach((header, i) => {
+                doc.fontSize(9).font('Helvetica-Bold').fillColor('#1e40af')
+                   .text(header, x, tableTop, { width: colWidths[i], align: 'center' });
+                x += colWidths[i];
+            });
+            let y = tableTop + 16;
+            weekPlan.meals.forEach((meal: any) => {
+                x = 50;
+                const row = [
+                    meal.day || '',
+                    meal.meal_type || '',
+                    meal.meal_time || '',
+                    meal.meal_description || '',
+                    meal.total_calories ? `${meal.total_calories}` : '',
+                    meal.total_protein ? `${meal.total_protein}` : '',
+                    meal.total_carbs ? `${meal.total_carbs}` : '',
+                    meal.total_fats ? `${meal.total_fats}` : '',
+                    meal.notes || ''
+                ];
+                row.forEach((cell, i) => {
+                    // Notas y descripción: permitir salto de línea
+                    const options = (i === 3 || i === 8)
+                        ? { width: colWidths[i], align: 'left', lineBreak: true }
+                        : { width: colWidths[i], align: 'center' };
+                    doc.fontSize(8).font('Helvetica').fillColor('#374151')
+                       .text(cell, x, y, options);
+                    x += colWidths[i];
+                });
+                y += 24; // Más espacio para celdas con wrap
+                if (y > 750) {
+                    doc.addPage();
+                    y = 50;
+                }
+            });
+            doc.moveDown(1);
+        });
+    }
+
+    /**
+     * Sección genérica para datos (compacta, sin addPage)
+     */
+    private addPDFSection(doc: any, title: string, data: Record<string, string>, longText: boolean = false) {
+        doc.moveDown(1);
+        doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e40af')
+           .text(title, { align: 'left' });
+        doc.moveDown(0.2);
+        Object.entries(data).forEach(([key, value]) => {
+            doc.fontSize(10).font('Helvetica-Bold').fillColor('#374151')
+               .text(`${key}:`, { continued: true });
+            doc.fontSize(10).font('Helvetica').fillColor('#374151')
+               .text(` ${value}`);
+            if (longText) doc.moveDown(0.2);
+        });
+        doc.moveDown(0.5);
+    }
+
+    /**
+     * 🔧 HELPER: Añadir footer del PDF
+     */
+    private addMealPlannerPDFFooter(doc: any, dietPlan: any) {
+        doc.moveDown(2);
+        
+        // Línea separadora
+        doc.strokeColor('#e5e7eb').lineWidth(1)
+           .moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+        
+        doc.moveDown(0.5);
+        
+        // Información del footer
+        doc.fontSize(8).font('Helvetica').fillColor('#6b7280')
+           .text(`Generado el: ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}`, { align: 'center' });
+        
+        doc.fontSize(8).font('Helvetica').fillColor('#6b7280')
+           .text(`Plan: ${dietPlan.name} | Paciente: ${dietPlan.patient.first_name} ${dietPlan.patient.last_name}`, { align: 'center' });
+        
+        doc.fontSize(8).font('Helvetica').fillColor('#6b7280')
+           .text('NutriWeb - Sistema de Gestión Nutricional', { align: 'center' });
+    }
+
+    /**
+     * 🔧 HELPER: Obtener etiqueta del tipo de comida
+     */
+    private getMealTypeLabel(mealType?: string): string {
+        switch (mealType) {
+            case 'breakfast': return 'Desayuno';
+            case 'morning_snack': return 'Merienda Mañana';
+            case 'lunch': return 'Almuerzo';
+            case 'afternoon_snack': return 'Merienda Tarde';
+            case 'dinner': return 'Cena';
+            case 'evening_snack': return 'Merienda Noche';
+            default: return mealType || 'Comida';
+        }
+    }
 }
 
 export default new DietPlanService();
