@@ -376,10 +376,18 @@ export interface WeeklyPlan {
 }
 
 export interface WeeklyMeal {
-  day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
-  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'Lunes' | 'Martes' | 'Miércoles' | 'Jueves' | 'Viernes' | 'Sábado' | 'Domingo';
+  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'morning_snack' | 'afternoon_snack' | 'evening_snack';
   foods: WeeklyFood[];
   notes?: string;
+  // Campos adicionales para comidas manuales del MealPlanner
+  meal_time?: string;
+  meal_description?: string;
+  total_calories?: number;
+  total_protein?: number;
+  total_carbs?: number;
+  total_fats?: number;
+  id?: string;
 }
 
 export interface WeeklyFood {
@@ -694,10 +702,18 @@ export interface WeeklyPlanDto {
 }
 
 export interface WeeklyMealDto {
-  day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
-  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'Lunes' | 'Martes' | 'Miércoles' | 'Jueves' | 'Viernes' | 'Sábado' | 'Domingo';
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'morning_snack' | 'afternoon_snack' | 'evening_snack';
   foods: WeeklyFoodDto[];
   notes?: string;
+  // Campos adicionales para comidas manuales del MealPlanner
+  mealTime?: string;
+  mealDescription?: string;
+  totalCalories?: number;
+  totalProtein?: number;
+  totalCarbs?: number;
+  totalFats?: number;
+  id?: string;
 }
 
 export interface WeeklyFoodDto {

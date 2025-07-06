@@ -1787,18 +1787,32 @@ class ClinicalRecordService {
         
         // Validar que el medicamento existe en la lista de medicamentos del expediente
         const medications = record.diagnosed_diseases?.medications_list || [];
-        const medicationIndex = parseInt(interactionData.medicationId.replace('med_', ''));
         
-        if (isNaN(medicationIndex) || medicationIndex < 0 || medicationIndex >= medications.length) {
-            throw new AppError('El medicamento seleccionado no existe en la lista de medicamentos del paciente', 400);
+        // Caso especial: "Sin medicamentos"
+        let medicationIndex: number;
+        if (interactionData.medicationId === 'no_medication') {
+            // Permitir crear interacción sin medicamento específico
+            medicationIndex = -1; // Valor especial para "Sin medicamentos"
+        } else {
+            medicationIndex = parseInt(interactionData.medicationId.replace('med_', ''));
+            
+            if (isNaN(medicationIndex) || medicationIndex < 0 || medicationIndex >= medications.length) {
+                throw new AppError('El medicamento seleccionado no existe en la lista de medicamentos del paciente', 400);
+            }
         }
 
         // Crear la nueva interacción
         const newInteraction = {
             id: require('crypto').randomUUID(),
-            medication: {
+            medication: interactionData.medicationId === 'no_medication' ? {
+                id: 'no_medication',
+                name: 'Sin medicamentos',
+                generic_name: 'No aplica',
+                dosage: undefined,
+                frequency: undefined
+            } : {
                 id: interactionData.medicationId,
-                name: medications[medicationIndex],
+                name: medications[medicationIndex] || 'Medicamento no encontrado',
                 generic_name: undefined,
                 dosage: undefined,
                 frequency: undefined
