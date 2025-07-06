@@ -541,40 +541,82 @@ const ProgressTrackingPage: React.FC = () => {
                 <form>
                   <div className="row">
                     <div className="col-md-6 mb-3">
-                      <label className="form-label">Fecha</label>
-                      <input type="date" className="form-control" defaultValue={new Date().toISOString().split('T')[0]} />
+                      <label className="form-label" htmlFor="progress-date">Fecha</label>
+                      <input 
+                        type="date" 
+                        className="form-control" 
+                        id="progress-date"
+                        name="progress-date"
+                        defaultValue={new Date().toISOString().split('T')[0]} 
+                      />
                     </div>
                     <div className="col-md-6 mb-3">
-                      <label className="form-label">Peso (kg)</label>
-                      <input type="number" className="form-control" step="0.1" placeholder="70.5" />
+                      <label className="form-label" htmlFor="progress-weight">Peso (kg)</label>
+                      <input 
+                        type="number" 
+                        className="form-control" 
+                        id="progress-weight"
+                        name="progress-weight"
+                        step="0.1" 
+                        placeholder="70.5" 
+                      />
                     </div>
                   </div>
                   <div className="row">
                     <div className="col-md-4 mb-3">
-                      <label className="form-label">Grasa Corporal (%)</label>
-                      <input type="number" className="form-control" step="0.1" placeholder="25.5" />
+                      <label className="form-label" htmlFor="progress-body-fat">Grasa Corporal (%)</label>
+                      <input 
+                        type="number" 
+                        className="form-control" 
+                        id="progress-body-fat"
+                        name="progress-body-fat"
+                        step="0.1" 
+                        placeholder="25.5" 
+                      />
                     </div>
                     <div className="col-md-4 mb-3">
-                      <label className="form-label">Masa Muscular (kg)</label>
-                      <input type="number" className="form-control" step="0.1" placeholder="45.2" />
+                      <label className="form-label" htmlFor="progress-muscle-mass">Masa Muscular (kg)</label>
+                      <input 
+                        type="number" 
+                        className="form-control" 
+                        id="progress-muscle-mass"
+                        name="progress-muscle-mass"
+                        step="0.1" 
+                        placeholder="45.2" 
+                      />
                     </div>
                     <div className="col-md-4 mb-3">
-                      <label className="form-label">Cintura (cm)</label>
-                      <input type="number" className="form-control" step="0.1" placeholder="85.0" />
+                      <label className="form-label" htmlFor="progress-waist">Cintura (cm)</label>
+                      <input 
+                        type="number" 
+                        className="form-control" 
+                        id="progress-waist"
+                        name="progress-waist"
+                        step="0.1" 
+                        placeholder="85.0" 
+                      />
                     </div>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Notas del Progreso</label>
+                    <label className="form-label" htmlFor="progress-notes">Notas del Progreso</label>
                     <textarea 
                       className="form-control" 
-                      rows={3}
-                      placeholder="Observaciones sobre el progreso del paciente..."
-                    ></textarea>
+                      id="progress-notes"
+                      name="progress-notes"
+                      rows={3} 
+                      placeholder="Describe el progreso del paciente..."
+                    />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Fotos de Progreso (Opcional)</label>
-                    <input type="file" className="form-control" multiple accept="image/*" />
-                    <small className="text-muted">Puedes subir múltiples fotos para documentar el progreso visual</small>
+                    <label className="form-label" htmlFor="progress-photos">Fotos de Progreso (Opcional)</label>
+                    <input 
+                      type="file" 
+                      className="form-control" 
+                      id="progress-photos"
+                      name="progress-photos"
+                      multiple 
+                      accept="image/*" 
+                    />
                   </div>
                 </form>
               </div>

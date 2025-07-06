@@ -1,0 +1,505 @@
+/* Estilos para la página de perfil */
+.profile-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.profile-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: white;
+}
+
+.profile-info h4 {
+  margin-bottom: 8px;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.profile-info p {
+  margin-bottom: 12px;
+  color: #7f8c8d;
+}
+
+.profile-meta {
+  text-align: center;
+  padding-top: 16px;
+  border-top: 1px solid #ecf0f1;
+}
+
+.profile-nav {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.profile-nav .btn {
+  text-align: left;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.profile-nav .btn:hover {
+  transform: translateX(4px);
+}
+
+.profile-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  min-height: 500px;
+}
+
+.profile-section {
+  margin-bottom: 32px;
+}
+
+.profile-section h5 {
+  color: #2c3e50;
+  font-weight: 600;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+/* Tarjetas de estadísticas */
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+}
+
+.stat-icon {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-content h3 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.stat-content p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 0.9rem;
+}
+
+/* Tarjetas de seguridad */
+.security-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  border-left: 4px solid #007bff;
+  transition: all 0.3s ease;
+}
+
+.security-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.security-card.danger {
+  border-left-color: #dc3545;
+}
+
+.security-card h6 {
+  color: #2c3e50;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.security-card p {
+  color: #7f8c8d;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+/* Configuración de notificaciones */
+.notification-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.notification-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.notification-item:hover {
+  background: #e9ecef;
+}
+
+.notification-item h6 {
+  margin: 0;
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.notification-item small {
+  display: block;
+  margin-top: 4px;
+}
+
+/* Formularios */
+.form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.form-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Botones */
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(86, 171, 47, 0.4);
+}
+
+/* Badges */
+.badge {
+  font-size: 0.75rem;
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+/* Alertas */
+.alert {
+  border-radius: 8px;
+  border: none;
+}
+
+.alert-success {
+  background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+  color: white;
+}
+
+.alert-danger {
+  background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+  color: white;
+}
+
+.alert-info {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+/* Modales */
+.modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  border-bottom: 1px solid #ecf0f1;
+  padding: 20px 24px;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-footer {
+  border-top: 1px solid #ecf0f1;
+  padding: 20px 24px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .profile-card {
+    margin-bottom: 16px;
+  }
+  
+  .profile-nav {
+    margin-bottom: 16px;
+  }
+  
+  .stat-card {
+    margin-bottom: 16px;
+  }
+  
+  .security-card {
+    margin-bottom: 16px;
+  }
+  
+  .notification-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.profile-content {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Estados de carga */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+/* Especialidades */
+.form-check {
+  margin-bottom: 8px;
+}
+
+.form-check-input:checked {
+  background-color: #667eea;
+  border-color: #667eea;
+}
+
+.form-check-label {
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.9rem;
+}
+
+/* Campos de texto */
+textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Campos numéricos */
+input[type="number"].form-control {
+  -moz-appearance: textfield;
+}
+
+input[type="number"].form-control::-webkit-outer-spin-button,
+input[type="number"].form-control::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Estados de edición */
+.form-control:disabled {
+  background-color: #f8f9fa;
+  opacity: 0.7;
+}
+
+/* Iconos en badges */
+.badge .lucide {
+  width: 14px;
+  height: 14px;
+}
+
+/* Hover effects para botones de acción */
+.btn-outline-secondary:hover {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  transform: translateY(-1px);
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  transform: translateY(-1px);
+}
+
+/* Estilos para switches de notificaciones */
+.form-check-input[type="checkbox"] {
+  width: 3rem;
+  height: 1.5rem;
+  margin-top: 0;
+}
+
+.form-check-input[type="checkbox"]:checked {
+  background-color: #667eea;
+  border-color: #667eea;
+}
+
+/* Estilos para campos de fecha */
+input[type="date"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para campos de teléfono */
+input[type="tel"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para campos de email */
+input[type="email"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para campos de contraseña */
+input[type="password"].form-control {
+  font-family: inherit;
+  letter-spacing: 0.1em;
+}
+
+/* Estilos para campos de número */
+input[type="number"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para campos de texto */
+input[type="text"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para textareas */
+textarea.form-control {
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+/* Estilos para selects */
+select.form-select {
+  font-family: inherit;
+}
+
+/* Estilos para checkboxes */
+input[type="checkbox"].form-check-input {
+  font-family: inherit;
+}
+
+/* Estilos para radio buttons */
+input[type="radio"].form-check-input {
+  font-family: inherit;
+}
+
+/* Estilos para switches */
+input[type="checkbox"].form-check-input[type="checkbox"] {
+  font-family: inherit;
+}
+
+/* Estilos para campos de búsqueda */
+input[type="search"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para campos de URL */
+input[type="url"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para campos de tiempo */
+input[type="time"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para campos de semana */
+input[type="week"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para campos de mes */
+input[type="month"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para campos de color */
+input[type="color"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para campos de archivo */
+input[type="file"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para campos de rango */
+input[type="range"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para campos de imagen */
+input[type="image"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para campos de botón */
+input[type="button"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para campos de submit */
+input[type="submit"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para campos de reset */
+input[type="reset"].form-control {
+  font-family: inherit;
+}
+
+/* Estilos para campos de hidden */
+input[type="hidden"].form-control {
+  font-family: inherit;
+} 

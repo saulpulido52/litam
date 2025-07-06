@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Plus, 
-  Trash2, 
-  Clock, 
-  Calendar, 
-  Target, 
-  Search,
-  Edit,
+  Plus,
+  Trash2,
+  Clock,
+  Calendar,
+  Users,
+  Settings,
   Save,
-  X,
-  AlertTriangle,
-  CheckCircle
+  Loader
 } from 'lucide-react';
-import { Button, Modal, Alert, Form, Badge } from 'react-bootstrap';
+import { Button, Modal, Form, Badge } from 'react-bootstrap';
 
 interface Food {
   id: string;

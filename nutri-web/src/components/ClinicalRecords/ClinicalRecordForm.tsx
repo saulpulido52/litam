@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import type { ClinicalRecord, CreateClinicalRecordDto, UpdateClinicalRecordDto } from '../../types/clinical-record';
 import { clinicalRecordsService } from '../../services/clinicalRecordsService';
+import { Card, Form } from 'react-bootstrap';
+import { MdAdd, MdEdit } from 'react-icons/md';
 
 interface ClinicalRecordFormProps {
   record?: ClinicalRecord;
@@ -390,1639 +392,1203 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
   };
 
   return (
-    <div className="clinical-record-form">
-      <div className="card">
-        <div className="card-header">
-          <h5 className="mb-0">
-            <i className="fas fa-clipboard-list me-2" aria-hidden="true"></i>
-            {isEditing ? 'Editar' : 'Nuevo'} Expediente Clínico
-            <span className="text-muted"> - {patientName}</span>
-          </h5>
+    <Card className="clinical-form-card">
+      <Card.Header>
+        <h5 className="mb-0 d-flex align-items-center">
+          {isEditing ? (
+            <MdEdit className="text-primary me-2" />
+          ) : (
+            <MdAdd className="text-primary me-2" />
+          )}
+          {isEditing ? 'Editar' : 'Nuevo'} Expediente Clínico
+          <span className="text-muted ms-2"> - {patientName}</span>
+        </h5>
+      </Card.Header>
+      <Card.Body>
+        <div className="progress-indicator-modern mb-4">
+          <div className="current-step-circle-modern">{currentStep}</div>
+          <div className="current-step-info-modern">
+            <div className="step-title-modern">{steps[currentStep - 1].title}</div>
+            <div className="step-counter-modern">Paso {currentStep} de {steps.length}</div>
+            {steps[currentStep - 1].required && <small className="step-required-modern">*Requerido</small>}
+          </div>
         </div>
 
-        <div className="card-body">
-          {/* Indicador de progreso minimalista con colores del sistema de expedientes */}
-          <div className="progress-indicator mb-4">
-            <div className="current-step-circle">{currentStep}</div>
-            <div className="current-step-info">
-              <div className="step-title">{steps[currentStep - 1].title}</div>
-              <div className="step-counter">Paso {currentStep} de {steps.length}</div>
-              {steps[currentStep - 1].required && <small className="step-required">*Requerido</small>}
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit}>
-            {/* Paso 1: Datos Básicos */}
-            {currentStep === 1 && (
-              <div className="step-content">
-                <h6 className="mb-3">
-                  <i className="fas fa-info-circle me-2" aria-hidden="true"></i>
-                  Datos Básicos del Expediente
-                </h6>
-                
-                <div className="row">
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="recordDate">
-                        Fecha del Registro <span className="text-danger">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        id="recordDate"
-                        name="recordDate"
-                        title="Fecha del Registro"
-                        aria-label="Fecha del Registro"
-                        value={formData.recordDate}
-                        onChange={(e) => handleBasicChange('recordDate', e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="expedientNumber">Número de Expediente</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="expedientNumber"
-                        name="expedientNumber"
-                        title="Número de Expediente"
-                        aria-label="Número de Expediente"
-                        value={formData.expedientNumber}
-                        onChange={(e) => handleBasicChange('expedientNumber', e.target.value)}
-                        placeholder="Ej: EXP-001"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label" htmlFor="consultationReason">
-                    Motivo de Consulta <span className="text-danger">*</span>
-                  </label>
-                  <textarea
-                    className="form-control"
-                    id="consultationReason"
-                    name="consultationReason"
-                    title="Motivo de Consulta"
-                    aria-label="Motivo de Consulta"
-                    rows={3}
-                    value={formData.consultationReason}
-                    onChange={(e) => handleBasicChange('consultationReason', e.target.value)}
-                    placeholder="Describe el motivo de la consulta..."
-                    required
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Paso 2: Problemas Actuales */}
-            {currentStep === 2 && (
-              <div className="step-content">
-                <h6 className="mb-3">
-                  <i className="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>
-                  Problemas Actuales del Paciente
-                </h6>
-                
-                <div className="mb-4">
-                  <h6 className="mb-3">Problemas Gastrointestinales</h6>
-                  <div className="row">
-                    {[
-                      { key: 'diarrhea', label: 'Diarrea' },
-                      { key: 'constipation', label: 'Estreñimiento' },
-                      { key: 'gastritis', label: 'Gastritis' },
-                      { key: 'ulcer', label: 'Úlcera' },
-                      { key: 'nausea', label: 'Náuseas' },
-                      { key: 'pyrosis', label: 'Pirosis' },
-                      { key: 'vomiting', label: 'Vómito' },
-                      { key: 'colitis', label: 'Colitis' },
-                    ].map(({ key, label }) => {
-                      const checkboxId = `currentProblems-${key}`;
-                      const isChecked = Boolean(formData.currentProblems[key as keyof typeof formData.currentProblems]);
-                      return (
-                        <div key={key} className="col-6 col-md-3 mb-2">
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              id={checkboxId}
-                              name={key}
-                              checked={isChecked}
-                              onChange={(e) => {
-                                console.log(`Checkbox ${key} changed:`, e.target.checked); // Debug
-                                handleInputChange('currentProblems', key, e.target.checked);
-                              }}
-                              title={`Marcar si el paciente tiene ${label.toLowerCase()}`}
-                              aria-label={`${label} - Marcar si el paciente tiene este problema`}
-                            />
-                            <label 
-                              className="form-check-label" 
-                              htmlFor={checkboxId}
-                              style={{ cursor: 'pointer', userSelect: 'none' }}
-                            >
-                              {label}
-                            </label>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label" htmlFor="currentProblems-mouthMechanics">Mecánicos de la Boca</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="currentProblems-mouthMechanics"
-                    name="currentProblems-mouthMechanics"
-                    title="Mecánicos de la Boca"
-                    aria-label="Mecánicos de la Boca"
-                                      value={formData.currentProblems.mouth_mechanics}
-                  onChange={(e) => handleInputChange('currentProblems', 'mouth_mechanics', e.target.value)}
-                    placeholder="Ej: Dificultad para masticar, problemas dentales..."
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label" htmlFor="currentProblems-otherProblems">Otros Problemas</label>
-                  <textarea
-                    className="form-control"
-                    id="currentProblems-otherProblems"
-                    name="currentProblems-otherProblems"
-                    title="Otros Problemas"
-                    aria-label="Otros Problemas"
-                    rows={2}
-                                      value={formData.currentProblems.other_problems}
-                  onChange={(e) => handleInputChange('currentProblems', 'other_problems', e.target.value)}
-                    placeholder="Describe otros problemas..."
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label" htmlFor="currentProblems-observations">Observaciones</label>
-                  <textarea
-                    className="form-control"
-                    id="currentProblems-observations"
-                    name="currentProblems-observations"
-                    title="Observaciones"
-                    aria-label="Observaciones"
-                    rows={2}
-                    value={formData.currentProblems.observations}
-                    onChange={(e) => handleInputChange('currentProblems', 'observations', e.target.value)}
-                    placeholder="Observaciones adicionales..."
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Paso 3: Enfermedades y Medicamentos */}
-            {currentStep === 3 && (
-              <div className="step-content">
-                <h6 className="mb-3">
-                  <i className="fas fa-pills me-2" aria-hidden="true"></i>
-                  Enfermedades Diagnosticadas y Medicamentos
-                </h6>
-                
-                <div className="row">
-                  <div className="col-12 col-md-6">
-                    <div className="form-check mb-3">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="diagnosedDiseases-hasDisease"
-                        name="hasDisease"
-                        checked={Boolean(formData.diagnosedDiseases.hasDisease)}
-                        onChange={(e) => handleInputChange('diagnosedDiseases', 'hasDisease', e.target.checked)}
-                        title="Marcar si el paciente tiene alguna enfermedad diagnosticada"
-                        aria-label="Tiene enfermedad diagnosticada"
-                      />
-                      <label 
-                        className="form-check-label" 
-                        htmlFor="diagnosedDiseases-hasDisease"
-                      >
-                        Tiene enfermedad diagnosticada
-                      </label>
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="diagnosedDiseases-diseaseName">Nombre de la Enfermedad</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="diagnosedDiseases-diseaseName"
-                        name="diseaseName"
-                        title="Nombre de la Enfermedad"
-                        aria-label="Nombre de la Enfermedad"
-                        value={formData.diagnosedDiseases.diseaseName}
-                        onChange={(e) => handleInputChange('diagnosedDiseases', 'diseaseName', e.target.value)}
-                        disabled={!formData.diagnosedDiseases.hasDisease}
-                        placeholder="Ej: Diabetes, Hipertensión..."
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="row">
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="diagnosedDiseases-sinceWhen">¿Desde cuándo?</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="diagnosedDiseases-sinceWhen"
-                        name="sinceWhen"
-                        title="¿Desde cuándo?"
-                        aria-label="¿Desde cuándo tiene la enfermedad?"
-                        value={formData.diagnosedDiseases.sinceWhen}
-                        onChange={(e) => handleInputChange('diagnosedDiseases', 'sinceWhen', e.target.value)}
-                        disabled={!formData.diagnosedDiseases.hasDisease}
-                        placeholder="Ej: Hace 2 años, Desde 2020..."
-                      />
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <div className="form-check mb-3 d-flex align-items-center" style={{ minHeight: '38px' }}>
-                      <input
-                        className="form-check-input me-2"
-                        type="checkbox"
-                        id="diagnosedDiseases-takesMedication"
-                        name="takesMedication"
-                        checked={Boolean(formData.diagnosedDiseases.takesMedication)}
-                        onChange={(e) => handleInputChange('diagnosedDiseases', 'takesMedication', e.target.checked)}
-                        disabled={!formData.diagnosedDiseases.hasDisease}
-                        title="Marcar si el paciente toma medicamentos"
-                        aria-label="Toma medicamentos"
-                      />
-                      <label 
-                        className="form-check-label" 
-                        htmlFor="diagnosedDiseases-takesMedication"
-                      >
-                        Toma medicamentos
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label" htmlFor="diagnosedDiseases-medicationsList">
-                    Lista de Medicamentos
-                    <small className="text-muted ms-2">(Separar con comas)</small>
-                  </label>
-                  <textarea
-                    className="form-control"
-                    id="diagnosedDiseases-medicationsList"
-                    name="medicationsList"
-                    title="Lista de Medicamentos"
-                    aria-label="Lista de Medicamentos que toma el paciente"
-                    rows={3}
-                    value={formData.diagnosedDiseases.medicationsList}
-                    onChange={(e) => handleInputChange('diagnosedDiseases', 'medicationsList', e.target.value)}
-                    disabled={!formData.diagnosedDiseases.takesMedication}
-                    placeholder="Ej: Metformina 500mg, Losartán 50mg, Aspirina 100mg"
-                  />
-                  <div className="form-text">
-                    Escriba cada medicamento separado por comas. Incluya la dosis si la conoce.
-                  </div>
-                </div>
-
-                <hr className="my-4" />
-
-                <h6 className="mb-3">Enfermedades Importantes</h6>
-                <div className="row">
-                  <div className="col-12 col-md-6">
-                    <div className="form-check mb-3">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="diagnosedDiseases-hasImportantDisease"
-                        name="hasImportantDisease"
-                        checked={Boolean(formData.diagnosedDiseases.hasImportantDisease)}
-                        onChange={(e) => handleInputChange('diagnosedDiseases', 'hasImportantDisease', e.target.checked)}
-                        title="Marcar si el paciente tiene alguna enfermedad importante"
-                        aria-label="Tiene enfermedad importante"
-                      />
-                      <label 
-                        className="form-check-label" 
-                        htmlFor="diagnosedDiseases-hasImportantDisease"
-                      >
-                        Tiene enfermedad importante
-                      </label>
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="diagnosedDiseases-importantDiseaseName">Nombre de la Enfermedad Importante</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="diagnosedDiseases-importantDiseaseName"
-                        name="importantDiseaseName"
-                        title="Nombre de la Enfermedad Importante"
-                        aria-label="Nombre de la Enfermedad Importante"
-                        value={formData.diagnosedDiseases.importantDiseaseName}
-                        onChange={(e) => handleInputChange('diagnosedDiseases', 'importantDiseaseName', e.target.value)}
-                        disabled={!formData.diagnosedDiseases.hasImportantDisease}
-                        placeholder="Ej: Cáncer, Insuficiencia renal..."
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="row">
-                  <div className="col-12 col-md-6">
-                    <div className="form-check mb-3">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="diagnosedDiseases-takesSpecialTreatment"
-                        name="takesSpecialTreatment"
-                        checked={Boolean(formData.diagnosedDiseases.takesSpecialTreatment)}
-                        onChange={(e) => handleInputChange('diagnosedDiseases', 'takesSpecialTreatment', e.target.checked)}
-                        title="Marcar si el paciente lleva tratamiento especial"
-                        aria-label="Lleva tratamiento especial"
-                      />
-                      <label 
-                        className="form-check-label" 
-                        htmlFor="diagnosedDiseases-takesSpecialTreatment"
-                      >
-                        Lleva tratamiento especial
-                      </label>
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="diagnosedDiseases-specialTreatmentDetails">Detalles del Tratamiento</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="diagnosedDiseases-specialTreatmentDetails"
-                        name="specialTreatmentDetails"
-                        title="Detalles del Tratamiento"
-                        aria-label="Detalles del Tratamiento Especial"
-                        value={formData.diagnosedDiseases.specialTreatmentDetails}
-                        onChange={(e) => handleInputChange('diagnosedDiseases', 'specialTreatmentDetails', e.target.value)}
-                        disabled={!formData.diagnosedDiseases.takesSpecialTreatment}
-                        placeholder="Ej: Quimioterapia, Diálisis..."
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="row">
-                  <div className="col-12 col-md-6">
-                    <div className="form-check mb-3">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="diagnosedDiseases-hasSurgery"
-                        name="hasSurgery"
-                        checked={Boolean(formData.diagnosedDiseases.hasSurgery)}
-                        onChange={(e) => handleInputChange('diagnosedDiseases', 'hasSurgery', e.target.checked)}
-                        title="Marcar si el paciente ha tenido cirugías"
-                        aria-label="Ha tenido cirugías"
-                      />
-                      <label 
-                        className="form-check-label" 
-                        htmlFor="diagnosedDiseases-hasSurgery"
-                      >
-                        Ha tenido cirugías
-                      </label>
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="diagnosedDiseases-surgeryDetails">Detalles de Cirugías</label>
-                      <textarea
-                        className="form-control"
-                        id="diagnosedDiseases-surgeryDetails"
-                        name="surgeryDetails"
-                        title="Detalles de Cirugías"
-                        aria-label="Detalles de Cirugías"
-                        rows={2}
-                        value={formData.diagnosedDiseases.surgeryDetails}
-                        onChange={(e) => handleInputChange('diagnosedDiseases', 'surgeryDetails', e.target.value)}
-                        disabled={!formData.diagnosedDiseases.hasSurgery}
-                        placeholder="Ej: Apendicectomía en 2019, Colecistectomía..."
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Paso 4: Antecedentes Familiares */}
-            {currentStep === 4 && (
-              <div className="step-content">
-                <h6 className="mb-3">
-                  <i className="fas fa-users me-2" aria-hidden="true"></i>
-                  Antecedentes Familiares
-                </h6>
-                
-                <div className="mb-4">
-                  <p className="text-muted">
-                    Marque las condiciones médicas que hayan presentado familiares directos (padres, hermanos, abuelos).
-                  </p>
-                  
-                  <div className="row">
-                    {[
-                      { key: 'obesity', label: 'Obesidad', color: 'bg-warning' },
-                      { key: 'diabetes', label: 'Diabetes', color: 'bg-danger' },
-                      { key: 'hta', label: 'Hipertensión (HTA)', color: 'bg-info' },
-                      { key: 'cancer', label: 'Cáncer', color: 'bg-dark' },
-                      { key: 'hypoHyperthyroidism', label: 'Problemas de Tiroides', color: 'bg-primary' },
-                      { key: 'dyslipidemia', label: 'Dislipidemia', color: 'bg-secondary' },
-                    ].map(({ key, label, color }) => {
-                      const checkboxId = `familyMedicalHistory-${key}`;
-                      const isChecked = Boolean(formData.familyMedicalHistory[key as keyof typeof formData.familyMedicalHistory]);
-                      return (
-                        <div key={key} className="col-6 col-md-4 mb-3">
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              id={checkboxId}
-                              name={key}
-                              checked={isChecked}
-                              onChange={(e) => {
-                                console.log(`Family history ${key} changed:`, e.target.checked); // Debug
-                                handleInputChange('familyMedicalHistory', key, e.target.checked);
-                              }}
-                              title={`Marcar si familiares han tenido ${label.toLowerCase()}`}
-                              aria-label={`${label} - Antecedentes familiares`}
-                            />
-                            <label 
-                              className="form-check-label" 
-                              htmlFor={checkboxId}
-                              style={{ cursor: 'pointer', userSelect: 'none' }}
-                            >
-                              <span className={`badge ${color} me-2`}></span>
-                              {label}
-                            </label>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label" htmlFor="familyMedicalHistory-otherHistory">
-                    Otros Antecedentes Familiares
-                  </label>
-                  <textarea
-                    className="form-control"
-                    id="familyMedicalHistory-otherHistory"
-                    name="familyMedicalHistory-otherHistory"
-                    title="Otros Antecedentes Familiares"
-                    aria-label="Otros antecedentes familiares no mencionados arriba"
-                    rows={3}
-                    value={formData.familyMedicalHistory.otherHistory}
-                    onChange={(e) => handleInputChange('familyMedicalHistory', 'otherHistory', e.target.value)}
-                    placeholder="Ej: Abuelo materno con enfermedad cardíaca, tía con artritis reumatoide, historial familiar de migrañas..."
-                  />
-                  <div className="form-text">
-                    Mencione cualquier otra condición médica relevante en la familia que no esté listada arriba.
-                  </div>
-                </div>
-
-                <div className="alert alert-info">
-                  <i className="fas fa-info-circle me-2"></i>
-                  <strong>Nota:</strong> La información sobre antecedentes familiares ayuda a identificar factores de riesgo genéticos y elaborar un plan nutricional más personalizado.
-                </div>
-              </div>
-            )}
-
-            {/* Paso 5: Estilo de Vida */}
-            {currentStep === 5 && (
-              <div className="step-content">
-                <h6 className="mb-3">
-                  <i className="fas fa-running me-2" aria-hidden="true"></i>
-                  Estilo de Vida del Paciente
-                </h6>
-                
-                {/* Nivel de Actividad */}
-                <div className="mb-4">
-                  <h6 className="mb-3">Nivel de Actividad</h6>
+        <Form onSubmit={handleSubmit}>
+          {currentStep === 1 && (
+            <div className="step-content">
+              <h6 className="mb-3">
+                <i className="fas fa-info-circle me-2" aria-hidden="true"></i>
+                Datos Básicos del Expediente
+              </h6>
+              
+              <div className="row">
+                <div className="col-12 col-md-6">
                   <div className="mb-3">
-                    <label className="form-label" htmlFor="activityLevelDescription">Descripción del Nivel de Actividad</label>
-                    <textarea
+                    <label className="form-label" htmlFor="recordDate">
+                      Fecha del Registro <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      type="date"
                       className="form-control"
-                      id="activityLevelDescription"
-                      name="activityLevelDescription"
-                      title="Descripción del Nivel de Actividad"
-                      aria-label="Descripción del nivel de actividad del paciente"
-                      rows={3}
-                      value={formData.activityLevelDescription}
-                      onChange={(e) => handleBasicChange('activityLevelDescription', e.target.value)}
-                      placeholder="Ej: Sedentario, trabajo de oficina, camina ocasionalmente..."
+                      id="recordDate"
+                      name="recordDate"
+                      title="Fecha del Registro"
+                      aria-label="Fecha del Registro"
+                      value={formData.recordDate}
+                      onChange={(e) => handleBasicChange('recordDate', e.target.value)}
+                      required
                     />
                   </div>
                 </div>
-
-                {/* Ejercicio Físico */}
-                <div className="mb-4">
-                  <h6 className="mb-3">Ejercicio Físico</h6>
-                  <div className="row">
-                    <div className="col-12 col-md-6">
-                      <div className="form-check mb-3">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          id="physicalExercise-performsExercise"
-                          name="performsExercise"
-                          checked={Boolean(formData.physicalExercise.performsExercise)}
-                          onChange={(e) => handleInputChange('physicalExercise', 'performsExercise', e.target.checked)}
-                          title="Marcar si el paciente realiza ejercicio físico"
-                          aria-label="Realiza ejercicio físico"
-                        />
-                        <label 
-                          className="form-check-label" 
-                          htmlFor="physicalExercise-performsExercise"
-                        >
-                          ¿Realiza ejercicio físico?
-                        </label>
-                      </div>
-                    </div>
-                    <div className="col-12 col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label" htmlFor="physicalExercise-type">Tipo de Ejercicio</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="physicalExercise-type"
-                          name="physicalExercise-type"
-                          title="Tipo de Ejercicio"
-                          aria-label="Tipo de ejercicio que realiza"
-                          value={formData.physicalExercise.type}
-                          onChange={(e) => handleInputChange('physicalExercise', 'type', e.target.value)}
-                          disabled={!formData.physicalExercise.performsExercise}
-                          placeholder="Ej: Caminar, correr, natación, gimnasio..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="row">
-                    <div className="col-12 col-md-4">
-                      <div className="mb-3">
-                        <label className="form-label" htmlFor="physicalExercise-frequency">Frecuencia</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="physicalExercise-frequency"
-                          name="physicalExercise-frequency"
-                          title="Frecuencia del Ejercicio"
-                          aria-label="Frecuencia con la que realiza ejercicio"
-                          value={formData.physicalExercise.frequency}
-                          onChange={(e) => handleInputChange('physicalExercise', 'frequency', e.target.value)}
-                          disabled={!formData.physicalExercise.performsExercise}
-                          placeholder="Ej: 3 veces por semana"
-                        />
-                      </div>
-                    </div>
-                    <div className="col-12 col-md-4">
-                      <div className="mb-3">
-                        <label className="form-label" htmlFor="physicalExercise-duration">Duración</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="physicalExercise-duration"
-                          name="physicalExercise-duration"
-                          title="Duración del Ejercicio"
-                          aria-label="Duración de cada sesión de ejercicio"
-                          value={formData.physicalExercise.duration}
-                          onChange={(e) => handleInputChange('physicalExercise', 'duration', e.target.value)}
-                          disabled={!formData.physicalExercise.performsExercise}
-                          placeholder="Ej: 45 minutos"
-                        />
-                      </div>
-                    </div>
-                    <div className="col-12 col-md-4">
-                      <div className="mb-3">
-                        <label className="form-label" htmlFor="physicalExercise-sinceWhen">¿Desde cuándo?</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="physicalExercise-sinceWhen"
-                          name="physicalExercise-sinceWhen"
-                          title="¿Desde cuándo realiza ejercicio?"
-                          aria-label="¿Desde cuándo realiza ejercicio?"
-                          value={formData.physicalExercise.sinceWhen}
-                          onChange={(e) => handleInputChange('physicalExercise', 'sinceWhen', e.target.value)}
-                          disabled={!formData.physicalExercise.performsExercise}
-                          placeholder="Ej: Hace 2 años"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Hábitos de Consumo */}
-                <div className="mb-4">
-                  <h6 className="mb-3">Hábitos de Consumo</h6>
-                  <div className="row">
-                    <div className="col-12 col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label" htmlFor="consumptionHabits-alcohol">Consumo de Alcohol</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="consumptionHabits-alcohol"
-                          name="consumptionHabits-alcohol"
-                          title="Consumo de Alcohol"
-                          aria-label="Describe el consumo de alcohol"
-                          value={formData.consumptionHabits.alcohol}
-                          onChange={(e) => handleInputChange('consumptionHabits', 'alcohol', e.target.value)}
-                          placeholder="Ej: Social, fin de semana, nunca, diario..."
-                        />
-                      </div>
-                    </div>
-                    <div className="col-12 col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label" htmlFor="consumptionHabits-tobacco">Consumo de Tabaco</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="consumptionHabits-tobacco"
-                          name="consumptionHabits-tobacco"
-                          title="Consumo de Tabaco"
-                          aria-label="Describe el consumo de tabaco"
-                          value={formData.consumptionHabits.tobacco}
-                          onChange={(e) => handleInputChange('consumptionHabits', 'tobacco', e.target.value)}
-                          placeholder="Ej: No fuma, 5 cigarrillos/día, dejó hace 1 año..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="row">
-                    <div className="col-12 col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label" htmlFor="consumptionHabits-coffee">Consumo de Café</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="consumptionHabits-coffee"
-                          name="consumptionHabits-coffee"
-                          title="Consumo de Café"
-                          aria-label="Describe el consumo de café"
-                          value={formData.consumptionHabits.coffee}
-                          onChange={(e) => handleInputChange('consumptionHabits', 'coffee', e.target.value)}
-                          placeholder="Ej: 2 tazas al día, no toma café, solo por la mañana..."
-                        />
-                      </div>
-                    </div>
-                    <div className="col-12 col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label" htmlFor="consumptionHabits-otherSubstances">Otras Sustancias</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="consumptionHabits-otherSubstances"
-                          name="consumptionHabits-otherSubstances"
-                          title="Otras Sustancias"
-                          aria-label="Describe el consumo de otras sustancias"
-                          value={formData.consumptionHabits.otherSubstances}
-                          onChange={(e) => handleInputChange('consumptionHabits', 'otherSubstances', e.target.value)}
-                          placeholder="Ej: Té, bebidas energéticas, ninguna..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Hidratación */}
-                <div className="mb-4">
-                  <h6 className="mb-3">Hidratación</h6>
-                  <div className="row">
-                    <div className="col-12 col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label" htmlFor="waterConsumptionLiters">Consumo de Agua (litros/día)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          max="10"
-                          className="form-control"
-                          id="waterConsumptionLiters"
-                          name="waterConsumptionLiters"
-                          title="Consumo de Agua (litros/día)"
-                          aria-label="Consumo diario de agua en litros"
-                          value={formData.waterConsumptionLiters}
-                          onChange={(e) => handleBasicChange('waterConsumptionLiters', e.target.value)}
-                          placeholder="Ej: 1.5"
-                        />
-                        <div className="form-text">
-                          Cantidad aproximada de agua pura que consume diariamente (no incluye otras bebidas)
-                        </div>
-                      </div>
-                    </div>
+                <div className="col-12 col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="expedientNumber">Número de Expediente</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="expedientNumber"
+                      name="expedientNumber"
+                      title="Número de Expediente"
+                      aria-label="Número de Expediente"
+                      value={formData.expedientNumber}
+                      onChange={(e) => handleBasicChange('expedientNumber', e.target.value)}
+                      placeholder="Ej: EXP-001"
+                    />
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* Paso 6: Mediciones */}
-            {currentStep === 6 && (
-              <div className="step-content">
-                <h6 className="mb-3">
-                  <i className="fas fa-ruler me-2" aria-hidden="true"></i>
-                  Mediciones Antropométricas
-                </h6>
-                
-                <div className="row">
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="anthropometricMeasurements-currentWeightKg">Peso Actual (kg)</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        className="form-control"
-                        id="anthropometricMeasurements-currentWeightKg"
-                        name="anthropometricMeasurements-currentWeightKg"
-                        title="Peso Actual (kg)"
-                        aria-label="Peso Actual en kilogramos"
-                        value={formData.anthropometricMeasurements.currentWeightKg}
-                        onChange={(e) => handleInputChange('anthropometricMeasurements', 'currentWeightKg', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="anthropometricMeasurements-habitualWeightKg">Peso Habitual (kg)</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        className="form-control"
-                        id="anthropometricMeasurements-habitualWeightKg"
-                        name="anthropometricMeasurements-habitualWeightKg"
-                        title="Peso Habitual (kg)"
-                        aria-label="Peso Habitual en kilogramos"
-                        value={formData.anthropometricMeasurements.habitualWeightKg}
-                        onChange={(e) => handleInputChange('anthropometricMeasurements', 'habitualWeightKg', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="row">
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="anthropometricMeasurements-heightM">Estatura (m)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        className="form-control"
-                        id="anthropometricMeasurements-heightM"
-                        name="anthropometricMeasurements-heightM"
-                        title="Estatura (m)"
-                        aria-label="Estatura en metros"
-                        value={formData.anthropometricMeasurements.heightM}
-                        onChange={(e) => handleInputChange('anthropometricMeasurements', 'heightM', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="anthropometricMeasurements-bmi">IMC Calculado</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="anthropometricMeasurements-bmi"
-                        name="anthropometricMeasurements-bmi"
-                        title="IMC Calculado"
-                        aria-label="Índice de Masa Corporal calculado automáticamente"
-                        value={calculateBMI() || ''}
-                        readOnly
-                        placeholder="Se calcula automáticamente"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="row">
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="anthropometricMeasurements-waistCircCm">Circunferencia de Cintura (cm)</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        className="form-control"
-                        id="anthropometricMeasurements-waistCircCm"
-                        name="anthropometricMeasurements-waistCircCm"
-                        title="Circunferencia de Cintura (cm)"
-                        aria-label="Circunferencia de Cintura en centímetros"
-                        value={formData.anthropometricMeasurements.waistCircCm}
-                        onChange={(e) => handleInputChange('anthropometricMeasurements', 'waistCircCm', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="anthropometricMeasurements-hipCircCm">Circunferencia de Cadera (cm)</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        className="form-control"
-                        id="anthropometricMeasurements-hipCircCm"
-                        name="anthropometricMeasurements-hipCircCm"
-                        title="Circunferencia de Cadera (cm)"
-                        aria-label="Circunferencia de Cadera en centímetros"
-                        value={formData.anthropometricMeasurements.hipCircCm}
-                        onChange={(e) => handleInputChange('anthropometricMeasurements', 'hipCircCm', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <h6 className="mt-4 mb-3">Presión Arterial</h6>
-                <div className="row">
-                  <div className="col-12 col-md-4">
-                    <div className="form-check mb-3">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="bloodPressure-knowsBp"
-                        name="knowsBp"
-                        checked={Boolean(formData.bloodPressure.knowsBp)}
-                        onChange={(e) => handleInputChange('bloodPressure', 'knowsBp', e.target.checked)}
-                        title="Marcar si el paciente conoce su presión arterial"
-                        aria-label="Conoce su presión arterial - Marcar si el paciente conoce sus valores"
-                      />
-                      <label 
-                        className="form-check-label" 
-                        htmlFor="bloodPressure-knowsBp"
-                      >
-                        Conoce su presión arterial
-                      </label>
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-4">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="bloodPressure-systolic">Sistólica</label>
-                      <input
-                        type="number"
-                        className={`form-control ${validationErrors.bloodPressure ? 'is-invalid' : ''}`}
-                        id="bloodPressure-systolic"
-                        name="bloodPressure-systolic"
-                        title="Sistólica"
-                        aria-label="Presión arterial sistólica"
-                        min="50"
-                        max="250"
-                        placeholder="Ej: 120"
-                        value={formData.bloodPressure.systolic}
-                        onChange={(e) => handleInputChange('bloodPressure', 'systolic', e.target.value)}
-                        disabled={!formData.bloodPressure.knowsBp}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-4">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="bloodPressure-diastolic">Diastólica</label>
-                      <input
-                        type="number"
-                        className={`form-control ${validationErrors.bloodPressure ? 'is-invalid' : ''}`}
-                        id="bloodPressure-diastolic"
-                        name="bloodPressure-diastolic"
-                        title="Diastólica"
-                        aria-label="Presión arterial diastólica"
-                        min="30"
-                        max="150"
-                        placeholder="Ej: 80"
-                        value={formData.bloodPressure.diastolic}
-                        onChange={(e) => handleInputChange('bloodPressure', 'diastolic', e.target.value)}
-                        disabled={!formData.bloodPressure.knowsBp}
-                      />
-                    </div>
-                  </div>
-                </div>
-                {/* Mostrar error de validación de presión arterial */}
-                {validationErrors.bloodPressure && (
-                  <div className="alert alert-warning d-flex align-items-center mt-3" role="alert">
-                    <i className="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>
-                    <div>
-                      <strong>⚠️ Verificar Presión Arterial:</strong> {validationErrors.bloodPressure}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Paso 7: Historia Dietética */}
-            {currentStep === 7 && (
-              <div className="step-content">
-                <h6 className="mb-3">
-                  <i className="fas fa-utensils me-2" aria-hidden="true"></i>
-                  Historia Dietética
-                </h6>
-                
-                <div className="row">
-                  <div className="col-12 col-md-6">
-                    <div className="form-check mb-3">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="dietaryHistory-receivedNutritionalGuidance"
-                        name="receivedNutritionalGuidance"
-                        checked={Boolean(formData.dietaryHistory.receivedNutritionalGuidance)}
-                        onChange={(e) => handleInputChange('dietaryHistory', 'receivedNutritionalGuidance', e.target.checked)}
-                        title="Marcar si el paciente ha recibido orientación nutricional previa"
-                        aria-label="Ha recibido orientación nutricional - Marcar si el paciente ha tenido orientación previa"
-                      />
-                      <label 
-                        className="form-check-label" 
-                        htmlFor="dietaryHistory-receivedNutritionalGuidance"
-                      >
-                        Ha recibido orientación nutricional
-                      </label>
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="dietaryHistory-whenReceived">¿Cuándo?</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="dietaryHistory-whenReceived"
-                        name="dietaryHistory-whenReceived"
-                        title="¿Cuándo?"
-                        aria-label="¿Cuándo recibió orientación nutricional?"
-                        value={formData.dietaryHistory.whenReceived}
-                        onChange={(e) => handleInputChange('dietaryHistory', 'whenReceived', e.target.value)}
-                        disabled={!formData.dietaryHistory.receivedNutritionalGuidance}
-                        placeholder="Ej: Hace 6 meses"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label" htmlFor="dietaryHistory-adherenceLevel">Nivel de Adherencia</label>
-                  <select
-                    className="form-select"
-                    id="dietaryHistory-adherenceLevel"
-                    name="dietaryHistory-adherenceLevel"
-                    title="Nivel de Adherencia"
-                    aria-label="Seleccionar nivel de adherencia"
-                    value={formData.dietaryHistory.adherenceLevel}
-                    onChange={(e) => handleInputChange('dietaryHistory', 'adherenceLevel', e.target.value)}
-                  >
-                    <option value="">Selecciona un nivel</option>
-                    <option value="Excelente apego">Excelente apego</option>
-                    <option value="Buena adherencia">Buena adherencia</option>
-                    <option value="Moderado apego">Moderado apego</option>
-                    <option value="Baja adherencia">Baja adherencia</option>
-                    <option value="Sin apego">Sin apego</option>
-                  </select>
-                </div>
-
-                <div className="row">
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="dietaryHistory-preferredFoods">Alimentos Preferidos</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="dietaryHistory-preferredFoods"
-                        name="dietaryHistory-preferredFoods"
-                        title="Alimentos Preferidos"
-                        aria-label="Alimentos Preferidos"
-                        value={formData.dietaryHistory.preferredFoods}
-                        onChange={(e) => handleInputChange('dietaryHistory', 'preferredFoods', e.target.value)}
-                        placeholder="Ej: Frutas, verduras, pescado..."
-                      />
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="dietaryHistory-dislikedFoods">Alimentos que No Le Gustan</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="dietaryHistory-dislikedFoods"
-                        name="dietaryHistory-dislikedFoods"
-                        title="Alimentos que No Le Gustan"
-                        aria-label="Alimentos que No Le Gustan"
-                        value={formData.dietaryHistory.dislikedFoods}
-                        onChange={(e) => handleInputChange('dietaryHistory', 'dislikedFoods', e.target.value)}
-                        placeholder="Ej: Brócoli, pescado..."
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label" htmlFor="dietaryHistory-malestarAlergiaFoods">Alimentos que Causan Malestar o Alergia</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="dietaryHistory-malestarAlergiaFoods"
-                    name="dietaryHistory-malestarAlergiaFoods"
-                    title="Alimentos que Causan Malestar o Alergia"
-                    aria-label="Alimentos que Causan Malestar o Alergia"
-                    value={formData.dietaryHistory.malestarAlergiaFoods}
-                    onChange={(e) => handleInputChange('dietaryHistory', 'malestarAlergiaFoods', e.target.value)}
-                    placeholder="Ej: Lácteos, gluten, mariscos..."
-                  />
-                </div>
-
-                <div className="row">
-                  <div className="col-12 col-md-6">
-                    <div className="form-check mb-3">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="dietaryHistory-takesSupplements"
-                        name="takesSupplements"
-                        checked={Boolean(formData.dietaryHistory.takesSupplements)}
-                        onChange={(e) => handleInputChange('dietaryHistory', 'takesSupplements', e.target.checked)}
-                        title="Marcar si el paciente toma suplementos"
-                        aria-label="Toma suplementos - Marcar si el paciente consume suplementos nutricionales"
-                      />
-                      <label 
-                        className="form-check-label" 
-                        htmlFor="dietaryHistory-takesSupplements"
-                      >
-                        Toma suplementos
-                      </label>
-                    </div>
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="dietaryHistory-supplementDetails">Detalles de Suplementos</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="dietaryHistory-supplementDetails"
-                        name="dietaryHistory-supplementDetails"
-                        title="Detalles de Suplementos"
-                        aria-label="Detalles de Suplementos"
-                        value={formData.dietaryHistory.supplementDetails}
-                        onChange={(e) => handleInputChange('dietaryHistory', 'supplementDetails', e.target.value)}
-                        disabled={!formData.dietaryHistory.takesSupplements}
-                        placeholder="Ej: Vitamina D, Omega 3..."
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Paso 8: Diagnóstico y Plan */}
-            {currentStep === 8 && (
-              <div className="step-content">
-                <h6 className="mb-3">
-                  <i className="fas fa-stethoscope me-2" aria-hidden="true"></i>
-                  Diagnóstico y Plan Nutricional
-                </h6>
-                
-                <div className="mb-3">
-                  <label className="form-label" htmlFor="nutritionalDiagnosis">
-                    Diagnóstico Nutricional <span className="text-danger">*</span>
-                  </label>
-                  <textarea
-                    className="form-control"
-                    id="nutritionalDiagnosis"
-                    name="nutritionalDiagnosis"
-                    title="Diagnóstico Nutricional"
-                    aria-label="Diagnóstico Nutricional"
-                    rows={4}
-                    value={formData.nutritionalDiagnosis}
-                    onChange={(e) => handleBasicChange('nutritionalDiagnosis', e.target.value)}
-                    placeholder="Describe el diagnóstico nutricional..."
-                    required
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label" htmlFor="nutritionalPlanAndManagement">
-                    Plan y Manejo Nutricional <span className="text-danger">*</span>
-                  </label>
-                  <textarea
-                    className="form-control"
-                    id="nutritionalPlanAndManagement"
-                    name="nutritionalPlanAndManagement"
-                    title="Plan y Manejo Nutricional"
-                    aria-label="Plan y Manejo Nutricional"
-                    rows={4}
-                    value={formData.nutritionalPlanAndManagement}
-                    onChange={(e) => handleBasicChange('nutritionalPlanAndManagement', e.target.value)}
-                    placeholder="Describe el plan nutricional y manejo..."
-                    required
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label" htmlFor="evolutionAndFollowUpNotes">Notas de Evolución y Seguimiento</label>
-                  <textarea
-                    className="form-control"
-                    id="evolutionAndFollowUpNotes"
-                    name="evolutionAndFollowUpNotes"
-                    title="Notas de Evolución y Seguimiento"
-                    aria-label="Notas de Evolución y Seguimiento"
-                    rows={3}
-                    value={formData.evolutionAndFollowUpNotes}
-                    onChange={(e) => handleBasicChange('evolutionAndFollowUpNotes', e.target.value)}
-                    placeholder="Notas adicionales para seguimiento..."
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Navegación entre pasos */}
-            <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4">
-              <div className="mb-2 mb-md-0">
-                {currentStep > 1 && (
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary"
-                    onClick={prevStep}
-                    title="Ir al paso anterior"
-                    aria-label="Ir al paso anterior"
-                  >
-                    <i className="fas fa-arrow-left me-1" aria-hidden="true"></i>
-                    Anterior
-                  </button>
-                )}
-              </div>
-              
-              <div className="d-flex flex-column flex-md-row gap-2">
-                {currentStep < steps.length && (
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={nextStep}
-                    title="Ir al siguiente paso"
-                    aria-label="Ir al siguiente paso"
-                  >
-                    Siguiente
-                    <i className="fas fa-arrow-right ms-1" aria-hidden="true"></i>
-                  </button>
-                )}
-                
-                {currentStep === steps.length && (
-                  <button
-                    type="submit"
-                    className="btn btn-success"
-                    disabled={loading}
-                    title={isEditing ? "Actualizar expediente clínico" : "Crear expediente clínico"}
-                    aria-label={isEditing ? "Actualizar expediente clínico" : "Crear expediente clínico"}
-                  >
-                    {loading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Guardando...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-save me-1" aria-hidden="true"></i>
-                        {isEditing ? 'Actualizar' : 'Crear'} Expediente
-                      </>
-                    )}
-                  </button>
-                )}
-                
-                <button
-                  type="button"
-                  className="btn btn-outline-danger"
-                  onClick={onCancel}
-                  title="Cancelar y volver"
-                  aria-label="Cancelar y volver"
-                >
-                  <i className="fas fa-times me-1" aria-hidden="true"></i>
-                  Cancelar
-                </button>
+              <div className="mb-3">
+                <label className="form-label" htmlFor="consultationReason">
+                  Motivo de Consulta <span className="text-danger">*</span>
+                </label>
+                <textarea
+                  className="form-control"
+                  id="consultationReason"
+                  name="consultationReason"
+                  title="Motivo de Consulta"
+                  aria-label="Motivo de Consulta"
+                  rows={3}
+                  value={formData.consultationReason}
+                  onChange={(e) => handleBasicChange('consultationReason', e.target.value)}
+                  placeholder="Describe el motivo de la consulta..."
+                  required
+                />
               </div>
             </div>
-          </form>
-        </div>
-      </div>
+          )}
 
-      <style>{`
-        .clinical-record-form {
-          max-width: 100%;
-        }
-        
-        /* Indicador de progreso minimalista con colores del sistema de expedientes */
-        .progress-indicator {
-          padding: 20px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-radius: 12px;
-          box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
-          margin: 20px auto;
-          max-width: 400px;
-          text-align: center;
-          position: relative;
-          overflow: hidden;
-        }
-        
-        .progress-indicator::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
-          pointer-events: none;
-        }
-        
-        @media (min-width: 768px) {
-          .progress-indicator {
-            padding: 30px;
-            max-width: 500px;
-          }
-        }
-        
-        .current-step-circle {
-          width: 60px;
-          height: 60px;
-          border-radius: 50%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          font-weight: 700;
-          font-size: 1.8em;
-          background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-          color: #ffffff;
-          border: 3px solid #ffffff;
-          box-shadow: 0 5px 15px rgba(255, 107, 107, 0.5);
-          margin: 0 auto 15px auto;
-          transition: all 0.3s ease-in-out;
-          flex-shrink: 0;
-          position: relative;
-          z-index: 1;
-          -webkit-backdrop-filter: blur(10px);
-          backdrop-filter: blur(10px);
-        }
-        
-        .current-step-info {
-          position: relative;
-          z-index: 1;
-        }
-        
-        .current-step-info .step-title {
-          font-size: 1.4em;
-          font-weight: 600;
-          color: #ffffff;
-          margin-bottom: 5px;
-          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .current-step-info .step-counter {
-          font-size: 0.9em;
-          color: rgba(255, 255, 255, 0.9);
-          margin-bottom: 5px;
-        }
-        
-        .current-step-info .step-required {
-          color: #ff7675;
-          font-weight: 500;
-          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        }
-        
-        @media (max-width: 767.98px) {
-          .current-step-circle {
-            width: 50px;
-            height: 50px;
-            font-size: 1.5em;
-            margin-bottom: 10px;
-          }
-          .current-step-info .step-title {
-            font-size: 1.2em;
-          }
-          .current-step-info .step-counter {
-            font-size: 0.8em;
-          }
-        }
-        
-        .step-content {
-          min-height: 300px;
-          background: #ffffff;
-          border-radius: 15px;
-          padding: 2rem;
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-          margin-top: 1.5rem;
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-          .progress-indicator {
-            padding: 1.5rem 1rem;
-            border-radius: 15px;
-          }
-          
-          .form-label {
-            font-size: 0.9rem;
-          }
-          
-          .form-control, .form-select {
-            font-size: 0.9rem;
-          }
-          
-          .btn {
-            font-size: 0.9rem;
-            padding: 0.5rem 1rem;
-          }
-          
-          .card-body {
-            padding: 1rem;
-          }
-          
-          .step-content {
-            min-height: 250px;
-            padding: 1.5rem;
-          }
-        }
-        
-        @media (max-width: 576px) {
-          .progress-indicator {
-            padding: 1rem 0.75rem;
-            border-radius: 12px;
-          }
-          
-          .form-label {
-            font-size: 0.85rem;
-          }
-          
-          .form-control, .form-select {
-            font-size: 0.85rem;
-          }
-          
-          .btn {
-            font-size: 0.85rem;
-            padding: 0.4rem 0.8rem;
-          }
-          
-          .card-body {
-            padding: 0.75rem;
-          }
-          
-          .step-content {
-            min-height: 200px;
-            padding: 1rem;
-          }
-          
-          /* Stack buttons vertically on very small screens */
-          .d-flex.flex-column.flex-md-row.gap-2 {
-            width: 100%;
-          }
-          
-          .d-flex.flex-column.flex-md-row.gap-2 .btn {
-            width: 100%;
-            margin-bottom: 0.5rem;
-          }
-        }
-        
-        /* Improve form field spacing on mobile */
-        @media (max-width: 768px) {
-          .mb-3 {
-            margin-bottom: 1rem !important;
-          }
-          
-          .row {
-            margin-left: -0.5rem;
-            margin-right: -0.5rem;
-          }
-          
-          .col-12, .col-6, .col-md-6, .col-md-4 {
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
-          }
-        }
-        
-        /* Ensure checkboxes are clickable and accessible */
-        .form-check-input {
-          cursor: pointer;
-          width: 1.2em;
-          height: 1.2em;
-          border: 2px solid #6c757d;
-          border-radius: 0.25em;
-          background-color: #fff;
-          transition: all 0.15s ease-in-out;
-          margin: 0;
-          flex-shrink: 0;
-        }
-        
-        .form-check-input:checked {
-          background-color: #007bff;
-          border-color: #007bff;
-        }
-        
-        .form-check-input:focus {
-          outline: 0;
-          box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-          border-color: #80bdff;
-        }
-        
-        .form-check-input:hover {
-          border-color: #007bff;
-          transform: scale(1.05);
-        }
-        
-        .form-check-input:active {
-          transform: scale(0.95);
-        }
-        
-        .form-check-label {
-          cursor: pointer;
-          -webkit-user-select: none;
-          -moz-user-select: none;
-          -ms-user-select: none;
-          user-select: none;
-          margin-left: 0.5rem;
-          line-height: 1.4;
-          font-size: 0.9rem;
-          flex: 1;
-          margin-bottom: 0;
-          padding-top: 0.1rem;
-        }
-        
-        /* Improve checkbox spacing and layout */
-        .form-check {
-          display: flex;
-          align-items: flex-start;
-          margin-bottom: 0.75rem;
-          padding: 0.5rem;
-          border-radius: 0.375rem;
-          transition: background-color 0.15s ease-in-out;
-        }
-        
-        .form-check:hover {
-          background-color: rgba(0, 123, 255, 0.05);
-        }
-        
-        .form-check-input {
-          margin-right: 0.5rem;
-          margin-top: 0.1rem;
-        }
-        
-        /* Ensure proper touch targets on mobile */
-        @media (max-width: 768px) {
-          .form-check-input {
-            width: 1.4em;
-            height: 1.4em;
-            min-width: 1.4em;
-            min-height: 1.4em;
-          }
-          
-          .form-check-label {
-            font-size: 0.9rem;
-            line-height: 1.3;
-            padding-top: 0.05rem;
-          }
-          
-          .form-check {
-            margin-bottom: 1rem;
-            padding: 0.75rem;
-            min-height: 44px;
-          }
-        }
-        
-        /* Ensure checkboxes work on all browsers */
-        .form-check-input::-ms-check {
-          display: none;
-        }
-        
-        /* High contrast mode support */
-        @media (prefers-contrast: high) {
-          .form-check-input {
-            border-width: 3px;
-          }
-          
-          .form-check-input:checked {
-            background-color: #000;
-            border-color: #000;
-          }
-        }
-        
-        /* Reduced motion support */
-        @media (prefers-reduced-motion: reduce) {
-          .form-check-input,
-          .form-check {
-            transition: none;
-          }
-          
-          .form-check-input:hover {
-            transform: none;
-          }
-        }
-        
-        /* Improve textarea on mobile */
-        @media (max-width: 768px) {
-          textarea.form-control {
-            min-height: 80px;
-          }
-        }
-        
-        /* Fix text-size-adjust compatibility - Remove problematic properties */
-        .form-control, .form-select, .btn, .form-label {
-          /* Remove problematic text-size-adjust properties */
-        }
-        
-        /* Fix text-align compatibility - Use standard properties */
-        .text-center {
-          text-align: center !important;
-        }
-        
-        /* Remove problematic color-adjust properties */
-        @media print {
-          .btn, .form-control, .form-select {
-            /* Remove problematic print-color-adjust properties */
-          }
-        }
-        
-        /* Ensure proper focus indicators for accessibility */
-        .form-control:focus,
-        .form-select:focus,
-        .btn:focus {
-          outline: 2px solid #007bff;
-          outline-offset: 2px;
-        }
-        
-        /* Improve button accessibility */
-        .btn {
-          position: relative;
-          overflow: hidden;
-        }
-        
-        .btn:focus {
-          box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-        }
-        
-        /* Ensure proper contrast for accessibility */
-        .form-label {
-          color: #495057;
-          font-weight: 500;
-        }
-        
-        .text-danger {
-          color: #dc3545 !important;
-        }
-        
-        /* Improve form field spacing on mobile */
-        @media (max-width: 768px) {
-          .mb-3 {
-            margin-bottom: 1rem !important;
-          }
-          
-          .row {
-            margin-left: -0.5rem;
-            margin-right: -0.5rem;
-          }
-          
-          .col-12, .col-6, .col-md-6, .col-md-4 {
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
-          }
-        }
-        
-        /* Ensure all form fields have proper accessibility */
-        .form-control:not([id]),
-        .form-select:not([id]),
-        .form-check-input:not([id]) {
-          border: 2px solid #dc3545;
-        }
-        
-        /* Improve button text accessibility */
-        .btn:not([title]):not([aria-label]) {
-          border: 2px solid #dc3545;
-        }
-        
-        /* Ensure proper text alignment */
-        .text-center {
-          text-align: center !important;
-        }
-        
-        .text-left {
-          text-align: left !important;
-        }
-        
-        .text-right {
-          text-align: right !important;
-        }
-        
-        /* Improve mobile compatibility */
-        @media (max-width: 768px) {
-          .btn {
-            min-height: 44px;
-            min-width: 44px;
-          }
-          
-          .form-control, .form-select {
-            min-height: 44px;
-          }
-          
-          .form-check-input {
-            min-width: 44px;
-            min-height: 44px;
-          }
-        }
-      `}</style>
-    </div>
+          {currentStep === 2 && (
+            <div className="step-content">
+              <h6 className="mb-3">
+                <i className="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>
+                Problemas Actuales del Paciente
+              </h6>
+              
+              <div className="mb-4">
+                <h6 className="mb-3">Problemas Gastrointestinales</h6>
+                <div className="row">
+                  {[
+                    { key: 'diarrhea', label: 'Diarrea' },
+                    { key: 'constipation', label: 'Estreñimiento' },
+                    { key: 'gastritis', label: 'Gastritis' },
+                    { key: 'ulcer', label: 'Úlcera' },
+                    { key: 'nausea', label: 'Náuseas' },
+                    { key: 'pyrosis', label: 'Pirosis' },
+                    { key: 'vomiting', label: 'Vómito' },
+                    { key: 'colitis', label: 'Colitis' },
+                  ].map(({ key, label }) => {
+                    const checkboxId = `currentProblems-${key}`;
+                    const isChecked = Boolean(formData.currentProblems[key as keyof typeof formData.currentProblems]);
+                    return (
+                      <div key={key} className="col-6 col-md-3 mb-2">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id={checkboxId}
+                            name={key}
+                            checked={isChecked}
+                            onChange={(e) => {
+                              console.log(`Checkbox ${key} changed:`, e.target.checked); // Debug
+                              handleInputChange('currentProblems', key, e.target.checked);
+                            }}
+                            title={`Marcar si el paciente tiene ${label.toLowerCase()}`}
+                            aria-label={`${label} - Marcar si el paciente tiene este problema`}
+                          />
+                          <label 
+                            className="form-check-label" 
+                            htmlFor={checkboxId}
+                            style={{ cursor: 'pointer', userSelect: 'none' }}
+                          >
+                            {label}
+                          </label>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label" htmlFor="currentProblems-mouthMechanics">Mecánicos de la Boca</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="currentProblems-mouthMechanics"
+                  name="currentProblems-mouthMechanics"
+                  title="Mecánicos de la Boca"
+                  aria-label="Mecánicos de la Boca"
+                  value={formData.currentProblems.mouth_mechanics}
+                  onChange={(e) => handleInputChange('currentProblems', 'mouth_mechanics', e.target.value)}
+                  placeholder="Ej: Dificultad para masticar, problemas dentales..."
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label" htmlFor="currentProblems-otherProblems">Otros Problemas</label>
+                <textarea
+                  className="form-control"
+                  id="currentProblems-otherProblems"
+                  name="currentProblems-otherProblems"
+                  title="Otros Problemas"
+                  aria-label="Otros Problemas"
+                  rows={2}
+                  value={formData.currentProblems.other_problems}
+                  onChange={(e) => handleInputChange('currentProblems', 'other_problems', e.target.value)}
+                  placeholder="Describe otros problemas..."
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label" htmlFor="currentProblems-observations">Observaciones</label>
+                <textarea
+                  className="form-control"
+                  id="currentProblems-observations"
+                  name="currentProblems-observations"
+                  title="Observaciones"
+                  aria-label="Observaciones"
+                  rows={2}
+                  value={formData.currentProblems.observations}
+                  onChange={(e) => handleInputChange('currentProblems', 'observations', e.target.value)}
+                  placeholder="Observaciones adicionales..."
+                />
+              </div>
+            </div>
+          )}
+
+          {currentStep === 3 && (
+            <div className="step-content">
+              <h6 className="mb-3">
+                <i className="fas fa-pills me-2" aria-hidden="true"></i>
+                Enfermedades Diagnosticadas y Medicamentos
+              </h6>
+              
+              <div className="row">
+                <div className="col-12 col-md-6">
+                  <div className="form-check mb-3">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="diagnosedDiseases-hasDisease"
+                      name="hasDisease"
+                      checked={Boolean(formData.diagnosedDiseases.hasDisease)}
+                      onChange={(e) => handleInputChange('diagnosedDiseases', 'hasDisease', e.target.checked)}
+                      title="Marcar si el paciente tiene alguna enfermedad diagnosticada"
+                      aria-label="Tiene enfermedad diagnosticada"
+                    />
+                    <label 
+                      className="form-check-label" 
+                      htmlFor="diagnosedDiseases-hasDisease"
+                    >
+                      Tiene enfermedad diagnosticada
+                    </label>
+                  </div>
+                </div>
+                <div className="col-12 col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="diagnosedDiseases-diseaseName">Nombre de la Enfermedad</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="diagnosedDiseases-diseaseName"
+                      name="diseaseName"
+                      title="Nombre de la Enfermedad"
+                      aria-label="Nombre de la Enfermedad"
+                      value={formData.diagnosedDiseases.diseaseName}
+                      onChange={(e) => handleInputChange('diagnosedDiseases', 'diseaseName', e.target.value)}
+                      disabled={!formData.diagnosedDiseases.hasDisease}
+                      placeholder="Ej: Diabetes, Hipertensión..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="row">
+                <div className="col-12 col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="diagnosedDiseases-sinceWhen">¿Desde cuándo?</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="diagnosedDiseases-sinceWhen"
+                      name="sinceWhen"
+                      title="¿Desde cuándo?"
+                      aria-label="¿Desde cuándo tiene la enfermedad?"
+                      value={formData.diagnosedDiseases.sinceWhen}
+                      onChange={(e) => handleInputChange('diagnosedDiseases', 'sinceWhen', e.target.value)}
+                      disabled={!formData.diagnosedDiseases.hasDisease}
+                      placeholder="Ej: Hace 2 años, Desde 2020..."
+                    />
+                  </div>
+                </div>
+                <div className="col-12 col-md-6">
+                  <div className="form-check mb-3 d-flex align-items-center" style={{ minHeight: '38px' }}>
+                    <input
+                      className="form-check-input me-2"
+                      type="checkbox"
+                      id="diagnosedDiseases-takesMedication"
+                      name="takesMedication"
+                      checked={Boolean(formData.diagnosedDiseases.takesMedication)}
+                      onChange={(e) => handleInputChange('diagnosedDiseases', 'takesMedication', e.target.checked)}
+                      disabled={!formData.diagnosedDiseases.hasDisease}
+                      title="Marcar si el paciente toma medicamentos"
+                      aria-label="Toma medicamentos"
+                    />
+                    <label 
+                      className="form-check-label" 
+                      htmlFor="diagnosedDiseases-takesMedication"
+                    >
+                      Toma medicamentos
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label" htmlFor="diagnosedDiseases-medicationsList">
+                  Lista de Medicamentos
+                  <small className="text-muted ms-2">(Separar con comas)</small>
+                </label>
+                <textarea
+                  className="form-control"
+                  id="diagnosedDiseases-medicationsList"
+                  name="medicationsList"
+                  title="Lista de Medicamentos"
+                  aria-label="Lista de Medicamentos que toma el paciente"
+                  rows={3}
+                  value={formData.diagnosedDiseases.medicationsList}
+                  onChange={(e) => handleInputChange('diagnosedDiseases', 'medicationsList', e.target.value)}
+                  disabled={!formData.diagnosedDiseases.takesMedication}
+                  placeholder="Ej: Metformina 500mg, Losartán 50mg, Aspirina 100mg"
+                />
+                <div className="form-text">
+                  Escriba cada medicamento separado por comas. Incluya la dosis si la conoce.
+                </div>
+              </div>
+
+              <hr className="my-4" />
+
+              <h6 className="mb-3">Enfermedades Importantes</h6>
+              <div className="row">
+                <div className="col-12 col-md-6">
+                  <div className="form-check mb-3">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="diagnosedDiseases-hasImportantDisease"
+                      name="hasImportantDisease"
+                      checked={Boolean(formData.diagnosedDiseases.hasImportantDisease)}
+                      onChange={(e) => handleInputChange('diagnosedDiseases', 'hasImportantDisease', e.target.checked)}
+                      title="Marcar si el paciente tiene alguna enfermedad importante"
+                      aria-label="Tiene enfermedad importante"
+                    />
+                    <label 
+                      className="form-check-label" 
+                      htmlFor="diagnosedDiseases-hasImportantDisease"
+                    >
+                      Tiene enfermedad importante
+                    </label>
+                  </div>
+                </div>
+                <div className="col-12 col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="diagnosedDiseases-importantDiseaseName">Nombre de la Enfermedad Importante</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="diagnosedDiseases-importantDiseaseName"
+                      name="importantDiseaseName"
+                      title="Nombre de la Enfermedad Importante"
+                      aria-label="Nombre de la Enfermedad Importante"
+                      value={formData.diagnosedDiseases.importantDiseaseName}
+                      onChange={(e) => handleInputChange('diagnosedDiseases', 'importantDiseaseName', e.target.value)}
+                      disabled={!formData.diagnosedDiseases.hasImportantDisease}
+                      placeholder="Ej: Cáncer, Insuficiencia renal..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="row">
+                <div className="col-12 col-md-6">
+                  <div className="form-check mb-3">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="diagnosedDiseases-takesSpecialTreatment"
+                      name="takesSpecialTreatment"
+                      checked={Boolean(formData.diagnosedDiseases.takesSpecialTreatment)}
+                      onChange={(e) => handleInputChange('diagnosedDiseases', 'takesSpecialTreatment', e.target.checked)}
+                      title="Marcar si el paciente lleva tratamiento especial"
+                      aria-label="Lleva tratamiento especial"
+                    />
+                    <label 
+                      className="form-check-label" 
+                      htmlFor="diagnosedDiseases-takesSpecialTreatment"
+                    >
+                      Lleva tratamiento especial
+                    </label>
+                  </div>
+                </div>
+                <div className="col-12 col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="diagnosedDiseases-specialTreatmentDetails">Detalles del Tratamiento</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="diagnosedDiseases-specialTreatmentDetails"
+                      name="specialTreatmentDetails"
+                      title="Detalles del Tratamiento"
+                      aria-label="Detalles del Tratamiento Especial"
+                      value={formData.diagnosedDiseases.specialTreatmentDetails}
+                      onChange={(e) => handleInputChange('diagnosedDiseases', 'specialTreatmentDetails', e.target.value)}
+                      disabled={!formData.diagnosedDiseases.takesSpecialTreatment}
+                      placeholder="Ej: Quimioterapia, Diálisis..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="row">
+                <div className="col-12 col-md-6">
+                  <div className="form-check mb-3">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="diagnosedDiseases-hasSurgery"
+                      name="hasSurgery"
+                      checked={Boolean(formData.diagnosedDiseases.hasSurgery)}
+                      onChange={(e) => handleInputChange('diagnosedDiseases', 'hasSurgery', e.target.checked)}
+                      title="Marcar si el paciente ha tenido cirugías"
+                      aria-label="Ha tenido cirugías"
+                    />
+                    <label 
+                      className="form-check-label" 
+                      htmlFor="diagnosedDiseases-hasSurgery"
+                    >
+                      Ha tenido cirugías
+                    </label>
+                  </div>
+                </div>
+                <div className="col-12 col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="diagnosedDiseases-surgeryDetails">Detalles de Cirugías</label>
+                    <textarea
+                      className="form-control"
+                      id="diagnosedDiseases-surgeryDetails"
+                      name="surgeryDetails"
+                      title="Detalles de Cirugías"
+                      aria-label="Detalles de Cirugías"
+                      rows={2}
+                      value={formData.diagnosedDiseases.surgeryDetails}
+                      onChange={(e) => handleInputChange('diagnosedDiseases', 'surgeryDetails', e.target.value)}
+                      disabled={!formData.diagnosedDiseases.hasSurgery}
+                      placeholder="Ej: Apendicectomía en 2019, Colecistectomía..."
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 4 && (
+            <div className="step-content">
+              <h6 className="mb-3">
+                <i className="fas fa-users me-2" aria-hidden="true"></i>
+                Antecedentes Familiares
+              </h6>
+              
+              <div className="mb-4">
+                <p className="text-muted">
+                  Marque las condiciones médicas que hayan presentado familiares directos (padres, hermanos, abuelos).
+                </p>
+                
+                <div className="row">
+                  {[
+                    { key: 'obesity', label: 'Obesidad', color: 'bg-warning' },
+                    { key: 'diabetes', label: 'Diabetes', color: 'bg-danger' },
+                    { key: 'hta', label: 'Hipertensión (HTA)', color: 'bg-info' },
+                    { key: 'cancer', label: 'Cáncer', color: 'bg-dark' },
+                    { key: 'hypoHyperthyroidism', label: 'Problemas de Tiroides', color: 'bg-primary' },
+                    { key: 'dyslipidemia', label: 'Dislipidemia', color: 'bg-secondary' },
+                  ].map(({ key, label, color }) => {
+                    const checkboxId = `familyMedicalHistory-${key}`;
+                    const isChecked = Boolean(formData.familyMedicalHistory[key as keyof typeof formData.familyMedicalHistory]);
+                    return (
+                      <div key={key} className="col-6 col-md-4 mb-3">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id={checkboxId}
+                            name={key}
+                            checked={isChecked}
+                            onChange={(e) => {
+                              console.log(`Family history ${key} changed:`, e.target.checked); // Debug
+                              handleInputChange('familyMedicalHistory', key, e.target.checked);
+                            }}
+                            title={`Marcar si familiares han tenido ${label.toLowerCase()}`}
+                            aria-label={`${label} - Antecedentes familiares`}
+                          />
+                          <label 
+                            className="form-check-label" 
+                            htmlFor={checkboxId}
+                            style={{ cursor: 'pointer', userSelect: 'none' }}
+                          >
+                            <span className={`badge ${color} me-2`}></span>
+                            {label}
+                          </label>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label" htmlFor="familyMedicalHistory-otherHistory">
+                  Otros Antecedentes Familiares
+                </label>
+                <textarea
+                  className="form-control"
+                  id="familyMedicalHistory-otherHistory"
+                  name="familyMedicalHistory-otherHistory"
+                  title="Otros Antecedentes Familiares"
+                  aria-label="Otros antecedentes familiares no mencionados arriba"
+                  rows={3}
+                  value={formData.familyMedicalHistory.otherHistory}
+                  onChange={(e) => handleInputChange('familyMedicalHistory', 'otherHistory', e.target.value)}
+                  placeholder="Ej: Abuelo materno con enfermedad cardíaca, tía con artritis reumatoide, historial familiar de migrañas..."
+                />
+                <div className="form-text">
+                  Mencione cualquier otra condición médica relevante en la familia que no esté listada arriba.
+                </div>
+              </div>
+
+              <div className="alert alert-info">
+                <i className="fas fa-info-circle me-2"></i>
+                <strong>Nota:</strong> La información sobre antecedentes familiares ayuda a identificar factores de riesgo genéticos y elaborar un plan nutricional más personalizado.
+              </div>
+            </div>
+          )}
+
+          {currentStep === 5 && (
+            <div className="step-content">
+              <h6 className="mb-3">
+                <i className="fas fa-running me-2" aria-hidden="true"></i>
+                Estilo de Vida del Paciente
+              </h6>
+              
+              <div className="mb-4">
+                <h6 className="mb-3">Nivel de Actividad</h6>
+                <div className="mb-3">
+                  <label className="form-label" htmlFor="activityLevelDescription">Descripción del Nivel de Actividad</label>
+                  <textarea
+                    className="form-control"
+                    id="activityLevelDescription"
+                    name="activityLevelDescription"
+                    title="Descripción del Nivel de Actividad"
+                    aria-label="Descripción del nivel de actividad del paciente"
+                    rows={3}
+                    value={formData.activityLevelDescription}
+                    onChange={(e) => handleBasicChange('activityLevelDescription', e.target.value)}
+                    placeholder="Ej: Sedentario, trabajo de oficina, camina ocasionalmente..."
+                  />
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h6 className="mb-3">Ejercicio Físico</h6>
+                <div className="row">
+                  <div className="col-12 col-md-6">
+                    <div className="form-check mb-3">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="physicalExercise-performsExercise"
+                        name="performsExercise"
+                        checked={Boolean(formData.physicalExercise.performsExercise)}
+                        onChange={(e) => handleInputChange('physicalExercise', 'performsExercise', e.target.checked)}
+                        title="Marcar si el paciente realiza ejercicio físico"
+                        aria-label="Realiza ejercicio físico"
+                      />
+                      <label 
+                        className="form-check-label" 
+                        htmlFor="physicalExercise-performsExercise"
+                      >
+                        ¿Realiza ejercicio físico?
+                      </label>
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor="physicalExercise-type">Tipo de Ejercicio</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="physicalExercise-type"
+                        name="physicalExercise-type"
+                        title="Tipo de Ejercicio"
+                        aria-label="Tipo de ejercicio que realiza"
+                        value={formData.physicalExercise.type}
+                        onChange={(e) => handleInputChange('physicalExercise', 'type', e.target.value)}
+                        disabled={!formData.physicalExercise.performsExercise}
+                        placeholder="Ej: Caminar, correr, natación, gimnasio..."
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="row">
+                  <div className="col-12 col-md-4">
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor="physicalExercise-frequency">Frecuencia</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="physicalExercise-frequency"
+                        name="physicalExercise-frequency"
+                        title="Frecuencia del Ejercicio"
+                        aria-label="Frecuencia con la que realiza ejercicio"
+                        value={formData.physicalExercise.frequency}
+                        onChange={(e) => handleInputChange('physicalExercise', 'frequency', e.target.value)}
+                        disabled={!formData.physicalExercise.performsExercise}
+                        placeholder="Ej: 3 veces por semana"
+                      />
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-4">
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor="physicalExercise-duration">Duración</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="physicalExercise-duration"
+                        name="physicalExercise-duration"
+                        title="Duración del Ejercicio"
+                        aria-label="Duración de cada sesión de ejercicio"
+                        value={formData.physicalExercise.duration}
+                        onChange={(e) => handleInputChange('physicalExercise', 'duration', e.target.value)}
+                        disabled={!formData.physicalExercise.performsExercise}
+                        placeholder="Ej: 45 minutos"
+                      />
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-4">
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor="physicalExercise-sinceWhen">¿Desde cuándo?</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="physicalExercise-sinceWhen"
+                        name="physicalExercise-sinceWhen"
+                        title="¿Desde cuándo realiza ejercicio?"
+                        aria-label="¿Desde cuándo realiza ejercicio?"
+                        value={formData.physicalExercise.sinceWhen}
+                        onChange={(e) => handleInputChange('physicalExercise', 'sinceWhen', e.target.value)}
+                        disabled={!formData.physicalExercise.performsExercise}
+                        placeholder="Ej: Hace 2 años"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h6 className="mb-3">Hábitos de Consumo</h6>
+                <div className="row">
+                  <div className="col-12 col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor="consumptionHabits-alcohol">Consumo de Alcohol</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="consumptionHabits-alcohol"
+                        name="consumptionHabits-alcohol"
+                        title="Consumo de Alcohol"
+                        aria-label="Describe el consumo de alcohol"
+                        value={formData.consumptionHabits.alcohol}
+                        onChange={(e) => handleInputChange('consumptionHabits', 'alcohol', e.target.value)}
+                        placeholder="Ej: Social, fin de semana, nunca, diario..."
+                      />
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor="consumptionHabits-tobacco">Consumo de Tabaco</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="consumptionHabits-tobacco"
+                        name="consumptionHabits-tobacco"
+                        title="Consumo de Tabaco"
+                        aria-label="Describe el consumo de tabaco"
+                        value={formData.consumptionHabits.tobacco}
+                        onChange={(e) => handleInputChange('consumptionHabits', 'tobacco', e.target.value)}
+                        placeholder="Ej: No fuma, 5 cigarrillos/día, dejó hace 1 año..."
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="row">
+                  <div className="col-12 col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor="consumptionHabits-coffee">Consumo de Café</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="consumptionHabits-coffee"
+                        name="consumptionHabits-coffee"
+                        title="Consumo de Café"
+                        aria-label="Describe el consumo de café"
+                        value={formData.consumptionHabits.coffee}
+                        onChange={(e) => handleInputChange('consumptionHabits', 'coffee', e.target.value)}
+                        placeholder="Ej: 2 tazas al día, no toma café, solo por la mañana..."
+                      />
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor="consumptionHabits-otherSubstances">Otras Sustancias</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="consumptionHabits-otherSubstances"
+                        name="consumptionHabits-otherSubstances"
+                        title="Otras Sustancias"
+                        aria-label="Describe el consumo de otras sustancias"
+                        value={formData.consumptionHabits.otherSubstances}
+                        onChange={(e) => handleInputChange('consumptionHabits', 'otherSubstances', e.target.value)}
+                        placeholder="Ej: Té, bebidas energéticas, ninguna..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h6 className="mb-3">Hidratación</h6>
+                <div className="row">
+                  <div className="col-12 col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor="waterConsumptionLiters">Consumo de Agua (litros/día)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="10"
+                        className="form-control"
+                        id="waterConsumptionLiters"
+                        name="waterConsumptionLiters"
+                        title="Consumo de Agua (litros/día)"
+                        aria-label="Consumo diario de agua en litros"
+                        value={formData.waterConsumptionLiters}
+                        onChange={(e) => handleBasicChange('waterConsumptionLiters', e.target.value)}
+                        placeholder="Ej: 1.5"
+                      />
+                      <div className="form-text">
+                        Cantidad aproximada de agua pura que consume diariamente (no incluye otras bebidas)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 6 && (
+            <div className="step-content">
+              <h6 className="mb-3">
+                <i className="fas fa-ruler me-2" aria-hidden="true"></i>
+                Mediciones Antropométricas
+              </h6>
+              
+              <div className="row">
+                <div className="col-12 col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="anthropometricMeasurements-currentWeightKg">Peso Actual (kg)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="form-control"
+                      id="anthropometricMeasurements-currentWeightKg"
+                      name="anthropometricMeasurements-currentWeightKg"
+                      title="Peso Actual (kg)"
+                      aria-label="Peso Actual en kilogramos"
+                      value={formData.anthropometricMeasurements.currentWeightKg}
+                      onChange={(e) => handleInputChange('anthropometricMeasurements', 'currentWeightKg', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="col-12 col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="anthropometricMeasurements-habitualWeightKg">Peso Habitual (kg)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="form-control"
+                      id="anthropometricMeasurements-habitualWeightKg"
+                      name="anthropometricMeasurements-habitualWeightKg"
+                      title="Peso Habitual (kg)"
+                      aria-label="Peso Habitual en kilogramos"
+                      value={formData.anthropometricMeasurements.habitualWeightKg}
+                      onChange={(e) => handleInputChange('anthropometricMeasurements', 'habitualWeightKg', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="row">
+                <div className="col-12 col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="anthropometricMeasurements-heightM">Estatura (m)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="form-control"
+                      id="anthropometricMeasurements-heightM"
+                      name="anthropometricMeasurements-heightM"
+                      title="Estatura (m)"
+                      aria-label="Estatura en metros"
+                      value={formData.anthropometricMeasurements.heightM}
+                      onChange={(e) => handleInputChange('anthropometricMeasurements', 'heightM', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="col-12 col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="anthropometricMeasurements-bmi">IMC Calculado</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="anthropometricMeasurements-bmi"
+                      name="anthropometricMeasurements-bmi"
+                      title="IMC Calculado"
+                      aria-label="Índice de Masa Corporal calculado automáticamente"
+                      value={calculateBMI() || ''}
+                      readOnly
+                      placeholder="Se calcula automáticamente"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="row">
+                <div className="col-12 col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="anthropometricMeasurements-waistCircCm">Circunferencia de Cintura (cm)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="form-control"
+                      id="anthropometricMeasurements-waistCircCm"
+                      name="anthropometricMeasurements-waistCircCm"
+                      title="Circunferencia de Cintura (cm)"
+                      aria-label="Circunferencia de Cintura en centímetros"
+                      value={formData.anthropometricMeasurements.waistCircCm}
+                      onChange={(e) => handleInputChange('anthropometricMeasurements', 'waistCircCm', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="col-12 col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="anthropometricMeasurements-hipCircCm">Circunferencia de Cadera (cm)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="form-control"
+                      id="anthropometricMeasurements-hipCircCm"
+                      name="anthropometricMeasurements-hipCircCm"
+                      title="Circunferencia de Cadera (cm)"
+                      aria-label="Circunferencia de Cadera en centímetros"
+                      value={formData.anthropometricMeasurements.hipCircCm}
+                      onChange={(e) => handleInputChange('anthropometricMeasurements', 'hipCircCm', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <h6 className="mt-4 mb-3">Presión Arterial</h6>
+              <div className="row">
+                <div className="col-12 col-md-4">
+                  <div className="form-check mb-3">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="bloodPressure-knowsBp"
+                      name="knowsBp"
+                      checked={Boolean(formData.bloodPressure.knowsBp)}
+                      onChange={(e) => handleInputChange('bloodPressure', 'knowsBp', e.target.checked)}
+                      title="Marcar si el paciente conoce su presión arterial"
+                      aria-label="Conoce su presión arterial - Marcar si el paciente conoce sus valores"
+                    />
+                    <label 
+                      className="form-check-label" 
+                      htmlFor="bloodPressure-knowsBp"
+                    >
+                      Conoce su presión arterial
+                    </label>
+                  </div>
+                </div>
+                <div className="col-12 col-md-4">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="bloodPressure-systolic">Sistólica</label>
+                    <input
+                      type="number"
+                      className={`form-control ${validationErrors.bloodPressure ? 'is-invalid' : ''}`}
+                      id="bloodPressure-systolic"
+                      name="bloodPressure-systolic"
+                      title="Sistólica"
+                      aria-label="Presión arterial sistólica"
+                      min="50"
+                      max="250"
+                      placeholder="Ej: 120"
+                      value={formData.bloodPressure.systolic}
+                      onChange={(e) => handleInputChange('bloodPressure', 'systolic', e.target.value)}
+                      disabled={!formData.bloodPressure.knowsBp}
+                    />
+                  </div>
+                </div>
+                <div className="col-12 col-md-4">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="bloodPressure-diastolic">Diastólica</label>
+                    <input
+                      type="number"
+                      className={`form-control ${validationErrors.bloodPressure ? 'is-invalid' : ''}`}
+                      id="bloodPressure-diastolic"
+                      name="bloodPressure-diastolic"
+                      title="Diastólica"
+                      aria-label="Presión arterial diastólica"
+                      min="30"
+                      max="150"
+                      placeholder="Ej: 80"
+                      value={formData.bloodPressure.diastolic}
+                      onChange={(e) => handleInputChange('bloodPressure', 'diastolic', e.target.value)}
+                      disabled={!formData.bloodPressure.knowsBp}
+                    />
+                  </div>
+                </div>
+              </div>
+              {validationErrors.bloodPressure && (
+                <div className="alert alert-warning d-flex align-items-center mt-3" role="alert">
+                  <i className="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>
+                  <div>
+                    <strong>⚠️ Verificar Presión Arterial:</strong> {validationErrors.bloodPressure}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentStep === 7 && (
+            <div className="step-content">
+              <h6 className="mb-3">
+                <i className="fas fa-utensils me-2" aria-hidden="true"></i>
+                Historia Dietética
+              </h6>
+              
+              <div className="row">
+                <div className="col-12 col-md-6">
+                  <div className="form-check mb-3">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="dietaryHistory-receivedNutritionalGuidance"
+                      name="receivedNutritionalGuidance"
+                      checked={Boolean(formData.dietaryHistory.receivedNutritionalGuidance)}
+                      onChange={(e) => handleInputChange('dietaryHistory', 'receivedNutritionalGuidance', e.target.checked)}
+                      title="Marcar si el paciente ha recibido orientación nutricional previa"
+                      aria-label="Ha recibido orientación nutricional - Marcar si el paciente ha tenido orientación previa"
+                    />
+                    <label 
+                      className="form-check-label" 
+                      htmlFor="dietaryHistory-receivedNutritionalGuidance"
+                    >
+                      Ha recibido orientación nutricional
+                    </label>
+                  </div>
+                </div>
+                <div className="col-12 col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="dietaryHistory-whenReceived">¿Cuándo?</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="dietaryHistory-whenReceived"
+                      name="dietaryHistory-whenReceived"
+                      title="¿Cuándo?"
+                      aria-label="¿Cuándo recibió orientación nutricional?"
+                      value={formData.dietaryHistory.whenReceived}
+                      onChange={(e) => handleInputChange('dietaryHistory', 'whenReceived', e.target.value)}
+                      disabled={!formData.dietaryHistory.receivedNutritionalGuidance}
+                      placeholder="Ej: Hace 6 meses"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label" htmlFor="dietaryHistory-adherenceLevel">Nivel de Adherencia</label>
+                <select
+                  className="form-select"
+                  id="dietaryHistory-adherenceLevel"
+                  name="dietaryHistory-adherenceLevel"
+                  title="Nivel de Adherencia"
+                  aria-label="Seleccionar nivel de adherencia"
+                  value={formData.dietaryHistory.adherenceLevel}
+                  onChange={(e) => handleInputChange('dietaryHistory', 'adherenceLevel', e.target.value)}
+                >
+                  <option value="">Selecciona un nivel</option>
+                  <option value="Excelente apego">Excelente apego</option>
+                  <option value="Buena adherencia">Buena adherencia</option>
+                  <option value="Moderado apego">Moderado apego</option>
+                  <option value="Baja adherencia">Baja adherencia</option>
+                  <option value="Sin apego">Sin apego</option>
+                </select>
+              </div>
+
+              <div className="row">
+                <div className="col-12 col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="dietaryHistory-preferredFoods">Alimentos Preferidos</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="dietaryHistory-preferredFoods"
+                      name="dietaryHistory-preferredFoods"
+                      title="Alimentos Preferidos"
+                      aria-label="Alimentos Preferidos"
+                      value={formData.dietaryHistory.preferredFoods}
+                      onChange={(e) => handleInputChange('dietaryHistory', 'preferredFoods', e.target.value)}
+                      placeholder="Ej: Frutas, verduras, pescado..."
+                    />
+                  </div>
+                </div>
+                <div className="col-12 col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="dietaryHistory-dislikedFoods">Alimentos que No Le Gustan</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="dietaryHistory-dislikedFoods"
+                      name="dietaryHistory-dislikedFoods"
+                      title="Alimentos que No Le Gustan"
+                      aria-label="Alimentos que No Le Gustan"
+                      value={formData.dietaryHistory.dislikedFoods}
+                      onChange={(e) => handleInputChange('dietaryHistory', 'dislikedFoods', e.target.value)}
+                      placeholder="Ej: Brócoli, pescado..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label" htmlFor="dietaryHistory-malestarAlergiaFoods">Alimentos que Causan Malestar o Alergia</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="dietaryHistory-malestarAlergiaFoods"
+                  name="dietaryHistory-malestarAlergiaFoods"
+                  title="Alimentos que Causan Malestar o Alergia"
+                  aria-label="Alimentos que Causan Malestar o Alergia"
+                  value={formData.dietaryHistory.malestarAlergiaFoods}
+                  onChange={(e) => handleInputChange('dietaryHistory', 'malestarAlergiaFoods', e.target.value)}
+                  placeholder="Ej: Lácteos, gluten, mariscos..."
+                />
+              </div>
+
+              <div className="row">
+                <div className="col-12 col-md-6">
+                  <div className="form-check mb-3">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="dietaryHistory-takesSupplements"
+                      name="takesSupplements"
+                      checked={Boolean(formData.dietaryHistory.takesSupplements)}
+                      onChange={(e) => handleInputChange('dietaryHistory', 'takesSupplements', e.target.checked)}
+                      title="Marcar si el paciente toma suplementos"
+                      aria-label="Toma suplementos - Marcar si el paciente consume suplementos nutricionales"
+                    />
+                    <label 
+                      className="form-check-label" 
+                      htmlFor="dietaryHistory-takesSupplements"
+                    >
+                      Toma suplementos
+                    </label>
+                  </div>
+                </div>
+                <div className="col-12 col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="dietaryHistory-supplementDetails">Detalles de Suplementos</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="dietaryHistory-supplementDetails"
+                      name="dietaryHistory-supplementDetails"
+                      title="Detalles de Suplementos"
+                      aria-label="Detalles de Suplementos"
+                      value={formData.dietaryHistory.supplementDetails}
+                      onChange={(e) => handleInputChange('dietaryHistory', 'supplementDetails', e.target.value)}
+                      disabled={!formData.dietaryHistory.takesSupplements}
+                      placeholder="Ej: Vitamina D, Omega 3..."
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 8 && (
+            <div className="step-content">
+              <h6 className="mb-3">
+                <i className="fas fa-stethoscope me-2" aria-hidden="true"></i>
+                Diagnóstico y Plan Nutricional
+              </h6>
+              
+              <div className="mb-3">
+                <label className="form-label" htmlFor="nutritionalDiagnosis">
+                  Diagnóstico Nutricional <span className="text-danger">*</span>
+                </label>
+                <textarea
+                  className="form-control"
+                  id="nutritionalDiagnosis"
+                  name="nutritionalDiagnosis"
+                  title="Diagnóstico Nutricional"
+                  aria-label="Diagnóstico Nutricional"
+                  rows={4}
+                  value={formData.nutritionalDiagnosis}
+                  onChange={(e) => handleBasicChange('nutritionalDiagnosis', e.target.value)}
+                  placeholder="Describe el diagnóstico nutricional..."
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label" htmlFor="nutritionalPlanAndManagement">
+                  Plan y Manejo Nutricional <span className="text-danger">*</span>
+                </label>
+                <textarea
+                  className="form-control"
+                  id="nutritionalPlanAndManagement"
+                  name="nutritionalPlanAndManagement"
+                  title="Plan y Manejo Nutricional"
+                  aria-label="Plan y Manejo Nutricional"
+                  rows={4}
+                  value={formData.nutritionalPlanAndManagement}
+                  onChange={(e) => handleBasicChange('nutritionalPlanAndManagement', e.target.value)}
+                  placeholder="Describe el plan nutricional y manejo..."
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label" htmlFor="evolutionAndFollowUpNotes">Notas de Evolución y Seguimiento</label>
+                <textarea
+                  className="form-control"
+                  id="evolutionAndFollowUpNotes"
+                  name="evolutionAndFollowUpNotes"
+                  title="Notas de Evolución y Seguimiento"
+                  aria-label="Notas de Evolución y Seguimiento"
+                  rows={3}
+                  value={formData.evolutionAndFollowUpNotes}
+                  onChange={(e) => handleBasicChange('evolutionAndFollowUpNotes', e.target.value)}
+                  placeholder="Notas adicionales para seguimiento..."
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 clinical-form-actions">
+            <div className="mb-2 mb-md-0">
+              {currentStep > 1 && (
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary clinical-btn secondary-btn"
+                  onClick={prevStep}
+                  title="Ir al paso anterior"
+                  aria-label="Ir al paso anterior"
+                >
+                  <i className="fas fa-arrow-left me-1" aria-hidden="true"></i>
+                  Anterior
+                </button>
+              )}
+            </div>
+            
+            <div className="d-flex flex-column flex-md-row gap-2">
+              {currentStep < steps.length && (
+                <button
+                  type="button"
+                  className="btn btn-primary clinical-btn primary-btn"
+                  onClick={nextStep}
+                  title="Ir al siguiente paso"
+                  aria-label="Ir al siguiente paso"
+                >
+                  Siguiente
+                  <i className="fas fa-arrow-right ms-1" aria-hidden="true"></i>
+                </button>
+              )}
+              
+              {currentStep === steps.length && (
+                <button
+                  type="submit"
+                  className="btn btn-success clinical-btn success-btn"
+                  disabled={loading}
+                  title={isEditing ? "Actualizar expediente clínico" : "Crear expediente clínico"}
+                  aria-label={isEditing ? "Actualizar expediente clínico" : "Crear expediente clínico"}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-save me-1" aria-hidden="true"></i>
+                      {isEditing ? 'Actualizar' : 'Crear'} Expediente
+                    </>
+                  )}
+                </button>
+              )}
+              
+              <button
+                type="button"
+                className="btn btn-outline-danger clinical-btn danger-btn"
+                onClick={onCancel}
+                title="Cancelar y volver"
+                aria-label="Cancelar y volver"
+              >
+                <i className="fas fa-times me-1" aria-hidden="true"></i>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </Form>
+      </Card.Body>
+    </Card>
   );
 };
 

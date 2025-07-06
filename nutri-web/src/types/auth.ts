@@ -51,6 +51,30 @@ export interface NutritionistProfile {
   is_verified: boolean;
   is_available: boolean;
   user?: User;
+  
+  // --- NUEVOS CAMPOS PARA APP MÓVIL ---
+  professional_summary?: string; // Descripción breve para pacientes
+  offers_in_person?: boolean; // Consultas presenciales
+  offers_online?: boolean; // Consultas online
+  
+  // Ubicación del consultorio
+  clinic_name?: string;
+  clinic_address?: string;
+  clinic_city?: string;
+  clinic_state?: string;
+  clinic_zip_code?: string;
+  clinic_country?: string;
+  
+  // Coordenadas para Google Maps
+  latitude?: number;
+  longitude?: number;
+  
+  // Información adicional del consultorio
+  clinic_notes?: string;
+  clinic_phone?: string;
+  
+  // Horarios de consulta
+  office_hours?: any;
 }
 
 export interface AuthUser {

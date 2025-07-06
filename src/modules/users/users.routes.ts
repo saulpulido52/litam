@@ -11,12 +11,17 @@ const router = Router();
 // Todas las rutas debajo de este punto requerirán autenticación
 router.use(protect);
 
+// Rutas básicas del perfil
 router.get('/me', userController.getMyProfile);
-router.patch(
-    '/me',
-    validateMiddleware(UpdateUserDto),
-    userController.updateMyProfile
-);
+router.patch('/me', userController.updateMyProfile);
+
+// Rutas de seguridad
+router.patch('/me/password', userController.updatePassword);
+router.delete('/me', userController.deleteAccount);
+
+// Rutas de estadísticas y configuraciones
+router.get('/me/stats', userController.getProfileStats);
+router.patch('/me/notifications', userController.updateNotificationSettings);
 
 // Ejemplo de ruta solo para nutriólogos (descomentar si quieres probarlo)
 // router.get('/nutritionists/dashboard', authorize(RoleName.NUTRITIONIST), (req, res) => {

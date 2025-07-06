@@ -8,6 +8,11 @@ import { RoleName } from '../../database/entities/role.entity';
 
 const router = Router();
 
+// --- RUTAS PÚBLICAS PARA APP MÓVIL ---
+router.get('/available', nutritionistController.getAvailableNutritionists);
+router.get('/:nutritionistId/profile', nutritionistController.getNutritionistProfileForMobile);
+
+// --- RUTAS PROTEGIDAS PARA NUTRIÓLOGOS ---
 router.use(protect, authorize(RoleName.NUTRITIONIST));
 
 router.get('/me/profile', nutritionistController.getMyProfile);

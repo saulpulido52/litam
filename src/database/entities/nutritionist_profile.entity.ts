@@ -61,6 +61,56 @@ export class NutritionistProfile {
     @Column({ type: 'boolean', default: false })
     is_verified!: boolean;
 
+    // --- NUEVOS CAMPOS PARA APP MÓVIL ---
+    
+    // Descripción profesional breve
+    @Column({ type: 'text', nullable: true })
+    professional_summary: string | null; // Descripción breve para pacientes
+
+    // Modalidad de consulta
+    @Column({ type: 'boolean', default: true })
+    offers_in_person: boolean; // Consultas presenciales
+
+    @Column({ type: 'boolean', default: true })
+    offers_online: boolean; // Consultas online
+
+    // Ubicación del consultorio
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    clinic_name: string | null; // Nombre del consultorio/clínica
+
+    @Column({ type: 'text', nullable: true })
+    clinic_address: string | null; // Dirección completa del consultorio
+
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    clinic_city: string | null; // Ciudad
+
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    clinic_state: string | null; // Estado/Provincia
+
+    @Column({ type: 'varchar', length: 10, nullable: true })
+    clinic_zip_code: string | null; // Código postal
+
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    clinic_country: string | null; // País
+
+    // Coordenadas para Google Maps
+    @Column({ type: 'decimal', precision: 10, scale: 8, nullable: true })
+    latitude: number | null; // Latitud
+
+    @Column({ type: 'decimal', precision: 11, scale: 8, nullable: true })
+    longitude: number | null; // Longitud
+
+    // Información adicional del consultorio
+    @Column({ type: 'text', nullable: true })
+    clinic_notes: string | null; // Notas sobre el consultorio (estacionamiento, accesibilidad, etc.)
+
+    @Column({ type: 'varchar', length: 20, nullable: true })
+    clinic_phone: string | null; // Teléfono del consultorio
+
+    // Estado de disponibilidad
+    @Column({ type: 'boolean', default: true })
+    is_available: boolean; // Si está disponible para nuevos pacientes
+
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at!: Date;
 

@@ -351,45 +351,72 @@ const AppointmentsPage: React.FC = () => {
                 <form>
                   <div className="row">
                     <div className="col-md-6 mb-3">
-                      <label className="form-label">Paciente</label>
-                      <select className="form-select">
-                        <option>Seleccionar paciente...</option>
-                        <option>María González</option>
-                        <option>Carlos Ruiz</option>
-                        <option>Ana López</option>
+                      <label className="form-label" htmlFor="appointment-patient">Paciente</label>
+                      <select className="form-select" id="appointment-patient" name="appointment-patient">
+                        <option value="">Seleccionar paciente...</option>
+                        <option value="1">María González</option>
+                        <option value="2">Carlos Ruiz</option>
+                        <option value="3">Ana López</option>
                       </select>
                     </div>
                     <div className="col-md-6 mb-3">
-                      <label className="form-label">Tipo de cita</label>
-                      <select className="form-select">
-                        <option>Consulta inicial</option>
-                        <option>Seguimiento</option>
-                        <option>Control de peso</option>
-                        <option>Consulta especializada</option>
+                      <label className="form-label" htmlFor="appointment-type">Tipo de cita</label>
+                      <select className="form-select" id="appointment-type" name="appointment-type">
+                        <option value="">Seleccionar tipo...</option>
+                        <option value="consultation">Consulta inicial</option>
+                        <option value="follow-up">Seguimiento</option>
+                        <option value="weight-check">Control de peso</option>
+                        <option value="specialized">Consulta especializada</option>
                       </select>
                     </div>
                   </div>
                   <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Fecha</label>
-                      <input type="date" className="form-control" />
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label" htmlFor="appointment-date">Fecha</label>
+                        <input 
+                          type="date" 
+                          className="form-control" 
+                          id="appointment-date"
+                          name="appointment-date"
+                        />
+                      </div>
                     </div>
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Hora</label>
-                      <input type="time" className="form-control" />
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label" htmlFor="appointment-time">Hora</label>
+                        <input 
+                          type="time" 
+                          className="form-control" 
+                          id="appointment-time"
+                          name="appointment-time"
+                        />
+                      </div>
                     </div>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Modalidad</label>
-                    <div className="d-flex gap-3">
-                      <div className="form-check">
-                        <input className="form-check-input" type="radio" name="location" id="presencial" />
+                    <label className="form-label" htmlFor="appointment-location">Modalidad</label>
+                    <div>
+                      <div className="form-check form-check-inline">
+                        <input 
+                          className="form-check-input" 
+                          type="radio" 
+                          name="location" 
+                          id="presencial" 
+                          value="presencial"
+                        />
                         <label className="form-check-label" htmlFor="presencial">
                           Presencial
                         </label>
                       </div>
-                      <div className="form-check">
-                        <input className="form-check-input" type="radio" name="location" id="virtual" />
+                      <div className="form-check form-check-inline">
+                        <input 
+                          className="form-check-input" 
+                          type="radio" 
+                          name="location" 
+                          id="virtual" 
+                          value="virtual"
+                        />
                         <label className="form-check-label" htmlFor="virtual">
                           Virtual
                         </label>
@@ -397,8 +424,14 @@ const AppointmentsPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Notas adicionales</label>
-                    <textarea className="form-control" rows={3} placeholder="Información adicional sobre la cita..."></textarea>
+                    <label className="form-label" htmlFor="appointment-notes">Notas adicionales</label>
+                    <textarea 
+                      className="form-control" 
+                      id="appointment-notes"
+                      name="appointment-notes"
+                      rows={3} 
+                      placeholder="Observaciones sobre la cita..."
+                    />
                   </div>
                 </form>
               </div>

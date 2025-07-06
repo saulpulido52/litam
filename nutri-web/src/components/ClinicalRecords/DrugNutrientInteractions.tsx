@@ -105,8 +105,32 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
   };
 
   const handleSave = async () => {
-    if (!selectedMedication || !interactionType || !severity || !description) {
-      alert('Por favor completa todos los campos obligatorios');
+    // Si no hay medicamentos disponibles, permitir crear interacción sin medicamento específico
+    if (medications.length === 0) {
+      // Permitir continuar sin medicamento específico
+      console.log('No hay medicamentos previos, creando interacción genérica');
+    } else if (!selectedMedication) {
+      alert('Por favor selecciona un medicamento');
+      return;
+    }
+    
+    // Validar campos obligatorios según el contexto
+    const requiredFields = [];
+    if (medications.length > 0 && !selectedMedication) {
+      requiredFields.push('medicamento');
+    }
+    if (medications.length > 0 && !interactionType) {
+      requiredFields.push('tipo de interacción');
+    }
+    if (!severity) {
+      requiredFields.push('severidad');
+    }
+    if (!description) {
+      requiredFields.push('descripción');
+    }
+    
+    if (requiredFields.length > 0) {
+      alert(`Por favor completa los siguientes campos: ${requiredFields.join(', ')}`);
       return;
     }
 
@@ -121,9 +145,9 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
         : [];
 
       const interactionData = {
-        medicationId: selectedMedication.id,
+        medicationId: selectedMedication?.id || (medications.length === 0 ? 'generic' : ''),
         nutrientsAffected: nutrientsAffected,
-        interactionType: interactionType as 'absorption' | 'metabolism' | 'excretion' | 'antagonism',
+        interactionType: (medications.length > 0 ? interactionType : 'absorption') as 'absorption' | 'metabolism' | 'excretion' | 'antagonism',
         severity: severity as 'low' | 'moderate' | 'high' | 'critical',
         description: description,
         recommendations: recommendations.filter(r => r.trim() !== ''),
@@ -378,41 +402,69 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          {medications.length === 0 && (
+            <Alert variant="info" className="mb-3">
+              <AlertTriangle size={16} className="me-2" />
+              <strong>Información:</strong> No hay medicamentos previos registrados en este expediente. 
+              Puedes crear interacciones fármaco-nutriente genéricas que se aplicarán cuando se agreguen 
+              medicamentos específicos al expediente.
+            </Alert>
+          )}
           <Form>
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Medicamento *</Form.Label>
+                  <Form.Label>
+                    Medicamento {medications.length > 0 ? '*' : '(Opcional)'}
+                  </Form.Label>
                   <Form.Select 
                     value={selectedMedication?.id || ''}
                     onChange={(e) => {
                       const med = medications.find(m => m.id === e.target.value);
                       setSelectedMedication(med || null);
                     }}
+                    disabled={medications.length === 0}
                   >
-                    <option value="">Seleccionar medicamento...</option>
+                    <option value="">
+                      {medications.length > 0 ? 'Seleccionar medicamento...' : 'Interacción genérica (sin medicamento específico)'}
+                    </option>
                     {medications.map(med => (
                       <option key={med.id} value={med.id}>
                         {med.name} {med.generic_name ? `(${med.generic_name})` : ''}
                       </option>
                     ))}
                   </Form.Select>
+                  {medications.length === 0 && (
+                    <Form.Text className="text-info">
+                      Se creará una interacción genérica que se aplicará cuando se agreguen medicamentos específicos.
+                    </Form.Text>
+                  )}
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Tipo de Interacción *</Form.Label>
+                  <Form.Label>
+                    Tipo de Interacción {medications.length > 0 ? '*' : '(Opcional)'}
+                  </Form.Label>
                   <Form.Select 
                     value={interactionType}
                     onChange={(e) => setInteractionType(e.target.value)}
+                    disabled={medications.length === 0}
                   >
-                    <option value="">Seleccionar tipo...</option>
+                    <option value="">
+                      {medications.length > 0 ? 'Seleccionar tipo...' : 'Tipo de interacción genérica'}
+                    </option>
                     {interactionTypes.map(type => (
                       <option key={type.value} value={type.value}>
                         {type.label}
                       </option>
                     ))}
                   </Form.Select>
+                  {medications.length === 0 && (
+                    <Form.Text className="text-info">
+                      Para interacciones genéricas, el tipo se determinará cuando se agreguen medicamentos específicos.
+                    </Form.Text>
+                  )}
                 </Form.Group>
               </Col>
             </Row>
@@ -546,7 +598,11 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
           <Button variant="secondary" onClick={() => setShowModal(false)}>
             Cancelar
           </Button>
-          <Button variant="primary" onClick={handleSave} disabled={loading}>
+          <Button 
+            variant="primary" 
+            onClick={handleSave} 
+            disabled={loading}
+          >
             {loading ? 'Guardando...' : (editingInteraction ? 'Actualizar' : 'Guardar')}
           </Button>
         </Modal.Footer>

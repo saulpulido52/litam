@@ -1,5 +1,21 @@
 import React, { useState } from 'react';
-import type { ClinicalRecord } from '../../types';
+import { Card, Button, Badge, Modal, Form, Row, Col } from 'react-bootstrap';
+import { 
+  MdAdd, 
+  MdEdit, 
+  MdDelete, 
+  MdVisibility,
+  MdSearch,
+  MdFilterList,
+  MdSort,
+  MdPerson,
+  MdCalendarToday,
+  MdDescription,
+  MdStickyNote2
+} from 'react-icons/md';
+import { FaUserMd } from 'react-icons/fa';
+import { HiOutlineDocumentText } from 'react-icons/hi';
+import type { ClinicalRecord } from '../../types/clinical-record';
 
 interface ClinicalRecordsListProps {
   records: ClinicalRecord[];
@@ -89,46 +105,15 @@ const ClinicalRecordsList: React.FC<ClinicalRecordsListProps> = ({
 
   return (
     <div className="clinical-records-list">
-      {/* Filtros y ordenamiento */}
-      <div className="row mb-4">
-        <div className="col-md-6">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Buscar expedientes..."
-            value={filterBy}
-            onChange={(e) => setFilterBy(e.target.value)}
-          />
-        </div>
-        <div className="col-md-3">
-          <select
-            className="form-select"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'date' | 'nutritionist')}
-          >
-            <option value="date">Ordenar por fecha</option>
-            <option value="nutritionist">Ordenar por nutriólogo</option>
-          </select>
-        </div>
-        <div className="col-md-3">
-          <select
-            className="form-select"
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-          >
-            <option value="desc">Más recientes primero</option>
-            <option value="asc">Más antiguos primero</option>
-          </select>
-        </div>
-      </div>
+
 
       {/* Lista de expedientes */}
       {sortedRecords.length === 0 ? (
-        <div className="text-center py-4">
-          <i className="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
-          <h5 className="text-muted">
+        <div className="text-center py-5">
+          <HiOutlineDocumentText className="text-muted mb-3" size={48} />
+          <h4 className="text-muted mb-3">
             {filterBy ? 'No se encontraron expedientes' : 'No hay expedientes clínicos'}
-          </h5>
+          </h4>
           <p className="text-muted">
             {filterBy 
               ? 'Intenta con otros términos de búsqueda'
@@ -137,95 +122,139 @@ const ClinicalRecordsList: React.FC<ClinicalRecordsListProps> = ({
           </p>
         </div>
       ) : (
-        <div className="row">
+        <Row>
           {sortedRecords.map((record) => (
-            <div key={record.id} className="col-12 mb-3">
-              <div className="card h-100 shadow-sm">
-                <div className="card-body">
-                  <div className="row">
-                    <div className="col-md-8">
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <h6 className="card-title mb-1">
+            <Col key={record.id} lg={6} md={12} className="mb-3">
+              <Card className="h-100 patient-card">
+                <Card.Body>
+                  <div className="d-flex justify-content-between align-items-start mb-3">
+                    <div className="d-flex align-items-center">
+                      <div className="patient-avatar me-3">
+                        <FaUserMd size={32} />
+                      </div>
+                      <div>
+                        <h6 className="mb-0 fw-bold">
                           {record.expedient_number && (
-                            <span className="badge bg-primary me-2">
+                            <Badge bg="primary" className="me-2">
                               {record.expedient_number}
-                            </span>
+                            </Badge>
                           )}
-                          Expediente - {formatDate(record.record_date)}
+                          Expediente Clínico
                         </h6>
-                        <small className="text-muted">
-                          {new Date(record.updated_at).toLocaleString('es-MX')}
+                        <small className="text-muted d-flex align-items-center">
+                          <MdCalendarToday size={14} className="me-1" />
+                          {formatDate(record.record_date)}
                         </small>
                       </div>
-                      
-                      <p className="card-text text-muted small mb-2">
-                        <i className="fas fa-user-md me-1"></i>
+                    </div>
+                    <Badge 
+                      bg="info"
+                      className="patient-status-badge"
+                    >
+                      {new Date(record.updated_at).toLocaleDateString('es-MX')}
+                    </Badge>
+                  </div>
+                  
+                  <div className="patient-info mb-3">
+                    <div className="patient-info-item">
+                      <div className="info-icon-wrapper">
+                        <FaUserMd className="info-icon" />
+                      </div>
+                      <small className="info-text">
                         Dr./Dra. {record.nutritionist.first_name} {record.nutritionist.last_name}
-                      </p>
-                      
-                      <p className="card-text">
-                        {getRecordSummary(record)}
-                      </p>
-
-                      {record.evolution_and_follow_up_notes && (
-                        <div className="mt-2">
-                          <small className="text-muted">
-                            <i className="fas fa-sticky-note me-1"></i>
-                            {record.evolution_and_follow_up_notes.length > 100
-                              ? `${record.evolution_and_follow_up_notes.substring(0, 100)}...`
-                              : record.evolution_and_follow_up_notes
-                            }
-                          </small>
-                        </div>
-                      )}
+                      </small>
                     </div>
                     
-                    <div className="col-md-4 text-end">
-                      <div className="btn-group-vertical" role="group">
-                        <button
-                          className="btn btn-outline-primary btn-sm"
-                          onClick={() => onViewRecord(record)}
-                          title="Ver expediente completo"
-                        >
-                          <i className="fas fa-eye me-1"></i>
-                          Ver
-                        </button>
-                        
+                    {record.consultation_reason && (
+                      <div className="patient-info-item">
+                        <div className="info-icon-wrapper">
+                          <MdDescription className="info-icon" />
+                        </div>
+                        <small className="info-text">
+                          {record.consultation_reason.length > 50
+                            ? `${record.consultation_reason.substring(0, 50)}...`
+                            : record.consultation_reason
+                          }
+                        </small>
+                      </div>
+                    )}
+                    
+                    {record.anthropometric_measurements?.current_weight_kg && (
+                      <div className="patient-info-item">
+                        <div className="info-icon-wrapper">
+                          <MdPerson className="info-icon" />
+                        </div>
+                        <small className="info-text">
+                          Peso: {record.anthropometric_measurements.current_weight_kg}kg
+                        </small>
+                      </div>
+                    )}
+                    
+                    {record.evolution_and_follow_up_notes && (
+                      <div className="patient-info-item">
+                        <div className="info-icon-wrapper">
+                          <MdStickyNote2 className="info-icon" />
+                        </div>
+                        <small className="info-text">
+                          {record.evolution_and_follow_up_notes.length > 60
+                            ? `${record.evolution_and_follow_up_notes.substring(0, 60)}...`
+                            : record.evolution_and_follow_up_notes
+                          }
+                        </small>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="patient-actions">
+                    <div className="action-buttons">
+                      <Button 
+                        variant="primary" 
+                        size="sm"
+                        className="action-btn primary-btn"
+                        onClick={() => onViewRecord(record)}
+                      >
+                        <MdVisibility className="btn-icon" />
+                        <span>Ver Detalles</span>
+                      </Button>
+                      
+                      <div className="secondary-actions">
                         {canEdit && (
-                          <button
-                            className="btn btn-outline-secondary btn-sm"
+                          <Button 
+                            variant="outline-primary" 
+                            size="sm"
+                            className="action-btn secondary-btn"
                             onClick={() => onEditRecord(record)}
-                            title="Editar expediente"
                           >
-                            <i className="fas fa-edit me-1"></i>
-                            Editar
-                          </button>
-                        )}
-                        
-                        {canDelete && (
-                          <button
-                            className="btn btn-outline-danger btn-sm"
-                            onClick={() => onDeleteRecord(record)}
-                            title="Eliminar expediente"
-                          >
-                            <i className="fas fa-trash me-1"></i>
-                            Eliminar
-                          </button>
+                            <MdEdit className="btn-icon" />
+                            <span>Editar</span>
+                          </Button>
                         )}
                       </div>
+                      
+                      {canDelete && (
+                        <Button 
+                          variant="outline-danger" 
+                          size="sm"
+                          className="action-btn danger-btn"
+                          onClick={() => onDeleteRecord(record)}
+                        >
+                          <MdDelete className="btn-icon" />
+                          <span>Eliminar</span>
+                        </Button>
+                      )}
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
+                </Card.Body>
+              </Card>
+            </Col>
           ))}
-        </div>
+        </Row>
       )}
 
       {/* Información adicional */}
       <div className="mt-3">
         <small className="text-muted">
-          <i className="fas fa-info-circle me-1"></i>
+          <MdSearch className="me-1" />
           Mostrando {sortedRecords.length} de {records.length} expedientes
           {filterBy && ` (filtrados por "${filterBy}")`}
         </small>

@@ -1,11 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Container, Row, Col, Card, Button, Alert, Badge, Form } from 'react-bootstrap';
 import ClinicalRecordsList from '../components/ClinicalRecords/ClinicalRecordsList';
 import ClinicalRecordForm from '../components/ClinicalRecords/ClinicalRecordForm';
 import ClinicalRecordDetail from '../components/ClinicalRecords/ClinicalRecordDetail';
 import { patientsService } from '../services/patientsService';
 import { clinicalRecordsService } from '../services/clinicalRecordsService';
 import type { ClinicalRecord, CreateClinicalRecordDto, UpdateClinicalRecordDto } from '../types';
+
+// React Icons
+import { 
+  MdArrowBack,
+  MdHome,
+  MdSearch,
+  MdAdd,
+  MdEdit,
+  MdDelete,
+  MdSave,
+  MdClose,
+  MdWarning,
+  MdCheckCircle,
+  MdContentCopy,
+  MdLock,
+  MdPerson,
+  MdPhone,
+  MdCalendarToday
+} from 'react-icons/md';
+import { FaUsers, FaUserCircle, FaChartLine, FaUserPlus } from 'react-icons/fa';
+import { BsGenderMale, BsGenderFemale, BsGenderAmbiguous } from 'react-icons/bs';
+import { HiOutlineDocumentText } from 'react-icons/hi';
 
 type ViewMode = 'list' | 'create' | 'edit' | 'view';
 
@@ -154,47 +177,49 @@ const ClinicalRecordsPage: React.FC = () => {
   // Mostrar pantalla de error si el paciente es inválido
   if (patientError) {
     return (
-      <div className="container mt-5">
-        <div className="row justify-content-center">
-          <div className="col-md-8">
-            <div className="card border-danger">
-              <div className="card-header bg-danger text-white">
-                <h4 className="mb-0">
-                  <i className="fas fa-exclamation-triangle me-2"></i>
+      <Container fluid className="py-4">
+        <Row className="justify-content-center">
+          <Col md={8} lg={6}>
+            <Card className="border-danger">
+              <Card.Header className="bg-danger text-white">
+                <h4 className="mb-0 d-flex align-items-center">
+                  <MdWarning className="me-2" />
                   Paciente No Encontrado
                 </h4>
-              </div>
-              <div className="card-body text-center">
+              </Card.Header>
+              <Card.Body className="text-center">
                 <div className="mb-4">
-                  <i className="fas fa-user-times text-danger" style={{ fontSize: '4rem' }}></i>
+                  <FaUserCircle className="text-danger" size={48} />
                 </div>
                 
                 <h5 className="text-danger mb-3">Error: {patientError}</h5>
                 
                 <p className="text-muted mb-4">
-                  El paciente con ID <code>{patientId}</code> no existe en el sistema o ya no está disponible.
+                  El paciente con ID <code>{patientId}</code>
+                  no existe en el sistema o ya no está disponible.
                 </p>
 
-                <div className="alert alert-info">
+                <Alert variant="info">
                   <strong>Redirigiendo automáticamente en {redirectCountdown} segundos...</strong>
-                </div>
+                </Alert>
 
                 <div className="d-grid gap-2 d-md-flex justify-content-md-center">
-                  <button 
-                    className="btn btn-primary me-md-2" 
+                  <Button 
+                    variant="primary" 
+                    className="me-md-2" 
                     onClick={handleManualRedirect}
                   >
-                    <i className="fas fa-users me-2"></i>
+                    <FaUsers className="me-2" />
                     Ir a Lista de Pacientes
-                  </button>
+                  </Button>
                   
-                  <button 
-                    className="btn btn-outline-secondary" 
+                  <Button 
+                    variant="secondary" 
                     onClick={handleClearCacheAndReload}
                   >
-                    <i className="fas fa-sync-alt me-2"></i>
+                    <MdClose className="me-2" />
                     Limpiar Cache y Recargar
-                  </button>
+                  </Button>
                 </div>
 
                 <div className="mt-4">
@@ -202,27 +227,32 @@ const ClinicalRecordsPage: React.FC = () => {
                     Si el problema persiste, contacta al administrador del sistema.
                   </small>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
     );
   }
 
   // Mostrar loading mientras se valida el paciente
   if (!patientData && !patientError) {
     return (
-      <div className="container mt-5">
-        <div className="row justify-content-center">
-          <div className="col-md-8">
-            <div className="card">
-              <div className="card-body text-center">
-                <div className="spinner-border text-primary mb-3" role="status">
-                  <span className="visually-hidden">Cargando...</span>
+      <div className="author-layout">
+        <div className="author-dashboard">
+          <div className="author-dashboard-content">
+            <div className="row justify-content-center">
+              <div className="col-12 col-md-8 col-lg-6">
+                <div className="author-activity-card">
+                  <div className="author-activity-content text-center">
+                    <div className="spinner-border text-primary mb-3" role="status">
+                      <span className="visually-hidden">Cargando...</span>
+                    </div>
+                    <h5 className="d-none d-sm-block">Validando paciente...</h5>
+                    <h5 className="d-block d-sm-none">Validando...</h5>
+                    <p className="text-muted">Verificando que el paciente existe en el sistema</p>
+                  </div>
                 </div>
-                <h5>Validando paciente...</h5>
-                <p className="text-muted">Verificando que el paciente existe en el sistema</p>
               </div>
             </div>
           </div>
@@ -281,95 +311,137 @@ const ClinicalRecordsPage: React.FC = () => {
   };
 
   return (
-    <div className="container-fluid">
-      <div className="row">
-        <div className="col-12">
-          <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid className="py-4">
+      {/* Header */}
+      <Row className="mb-4">
+        <Col>
+          <div className="d-flex justify-content-between align-items-center">
             <div>
-              <h2 className="mb-1">Expedientes Clínicos</h2>
-              {patientData && (
-                <p className="text-muted mb-0">
-                  Paciente: <strong>{patientData.first_name} {patientData.last_name}</strong>
-                </p>
-              )}
+              <h1 className="h3 mb-1">Expedientes Clínicos</h1>
+              <p className="text-muted mb-0">
+                {patientData && (
+                  <span>
+                    Paciente: <strong>{patientData.first_name} {patientData.last_name}</strong>
+                  </span>
+                )}
+                {viewMode === 'list' 
+                  ? ` - ${records.length} expediente${records.length !== 1 ? 's' : ''} registrado${records.length !== 1 ? 's' : ''}`
+                  : viewMode === 'create' 
+                    ? ' - Registrar Nuevo Expediente'
+                    : viewMode === 'edit'
+                      ? ' - Editar Expediente'
+                      : ' - Ver Expediente'
+                }
+              </p>
             </div>
-            
             <div className="d-flex gap-2">
               {viewMode === 'list' && (
-                <button
-                  className="btn btn-primary"
-                  onClick={() => setViewMode('create')}
-                >
-                  <i className="fas fa-plus me-2"></i>
+                <Button variant="primary" onClick={() => setViewMode('create')} disabled={loading}>
+                  <MdAdd className="me-2" />
                   Nuevo Expediente
-                </button>
+                </Button>
               )}
-              
-              {viewMode !== 'list' && (
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setViewMode('list');
-                    setSelectedRecord(null);
-                  }}
-                >
-                  <i className="fas fa-arrow-left me-2"></i>
-                  Volver
-                </button>
-              )}
+              <Link to="/patients" className="btn btn-outline-secondary">
+                <MdArrowBack className="me-2" />
+                Volver a Pacientes
+              </Link>
             </div>
           </div>
+        </Col>
+      </Row>
 
-          {viewMode === 'list' && (
-            <ClinicalRecordsList
-              records={records}
-              loading={loading}
-              onViewRecord={handleViewRecord}
-              onEditRecord={handleEditRecord}
-              onDeleteRecord={(record) => handleDeleteRecord(record.id)}
-              canEdit={true}
-              canDelete={true}
-            />
-          )}
+      {/* Content */}
+      {viewMode === 'list' ? (
+        <>
 
-          {viewMode === 'create' && (
-            <ClinicalRecordForm
-              patientId={patientId!}
-              patientName={`${patientData?.first_name || ''} ${patientData?.last_name || ''}`}
-              onSubmit={handleCreateRecord}
-              onCancel={() => setViewMode('list')}
-            />
-          )}
 
-          {viewMode === 'edit' && selectedRecord && (
-            <ClinicalRecordForm
-              record={selectedRecord}
-              patientId={patientId!}
-              patientName={`${patientData?.first_name || ''} ${patientData?.last_name || ''}`}
-              onSubmit={(data) => handleUpdateRecord(selectedRecord.id, data)}
-              onCancel={() => {
-                setViewMode('list');
-                setSelectedRecord(null);
-              }}
-            />
-          )}
+          {/* Records List */}
+          <Card>
+            <Card.Header>
+              <div className="d-flex justify-content-between align-items-center">
+                <h5 className="mb-0">Expedientes del Paciente</h5>
+                <Badge bg="primary" className="fs-6">
+                  {records.length}
+                </Badge>
+              </div>
+            </Card.Header>
+            <Card.Body>
+              {loading ? (
+                <div className="text-center py-5">
+                  <div className="spinner-border text-primary mb-3" role="status">
+                    <span className="visually-hidden">Cargando...</span>
+                  </div>
+                  <p className="text-muted">Cargando expedientes...</p>
+                </div>
+              ) : records.length === 0 ? (
+                <div className="text-center py-5">
+                  <HiOutlineDocumentText className="text-muted mb-3" size={48} />
+                  <h4 className="text-muted mb-3">No hay expedientes registrados</h4>
+                  <p className="text-muted mb-4">
+                    Comienza registrando el primer expediente clínico para este paciente
+                  </p>
+                  <Button variant="primary" onClick={() => setViewMode('create')}>
+                    <MdAdd className="me-2" />
+                    Registrar Primer Expediente
+                  </Button>
+                </div>
+              ) : (
+                <ClinicalRecordsList
+                  records={records}
+                  loading={loading}
+                  onViewRecord={handleViewRecord}
+                  onEditRecord={handleEditRecord}
+                  onDeleteRecord={(record) => handleDeleteRecord(record.id)}
+                  canEdit={true}
+                  canDelete={true}
+                />
+              )}
+            </Card.Body>
+          </Card>
+        </>
+      ) : (
+        // Form or Detail View
+        <Row className="justify-content-center">
+          <Col md={10} lg={8}>
+            {viewMode === 'create' && (
+              <ClinicalRecordForm
+                patientId={patientId!}
+                patientName={`${patientData?.first_name || ''} ${patientData?.last_name || ''}`}
+                onSubmit={handleCreateRecord}
+                onCancel={() => setViewMode('list')}
+              />
+            )}
 
-          {viewMode === 'view' && selectedRecord && (
-            <ClinicalRecordDetail
-              record={selectedRecord}
-              onEdit={() => handleEditRecord(selectedRecord)}
-              onDelete={() => handleDeleteRecord(selectedRecord.id)}
-              onClose={() => {
-                setViewMode('list');
-                setSelectedRecord(null);
-              }}
-              canEdit={true}
-              canDelete={true}
-            />
-          )}
-        </div>
-      </div>
-    </div>
+            {viewMode === 'edit' && selectedRecord && (
+              <ClinicalRecordForm
+                record={selectedRecord}
+                patientId={patientId!}
+                patientName={`${patientData?.first_name || ''} ${patientData?.last_name || ''}`}
+                onSubmit={(data) => handleUpdateRecord(selectedRecord.id, data)}
+                onCancel={() => {
+                  setViewMode('list');
+                  setSelectedRecord(null);
+                }}
+              />
+            )}
+
+            {viewMode === 'view' && selectedRecord && (
+              <ClinicalRecordDetail
+                record={selectedRecord}
+                onEdit={() => handleEditRecord(selectedRecord)}
+                onDelete={() => handleDeleteRecord(selectedRecord.id)}
+                onClose={() => {
+                  setViewMode('list');
+                  setSelectedRecord(null);
+                }}
+                canEdit={true}
+                canDelete={true}
+              />
+            )}
+          </Col>
+        </Row>
+      )}
+    </Container>
   );
 };
 

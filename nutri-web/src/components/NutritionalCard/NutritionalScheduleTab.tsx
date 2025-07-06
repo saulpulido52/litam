@@ -332,10 +332,12 @@ export default function NutritionalScheduleTab({
                         </div>
                         
                         <div className="col-md-2">
-                          <label className="form-label small">Hora</label>
+                          <label className="form-label small" htmlFor={`meal-time-${meal.mealType}`}>Hora</label>
                           <input
                             type="time"
                             className="form-control form-control-sm"
+                            id={`meal-time-${meal.mealType}`}
+                            name={`meal-time-${meal.mealType}`}
                             value={meal.scheduledTime}
                             onChange={(e) => updateMealSchedule(meal.mealType, 'scheduledTime', e.target.value)}
                           />
