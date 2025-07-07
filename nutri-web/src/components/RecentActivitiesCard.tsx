@@ -69,61 +69,67 @@ const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
   onViewAll 
 }) => {
   // Mapa de configuración para los tipos de actividad
-  const activityConfig: { [key: string]: { icon: React.ReactElement; className: string } } = {
+  const activityConfig: { [key: string]: { icon: React.ReactElement; className: string; ariaLabel: string } } = {
     clinical_record: { 
-      icon: <FileTextIcon className="icon" />, 
-      className: 'icon-info' 
+      icon: <FileTextIcon className="icon" aria-hidden="true" />, 
+      className: 'icon-info',
+      ariaLabel: 'Expediente clínico'
     },
     patient: { 
-      icon: <UsersIcon className="icon" />, 
-      className: 'icon-success' 
+      icon: <UsersIcon className="icon" aria-hidden="true" />, 
+      className: 'icon-success',
+      ariaLabel: 'Paciente'
     },
     appointment: { 
-      icon: <CalendarIcon className="icon" />, 
-      className: 'icon-warning' 
+      icon: <CalendarIcon className="icon" aria-hidden="true" />, 
+      className: 'icon-warning',
+      ariaLabel: 'Cita'
     },
     progress: { 
-      icon: <TrendingUpIcon className="icon" />, 
-      className: 'icon-primary' 
+      icon: <TrendingUpIcon className="icon" aria-hidden="true" />, 
+      className: 'icon-primary',
+      ariaLabel: 'Progreso'
     },
     message: { 
-      icon: <MessageCircleIcon className="icon" />, 
-      className: 'icon-secondary' 
+      icon: <MessageCircleIcon className="icon" aria-hidden="true" />, 
+      className: 'icon-secondary',
+      ariaLabel: 'Mensaje'
     },
     default: { 
-      icon: <FileTextIcon className="icon" />, 
-      className: 'icon-default' 
+      icon: <FileTextIcon className="icon" aria-hidden="true" />, 
+      className: 'icon-default',
+      ariaLabel: 'Actividad'
     },
   };
 
   return (
-    <div className="activity-card">
+    <div className="activity-card" role="region" aria-label={title}>
       {/* Encabezado de la tarjeta */}
       <div className="activity-card-header">
-        <ClockIcon className="header-icon" />
+        <ClockIcon className="header-icon" aria-hidden="true" />
         <h5 className="header-title">{title}</h5>
       </div>
       
       {/* Cuerpo con la lista de actividades */}
       <div className="activity-card-body">
         {(!activities || activities.length === 0) ? (
-          <div className="empty-state">
+          <div className="empty-state" role="status" aria-live="polite">
             <p>No hay actividades recientes para mostrar.</p>
           </div>
         ) : (
-          <ul className="activity-list">
+          <ul className="activity-list" role="list" aria-label="Lista de actividades recientes">
             {activities.slice(0, 5).map((activity, index) => {
               const config = activityConfig[activity.type] || activityConfig.default;
               return (
-                <li key={index} className="activity-item">
+                <li key={index} className="activity-item" role="listitem">
                   <div className="timeline-connector">
-                    <div className={`activity-icon-wrapper ${config.className}`}>
+                    <div className={`activity-icon-wrapper ${config.className}`} aria-label={config.ariaLabel}>
                       {config.icon}
                     </div>
                   </div>
                   <div className="activity-content">
                     <p className="activity-description">{activity.description}</p>
-                    <small className="activity-time">{activity.time}</small>
+                    <time className="activity-time" dateTime={activity.time}>{activity.time}</time>
                   </div>
                 </li>
               );
@@ -138,6 +144,8 @@ const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
             className="footer-link" 
             onClick={onViewAll}
             type="button"
+            aria-label="Ver todas las actividades"
+            title="Ver todas las actividades"
           >
             Ver todas las actividades
           </button>

@@ -145,20 +145,64 @@ class PatientsService {
 
   // Obtener todos los pacientes del nutriólogo actual
   async getMyPatients(): Promise<Patient[]> {
+    console.log('🔍 [PatientsService] Iniciando getMyPatients...');
+    
     try {
-      const response = await apiService.get<{ patients: any[] }>('/patients/my-patients');
-      const rawPatients = response.data?.patients || [];
+      const response = await apiService.get<any>('/patients/my-patients');
+      console.log('🔍 [PatientsService] Respuesta del backend:', {
+        status: response.status,
+        data: response.data,
+        patientsCount: response.data?.data?.patients?.length || 0
+      });
       
-      console.log('📥 Pacientes recibidos del backend:', rawPatients);
+      const responseData = response.data;
       
-      // Transformar cada paciente al formato correcto
-      const transformedPatients = rawPatients.map(patient => this.transformBackendPatient(patient));
+      // Manejar ambos formatos de respuesta
+      let patients: any[] = [];
+      if (responseData?.status === 'success' && responseData?.data?.patients) {
+        // Formato: { status: 'success', data: { patients } }
+        console.log('🔍 [PatientsService] Usando formato data.patients');
+        patients = responseData.data.patients;
+      } else if (responseData?.patients) {
+        // Formato: { patients }
+        console.log('🔍 [PatientsService] Usando formato directo patients');
+        patients = responseData.patients;
+      } else if (Array.isArray(responseData)) {
+        // Formato: [patients] directamente
+        console.log('🔍 [PatientsService] Usando formato array directo');
+        patients = responseData;
+      } else {
+        console.error('🔍 [PatientsService] Formato de respuesta inesperado:', responseData);
+        throw new Error('Formato de respuesta inesperado del servidor');
+      }
+
+      console.log('🔍 [PatientsService] Pacientes extraídos:', {
+        count: patients.length,
+        patients: patients.map(p => ({
+          id: p.id,
+          name: `${p.first_name || ''} ${p.last_name || ''}`.trim(),
+          email: p.email,
+          is_active: p.is_active
+        }))
+      });
+
+      // Transformar cada paciente
+      const transformedPatients = patients.map(patient => this.transformBackendPatient(patient));
       
-      console.log('✅ Pacientes transformados:', transformedPatients);
+      console.log('🔍 [PatientsService] Pacientes transformados:', {
+        count: transformedPatients.length,
+        patients: transformedPatients.map(p => ({
+          id: p.id,
+          name: `${p.first_name} ${p.last_name}`,
+          email: p.email,
+          is_active: p.is_active
+        }))
+      });
+
       return transformedPatients;
     } catch (error) {
-      console.error('Error fetching patients:', error);
-      throw new Error('Error al obtener la lista de pacientes');
+      console.error('🔍 [PatientsService] Error en getMyPatients:', error);
+      throw error;
     }
   }
 

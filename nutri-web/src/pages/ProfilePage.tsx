@@ -1,96 +1,229 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Modal, Badge, Alert, Tab, Nav } from 'react-bootstrap';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { Container, Row, Col, Card, Button, Badge, Alert, Tab, Nav, Spinner, Image } from 'react-bootstrap';
 import { 
   User, 
-  Settings, 
   Save, 
   Edit, 
-  Trash2, 
   Shield, 
   Bell, 
   BarChart3, 
-  Heart, 
   Stethoscope, 
   Eye,
   EyeOff,
   Lock,
-  Unlock,
   Award,
-  TrendingUp,
   Users,
   Calendar,
   Star,
-  Activity,
-  Key,
   CheckCircle,
   AlertTriangle,
-  MapPin
+  Camera,
+  FileText,
+  AlertCircle,
+  Settings,
+  RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
-import { useNavigate } from 'react-router-dom';
+import profileService from '../services/profileService';
+import GoogleAuth from '../components/GoogleAuth';
+import GoogleCalendarConfig from '../components/GoogleCalendarConfig';
+import '../styles/profile.css';
+
+// Componentes optimizados
+const OptimizedFormField = React.memo(({
+  label,
+  type = 'text',
+  value,
+  onChange,
+  error, 
+  required = false,
+  placeholder,
+  id,
+  name,
+  autocomplete,
+  disabled = false,
+  className = '',
+  ...props
+}: {
+  label: string;
+  type?: string;
+  value: string | number;
+  onChange: (value: string | number) => void;
+  error?: string;
+  required?: boolean;
+  placeholder?: string;
+  id: string;
+  name: string;
+  autocomplete?: string;
+  disabled?: boolean;
+  className?: string;
+  [key: string]: any;
+}) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = type === 'number' ? Number(e.target.value) : e.target.value;
+    onChange(newValue);
+  }, [onChange, type]);
+
+  const fieldId = useMemo(() => id || name, [id, name]);
+
+  return (
+    <div className={`form-group ${className}`}>
+      <label className="form-label" htmlFor={fieldId}>
+        {label} {required && <span className="text-danger">*</span>}
+      </label>
+      <input
+        type={type}
+        className={`form-control ${error ? 'is-invalid' : ''}`}
+        id={fieldId}
+        name={name}
+        autoComplete={autocomplete || name}
+        value={value}
+        onChange={handleChange}
+        placeholder={placeholder}
+        disabled={disabled}
+        required={required}
+        {...props}
+      />
+      {error && <div className="invalid-feedback">{error}</div>}
+    </div>
+  );
+});
+
+const OptimizedButton = React.memo(({
+  children,
+  onClick,
+  variant = 'primary',
+  size = 'md',
+  disabled = false,
+  loading = false,
+  className = '',
+  type = 'button',
+  ...props
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'outline-primary' | 'outline-secondary' | 'outline-success' | 'outline-danger' | 'outline-warning' | 'outline-info';
+  size?: 'sm' | 'md' | 'lg';
+  disabled?: boolean;
+  loading?: boolean;
+  className?: string;
+  type?: 'button' | 'submit' | 'reset';
+}) => {
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    if (!disabled && !loading && onClick) {
+      onClick();
+    }
+  }, [onClick, disabled, loading]);
+
+  const buttonClasses = useMemo(() => {
+    const baseClass = `btn btn-${variant} btn-${size}`;
+    const loadingClass = loading ? 'disabled' : '';
+    return `${baseClass} ${loadingClass} ${className}`.trim();
+  }, [variant, size, loading, className]);
+
+  return (
+    <button
+      type={type}
+      className={buttonClasses}
+      onClick={handleClick}
+      disabled={disabled || loading}
+      {...props}
+    >
+      {loading && (
+        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+      )}
+      {children}
+    </button>
+  );
+});
+
+// 1. Definir el tipo para practice
+interface PracticeState {
+  clinic_address: string;
+  consultation_hours: string;
+  bio: string;
+  professional_summary: string;
+  [key: string]: any;
+}
+
+// 2. Definir el tipo para formState
+interface FormState {
+  personal: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+    birth_date: string;
+    gender: string;
+  };
+  professional: {
+    license_number: string;
+    license_issuing_authority: string;
+    experience_years: number;
+    consultation_fee: number;
+    specialties: string[];
+    languages: string[];
+    treatment_approach: string;
+    education: string;
+    certifications: string[];
+    areas_of_interest: string[];
+  };
+  practice: PracticeState;
+}
 
 const ProfilePage: React.FC = () => {
-  const { user, logout } = useAuth();
-  const { 
-    profile, 
-    stats, 
-    loading, 
-    error, 
-    updateProfile, 
-    updatePassword, 
-    updateNotificationSettings, 
-    deleteAccount, 
-    clearError,
-    loadProfile,
-    loadStats
-  } = useProfile();
-  
-  const navigate = useNavigate();
-  
-  // Estados para diferentes secciones
-  const [activeTab, setActiveTab] = useState<'personal' | 'professional' | 'clinic' | 'security' | 'notifications' | 'stats'>('personal');
-  const [isEditing, setIsEditing] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  
-  // Estados para formularios
-  const [personalData, setPersonalData] = useState({
-    first_name: '',
-    last_name: '',
-    phone: '',
-    birth_date: '',
-    age: '',
-    gender: 'male' as 'male' | 'female' | 'other',
+  const { profile, stats, loading, error, loadProfile, loadStats, updateProfile } = useProfile();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Estados consolidados
+  const [uiState, setUiState] = useState({
+    isEditing: false,
+    activeTab: 'personal',
+    showPasswordModal: false,
+    showDeleteModal: false,
+    showSuccessAlert: false,
+    showErrorAlert: false,
+    uploadingImage: false
   });
 
-  const [professionalData, setProfessionalData] = useState({
-    license_number: '',
-    specialties: [] as string[],
-    experience_years: '',
-    education: '',
-    bio: '',
-    professional_summary: '',
-    offers_in_person: false,
-    offers_online: false,
-    is_available: false,
-    clinic_name: '',
-    clinic_phone: '',
-    clinic_address: '',
-    clinic_city: '',
-    clinic_state: '',
-    clinic_zip_code: '',
-    clinic_country: '',
-    latitude: '',
-    longitude: '',
-    clinic_notes: '',
+  // 3. Usar el tipo en useState
+  const [formState, setFormState] = useState<FormState>({
+    personal: {
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone: '',
+      birth_date: '',
+      gender: ''
+    },
+    professional: {
+      license_number: '',
+      license_issuing_authority: '',
+      experience_years: 0,
+      consultation_fee: 0,
+      specialties: [],
+      languages: [],
+      treatment_approach: '',
+      education: '',
+      certifications: [],
+      areas_of_interest: []
+    },
+    practice: {
+      clinic_address: '',
+      consultation_hours: '',
+      bio: '',
+      professional_summary: ''
+    }
   });
 
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
+  const [passwordState, setPasswordState] = useState({
+    current: '',
+    new: '',
+    confirm: '',
+    showCurrent: false,
+    showNew: false,
+    showConfirm: false
   });
 
   const [notificationSettings, setNotificationSettings] = useState({
@@ -98,961 +231,988 @@ const ProfilePage: React.FC = () => {
     push_notifications: true,
     appointment_reminders: true,
     new_patient_alerts: true,
-    system_updates: true,
+    system_updates: true
   });
 
-  // Cargar datos del perfil
-  useEffect(() => {
-    if (user) {
-      loadProfile();
-      loadStats();
-    }
-  }, [user, loadProfile, loadStats]);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
 
-  // Actualizar datos del formulario cuando se carga el perfil
-  useEffect(() => {
-    if (profile) {
-      setPersonalData({
+  // Memoizar datos del perfil
+  const profileData = useMemo(() => {
+    if (!profile) return null;
+    
+    return {
+      personal: {
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
+        email: profile.email || '',
         phone: profile.phone || '',
         birth_date: profile.birth_date || '',
-        age: profile.age ? String(profile.age) : '',
-        gender: profile.gender || 'male',
-      });
-
-      setProfessionalData({
+        gender: profile.gender || ''
+      },
+      professional: {
         license_number: profile.license_number || '',
+        license_issuing_authority: profile.license_issuing_authority || '',
+        experience_years: profile.experience_years || 0,
+        consultation_fee: profile.consultation_fee || 0,
         specialties: profile.specialties || [],
-        experience_years: profile.experience_years ? String(profile.experience_years) : '',
+        languages: profile.languages || [],
+        treatment_approach: profile.treatment_approach || '',
         education: profile.education || '',
-        bio: profile.bio || '',
-        professional_summary: profile.professional_summary || '',
-        offers_in_person: profile.offers_in_person || false,
-        offers_online: profile.offers_online || false,
-        is_available: profile.is_available || false,
-        clinic_name: profile.clinic_name || '',
-        clinic_phone: profile.clinic_phone || '',
+        certifications: profile.certifications || [],
+        areas_of_interest: profile.areas_of_interest || []
+      },
+      practice: {
         clinic_address: profile.clinic_address || '',
-        clinic_city: profile.clinic_city || '',
-        clinic_state: profile.clinic_state || '',
-        clinic_zip_code: profile.clinic_zip_code || '',
-        clinic_country: profile.clinic_country || '',
-        latitude: profile.latitude || '',
-        longitude: profile.longitude || '',
-        clinic_notes: profile.clinic_notes || '',
-      });
+        consultation_hours: profile.consultation_hours || '',
+        bio: profile.bio || '',
+        professional_summary: profile.professional_summary || ''
+      }
+    };
+  }, [profile]);
+
+  // Cargar datos del perfil al montar el componente
+  useEffect(() => {
+    console.log('ProfilePage - Cargando datos iniciales del perfil...');
+    loadProfile();
+    loadStats();
+  }, [loadProfile, loadStats]);
+
+  // Actualizar formulario cuando cambien los datos del perfil
+  useEffect(() => {
+    if (profileData) {
+      setFormState(profileData);
+    }
+  }, [profileData]);
+
+  // Actualizar imagen de perfil cuando se cargue el perfil
+  useEffect(() => {
+    if (profile?.profile_image) {
+      setProfileImage(profile.profile_image);
     }
   }, [profile]);
 
-  const handlePersonalChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setPersonalData(prev => ({
+  // Handlers optimizados
+  const handleInputChange = useCallback((section: string, field: string, value: any) => {
+    setFormState(prev => ({
       ...prev,
-      [name]: value
+      [section]: {
+        ...prev[section as keyof typeof prev],
+        [field]: value
+      }
     }));
-  };
+  }, []);
 
-  const handleProfessionalChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setProfessionalData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  const toggleEditing = useCallback(() => {
+    setUiState(prev => ({ ...prev, isEditing: !prev.isEditing }));
+  }, []);
 
-  const handleSpecialtyChange = (specialty: string, checked: boolean) => {
-    setProfessionalData(prev => ({
-      ...prev,
-      specialties: checked 
-        ? [...prev.specialties, specialty]
-        : prev.specialties.filter(s => s !== specialty)
-    }));
-  };
-
-  const handleSavePersonal = async () => {
+  const handleSave = useCallback(async () => {
     try {
-      const dataToSend = {
-        ...personalData,
-        age: personalData.age ? Number(personalData.age) : undefined
+      // Preparar datos para enviar, filtrando arrays vacíos
+      const updateData = {
+        ...formState.personal,
+        ...formState.professional,
+        ...formState.practice
       };
-      await updateProfile(dataToSend);
-      setIsEditing(false);
-      setSuccessMessage('Información personal actualizada exitosamente');
-      setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (error) {
-      console.error('Error al actualizar información personal:', error);
-    }
-  };
 
-  const handleSaveProfessional = async () => {
-    try {
-      const dataToSend = {
-        ...professionalData,
-        experience_years: professionalData.experience_years ? Number(professionalData.experience_years) : undefined
-      };
-      await updateProfile(dataToSend);
-      setIsEditing(false);
-      setSuccessMessage('Información profesional actualizada exitosamente');
-      setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (error) {
-      console.error('Error al actualizar información profesional:', error);
-    }
-  };
+      // Filtrar arrays vacíos para evitar errores en PostgreSQL
+      const cleanedData: any = {};
+      
+      // Solo incluir propiedades con valores válidos
+      Object.entries(updateData).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          // Solo incluir arrays que no estén vacíos
+          if (value.length > 0) {
+            cleanedData[key] = value;
+          }
+        } else if (typeof value === 'string') {
+          // Solo incluir strings que no estén vacíos
+          if (value.trim() !== '') {
+            cleanedData[key] = value;
+          }
+        } else if (typeof value === 'number') {
+          // Incluir números (incluyendo 0)
+          cleanedData[key] = value;
+        } else if (value !== null && value !== undefined) {
+          // Incluir otros valores válidos
+          cleanedData[key] = value;
+        }
+      });
 
-  const handlePasswordChange = async () => {
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('Las contraseñas no coinciden');
+      console.log('ProfilePage - Sending cleaned data:', cleanedData);
+      
+      await updateProfile(cleanedData);
+      setUiState(prev => ({ 
+      ...prev,
+        isEditing: false,
+        showSuccessAlert: true 
+      }));
+      
+      // Ocultar alerta después de 3 segundos
+      setTimeout(() => {
+        setUiState(prev => ({ ...prev, showSuccessAlert: false }));
+      }, 3000);
+    } catch (error) {
+      setUiState(prev => ({ 
+        ...prev, 
+        showErrorAlert: true 
+      }));
+    }
+  }, [formState, updateProfile]);
+
+  const handlePasswordChange = useCallback((field: string, value: string) => {
+    setPasswordState(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  const togglePasswordVisibility = useCallback((field: string) => {
+    setPasswordState(prev => ({ 
+      ...prev, 
+      [`show${field.charAt(0).toUpperCase() + field.slice(1)}`]: !prev[`show${field.charAt(0).toUpperCase() + field.slice(1)}` as keyof typeof prev]
+    }));
+  }, []);
+
+  const handleNotificationChange = useCallback((setting: string, value: boolean) => {
+    setNotificationSettings(prev => ({ ...prev, [setting]: value }));
+  }, []);
+
+  // Memoizar estadísticas
+  const statsDisplay = useMemo(() => {
+    if (!stats) return null;
+    
+    return [
+      { label: 'Pacientes Totales', value: stats.total_patients || 0, icon: Users, color: 'primary' },
+      { label: 'Citas Totales', value: stats.total_appointments || 0, icon: Calendar, color: 'success' },
+      { label: 'Años de Experiencia', value: stats.experience_years || 0, icon: Award, color: 'warning' },
+      { label: 'Tasa de Completitud', value: `${stats.completion_rate || 0}%`, icon: CheckCircle, color: 'info' },
+      { label: 'Calificación Promedio', value: (stats.average_rating || 0).toFixed(1), icon: Star, color: 'secondary' },
+      { label: 'Reseñas Totales', value: stats.total_reviews || 0, icon: FileText, color: 'dark' }
+    ];
+  }, [stats]);
+
+  // Memoizar tabs
+  const tabs = useMemo(() => [
+    { key: 'personal', label: 'Información Personal', icon: User },
+    { key: 'professional', label: 'Credenciales', icon: Shield },
+    { key: 'practice', label: 'Práctica', icon: Stethoscope },
+    { key: 'notifications', label: 'Notificaciones', icon: Bell },
+    { key: 'security', label: 'Seguridad', icon: Lock },
+    { key: 'google', label: 'Google Calendar', icon: Calendar },
+    { key: 'stats', label: 'Estadísticas', icon: BarChart3 }
+  ], []);
+
+  // Función para manejar la selección de imagen
+  const handleImageSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validar tipo de archivo
+      if (!file.type.startsWith('image/')) {
+        alert('Por favor selecciona solo archivos de imagen.');
+        return;
+      }
+
+      // Validar tamaño (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen debe ser menor a 5MB.');
       return;
     }
 
-    try {
-      await updatePassword({
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword
-      });
-      setShowPasswordModal(false);
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      setSuccessMessage('Contraseña actualizada exitosamente');
-      setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (error) {
-      console.error('Error al cambiar contraseña:', error);
-    }
-  };
-
-  const handleNotificationChange = async (setting: string, value: boolean) => {
-    try {
-      const newSettings = { ...notificationSettings, [setting]: value };
-      setNotificationSettings(newSettings);
-      await updateNotificationSettings(newSettings);
-      setSuccessMessage('Configuración de notificaciones actualizada');
-      setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (error) {
-      console.error('Error al actualizar notificaciones:', error);
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    try {
-      await deleteAccount(passwordData.currentPassword);
-      logout();
-      navigate('/login');
-    } catch (error) {
-      console.error('Error al eliminar cuenta:', error);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-MX', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const getRoleDisplayName = (role: string) => {
-    switch (role) {
-      case 'nutritionist': return 'Nutriólogo';
-      case 'patient': return 'Paciente';
-      case 'admin': return 'Administrador';
-      default: return role;
-    }
-  };
-
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'nutritionist': return <Stethoscope size={20} />;
-      case 'patient': return <Heart size={20} />;
-      case 'admin': return <Shield size={20} />;
-      default: return <User size={20} />;
-    }
-  };
-
-  const renderPersonalInfo = () => (
-    <div className="profile-section">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h5><User className="me-2" /> Información Personal</h5>
-        <Button 
-          variant={isEditing ? "success" : "primary"} 
-          size="sm"
-          onClick={() => setIsEditing(!isEditing)}
-        >
-          {isEditing ? <Save size={16} className="me-1" /> : <Settings size={16} className="me-1" />}
-          {isEditing ? 'Guardar' : 'Editar'}
-        </Button>
-      </div>
-
-      <div className="row">
-        <div className="col-md-6">
-          <Form.Group className="mb-3">
-            <Form.Label>Nombres</Form.Label>
-            <Form.Control
-              type="text"
-              name="first_name"
-              value={personalData.first_name}
-              onChange={handlePersonalChange}
-              disabled={!isEditing}
-            />
-          </Form.Group>
-        </div>
-        <div className="col-md-6">
-          <Form.Group className="mb-3">
-            <Form.Label>Apellidos</Form.Label>
-            <Form.Control
-              type="text"
-              name="last_name"
-              value={personalData.last_name}
-              onChange={handlePersonalChange}
-              disabled={!isEditing}
-            />
-          </Form.Group>
-        </div>
-      </div>
-
-      <div className="row">
-        <div className="col-md-6">
-          <Form.Group className="mb-3">
-            <Form.Label>Teléfono</Form.Label>
-            <Form.Control
-              type="tel"
-              name="phone"
-              value={personalData.phone}
-              onChange={handlePersonalChange}
-              disabled={!isEditing}
-            />
-          </Form.Group>
-        </div>
-        <div className="col-md-6">
-          <Form.Group className="mb-3">
-            <Form.Label>Género</Form.Label>
-            <Form.Select
-              name="gender"
-              value={personalData.gender}
-              onChange={handlePersonalChange}
-              disabled={!isEditing}
-            >
-              <option value="male">Masculino</option>
-              <option value="female">Femenino</option>
-              <option value="other">Otro</option>
-            </Form.Select>
-          </Form.Group>
-        </div>
-      </div>
-
-      <div className="row">
-        <div className="col-md-6">
-          <Form.Group className="mb-3">
-            <Form.Label>Fecha de Nacimiento</Form.Label>
-            <Form.Control
-              type="date"
-              name="birth_date"
-              value={personalData.birth_date}
-              onChange={handlePersonalChange}
-              disabled={!isEditing}
-            />
-          </Form.Group>
-        </div>
-        <div className="col-md-6">
-          <Form.Group className="mb-3">
-            <Form.Label>Edad</Form.Label>
-            <Form.Control
-              type="number"
-              name="age"
-              value={personalData.age}
-              onChange={handlePersonalChange}
-              disabled={!isEditing}
-            />
-          </Form.Group>
-        </div>
-      </div>
-
-      {isEditing && (
-        <div className="d-flex justify-content-end gap-2">
-          <Button variant="secondary" onClick={() => setIsEditing(false)}>
-            Cancelar
-          </Button>
-          <Button variant="success" onClick={handleSavePersonal}>
-            <Save size={16} className="me-1" />
-            Guardar Cambios
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderProfessionalInfo = () => {
-    if (user?.role?.name !== 'nutritionist') return null;
-
-    return (
-      <div className="profile-section">
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h5><Award className="me-2" /> Información Profesional</h5>
-          <Button 
-            variant={isEditing ? "success" : "primary"} 
-            size="sm"
-            onClick={() => setIsEditing(!isEditing)}
-          >
-            {isEditing ? <Save size={16} className="me-1" /> : <Settings size={16} className="me-1" />}
-            {isEditing ? 'Guardar' : 'Editar'}
-          </Button>
-        </div>
-
-        <div className="row">
-          <div className="col-md-6">
-            <Form.Group className="mb-3">
-              <Form.Label>Número de Licencia</Form.Label>
-              <Form.Control
-                type="text"
-                name="license_number"
-                value={professionalData.license_number}
-                onChange={handleProfessionalChange}
-                disabled={!isEditing}
-              />
-            </Form.Group>
-          </div>
-          <div className="col-md-6">
-            <Form.Group className="mb-3">
-              <Form.Label>Años de Experiencia</Form.Label>
-              <Form.Control
-                type="number"
-                name="experience_years"
-                value={professionalData.experience_years}
-                onChange={handleProfessionalChange}
-                disabled={!isEditing}
-              />
-            </Form.Group>
-          </div>
-        </div>
-
-        <Form.Group className="mb-3">
-          <Form.Label>Especialidades</Form.Label>
-          <div className="row">
-            {['Nutrición Clínica', 'Nutrición Deportiva', 'Nutrición Pediátrica', 'Nutrición Geriátrica', 'Bariatría'].map(specialty => (
-              <div key={specialty} className="col-md-4 mb-2">
-                <Form.Check
-                  type="checkbox"
-                  id={`specialty-${specialty}`}
-                  label={specialty}
-                  checked={professionalData.specialties.includes(specialty)}
-                  onChange={(e) => handleSpecialtyChange(specialty, e.target.checked)}
-                  disabled={!isEditing}
-                />
-              </div>
-            ))}
-          </div>
-        </Form.Group>
-
-        <Form.Group className="mb-3">
-          <Form.Label>Educación</Form.Label>
-          <Form.Control
-            as="textarea"
-            rows={3}
-            name="education"
-            value={professionalData.education}
-            onChange={handleProfessionalChange}
-            disabled={!isEditing}
-            placeholder="Describe tu formación académica..."
-          />
-        </Form.Group>
-
-        <Form.Group className="mb-3">
-          <Form.Label>Biografía</Form.Label>
-          <Form.Control
-            as="textarea"
-            rows={4}
-            name="bio"
-            value={professionalData.bio}
-            onChange={handleProfessionalChange}
-            disabled={!isEditing}
-            placeholder="Cuéntanos sobre ti y tu experiencia..."
-          />
-        </Form.Group>
-
-        <Form.Group className="mb-3">
-          <Form.Label>Descripción Profesional Breve</Form.Label>
-          <Form.Control
-            as="textarea"
-            rows={3}
-            name="professional_summary"
-            value={professionalData.professional_summary}
-            onChange={handleProfessionalChange}
-            disabled={!isEditing}
-            placeholder="Descripción breve que verán los pacientes en la app móvil..."
-            maxLength={300}
-          />
-          <Form.Text className="text-muted">
-            Máximo 300 caracteres. Esta descripción aparecerá en la app móvil para que los pacientes te conozcan.
-          </Form.Text>
-        </Form.Group>
-
-        {isEditing && (
-          <div className="d-flex justify-content-end gap-2">
-            <Button variant="secondary" onClick={() => setIsEditing(false)}>
-              Cancelar
-            </Button>
-            <Button variant="success" onClick={handleSaveProfessional}>
-              <Save size={16} className="me-1" />
-              Guardar Cambios
-            </Button>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderClinicInfo = () => {
-    if (user?.role?.name !== 'nutritionist') return null;
-
-    return (
-      <div className="profile-section">
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h5><MapPin className="me-2" /> Información del Consultorio</h5>
-          <Button 
-            variant={isEditing ? "success" : "primary"} 
-            size="sm"
-            onClick={() => setIsEditing(!isEditing)}
-          >
-            {isEditing ? <Save size={16} className="me-1" /> : <Settings size={16} className="me-1" />}
-            {isEditing ? 'Guardar' : 'Editar'}
-          </Button>
-        </div>
-
-        <div className="row">
-          <div className="col-md-6">
-            <Form.Group className="mb-3">
-              <Form.Label>Modalidad de Consulta</Form.Label>
-              <div className="mt-2">
-                <Form.Check
-                  type="checkbox"
-                  id="offers_in_person"
-                  label="Consultas Presenciales"
-                  checked={professionalData.offers_in_person}
-                  onChange={(e) => handleProfessionalChange({
-                    target: { name: 'offers_in_person', value: e.target.checked }
-                  } as any)}
-                  disabled={!isEditing}
-                />
-                <Form.Check
-                  type="checkbox"
-                  id="offers_online"
-                  label="Consultas Online"
-                  checked={professionalData.offers_online}
-                  onChange={(e) => handleProfessionalChange({
-                    target: { name: 'offers_online', value: e.target.checked }
-                  } as any)}
-                  disabled={!isEditing}
-                />
-              </div>
-            </Form.Group>
-          </div>
-          <div className="col-md-6">
-            <Form.Group className="mb-3">
-              <Form.Label>Disponibilidad</Form.Label>
-              <div className="mt-2">
-                <Form.Check
-                  type="checkbox"
-                  id="is_available"
-                  label="Disponible para nuevos pacientes"
-                  checked={professionalData.is_available}
-                  onChange={(e) => handleProfessionalChange({
-                    target: { name: 'is_available', value: e.target.checked }
-                  } as any)}
-                  disabled={!isEditing}
-                />
-              </div>
-            </Form.Group>
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="col-md-6">
-            <Form.Group className="mb-3">
-              <Form.Label>Nombre del Consultorio</Form.Label>
-              <Form.Control
-                type="text"
-                name="clinic_name"
-                value={professionalData.clinic_name}
-                onChange={handleProfessionalChange}
-                disabled={!isEditing}
-                placeholder="Nombre de tu consultorio o clínica..."
-              />
-            </Form.Group>
-          </div>
-          <div className="col-md-6">
-            <Form.Group className="mb-3">
-              <Form.Label>Teléfono del Consultorio</Form.Label>
-              <Form.Control
-                type="tel"
-                name="clinic_phone"
-                value={professionalData.clinic_phone}
-                onChange={handleProfessionalChange}
-                disabled={!isEditing}
-                placeholder="Teléfono del consultorio..."
-              />
-            </Form.Group>
-          </div>
-        </div>
-
-        <Form.Group className="mb-3">
-          <Form.Label>Dirección Completa</Form.Label>
-          <Form.Control
-            as="textarea"
-            rows={2}
-            name="clinic_address"
-            value={professionalData.clinic_address}
-            onChange={handleProfessionalChange}
-            disabled={!isEditing}
-            placeholder="Dirección completa del consultorio..."
-          />
-        </Form.Group>
-
-        <div className="row">
-          <div className="col-md-4">
-            <Form.Group className="mb-3">
-              <Form.Label>Ciudad</Form.Label>
-              <Form.Control
-                type="text"
-                name="clinic_city"
-                value={professionalData.clinic_city}
-                onChange={handleProfessionalChange}
-                disabled={!isEditing}
-                placeholder="Ciudad..."
-              />
-            </Form.Group>
-          </div>
-          <div className="col-md-4">
-            <Form.Group className="mb-3">
-              <Form.Label>Estado/Provincia</Form.Label>
-              <Form.Control
-                type="text"
-                name="clinic_state"
-                value={professionalData.clinic_state}
-                onChange={handleProfessionalChange}
-                disabled={!isEditing}
-                placeholder="Estado o provincia..."
-              />
-            </Form.Group>
-          </div>
-          <div className="col-md-4">
-            <Form.Group className="mb-3">
-              <Form.Label>Código Postal</Form.Label>
-              <Form.Control
-                type="text"
-                name="clinic_zip_code"
-                value={professionalData.clinic_zip_code}
-                onChange={handleProfessionalChange}
-                disabled={!isEditing}
-                placeholder="Código postal..."
-              />
-            </Form.Group>
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="col-md-6">
-            <Form.Group className="mb-3">
-              <Form.Label>País</Form.Label>
-              <Form.Control
-                type="text"
-                name="clinic_country"
-                value={professionalData.clinic_country}
-                onChange={handleProfessionalChange}
-                disabled={!isEditing}
-                placeholder="País..."
-              />
-            </Form.Group>
-          </div>
-          <div className="col-md-6">
-            <Form.Group className="mb-3">
-              <Form.Label>Coordenadas (Opcional)</Form.Label>
-              <div className="row">
-                <div className="col-6">
-                  <Form.Control
-                    type="number"
-                    step="any"
-                    name="latitude"
-                    value={professionalData.latitude}
-                    onChange={handleProfessionalChange}
-                    disabled={!isEditing}
-                    placeholder="Latitud..."
-                  />
-                </div>
-                <div className="col-6">
-                  <Form.Control
-                    type="number"
-                    step="any"
-                    name="longitude"
-                    value={professionalData.longitude}
-                    onChange={handleProfessionalChange}
-                    disabled={!isEditing}
-                    placeholder="Longitud..."
-                  />
-                </div>
-              </div>
-              <Form.Text className="text-muted">
-                Coordenadas para Google Maps. Puedes obtenerlas desde Google Maps.
-              </Form.Text>
-            </Form.Group>
-          </div>
-        </div>
-
-        <Form.Group className="mb-3">
-          <Form.Label>Notas del Consultorio</Form.Label>
-          <Form.Control
-            as="textarea"
-            rows={3}
-            name="clinic_notes"
-            value={professionalData.clinic_notes}
-            onChange={handleProfessionalChange}
-            disabled={!isEditing}
-            placeholder="Información adicional: estacionamiento, accesibilidad, instrucciones de llegada..."
-          />
-          <Form.Text className="text-muted">
-            Información adicional que será útil para los pacientes (estacionamiento, accesibilidad, etc.)
-          </Form.Text>
-        </Form.Group>
-
-        {isEditing && (
-          <div className="d-flex justify-content-end gap-2">
-            <Button variant="secondary" onClick={() => setIsEditing(false)}>
-              Cancelar
-            </Button>
-            <Button variant="success" onClick={handleSaveProfessional}>
-              <Save size={16} className="me-1" />
-              Guardar Cambios
-            </Button>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderStats = () => (
-    <div className="profile-section">
-      <h5><TrendingUp className="me-2" /> Estadísticas</h5>
+      setSelectedImageFile(file);
       
-      {stats ? (
-        <div className="row">
-          <div className="col-md-4 mb-3">
-            <div className="stat-card">
-              <div className="stat-icon">
-                <Users size={24} />
-              </div>
-              <div className="stat-content">
-                <h3>{stats.total_patients}</h3>
-                <p>Pacientes</p>
-              </div>
-            </div>
-          </div>
-          <div className="col-md-4 mb-3">
-            <div className="stat-card">
-              <div className="stat-icon">
-                <Calendar size={24} />
-              </div>
-              <div className="stat-content">
-                <h3>{stats.total_appointments}</h3>
-                <p>Citas</p>
-              </div>
-            </div>
-          </div>
-          <div className="col-md-4 mb-3">
-            <div className="stat-card">
-              <div className="stat-icon">
-                <Star size={24} />
-              </div>
-              <div className="stat-content">
-                <h3>{stats.average_rating.toFixed(1)}</h3>
-                <p>Calificación</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <Alert variant="info">
-          <Activity className="me-2" />
-          Las estadísticas se cargarán pronto...
-        </Alert>
-      )}
-    </div>
-  );
+      // Crear URL temporal para previsualización
+      const imageUrl = URL.createObjectURL(file);
+      setProfileImage(imageUrl);
+    }
+  }, []);
 
-  const renderSecurity = () => (
-    <div className="profile-section">
-      <h5><Shield className="me-2" /> Seguridad</h5>
+  // Función para subir imagen al servidor
+  const uploadProfileImage = useCallback(async (file: File) => {
+    try {
+      setUiState(prev => ({ ...prev, uploadingImage: true }));
       
-      <div className="row">
-        <div className="col-md-6">
-          <div className="security-card">
-            <h6>Cambiar Contraseña</h6>
-            <p className="text-muted">Actualiza tu contraseña para mantener tu cuenta segura</p>
-            <Button variant="primary" onClick={() => setShowPasswordModal(true)}>
-              <Key size={16} className="me-1" />
-              Cambiar Contraseña
-            </Button>
-          </div>
-        </div>
-        <div className="col-md-6">
-          <div className="security-card danger">
-            <h6>Eliminar Cuenta</h6>
-            <p className="text-muted">Esta acción no se puede deshacer</p>
-            <Button variant="danger" onClick={() => setShowDeleteModal(true)}>
-              <Trash2 size={16} className="me-1" />
-              Eliminar Cuenta
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderNotifications = () => (
-    <div className="profile-section">
-      <h5><Bell className="me-2" /> Configuración de Notificaciones</h5>
+      const result = await profileService.uploadProfileImage(file);
       
-      <div className="notification-settings">
-        {Object.entries(notificationSettings).map(([key, value]) => (
-          <div key={key} className="notification-item">
-            <div>
-              <h6>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h6>
-              <small className="text-muted">
-                {key === 'email_notifications' && 'Recibir notificaciones por email'}
-                {key === 'push_notifications' && 'Recibir notificaciones push'}
-                {key === 'appointment_reminders' && 'Recordatorios de citas'}
-                {key === 'new_patient_alerts' && 'Alertas de nuevos pacientes'}
-                {key === 'system_updates' && 'Actualizaciones del sistema'}
-              </small>
-            </div>
-            <Form.Check
-              type="switch"
-              checked={value}
-              onChange={(e) => handleNotificationChange(key, e.target.checked)}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+      // Actualizar la imagen de perfil con la URL del servidor
+      if (result.profile_image) {
+        setProfileImage(result.profile_image);
+      }
+      
+      setUiState(prev => ({ 
+        ...prev, 
+        uploadingImage: false,
+        showSuccessAlert: true 
+      }));
+      
+      // Ocultar alerta después de 3 segundos
+      setTimeout(() => {
+        setUiState(prev => ({ ...prev, showSuccessAlert: false }));
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      setUiState(prev => ({ 
+        ...prev, 
+        uploadingImage: false,
+        showErrorAlert: true 
+      }));
+      
+      // Restaurar imagen original en caso de error
+      if (profile?.profile_image) {
+        setProfileImage(profile.profile_image);
+      } else {
+        setProfileImage('/default-avatar.png');
+      }
+    }
+  }, [profile]);
 
-  // Proteger acceso si no hay usuario autenticado
-  if (!user) {
-    return (
-      <div className="container py-5 text-center">
-        <div className="alert alert-danger" role="alert">
-          <strong>Error:</strong> No hay usuario autenticado. Por favor, inicia sesión nuevamente.
-        </div>
-      </div>
-    );
-  }
+  // Función para manejar el clic en el botón de subir imagen
+  const handleUploadImageClick = useCallback(() => {
+    if (selectedImageFile) {
+      uploadProfileImage(selectedImageFile);
+    }
+  }, [selectedImageFile, uploadProfileImage]);
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Cargando...</span>
+      <Container className="py-4">
+        <div className="text-center">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Cargando...</span>
+          </Spinner>
+          <p className="mt-2">Cargando perfil...</p>
         </div>
-      </div>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container className="py-4">
+        <Alert variant="danger">
+          <AlertCircle className="me-2" />
+          Error al cargar el perfil: {error}
+        </Alert>
+      </Container>
     );
   }
 
   return (
-    <div className="container-fluid py-4">
-      <div className="row">
-        <div className="col-lg-3">
-          {/* Perfil Card */}
-          <div className="profile-card">
-            <div className="profile-header">
-              <div className="profile-avatar">
-                <User size={48} />
-              </div>
-              <div className="profile-info">
-                <h4>{profile?.first_name} {profile?.last_name}</h4>
-                <p className="text-muted">{profile?.email}</p>
-                <Badge bg="primary" className="d-flex align-items-center gap-1">
-                  {getRoleIcon(user?.role?.name || 'user')}
-                  {getRoleDisplayName(user?.role?.name || 'user')}
-                </Badge>
-              </div>
-            </div>
-            
-            {profile?.created_at && (
-              <div className="profile-meta">
-                <small className="text-muted">
-                  Miembro desde {formatDate(profile.created_at)}
-                </small>
-              </div>
-            )}
-          </div>
+    <Container className="py-4">
+      {/* Alertas */}
+      {uiState.showSuccessAlert && (
+        <Alert variant="success" dismissible onClose={() => setUiState(prev => ({ ...prev, showSuccessAlert: false }))}>
+          <CheckCircle className="me-2" />
+          Perfil actualizado exitosamente
+        </Alert>
+      )}
 
-          {/* Navegación */}
-          <div className="profile-nav">
-            <Button
-              variant={activeTab === 'personal' ? 'primary' : 'outline-secondary'}
-              className="w-100 mb-2"
-              onClick={() => setActiveTab('personal')}
-            >
-              <User size={16} className="me-2" />
-              Personal
-            </Button>
-            {user?.role?.name === 'nutritionist' && (
-              <>
-                <Button
-                  variant={activeTab === 'professional' ? 'primary' : 'outline-secondary'}
-                  className="w-100 mb-2"
-                  onClick={() => setActiveTab('professional')}
-                >
-                  <Award size={16} className="me-2" />
-                  Profesional
-                </Button>
-                <Button
-                  variant={activeTab === 'clinic' ? 'primary' : 'outline-secondary'}
-                  className="w-100 mb-2"
-                  onClick={() => setActiveTab('clinic')}
-                >
-                  <MapPin size={16} className="me-2" />
-                  Consultorio
-                </Button>
-              </>
-            )}
-            <Button
-              variant={activeTab === 'stats' ? 'primary' : 'outline-secondary'}
-              className="w-100 mb-2"
-              onClick={() => setActiveTab('stats')}
-            >
-              <TrendingUp size={16} className="me-2" />
-              Estadísticas
-            </Button>
-            <Button
-              variant={activeTab === 'notifications' ? 'primary' : 'outline-secondary'}
-              className="w-100 mb-2"
-              onClick={() => setActiveTab('notifications')}
-            >
-              <Bell size={16} className="me-2" />
-              Notificaciones
-            </Button>
-            <Button
-              variant={activeTab === 'security' ? 'primary' : 'outline-secondary'}
-              className="w-100 mb-2"
-              onClick={() => setActiveTab('security')}
-            >
-              <Shield size={16} className="me-2" />
-              Seguridad
-            </Button>
-          </div>
+      {uiState.showErrorAlert && (
+        <Alert variant="danger" dismissible onClose={() => setUiState(prev => ({ ...prev, showErrorAlert: false }))}>
+          <AlertTriangle className="me-2" />
+          Error al actualizar el perfil
+        </Alert>
+      )}
+
+      <Row>
+        <Col lg={3}>
+          {/* Perfil del usuario */}
+          <Card className="mb-4">
+            <Card.Body className="text-center">
+              <div className="position-relative mb-3">
+                <Image
+                  src={profileImage || '/default-avatar.png'}
+                  roundedCircle
+                  width={120}
+                  height={120}
+                  className="border"
+                  style={{ objectFit: 'cover' }}
+                />
+                {uiState.isEditing && (
+                  <div className="position-absolute bottom-0 end-0">
+        <Button 
+          size="sm"
+                      variant="primary"
+                      className="rounded-circle"
+                      style={{ width: '32px', height: '32px', padding: 0 }}
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uiState.uploadingImage}
+                      title="Cambiar imagen de perfil"
+                    >
+                      {uiState.uploadingImage ? (
+                        <Spinner animation="border" size="sm" />
+                      ) : (
+                        <Camera size={16} />
+                      )}
+        </Button>
+      </div>
+                )}
+                
+                {/* Indicador de carga */}
+                {uiState.uploadingImage && (
+                  <div className="position-absolute top-50 start-50 translate-middle">
+                    <div className="bg-white bg-opacity-75 rounded p-2">
+                      <Spinner animation="border" size="sm" />
+                      <small className="d-block mt-1">Subiendo...</small>
         </div>
-
-        <div className="col-lg-9">
-          {/* Mensajes de éxito/error */}
-          {successMessage && (
-            <Alert variant="success" dismissible onClose={() => setSuccessMessage(null)}>
-              <CheckCircle size={16} className="me-2" />
-              {successMessage}
-            </Alert>
-          )}
-
-          {error && (
-            <Alert variant="danger" dismissible onClose={clearError}>
-              <AlertTriangle size={16} className="me-2" />
-              {error}
-            </Alert>
-          )}
-
-          {/* Contenido de la pestaña activa */}
-          <div className="profile-content">
-            {activeTab === 'personal' && renderPersonalInfo()}
-            {activeTab === 'professional' && renderProfessionalInfo()}
-            {activeTab === 'clinic' && renderClinicInfo()}
-            {activeTab === 'stats' && renderStats()}
-            {activeTab === 'notifications' && renderNotifications()}
-            {activeTab === 'security' && renderSecurity()}
-          </div>
         </div>
+                )}
       </div>
 
-      {/* Modal de cambio de contraseña */}
-      <Modal show={showPasswordModal} onHide={() => setShowPasswordModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <Key className="me-2" />
-            Cambiar Contraseña
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Contraseña Actual</Form.Label>
-              <Form.Control
-                type="password"
-                value={passwordData.currentPassword}
-                onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                placeholder="Ingresa tu contraseña actual"
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Nueva Contraseña</Form.Label>
-              <Form.Control
-                type="password"
-                value={passwordData.newPassword}
-                onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                placeholder="Ingresa tu nueva contraseña"
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Confirmar Nueva Contraseña</Form.Label>
-              <Form.Control
-                type="password"
-                value={passwordData.confirmPassword}
-                onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                placeholder="Confirma tu nueva contraseña"
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowPasswordModal(false)}>
-            Cancelar
-          </Button>
-          <Button variant="primary" onClick={handlePasswordChange}>
-            <Save size={16} className="me-1" />
-            Cambiar Contraseña
-          </Button>
-        </Modal.Footer>
-      </Modal>
+              <h5 className="mb-1">
+                {profile?.first_name} {profile?.last_name}
+              </h5>
+              <p className="text-muted mb-2">{profile?.email}</p>
+              
+              <Badge bg="success" className="mb-3">
+                Nutriólogo
+              </Badge>
 
-      {/* Modal de eliminación de cuenta */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <AlertTriangle className="me-2 text-danger" />
-            Eliminar Cuenta
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Alert variant="danger">
-            <strong>¡Advertencia!</strong> Esta acción no se puede deshacer. 
-            Se eliminarán todos tus datos permanentemente.
-          </Alert>
-          <Form.Group className="mb-3">
-            <Form.Label>Contraseña de Confirmación</Form.Label>
-            <Form.Control
-              type="password"
-              value={passwordData.currentPassword}
-              onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-              placeholder="Ingresa tu contraseña para confirmar"
-            />
-          </Form.Group>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+              {uiState.isEditing && selectedImageFile && (
+                <div className="mb-3">
+                  <small className="text-muted d-block mb-2">
+                    Imagen seleccionada: {selectedImageFile.name}
+                  </small>
+                  <div className="d-flex gap-2 justify-content-center">
+                    <OptimizedButton
+                      onClick={handleUploadImageClick}
+                      variant="success"
+                      size="sm"
+                      loading={uiState.uploadingImage}
+                      disabled={uiState.uploadingImage}
+                    >
+                      <Camera size={14} className="me-1" />
+                      Subir Imagen
+                    </OptimizedButton>
+                    <OptimizedButton
+                      onClick={() => {
+                        setSelectedImageFile(null);
+                        if (profile?.profile_image) {
+                          setProfileImage(profile.profile_image);
+                        } else {
+                          setProfileImage('/default-avatar.png');
+                        }
+                      }}
+                      variant="outline-secondary"
+                      size="sm"
+                      disabled={uiState.uploadingImage}
+                    >
             Cancelar
-          </Button>
-          <Button variant="danger" onClick={handleDeleteAccount}>
-            <Trash2 size={16} className="me-1" />
-            Eliminar Cuenta
-          </Button>
-        </Modal.Footer>
-      </Modal>
+                    </OptimizedButton>
+        </div>
     </div>
+              )}
+
+              {uiState.isEditing ? (
+                <div className="d-grid gap-2">
+                  <OptimizedButton
+                    onClick={handleSave}
+                    variant="success"
+                    loading={loading}
+                  >
+                    <Save size={16} className="me-2" />
+                    Guardar Cambios
+                  </OptimizedButton>
+                  <OptimizedButton
+                    onClick={toggleEditing}
+                    variant="outline-secondary"
+                  >
+                    Cancelar
+                  </OptimizedButton>
+        </div>
+              ) : (
+                <OptimizedButton
+                  onClick={toggleEditing}
+                  variant="primary"
+                >
+                  <Edit size={16} className="me-2" />
+                  Editar Perfil
+                </OptimizedButton>
+              )}
+            </Card.Body>
+          </Card>
+
+          {/* Estadísticas rápidas */}
+          {statsDisplay && (
+            <Card>
+              <Card.Header>
+                <h6 className="mb-0">
+                  <BarChart3 size={16} className="me-2" />
+                  Estadísticas
+                </h6>
+              </Card.Header>
+              <Card.Body>
+                <div className="row g-2">
+                  {statsDisplay.map((stat, index) => (
+                    <div key={index} className="col-6">
+                      <div className="text-center">
+                        <div className={`text-${stat.color} mb-1`}>
+                          <stat.icon size={20} />
+          </div>
+                        <div className="small fw-bold">{stat.value}</div>
+                        <div className="small text-muted">{stat.label}</div>
+          </div>
+              </div>
+            ))}
+          </div>
+              </Card.Body>
+            </Card>
+          )}
+        </Col>
+
+        <Col lg={9}>
+          <Card>
+            <Card.Header>
+              <Nav variant="tabs" activeKey={uiState.activeTab} onSelect={(k) => setUiState(prev => ({ ...prev, activeTab: k || 'personal' }))}>
+                {tabs.map(tab => (
+                  <Nav.Item key={tab.key}>
+                    <Nav.Link eventKey={tab.key}>
+                      <tab.icon size={16} className="me-2" />
+                      {tab.label}
+                    </Nav.Link>
+                  </Nav.Item>
+                ))}
+              </Nav>
+            </Card.Header>
+            
+            <Card.Body>
+              <Tab.Content>
+                {/* Información Personal */}
+                <Tab.Pane eventKey="personal" active={uiState.activeTab === 'personal'}>
+                  <Row>
+                    <Col md={6}>
+                      <OptimizedFormField
+                        label="Nombre"
+                        value={formState.personal.first_name}
+                        onChange={(value) => handleInputChange('personal', 'first_name', value)}
+                        id="first-name"
+                        name="first_name"
+                        autocomplete="given-name"
+                        disabled={!uiState.isEditing}
+                        required
+                      />
+                    </Col>
+                    <Col md={6}>
+                      <OptimizedFormField
+                        label="Apellidos"
+                        value={formState.personal.last_name}
+                        onChange={(value) => handleInputChange('personal', 'last_name', value)}
+                        id="last-name"
+                        name="last_name"
+                        autocomplete="family-name"
+                        disabled={!uiState.isEditing}
+                        required
+                      />
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col md={6}>
+                      <OptimizedFormField
+                        label="Email"
+                        type="email"
+                        value={formState.personal.email}
+                        onChange={(value) => handleInputChange('personal', 'email', value)}
+                        id="email"
+                        name="email"
+                        autocomplete="email"
+                        disabled={!uiState.isEditing}
+                        required
+                      />
+                    </Col>
+                    <Col md={6}>
+                      <OptimizedFormField
+                        label="Teléfono"
+                        type="tel"
+                        value={formState.personal.phone}
+                        onChange={(value) => handleInputChange('personal', 'phone', value)}
+                        id="phone"
+                        name="phone"
+                        autocomplete="tel"
+                        disabled={!uiState.isEditing}
+                      />
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col md={6}>
+                      <OptimizedFormField
+                        label="Fecha de Nacimiento"
+                        type="date"
+                        value={formState.personal.birth_date}
+                        onChange={(value) => handleInputChange('personal', 'birth_date', value)}
+                        id="birth-date"
+                        name="birth_date"
+                        autocomplete="bday"
+                        disabled={!uiState.isEditing}
+                      />
+                    </Col>
+                    <Col md={6}>
+                      <div className="form-group">
+                        <label className="form-label" htmlFor="gender">
+                          Género
+                        </label>
+                        <select
+                          className="form-control"
+                          id="gender"
+                          name="gender"
+                          autoComplete="sex"
+                          value={formState.personal.gender}
+                          onChange={(e) => handleInputChange('personal', 'gender', e.target.value)}
+                          disabled={!uiState.isEditing}
+                        >
+                          <option value="">Seleccionar género...</option>
+                          <option value="Masculino">Masculino</option>
+                          <option value="Femenino">Femenino</option>
+                        </select>
+                      </div>
+                    </Col>
+                  </Row>
+                </Tab.Pane>
+
+                {/* Credenciales */}
+                <Tab.Pane eventKey="professional" active={uiState.activeTab === 'professional'}>
+                  <Row>
+                    <Col md={6}>
+                      <OptimizedFormField
+                        label="Número de Cédula Profesional"
+                        value={formState.professional.license_number}
+                        onChange={(value) => handleInputChange('professional', 'license_number', value)}
+                        id="license-number"
+                        name="license-number"
+                        disabled={!uiState.isEditing}
+                        required
+                      />
+                    </Col>
+                    <Col md={6}>
+                      <OptimizedFormField
+                        label="Entidad Emisora"
+                        value={formState.professional.license_issuing_authority}
+                        onChange={(value) => handleInputChange('professional', 'license_issuing_authority', value)}
+                        id="license-issuing-authority"
+                        name="license-issuing-authority"
+                        disabled={!uiState.isEditing}
+                      />
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col md={6}>
+                      <OptimizedFormField
+                        label="Años de Experiencia"
+                        type="number"
+                        value={formState.professional.experience_years}
+                        onChange={(value) => handleInputChange('professional', 'experience_years', value)}
+                        id="experience-years"
+                        name="experience-years"
+                        disabled={!uiState.isEditing}
+                        min="0"
+                      />
+                    </Col>
+                    <Col md={6}>
+                      <OptimizedFormField
+                        label="Tarifa por Consulta"
+                        type="number"
+                        value={formState.professional.consultation_fee}
+                        onChange={(value) => handleInputChange('professional', 'consultation_fee', value)}
+                        id="consultation-fee"
+                        name="consultation-fee"
+                        disabled={!uiState.isEditing}
+                        min="0"
+                      />
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col md={12}>
+                      <label className="form-label">Educación</label>
+                      <textarea
+                        className="form-control"
+                        rows={3}
+                        value={formState.professional.education}
+                        onChange={(e) => handleInputChange('professional', 'education', e.target.value)}
+                        disabled={!uiState.isEditing}
+                        placeholder="Licenciatura en Nutrición - Universidad XYZ (2010)&#10;Maestría en Nutrición Clínica - Universidad ABC (2015)"
+                      />
+                      <small className="text-muted">Una institución/título por línea</small>
+                    </Col>
+                  </Row>
+                </Tab.Pane>
+
+                {/* Práctica */}
+                <Tab.Pane eventKey="practice" active={uiState.activeTab === 'practice'}>
+                  <Row>
+                    <Col md={12}>
+                      <OptimizedFormField
+                        label="Dirección de la Clínica"
+                        value={formState.practice.clinic_address}
+                        onChange={(value) => handleInputChange('practice', 'clinic_address', value)}
+                        id="clinic-address"
+                        name="clinic-address"
+                        disabled={!uiState.isEditing}
+                      />
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col md={12}>
+                      <div className="card border-0 bg-light">
+                        <div className="card-header bg-transparent border-0">
+                          <h6 className="mb-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-2">
+                              <circle cx="12" cy="12" r="10"></circle>
+                              <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            Horarios de Consulta
+                          </h6>
+                        </div>
+                        <div className="card-body">
+                          <div className="row">
+                            {[
+                              { key: 'monday', label: 'Lunes', icon: '1️⃣' },
+                              { key: 'tuesday', label: 'Martes', icon: '2️⃣' },
+                              { key: 'wednesday', label: 'Miércoles', icon: '3️⃣' },
+                              { key: 'thursday', label: 'Jueves', icon: '4️⃣' },
+                              { key: 'friday', label: 'Viernes', icon: '5️⃣' },
+                              { key: 'saturday', label: 'Sábado', icon: '6️⃣' },
+                              { key: 'sunday', label: 'Domingo', icon: '7️⃣' }
+                            ].map((day) => (
+                              <div key={day.key} className="col-md-6 col-lg-4 mb-3">
+                                <div className="border rounded p-3 h-100">
+                                  <div className="d-flex align-items-center mb-2">
+                                    <span className="me-2">{day.icon}</span>
+                                    <h6 className="mb-0">{day.label}</h6>
+                                  </div>
+                                  
+                                  <div className="form-check mb-2">
+                                    <input
+                                      className="form-check-input"
+                                      type="checkbox"
+                                      id={`${day.key}-active`}
+                                      checked={formState.practice[`${day.key}_active`] || false}
+                                      onChange={(e) => handleInputChange('practice', `${day.key}_active`, e.target.checked)}
+                                      disabled={!uiState.isEditing}
+                                    />
+                                    <label className="form-check-label small" htmlFor={`${day.key}-active`}>
+                                      Disponible
+                                    </label>
+                                  </div>
+
+                                  {formState.practice[`${day.key}_active`] && (
+                                    <>
+                                      <div className="row g-2">
+                                        <div className="col-6">
+                                          <label className="form-label small">Inicio</label>
+                                          <input
+                                            type="time"
+                                            className="form-control form-control-sm"
+                                            value={formState.practice[`${day.key}_start`] || '09:00'}
+                                            onChange={(e) => handleInputChange('practice', `${day.key}_start`, e.target.value)}
+                                            disabled={!uiState.isEditing}
+                                          />
+                                        </div>
+                                        <div className="col-6">
+                                          <label className="form-label small">Fin</label>
+                                          <input
+                                            type="time"
+                                            className="form-control form-control-sm"
+                                            value={formState.practice[`${day.key}_end`] || '18:00'}
+                                            onChange={(e) => handleInputChange('practice', `${day.key}_end`, e.target.value)}
+                                            disabled={!uiState.isEditing}
+                                          />
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="mt-2">
+                                        <label className="form-label small">Tipo de Consulta</label>
+                                        <select
+                                          className="form-select form-select-sm"
+                                          value={formState.practice[`${day.key}_type`] || 'presencial'}
+                                          onChange={(e) => handleInputChange('practice', `${day.key}_type`, e.target.value)}
+                                          disabled={!uiState.isEditing}
+                                        >
+                                          <option value="presencial">Presencial</option>
+                                          <option value="virtual">Virtual</option>
+                                          <option value="ambos">Ambos</option>
+                                        </select>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <div className="mt-3">
+                            <div className="alert alert-info">
+                              <div className="d-flex align-items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-2">
+                                  <circle cx="12" cy="12" r="10"></circle>
+                                  <path d="m9 12 2 2 4-4"></path>
+                                </svg>
+                                <small>
+                                  <strong>Resumen de Horarios:</strong> {(() => {
+                                    const activeDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].filter(day => 
+                                      formState.practice[`${day}_active`]
+                                    );
+                                    if (activeDays.length === 0) return 'No hay horarios configurados';
+                                    
+                                    const dayLabels = {
+                                      monday: 'Lun', tuesday: 'Mar', wednesday: 'Mié', 
+                                      thursday: 'Jue', friday: 'Vie', saturday: 'Sáb', sunday: 'Dom'
+                                    } as Record<string, string>;
+                                    return activeDays.map(day => dayLabels[day]).join(', ');
+                                  })()}
+                                </small>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col md={12}>
+                      <label className="form-label">Biografía</label>
+                      <textarea
+                        className="form-control"
+                        rows={4}
+                        value={formState.practice.bio}
+                        onChange={(e) => handleInputChange('practice', 'bio', e.target.value)}
+                        disabled={!uiState.isEditing}
+                        placeholder="Cuéntanos sobre tu experiencia y enfoque..."
+                      />
+                    </Col>
+                  </Row>
+                </Tab.Pane>
+
+                {/* Notificaciones */}
+                <Tab.Pane eventKey="notifications" active={uiState.activeTab === 'notifications'}>
+                  <h6 className="mb-3">Configuración de Notificaciones</h6>
+        {Object.entries(notificationSettings).map(([key, value]) => (
+                    <div key={key} className="form-check mb-2">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id={key}
+              checked={value}
+              onChange={(e) => handleNotificationChange(key, e.target.checked)}
+                        disabled={!uiState.isEditing}
+                      />
+                      <label className="form-check-label" htmlFor={key}>
+                        {key === 'email_notifications' && 'Notificaciones por Email'}
+                        {key === 'push_notifications' && 'Notificaciones Push'}
+                        {key === 'appointment_reminders' && 'Recordatorios de Citas'}
+                        {key === 'new_patient_alerts' && 'Alertas de Nuevos Pacientes'}
+                        {key === 'system_updates' && 'Actualizaciones del Sistema'}
+                      </label>
+          </div>
+        ))}
+                </Tab.Pane>
+
+                {/* Seguridad */}
+                <Tab.Pane eventKey="security" active={uiState.activeTab === 'security'}>
+                  <h6 className="mb-3">Cambiar Contraseña</h6>
+                  <Row>
+                    <Col md={6}>
+                      <div className="form-group">
+                        <label className="form-label">Contraseña Actual</label>
+                        <div className="input-group">
+                          <input
+                            type={passwordState.showCurrent ? 'text' : 'password'}
+                            className="form-control"
+                            value={passwordState.current}
+                            onChange={(e) => handlePasswordChange('current', e.target.value)}
+                            placeholder="Ingresa tu contraseña actual"
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary"
+                            onClick={() => togglePasswordVisibility('current')}
+                          >
+                            {passwordState.showCurrent ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+      </div>
+    </div>
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col md={6}>
+                      <div className="form-group">
+                        <label className="form-label">Nueva Contraseña</label>
+                        <div className="input-group">
+                          <input
+                            type={passwordState.showNew ? 'text' : 'password'}
+                            className="form-control"
+                            value={passwordState.new}
+                            onChange={(e) => handlePasswordChange('new', e.target.value)}
+                            placeholder="Ingresa tu nueva contraseña"
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary"
+                            onClick={() => togglePasswordVisibility('new')}
+                          >
+                            {passwordState.showNew ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+        </div>
+      </div>
+                    </Col>
+                    <Col md={6}>
+                      <div className="form-group">
+                        <label className="form-label">Confirmar Nueva Contraseña</label>
+                        <div className="input-group">
+                          <input
+                            type={passwordState.showConfirm ? 'text' : 'password'}
+                            className="form-control"
+                            value={passwordState.confirm}
+                            onChange={(e) => handlePasswordChange('confirm', e.target.value)}
+                            placeholder="Confirma tu nueva contraseña"
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary"
+                            onClick={() => togglePasswordVisibility('confirm')}
+                          >
+                            {passwordState.showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+        </div>
+      </div>
+                    </Col>
+                  </Row>
+
+                  <OptimizedButton
+                    variant="primary"
+                    onClick={() => {/* Implementar cambio de contraseña */}}
+                    disabled={!passwordState.current || !passwordState.new || passwordState.new !== passwordState.confirm}
+                  >
+                    <Lock size={16} className="me-2" />
+                    Cambiar Contraseña
+                  </OptimizedButton>
+                </Tab.Pane>
+
+                {/* Google Calendar */}
+                <Tab.Pane eventKey="google" active={uiState.activeTab === 'google'}>
+                  <div className="mb-4">
+                    <h6 className="mb-3">
+                      <Calendar size={20} className="me-2" />
+                      Configuración de Google Calendar
+                    </h6>
+                    <p className="text-muted">
+                      Conecta tu cuenta de Google para sincronizar automáticamente tus citas con Google Calendar.
+                    </p>
+                  </div>
+
+                  <Row>
+                    <Col md={6}>
+                      <Card className="mb-3">
+                        <Card.Header>
+                          <h6 className="mb-0">
+                            <Settings size={16} className="me-2" />
+                            Conexión con Google
+                          </h6>
+                        </Card.Header>
+                        <Card.Body>
+                          <GoogleAuth 
+                            variant="connect"
+                            onSuccess={(user) => {
+                              console.log('Google connected:', user);
+                              // Recargar el perfil para obtener la información actualizada
+                              loadProfile();
+                            }}
+                            onError={(error) => {
+                              console.error('Google auth error:', error);
+                            }}
+                          />
+                        </Card.Body>
+                      </Card>
+                    </Col>
+
+                    <Col md={6}>
+                      <Card className="mb-3">
+                        <Card.Header>
+                          <h6 className="mb-0">
+                            <RefreshCw size={16} className="me-2" />
+                            Sincronización
+                          </h6>
+                        </Card.Header>
+                        <Card.Body>
+                          <GoogleCalendarConfig 
+                            onConfigChange={(config) => {
+                              console.log('Calendar config changed:', config);
+                            }}
+                          />
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col md={12}>
+                      <Card>
+                        <Card.Header>
+                          <h6 className="mb-0">
+                            <AlertCircle size={16} className="me-2" />
+                            Información Importante
+                          </h6>
+                        </Card.Header>
+                        <Card.Body>
+                          <div className="alert alert-info">
+                            <h6>¿Cómo funciona la sincronización?</h6>
+                            <ul className="mb-0">
+                              <li>Las citas creadas en NutriWeb se sincronizan automáticamente con tu Google Calendar</li>
+                              <li>Los recordatorios se configuran automáticamente (24h antes por email, 30min antes por popup)</li>
+                              <li>Puedes sincronizar manualmente en cualquier momento</li>
+                              <li>Los cambios en Google Calendar también se reflejan en NutriWeb</li>
+                            </ul>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+                </Tab.Pane>
+
+                {/* Estadísticas */}
+                <Tab.Pane eventKey="stats" active={uiState.activeTab === 'stats'}>
+                  {statsDisplay && (
+      <div className="row">
+                      {statsDisplay.map((stat, index) => (
+                        <div key={index} className="col-md-6 mb-3">
+                          <Card>
+                            <Card.Body>
+                              <div className="d-flex align-items-center">
+                                <div className={`text-${stat.color} me-3`}>
+                                  <stat.icon size={24} />
+              </div>
+                                <div>
+                                  <h6 className="mb-1">{stat.label}</h6>
+                                  <h4 className="mb-0">{stat.value}</h4>
+              </div>
+            </div>
+                            </Card.Body>
+                          </Card>
+              </div>
+                      ))}
+          </div>
+                  )}
+                </Tab.Pane>
+              </Tab.Content>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Input oculto para subir imagen */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleImageSelect}
+      />
+    </Container>
   );
 };
 
-export default ProfilePage; 
+export default React.memo(ProfilePage); 

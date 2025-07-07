@@ -7,6 +7,7 @@ export interface User {
   birth_date?: Date | null;
   age?: number | null;
   gender?: string | null;
+  profile_image?: string | null;
   role: Role;
   is_active: boolean;
   registration_type?: 'online' | 'in_person';

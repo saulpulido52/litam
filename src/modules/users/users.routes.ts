@@ -14,6 +14,7 @@ router.use(protect);
 // Rutas básicas del perfil
 router.get('/me', userController.getMyProfile);
 router.patch('/me', userController.updateMyProfile);
+router.post('/me/profile-image', userController.uploadProfileImage);
 
 // Rutas de seguridad
 router.patch('/me/password', userController.updatePassword);

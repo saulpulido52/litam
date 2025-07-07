@@ -97,7 +97,8 @@ const ProgressTrackingPage: React.FC = () => {
   };
 
   const calculateBMI = (weight: number, height: number) => {
-    return (weight / ((height / 100) ** 2)).toFixed(1);
+    const bmi = weight / ((height / 100) ** 2);
+    return (bmi || 0).toFixed(1);
   };
 
   const selectedPatientData = patients.find(p => p.id.toString() === selectedPatient);
@@ -251,11 +252,11 @@ const ProgressTrackingPage: React.FC = () => {
                             <div className="mt-1">
                               {getProgressTrend(latestEntry.weight, previousEntry.weight) === 'down' ? (
                                 <span className="text-success">
-                                  <TrendingDown size={16} /> -{(previousEntry.weight - latestEntry.weight).toFixed(1)} kg
+                                  <TrendingDown size={16} /> -{((previousEntry.weight - latestEntry.weight) || 0).toFixed(1)} kg
                                 </span>
                               ) : getProgressTrend(latestEntry.weight, previousEntry.weight) === 'up' ? (
                                 <span className="text-danger">
-                                  <TrendingUp size={16} /> +{(latestEntry.weight - previousEntry.weight).toFixed(1)} kg
+                                  <TrendingUp size={16} /> +{((latestEntry.weight - previousEntry.weight) || 0).toFixed(1)} kg
                                 </span>
                               ) : (
                                 <span className="text-muted">Sin cambios</span>
@@ -272,7 +273,7 @@ const ProgressTrackingPage: React.FC = () => {
                           <div className="mt-1">
                             <span className="text-info">
                               {selectedPatientData.profile?.target_weight !== undefined && latestEntry.weight !== undefined
-                                ? (latestEntry.weight - selectedPatientData.profile.target_weight).toFixed(1)
+                                ? ((latestEntry.weight - selectedPatientData.profile.target_weight) || 0).toFixed(1)
                                 : '-'} kg restantes
                             </span>
                           </div>
@@ -299,11 +300,11 @@ const ProgressTrackingPage: React.FC = () => {
                             <div className="mt-1">
                               {getProgressTrend(latestEntry.body_fat, previousEntry.body_fat) === 'down' ? (
                                 <span className="text-success">
-                                  <TrendingDown size={16} /> -{(previousEntry.body_fat - latestEntry.body_fat).toFixed(1)}%
+                                  <TrendingDown size={16} /> -{((previousEntry.body_fat - latestEntry.body_fat) || 0).toFixed(1)}%
                                 </span>
                               ) : (
                                 <span className="text-danger">
-                                  <TrendingUp size={16} /> +{(latestEntry.body_fat - previousEntry.body_fat).toFixed(1)}%
+                                  <TrendingUp size={16} /> +{((latestEntry.body_fat - previousEntry.body_fat) || 0).toFixed(1)}%
                                 </span>
                               )}
                             </div>

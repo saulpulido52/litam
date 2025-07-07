@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import patientsService from '../services/patientsService';
 import authService from '../services/authService';
 import type { 
@@ -9,11 +9,20 @@ import type {
   PatientProgress
 } from '../services/patientsService';
 
+// Tipos optimizados
 interface PatientsStats {
   total: number;
   active: number;
   new: number;
   withConditions: number;
+}
+
+interface PatientsState {
+  patients: Patient[];
+  selectedPatient: Patient | null;
+  loading: boolean;
+  error: string | null;
+  stats: PatientsStats;
 }
 
 interface UsePatientsReturn {
@@ -37,35 +46,91 @@ interface UsePatientsReturn {
   setError: (error: string) => void;
 }
 
+// Hook optimizado para pacientes
 export const usePatients = (): UsePatientsReturn => {
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setErrorState] = useState<string | null>(null);
-  const [stats, setStats] = useState<PatientsStats>({
+  // Estados consolidados
+  const [state, setState] = useState<PatientsState>({
+    patients: [],
+    selectedPatient: null,
+    loading: false,
+    error: null,
+    stats: {
     total: 0,
     active: 0,
     new: 0,
     withConditions: 0
+    }
   });
+
+  // Refs para control de montaje y timeouts
+  const isMountedRef = useRef(true);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastFetchTimeRef = useRef(0);
+
+  // Log de depuración para cambios de estado
+  useEffect(() => {
+    console.log('🔍 [usePatients] Estado actualizado:', {
+      patientsCount: state.patients.length,
+      loading: state.loading,
+      error: state.error,
+      stats: state.stats,
+      timestamp: new Date().toISOString()
+    });
+  }, [state]);
+
+  // Log de depuración para montaje/desmontaje
+  useEffect(() => {
+    console.log('🔍 [usePatients] Componente montado');
+    isMountedRef.current = true;
+    
+    return () => {
+      console.log('🔍 [usePatients] Componente desmontado');
+      isMountedRef.current = false;
+      if (searchTimeoutRef.current) {
+        console.log('🔍 [usePatients] Limpiando timeout de búsqueda');
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Actualizar estado de forma optimizada
+  const updateState = useCallback((updates: Partial<PatientsState>) => {
+    if (isMountedRef.current) {
+      setState(prev => ({ ...prev, ...updates }));
+    }
+  }, []);
 
   // Limpiar error
   const clearError = useCallback(() => {
-    setErrorState(null);
-  }, []);
+    console.log('🔍 [usePatients] Limpiando error');
+    updateState({ error: null });
+  }, [updateState]);
 
   // Establecer error
   const setError = useCallback((error: string) => {
-    setErrorState(error);
-  }, []);
+    console.log('🔍 [usePatients] Estableciendo error:', error);
+    updateState({ error });
+  }, [updateState]);
 
-  // Cargar pacientes
+  // Cargar pacientes con optimizaciones
   const refreshPatients = useCallback(async () => {
-    let isMounted = true;
+    console.log('🔍 [usePatients] Iniciando refreshPatients...');
     
+    if (!isMountedRef.current) {
+      console.log('🔍 [usePatients] Componente desmontado, cancelando refresh');
+      return;
+    }
+
+    // Evitar múltiples llamadas simultáneas
+    const now = Date.now();
+    if (now - lastFetchTimeRef.current < 1000) {
+      console.log('⏭️ Skipping fetch - too soon since last call');
+      return;
+    }
+    lastFetchTimeRef.current = now;
+
     try {
-      setLoading(true);
-      setErrorState(null);
+      updateState({ loading: true, error: null });
       
       // Verificar autenticación antes de hacer llamadas
       const isAuth = authService.isAuthenticated();
@@ -74,10 +139,10 @@ export const usePatients = (): UsePatientsReturn => {
         throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
       }
       
-      // Solo una llamada - getPatientsStats ya incluye getMyPatients internamente
+      // Solo una llamada - getMyPatients ya incluye getPatientsStats internamente
       const patientsData = await patientsService.getMyPatients();
       
-      if (isMounted) {
+      if (isMountedRef.current) {
         // Verificar integridad de los datos
         const validPatients = patientsData.filter(patient => {
           if (!patient.id || !patient.first_name) {
@@ -88,9 +153,8 @@ export const usePatients = (): UsePatientsReturn => {
         });
         
         console.log(`✅ Cargados ${validPatients.length} pacientes válidos de ${patientsData.length} totales`);
-        setPatients(validPatients);
         
-        // Calcular estadísticas localmente
+        // Calcular estadísticas de forma optimizada
         const stats: PatientsStats = {
           total: validPatients.length,
           active: validPatients.filter(p => p.is_active).length,
@@ -103,10 +167,15 @@ export const usePatients = (): UsePatientsReturn => {
             p.profile?.medical_conditions && p.profile.medical_conditions.length > 0
           ).length
         };
-        setStats(stats);
+
+        updateState({
+          patients: validPatients,
+          stats,
+          loading: false
+        });
       }
     } catch (err: any) {
-      if (isMounted) {
+      if (isMountedRef.current) {
         // Si es un error de autenticación o acceso, limpiar datos
         if (err.message.includes('autenticado') || err.message.includes('Sesión expirada')) {
           console.warn('🔐 Problema de autenticación detectado. Limpiando sesión...');
@@ -117,151 +186,164 @@ export const usePatients = (): UsePatientsReturn => {
         }
         
         const errorMessage = err.message || 'Error al cargar los pacientes';
-        setErrorState(errorMessage);
+        updateState({ error: errorMessage, loading: false });
         console.error('❌ Error loading patients:', err);
       }
-    } finally {
-      if (isMounted) {
-        setLoading(false);
-      }
     }
-  }, []);
+  }, [updateState]);
 
-  // Crear paciente
+  // Crear paciente optimizado
   const createPatient = useCallback(async (patientData: CreatePatientRequest): Promise<Patient> => {
+    console.log('🔍 [usePatients] Iniciando createPatient con datos:', patientData);
+    
+    if (!isMountedRef.current) {
+      throw new Error('Componente desmontado');
+    }
+
+    setState(prev => ({ ...prev, loading: true, error: null }));
+
     try {
-      setLoading(true);
-      setErrorState(null);
-      
-      console.log('👥 usePatients: Creando nuevo paciente...');
       const newPatient = await patientsService.createPatient(patientData);
-      console.log('✅ usePatients: Paciente creado:', newPatient);
-      
-      // Refresco completo desde el servidor para asegurar consistencia
-      console.log('🔄 usePatients: Refrescando lista completa desde el servidor...');
-      await refreshPatients();
-      
-      console.log('✅ usePatients: Lista actualizada exitosamente');
+      console.log('🔍 [usePatients] Paciente creado exitosamente:', newPatient);
+
+      if (!isMountedRef.current) {
+        console.log('🔍 [usePatients] Componente desmontado después de crear paciente');
+        return newPatient;
+      }
+
+      setState(prev => {
+        console.log('🔍 [usePatients] Agregando nuevo paciente al estado');
+        return {
+          ...prev,
+          patients: [newPatient, ...prev.patients],
+          loading: false
+        };
+      });
+
       return newPatient;
     } catch (err: any) {
       const errorMessage = err.message || 'Error al crear el paciente';
-      setErrorState(errorMessage);
-      console.error('❌ usePatients: Error creando paciente:', err);
-      throw err;
-    } finally {
-      setLoading(false);
+      updateState({ error: errorMessage, loading: false });
+      throw new Error(errorMessage);
     }
-  }, [refreshPatients]);
+  }, [updateState]);
 
-  // Actualizar paciente
+  // Actualizar paciente optimizado
   const updatePatient = useCallback(async (patientId: string, patientData: UpdatePatientRequest): Promise<Patient> => {
+    console.log('🔍 [usePatients] Iniciando updatePatient:', { patientId, patientData });
+    
+    if (!isMountedRef.current) {
+      throw new Error('Componente desmontado');
+    }
+
+    setState(prev => ({ ...prev, loading: true, error: null }));
+
     try {
-      setLoading(true);
-      setErrorState(null);
-      
       const updatedPatient = await patientsService.updatePatient(patientId, patientData);
-      
-      // Actualizar la lista local
-      setPatients(prev => 
-        prev.map(patient => 
-          patient.id === patientId ? updatedPatient : patient
-        )
-      );
-      
-      // Si es el paciente seleccionado, actualizar también
-      if (selectedPatient && selectedPatient.id === patientId) {
-        setSelectedPatient(updatedPatient);
+      console.log('🔍 [usePatients] Paciente actualizado exitosamente:', updatedPatient);
+
+      if (!isMountedRef.current) {
+        console.log('🔍 [usePatients] Componente desmontado después de actualizar paciente');
+        return updatedPatient;
       }
+
+      setState(prev => {
+        console.log('🔍 [usePatients] Actualizando paciente en el estado');
+        return {
+          ...prev,
+          patients: prev.patients.map(p => p.id === patientId ? updatedPatient : p),
+          selectedPatient: prev.selectedPatient?.id === patientId ? updatedPatient : prev.selectedPatient,
+          loading: false
+        };
+      });
       
       return updatedPatient;
     } catch (err: any) {
       const errorMessage = err.message || 'Error al actualizar el paciente';
-      setErrorState(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
+      updateState({ error: errorMessage, loading: false });
+      throw new Error(errorMessage);
     }
-  }, [selectedPatient]);
+  }, [updateState]);
 
-  // Eliminar paciente
+  // Eliminar paciente optimizado
   const deletePatient = useCallback(async (patientId: string): Promise<void> => {
+    console.log('🔍 [usePatients] Iniciando deletePatient:', patientId);
+    
+    if (!isMountedRef.current) {
+      throw new Error('Componente desmontado');
+    }
+
+    setState(prev => ({ ...prev, loading: true, error: null }));
+
     try {
-      setLoading(true);
-      setErrorState(null);
-      
       await patientsService.deletePatient(patientId);
-      
-      // Remover de la lista local
-      setPatients(prev => prev.filter(patient => patient.id !== patientId));
-      
-      // Actualizar estadísticas
-      setStats(prev => ({
-        ...prev,
-        total: Math.max(0, prev.total - 1)
-      }));
-      
-      // Si era el paciente seleccionado, limpiar selección
-      if (selectedPatient && selectedPatient.id === patientId) {
-        setSelectedPatient(null);
-      }
-    } catch (err: any) {
-      console.error('❌ Error in deletePatient:', err);
-      
-      // Handle stale data scenario
-      if (err.message?.includes('ya no está en tu lista') || err.message?.includes('actualizará automáticamente')) {
-        console.warn('⚠️ Stale data detected. Refreshing patient list...');
-        // Force refresh the patient list
-        await refreshPatients();
-        // Remove from local list anyway since it's not there anymore
-        setPatients(prev => prev.filter(patient => patient.id !== patientId));
-        if (selectedPatient && selectedPatient.id === patientId) {
-          setSelectedPatient(null);
-        }
-        // Don't throw error since the patient was effectively "removed"
+      console.log('🔍 [usePatients] Paciente eliminado exitosamente');
+
+      if (!isMountedRef.current) {
+        console.log('🔍 [usePatients] Componente desmontado después de eliminar paciente');
         return;
       }
       
+      setState(prev => {
+        console.log('🔍 [usePatients] Eliminando paciente del estado');
+        return {
+          ...prev,
+          patients: prev.patients.filter(p => p.id !== patientId),
+          selectedPatient: prev.selectedPatient?.id === patientId ? null : prev.selectedPatient,
+          loading: false
+        };
+      });
+    } catch (err: any) {
       const errorMessage = err.message || 'Error al eliminar el paciente';
-      setErrorState(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
+      updateState({ error: errorMessage, loading: false });
+      throw new Error(errorMessage);
     }
-  }, [selectedPatient, refreshPatients]);
+  }, [updateState]);
 
   // Seleccionar paciente
   const selectPatient = useCallback((patient: Patient | null) => {
-    setSelectedPatient(patient);
-  }, []);
+    console.log('🔍 [usePatients] Seleccionando paciente:', patient ? { id: patient.id, name: `${patient.first_name} ${patient.last_name}` } : null);
+    updateState({ selectedPatient: patient });
+  }, [updateState]);
 
-  // Buscar pacientes
+  // Buscar pacientes con debouncing
   const searchPatients = useCallback(async (searchTerm: string): Promise<Patient[]> => {
-    try {
-      setErrorState(null);
+    console.log('🔍 [usePatients] Iniciando búsqueda:', searchTerm);
       
-      if (!searchTerm.trim()) {
-        return patients;
+    if (searchTimeoutRef.current) {
+      console.log('🔍 [usePatients] Cancelando búsqueda anterior');
+      clearTimeout(searchTimeoutRef.current);
       }
       
+    return new Promise((resolve) => {
+      searchTimeoutRef.current = setTimeout(async () => {
+        try {
+          console.log('🔍 [usePatients] Ejecutando búsqueda...');
       const results = await patientsService.searchPatients(searchTerm);
-      return results;
+          console.log('🔍 [usePatients] Resultados de búsqueda:', {
+            searchTerm,
+            count: results.length,
+            results: results.map(p => ({ id: p.id, name: `${p.first_name} ${p.last_name}` }))
+          });
+          resolve(results);
     } catch (err: any) {
       const errorMessage = err.message || 'Error al buscar pacientes';
-      setErrorState(errorMessage);
-      return [];
+          updateState({ error: errorMessage });
+          resolve([]);
     }
-  }, [patients]);
+      }, 300);
+    });
+  }, [updateState]);
 
   // Cargar pacientes al montar el componente (solo si está autenticado)
   useEffect(() => {
-    let isMounted = true;
-    
+    console.log('🔍 [usePatients] Efecto de carga inicial ejecutándose');
     const loadPatientsOnMount = async () => {
-      console.log('👥 usePatients: Component mounted, checking auth...');
+      console.log('🔍 [usePatients] Iniciando carga inicial de pacientes');
       const isAuth = authService.isAuthenticated();
       console.log('👥 usePatients: isAuthenticated =', isAuth);
       
-      if (isAuth && isMounted) {
+      if (isAuth && isMountedRef.current) {
         console.log('👥 usePatients: User authenticated, loading patients...');
         await refreshPatients();
       } else {
@@ -270,19 +352,16 @@ export const usePatients = (): UsePatientsReturn => {
     };
     
     loadPatientsOnMount();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, []); // Solo ejecutar una vez al montar
+  }, [refreshPatients]);
 
-  return {
+  // Memoizar valores de retorno para evitar re-renders innecesarios
+  const returnValue = useMemo(() => ({
     // State
-    patients,
-    selectedPatient,
-    loading,
-    error,
-    stats,
+    patients: state.patients,
+    selectedPatient: state.selectedPatient,
+    loading: state.loading,
+    error: state.error,
+    stats: state.stats,
     
     // Actions
     refreshPatients,
@@ -295,26 +374,39 @@ export const usePatients = (): UsePatientsReturn => {
     // Utilities
     clearError,
     setError
-  };
+  }), [
+    state.patients,
+    state.selectedPatient,
+    state.loading,
+    state.error,
+    state.stats,
+    refreshPatients,
+    createPatient,
+    updatePatient,
+    deletePatient,
+    selectPatient,
+    searchPatients,
+    clearError,
+    setError
+  ]);
+
+  return returnValue;
 };
 
-// Hook específico para obtener citas de un paciente
+// Hook optimizado para citas de pacientes
 export const usePatientAppointments = (patientId: string | null) => {
   const [appointments, setAppointments] = useState<PatientAppointment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAppointments = useCallback(async () => {
-    if (!patientId) {
-      setAppointments([]);
-      return;
-    }
+  const loadAppointments = useCallback(async () => {
+    if (!patientId) return;
 
     try {
       setLoading(true);
       setError(null);
-      const data = await patientsService.getPatientAppointments(patientId);
-      setAppointments(data);
+      const appointmentsData = await patientsService.getPatientAppointments(patientId);
+      setAppointments(appointmentsData);
     } catch (err: any) {
       setError(err.message || 'Error al cargar las citas');
     } finally {
@@ -323,48 +415,26 @@ export const usePatientAppointments = (patientId: string | null) => {
   }, [patientId]);
 
   useEffect(() => {
-    let isMounted = true;
-    
-    const loadAppointments = async () => {
-      console.log('📅 usePatientAppointments: Effect triggered, patientId =', patientId);
-      const isAuth = authService.isAuthenticated();
-      console.log('📅 usePatientAppointments: isAuthenticated =', isAuth);
-      
-      if (isAuth && patientId && isMounted) {
-        console.log('📅 usePatientAppointments: Fetching appointments for patient:', patientId);
-        await fetchAppointments();
-      } else {
-        console.log('📅 usePatientAppointments: Skipping fetch - auth:', isAuth, 'patientId:', patientId);
-      }
-    };
-    
     loadAppointments();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [patientId]); // Solo depender de patientId
+  }, [loadAppointments]);
 
-  return { appointments, loading, error, refreshAppointments: fetchAppointments };
+  return { appointments, loading, error, refreshAppointments: loadAppointments };
 };
 
-// Hook específico para obtener progreso de un paciente
+// Hook optimizado para progreso de pacientes
 export const usePatientProgress = (patientId: string | null) => {
   const [progress, setProgress] = useState<PatientProgress[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProgress = useCallback(async () => {
-    if (!patientId) {
-      setProgress([]);
-      return;
-    }
+  const loadProgress = useCallback(async () => {
+    if (!patientId) return;
 
     try {
       setLoading(true);
       setError(null);
-      const data = await patientsService.getPatientProgress(patientId);
-      setProgress(data);
+      const progressData = await patientsService.getPatientProgress(patientId);
+      setProgress(progressData);
     } catch (err: any) {
       setError(err.message || 'Error al cargar el progreso');
     } finally {
@@ -372,50 +442,11 @@ export const usePatientProgress = (patientId: string | null) => {
     }
   }, [patientId]);
 
-  const addProgress = useCallback(async (progressData: Omit<PatientProgress, 'id'>) => {
-    if (!patientId) return null;
-
-    try {
-      setError(null);
-      const newProgress = await patientsService.addPatientProgress(patientId, progressData);
-      setProgress(prev => [newProgress, ...prev]);
-      return newProgress;
-    } catch (err: any) {
-      setError(err.message || 'Error al agregar progreso');
-      throw err;
-    }
-  }, [patientId]);
-
   useEffect(() => {
-    let isMounted = true;
-    
-    const loadProgress = async () => {
-      console.log('📈 usePatientProgress: Effect triggered, patientId =', patientId);
-      const isAuth = authService.isAuthenticated();
-      console.log('📈 usePatientProgress: isAuthenticated =', isAuth);
-      
-      if (isAuth && patientId && isMounted) {
-        console.log('📈 usePatientProgress: Fetching progress for patient:', patientId);
-        await fetchProgress();
-      } else {
-        console.log('📈 usePatientProgress: Skipping fetch - auth:', isAuth, 'patientId:', patientId);
-      }
-    };
-    
     loadProgress();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [patientId]); // Solo depender de patientId
+  }, [loadProgress]);
 
-  return { 
-    progress, 
-    loading, 
-    error, 
-    refreshProgress: fetchProgress, 
-    addProgress 
-  };
+  return { progress, loading, error, refreshProgress: loadProgress };
 };
 
 export default usePatients; 

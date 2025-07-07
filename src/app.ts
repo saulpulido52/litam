@@ -20,6 +20,7 @@ import adminRoutes from './modules/admin/admin.routes';
 import messagingRoutes from './modules/messaging/message.routes';
 import clinicalRecordRoutes from './modules/clinical_records/clinical_record.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
+import calendarRoutes from './modules/calendar/calendar.routes';
 import { AppError } from './utils/app.error';
 
 // Extensión de tipos para Request
@@ -271,6 +272,7 @@ app.use('/api/educational-content', educationalContentRoutes);
 app.use('/api/messages', messagingRoutes);
 app.use('/api/clinical-records', clinicalRecordRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/calendar', calendarRoutes);
 
 // Manejo de rutas no encontradas con mejor información de accesibilidad
 app.all('*', (req: Request, res: Response, next: NextFunction) => {

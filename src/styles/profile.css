@@ -1,0 +1,487 @@
+/* Profile Page Styles */
+
+/* Container and Layout */
+.profile-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+.profile-content {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  min-height: 600px;
+}
+
+/* Profile Header */
+.profile-header {
+  padding-bottom: 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.profile-avatar-wrapper {
+  display: inline-block;
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.profile-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 4px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.profile-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-edit-overlay {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #0d6efd;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.avatar-edit-overlay:hover {
+  background: #0b5ed7;
+  transform: scale(1.1);
+}
+
+/* Validation Status */
+.validation-status {
+  margin-bottom: 16px;
+}
+
+.validation-status .badge {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Profile Completeness */
+.profile-completeness {
+  margin-top: 16px;
+}
+
+.profile-completeness .progress {
+  height: 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.profile-completeness .progress-bar {
+  background: linear-gradient(90deg, #0d6efd 0%, #0b5ed7 100%);
+  transition: width 0.5s ease;
+}
+
+/* Quick Stats */
+.quick-stats {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #eee;
+}
+
+.quick-stats h5 {
+  color: #0d6efd;
+  font-weight: 600;
+}
+
+/* Profile Navigation - MEJORADO CON MÁS ESPACIADO */
+.profile-nav {
+  padding-top: 24px;
+  border-top: 1px solid #eee;
+}
+
+.profile-nav .btn {
+  text-align: left;
+  justify-content: flex-start;
+  padding: 12px 18px; /* Aumentado de 10px 16px */
+  font-size: 14px;
+  transition: all 0.3s ease;
+  margin-bottom: 8px; /* Añadido espacio entre botones */
+  border-radius: 10px; /* Bordes más redondeados */
+  width: 100%;
+  border: 1px solid transparent;
+}
+
+.profile-nav .btn:hover {
+  transform: translateX(4px);
+  background-color: #f8f9fa;
+  border-color: #e9ecef;
+}
+
+.profile-nav .btn-primary {
+  background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+  border: none;
+  color: white;
+  box-shadow: 0 2px 4px rgba(13, 110, 253, 0.2);
+}
+
+.profile-nav .btn-primary:hover {
+  background: linear-gradient(135deg, #0b5ed7 0%, #0a58ca 100%);
+  transform: translateX(4px) translateY(-1px);
+  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+}
+
+.profile-nav .btn-outline-primary {
+  color: #0d6efd;
+  border-color: #e9ecef;
+  background: white;
+}
+
+.profile-nav .btn-outline-primary:hover {
+  background: #f8f9fa;
+  border-color: #0d6efd;
+  color: #0d6efd;
+}
+
+/* Iconos en la navegación */
+.profile-nav .btn svg {
+  margin-right: 10px; /* Más espacio entre icono y texto */
+  flex-shrink: 0;
+}
+
+/* Section Styles */
+.profile-section {
+  animation: fadeIn 0.5s ease;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.section-header h5 {
+  margin: 0;
+  color: #333;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+/* Form Styles */
+.form-label {
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.form-control,
+.form-select {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px 16px;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  background: white;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  background: #f0f0f0;
+  cursor: not-allowed;
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Stat Cards */
+.stat-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  background: #e7f3ff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: #0d6efd;
+}
+
+.stat-content h3 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #333;
+}
+
+.stat-content p {
+  margin: 4px 0 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Document Upload Cards */
+.document-upload-card {
+  background: #f8f9fa;
+  border: 2px dashed #ddd;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.document-upload-card:hover {
+  border-color: #0d6efd;
+  background: #f0f7ff;
+}
+
+.document-upload-card h6 {
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 600;
+}
+
+.upload-area {
+  padding: 16px;
+}
+
+.document-preview {
+  padding: 16px;
+}
+
+.documents-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.document-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+/* Security Cards */
+.security-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.security-card h6 {
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 600;
+}
+
+.security-card.danger {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+/* Avatar Modal */
+.avatar-preview {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .profile-content {
+    padding: 20px;
+  }
+  
+  .profile-card {
+    padding: 16px;
+  }
+  
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .stat-card {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .profile-nav .btn {
+    font-size: 13px;
+    padding: 10px 14px; /* Ajustado para móvil */
+    margin-bottom: 6px;
+  }
+}
+
+/* Alert Styles */
+.alert {
+  border: none;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.alert-info {
+  background: #e7f3ff;
+  color: #0c5460;
+}
+
+.alert-warning {
+  background: #fff3cd;
+  color: #856404;
+}
+
+/* Button Styles */
+.btn {
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: #0d6efd;
+  border: none;
+}
+
+.btn-primary:hover {
+  background: #0b5ed7;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+}
+
+.btn-outline-primary {
+  color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.btn-outline-primary:hover {
+  background: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  border: none;
+}
+
+.btn-secondary:hover {
+  background: #5c636a;
+}
+
+.btn-outline-danger {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+  background: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+/* Input Group */
+.input-group-text {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+}
+
+/* Badge Styles */
+.badge {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.bg-warning {
+  background: #ffc107 !important;
+  color: #000;
+}
+
+.bg-info {
+  background: #0dcaf0 !important;
+  color: #000;
+}
+
+.bg-success {
+  background: #198754 !important;
+}
+
+.bg-danger {
+  background: #dc3545 !important;
+} 

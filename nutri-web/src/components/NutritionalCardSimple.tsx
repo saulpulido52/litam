@@ -1004,10 +1004,12 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
                           </div>
 
                           <div className="mb-3">
-                            <label className="form-label">Nombre del Plan *</label>
+                            <label className="form-label" htmlFor="plan-name">Nombre del Plan *</label>
                             <input
                               type="text"
                               className="form-control"
+                              id="plan-name"
+                              name="plan-name"
                               value={planData.name}
                               onChange={(e) => updatePlanData('name', e.target.value)}
                               placeholder="Ej: Plan de Control de Peso - Enero 2025"
@@ -1017,9 +1019,11 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
                           </div>
 
                           <div className="mb-3">
-                            <label className="form-label">Descripción</label>
+                            <label className="form-label" htmlFor="plan-description">Descripción</label>
                             <textarea
                               className="form-control"
+                              id="plan-description"
+                              name="plan-description"
                               rows={2}
                               value={planData.description}
                               onChange={(e) => updatePlanData('description', e.target.value)}
@@ -1038,10 +1042,12 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
                         <div className="card-body">
                           <div className="row">
                             <div className="col-md-6">
-                              <label className="form-label">Fecha de Inicio *</label>
+                              <label className="form-label" htmlFor="start-date">Fecha de Inicio *</label>
                               <input
                                 type="date"
                                 className="form-control"
+                                id="start-date"
+                                name="start-date"
                                 value={planData.startDate}
                                 onChange={(e) => updatePlanData('startDate', e.target.value)}
                                 disabled={mode === 'view' || isLoading}
@@ -1049,9 +1055,11 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
                               />
                             </div>
                             <div className="col-md-6">
-                              <label className="form-label">Duración (semanas) *</label>
+                              <label className="form-label" htmlFor="total-weeks">Duración (semanas) *</label>
                               <select
                                 className="form-select"
+                                id="total-weeks"
+                                name="total-weeks"
                                 value={planData.totalWeeks}
                                 onChange={(e) => updatePlanData('totalWeeks', parseInt(e.target.value))}
                                 disabled={mode === 'view' || isLoading}
@@ -1113,11 +1121,13 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
                         </div>
                         <div className="card-body">
                           <div className="mb-3">
-                            <label className="form-label">Calorías Diarias Objetivo *</label>
+                            <label className="form-label" htmlFor="daily-calories-target">Calorías Diarias Objetivo *</label>
                             <div className="input-group">
                               <input
                                 type="number"
                                 className="form-control form-control-lg"
+                                id="daily-calories-target"
+                                name="daily-calories-target"
                                 value={planData.dailyCaloriesTarget}
                                 onChange={(e) => updatePlanData('dailyCaloriesTarget', parseInt(e.target.value) || 0)}
                                 min="1000"
@@ -1131,10 +1141,12 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
 
                           <div className="row">
                             <div className="col-md-4">
-                              <label className="form-label text-danger">🥩 Proteínas (g) *</label>
+                              <label className="form-label text-danger" htmlFor="protein-target">🥩 Proteínas (g) *</label>
                               <input
                                 type="number"
                                 className="form-control form-control-lg text-center"
+                                id="protein-target"
+                                name="protein-target"
                                 value={planData.dailyMacrosTarget.protein}
                                 onChange={(e) => updatePlanData('dailyMacrosTarget', {
                                   ...planData.dailyMacrosTarget,
@@ -1149,10 +1161,12 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
                               </small>
                             </div>
                             <div className="col-md-4">
-                              <label className="form-label text-warning">🌾 Carbohidratos (g) *</label>
+                              <label className="form-label text-warning" htmlFor="carbs-target">🌾 Carbohidratos (g) *</label>
                               <input
                                 type="number"
                                 className="form-control form-control-lg text-center"
+                                id="carbs-target"
+                                name="carbs-target"
                                 value={planData.dailyMacrosTarget.carbohydrates}
                                 onChange={(e) => updatePlanData('dailyMacrosTarget', {
                                   ...planData.dailyMacrosTarget,
@@ -1167,10 +1181,12 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
                               </small>
                             </div>
                             <div className="col-md-4">
-                              <label className="form-label text-success">🥑 Grasas (g) *</label>
+                              <label className="form-label text-success" htmlFor="fats-target">🥑 Grasas (g) *</label>
                               <input
                                 type="number"
                                 className="form-control form-control-lg text-center"
+                                id="fats-target"
+                                name="fats-target"
                                 value={planData.dailyMacrosTarget.fats}
                                 onChange={(e) => updatePlanData('dailyMacrosTarget', {
                                   ...planData.dailyMacrosTarget,

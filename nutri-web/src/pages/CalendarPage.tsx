@@ -465,11 +465,11 @@ const CalendarPage: React.FC = () => {
                       <label className="form-label" htmlFor="appointment-patient">Paciente</label>
                       <select className="form-select" id="appointment-patient" name="appointment-patient">
                         <option value="">Seleccionar paciente...</option>
-                        {patients.map(patient => (
+                        {/* {patients.map(patient => (
                           <option key={patient.id} value={patient.id}>
                             {patient.name}
                           </option>
-                        ))}
+                        ))} */}
                       </select>
                     </div>
                     <div className="row">

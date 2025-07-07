@@ -19,6 +19,8 @@ import {
 import { AppError } from '../../utils/app.error';
 import { RoleName } from '../../database/entities/role.entity';
 import { PatientProfile } from '../../database/entities/patient_profile.entity';
+import { PdfGenerationService } from './pdf_generation.service';
+import { DietGenerationAI } from './ai_diet_generation.service';
 
 class DietPlanService {
     private dietPlanRepository: Repository<DietPlan>;
@@ -28,6 +30,8 @@ class DietPlanService {
     private userRepository: Repository<User>;
     private patientProfileRepository: Repository<PatientProfile>;
     private relationRepository: Repository<PatientNutritionistRelation>;
+    private pdfService: PdfGenerationService;
+    private aiService: DietGenerationAI;
 
     constructor() {
         this.dietPlanRepository = AppDataSource.getRepository(DietPlan);
@@ -37,6 +41,11 @@ class DietPlanService {
         this.userRepository = AppDataSource.getRepository(User);
         this.patientProfileRepository = AppDataSource.getRepository(PatientProfile);
         this.relationRepository = AppDataSource.getRepository(PatientNutritionistRelation);
+        this.pdfService = new PdfGenerationService();
+        this.aiService = new DietGenerationAI(
+            AppDataSource.getRepository(Food),
+            AppDataSource.getRepository(PatientProfile)
+        );
     }
 
     // --- Utilidades para fechas semanales ---
@@ -224,7 +233,7 @@ class DietPlanService {
     // --- Métodos de CRUD para Diet Plans ---
 
     // Crear un plan de dieta semanal
-    public async createDietPlan(dietPlanDto: CreateDietPlanDto, nutritionistId: string) {
+    public async createDietPlan(dietPlanDto: CreateDietPlanDto, nutritionistId: string): Promise<DietPlan> {
         const nutritionist = await this.userRepository.findOne({
             where: { id: nutritionistId, role: { name: RoleName.NUTRITIONIST } },
         });
@@ -343,7 +352,9 @@ class DietPlanService {
                     where: { id: newMeal.id },
                     relations: ['meal_items', 'meal_items.food'],
                 });
-                newDietPlan.meals.push(savedMeal!);
+                if (savedMeal) {
+                    newDietPlan.meals.push(savedMeal);
+                }
             }
         }
 
@@ -358,119 +369,51 @@ class DietPlanService {
                 'meals.meal_items.food',
             ],
         });
+        
+        if (!savedPlan) {
+            throw new AppError('Error al crear el plan de dieta. No se pudo recargar el plan guardado.', 500);
+        }
+        
         return savedPlan;
     }
 
-    // Generar plan de dieta con IA
-    public async generateDietPlanByAI(generateDto: GenerateDietPlanAiDto, nutritionistId: string) {
-        const nutritionist = await this.userRepository.findOne({
-            where: { id: nutritionistId, role: { name: RoleName.NUTRITIONIST } },
-        });
-        if (!nutritionist) {
-            throw new AppError('Nutriólogo no encontrado o no autorizado.', 403);
-        }
-
-        const patient = await this.userRepository.findOne({
-            where: { id: generateDto.patientId, role: { name: RoleName.PATIENT } },
-        });
-        if (!patient) {
-            throw new AppError('Paciente no encontrado.', 404);
-        }
-
-        const activeRelation = await this.relationRepository.findOne({
-            where: {
-                patient: { id: patient.id },
-                nutritionist: { id: nutritionist.id },
-                status: RelationshipStatus.ACTIVE,
-            },
+    // Cambiar a método público para uso interno modular
+    public async validateActiveRelation(patientId: string, nutritionistId: string): Promise<void> {
+        const activeRelation = await this.relationRepository.findOneBy({
+            patient: { id: patientId },
+            nutritionist: { id: nutritionistId },
+            status: RelationshipStatus.ACTIVE,
         });
         if (!activeRelation) {
-            throw new AppError('El nutriólogo no está vinculado activamente con este paciente.', 403);
+            throw new AppError('El nutriólogo no tiene una relación activa con este paciente.', 403);
         }
+    }
 
-        // Calcular calorías diarias si no se proporcionan
-        let dailyCalories = generateDto.dailyCaloriesTarget;
-        if (!dailyCalories) {
-            // Calcular basado en perfil del paciente
-            const patientProfile = await this.patientProfileRepository.findOne({
-                where: { user: { id: patient.id } }
-            });
-            
-            if (patientProfile) {
-                const weight = patientProfile.current_weight || 70;
-                const height = patientProfile.height || 170;
-                const age = 30;
-                const activityLevel = patientProfile.activity_level || 'sedentario';
-                
-                // Fórmula básica de Harris-Benedict
-                let bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
-                
-                // Ajustar por nivel de actividad
-                const activityMultipliers = {
-                    'sedentario': 1.2,
-                    'ligero': 1.375,
-                    'moderado': 1.55,
-                    'activo': 1.725,
-                    'muy_activo': 1.9
-                };
-                
-                const multiplier = activityMultipliers[activityLevel as keyof typeof activityMultipliers] || 1.2;
-                dailyCalories = Math.round(bmr * multiplier);
-                
-                // Ajustar según objetivo
-                switch (generateDto.goal) {
-                    case 'weight_loss':
-                        dailyCalories = Math.round(dailyCalories * 0.85); // 15% déficit
-                        break;
-                    case 'weight_gain':
-                        dailyCalories = Math.round(dailyCalories * 1.15); // 15% superávit
-                        break;
-                    case 'muscle_gain':
-                        dailyCalories = Math.round(dailyCalories * 1.1); // 10% superávit
-                        break;
-                }
-            } else {
-                dailyCalories = 2000; // Valor por defecto
-            }
-        }
-
-        // Crear el plan base
+    public async generateDietPlanByAI(dto: GenerateDietPlanAiDto, nutritionistId: string): Promise<DietPlan> {
+        await this.validateActiveRelation(dto.patientId, nutritionistId);
+        const aiGeneratedData = await this.aiService.generateFullDietPlan(dto);
+        
+        // Asegurar que los campos obligatorios no sean undefined
         const createDto: CreateDietPlanDto = {
-            name: generateDto.name,
-            patientId: generateDto.patientId,
-            description: `Plan generado por IA - Objetivo: ${generateDto.goal}`,
-            startDate: generateDto.startDate,
-            endDate: generateDto.endDate,
-            dailyCaloriesTarget: dailyCalories,
-            notes: generateDto.notesForAI,
-            isWeeklyPlan: true,
-            totalWeeks: generateDto.totalWeeks,
+            name: aiGeneratedData.name || dto.name,
+            patientId: dto.patientId,
+            startDate: aiGeneratedData.startDate || dto.startDate,
+            endDate: aiGeneratedData.endDate || dto.endDate,
+            description: aiGeneratedData.description || '',
+            dailyCaloriesTarget: aiGeneratedData.dailyCaloriesTarget,
+            isWeeklyPlan: aiGeneratedData.isWeeklyPlan,
+            totalWeeks: aiGeneratedData.totalWeeks,
             generatedByIA: true,
-            iaVersion: '1.0',
-            weeklyPlans: []
+            iaVersion: '2.0-modular',
+            weeklyPlans: aiGeneratedData.weeklyPlans || [],
+            notes: dto.notesForAI,
         };
-
-        // Generar planes semanales
-        const weeklyPlans: WeeklyPlanDto[] = [];
-        for (let week = 1; week <= generateDto.totalWeeks; week++) {
-            const weeklyPlan = await this.generateWeeklyPlanWithAI(
-                generateDto.patientId,
-                week,
-                generateDto.startDate,
-                dailyCalories,
-                generateDto.goal,
-                generateDto.dietaryRestrictions,
-                generateDto.allergies,
-                generateDto.preferredFoods,
-                generateDto.dislikedFoods
-            );
-            weeklyPlans.push(weeklyPlan);
+        
+        const result = await this.createDietPlan(createDto, nutritionistId);
+        if (!result) {
+            throw new AppError('Error al crear el plan de dieta generado por IA.', 500);
         }
-
-        createDto.weeklyPlans = weeklyPlans;
-
-        // Crear el plan usando el método existente
-        return await this.createDietPlan(createDto, nutritionistId);
+        return result;
     }
 
     // Agregar una semana a un plan existente
@@ -507,37 +450,22 @@ class DietPlanService {
     }
 
     // Obtener un plan de dieta por ID (Nutriólogo, Paciente, Admin)
-    public async getDietPlanById(dietPlanId: string, userId: string, userRole: RoleName) {
+    public async getDietPlanById(dietPlanId: string, userId: string, userRole: RoleName): Promise<DietPlan> {
         const dietPlan = await this.dietPlanRepository.findOne({
             where: { id: dietPlanId },
-            relations: [
-                'patient',
-                'nutritionist',
-                'meals',
-                'meals.meal_items',
-                'meals.meal_items.food',
-            ],
+            relations: ['patient', 'nutritionist', 'meals', 'meals.meal_items', 'meals.meal_items.food'],
         });
-
         if (!dietPlan) {
             throw new AppError('Plan de dieta no encontrado.', 404);
         }
-
-        if (userRole === RoleName.NUTRITIONIST && dietPlan.nutritionist.id !== userId) {
-            throw new AppError('No tienes permiso para ver este plan de dieta.', 403);
-        }
-        if (userRole === RoleName.PATIENT && dietPlan.patient.id !== userId) {
-            throw new AppError('No tienes permiso para ver este plan de dieta.', 403);
-        }
-
+        // Mapear los campos para la respuesta
         const { password_hash: patientHash, ...patientWithoutHash } = dietPlan.patient;
         const { password_hash: nutritionistHash, ...nutritionistWithoutHash } = dietPlan.nutritionist;
-
         return {
             ...dietPlan,
             patient: patientWithoutHash,
             nutritionist: nutritionistWithoutHash,
-        };
+        } as DietPlan;
     }
 
     // Obtener planes de dieta de un paciente específico (solo por su nutriólogo o admin)
@@ -653,6 +581,25 @@ class DietPlanService {
             }
         }
         if (updateDto.status !== undefined) dietPlan.status = updateDto.status;
+
+        // === NUEVOS CAMPOS PARA COMPLETAR TABS ===
+        if (updateDto.mealSchedules !== undefined) dietPlan.meal_schedules = updateDto.mealSchedules;
+        if (updateDto.mealTiming !== undefined) dietPlan.meal_timing = updateDto.mealTiming;
+        if (updateDto.mealFrequency !== undefined) dietPlan.meal_frequency = updateDto.mealFrequency;
+        if (updateDto.nutritionalGoals !== undefined) dietPlan.nutritional_goals = updateDto.nutritionalGoals;
+        if (updateDto.flexibilitySettings !== undefined) dietPlan.flexibility_settings = updateDto.flexibilitySettings;
+        
+        // Restricciones patológicas - Normalizar nombres de campos
+        if (updateDto.pathologicalRestrictions !== undefined) {
+            dietPlan.pathological_restrictions = {
+                medical_conditions: updateDto.pathologicalRestrictions.medical_conditions || updateDto.pathologicalRestrictions.medicalConditions || [],
+                allergies: updateDto.pathologicalRestrictions.allergies || [],
+                intolerances: updateDto.pathologicalRestrictions.intolerances || [],
+                medications: updateDto.pathologicalRestrictions.medications || [],
+                special_considerations: updateDto.pathologicalRestrictions.special_considerations || updateDto.pathologicalRestrictions.specialConsiderations || [],
+                emergency_contacts: updateDto.pathologicalRestrictions.emergency_contacts || updateDto.pathologicalRestrictions.emergencyContacts || []
+            };
+        }
 
         // Lógica para actualizar comidas/items (complejo, solo permitir para planes DRAFT o PENDING_REVIEW)
         if (updateDto.meals !== undefined) {
@@ -802,278 +749,23 @@ class DietPlanService {
     }
 
     /**
-     * 📋 GENERAR PDF DEL PLANIFICADOR DE COMIDAS (FORMATO PROFESIONAL Y COMPACTO)
+     * 📋 GENERAR PDF DEL PLANIFICADOR DE COMIDAS (NUEVO DISEÑO, PDFKit moderno)
      */
     public async generateMealPlannerPDF(dietPlanId: string, requesterId: string, requesterRole: RoleName) {
+        // Obtener el plan con permisos
+        const dietPlan = await this.getDietPlanById(dietPlanId, requesterId, requesterRole);
+        
         try {
-            // Obtener plan completo con relaciones
-            const dietPlan = await this.dietPlanRepository.findOne({
-                where: { id: dietPlanId },
-                relations: [
-                    'patient',
-                    'nutritionist',
-                    'meals',
-                    'meals.meal_items',
-                    'meals.meal_items.food',
-                ],
-            });
-
-            if (!dietPlan) {
-                throw new AppError('Plan de dieta no encontrado.', 404);
-            }
-
-            // Verificar permisos
-            if (requesterRole === RoleName.NUTRITIONIST && dietPlan.nutritionist.id !== requesterId) {
-                throw new AppError('No tienes permiso para generar PDF de este plan.', 403);
-            }
-
-            // Importar PDFKit dinámicamente
-            const PDFDocument = require('pdfkit');
-            const fs = require('fs').promises;
-            const path = require('path');
-            
-            // Crear directorio para PDFs generados
-            const pdfDir = path.join(process.cwd(), 'generated-pdfs');
-            await fs.mkdir(pdfDir, { recursive: true });
-            
-            const pdfFilename = `planificador-comidas_${dietPlanId}_${Date.now()}.pdf`;
-            const pdfPath = path.join(pdfDir, pdfFilename);
-            
-            // Crear documento PDF
-            const doc = new PDFDocument({ 
-                margin: 40,
-                size: 'A4',
-                info: {
-                    Title: `Planificador de Comidas - ${dietPlan.name}`,
-                    Author: `Dr./Dra. ${dietPlan.nutritionist.first_name} ${dietPlan.nutritionist.last_name}`,
-                    Subject: 'Planificador de Comidas Nutricional',
-                    Creator: 'NutriWeb - Sistema de Gestión Nutricional'
-                }
-            });
-            
-            const stream = require('fs').createWriteStream(pdfPath);
-            doc.pipe(stream);
-            
-            // HEADER PROFESIONAL
-            this.addMealPlannerPDFHeaderProfessional(doc, dietPlan);
-            // Compactar: no addPage aquí
-            this.addMealPlannerPatientInfoSection(doc, dietPlan);
-            this.addMealPlannerPlanInfoSection(doc, dietPlan);
-            // Tabla de comidas compacta
-            this.addMealPlannerWeeklyMealsTableCompact(doc, dietPlan);
-            // FOOTER
-            this.addMealPlannerPDFFooter(doc, dietPlan);
-            // Finalizar documento
-            doc.end();
-            return new Promise<{ pdf_path: string; filename: string }>((resolve, reject) => {
-                stream.on('finish', () => {
-                    console.log(`✅ PDF del planificador de comidas generado: ${pdfFilename}`);
-                    resolve({ pdf_path: pdfPath, filename: pdfFilename });
-                });
-                stream.on('error', reject);
-            });
+            // Pasar directamente el plan de dieta al servicio de PDF
+            // El servicio de PDF debe manejar internamente la estructura de datos
+            const result = await this.pdfService.generate(dietPlan as any);
+            return {
+                pdf_path: result.pdfPath,
+                filename: result.filename
+            };
         } catch (error) {
             console.error('❌ Error generando PDF del planificador de comidas:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * HEADER profesional (sin emojis)
-     */
-    private addMealPlannerPDFHeaderProfessional(doc: any, dietPlan: any) {
-        // Fondo superior
-        doc.rect(40, 40, 515, 80)
-           .fillAndStroke('#1e3a8a', '#1e40af');
-        // Logo simulado
-        doc.circle(70, 70, 12)
-           .fillAndStroke('#ffffff', '#ffffff');
-        doc.moveTo(65, 70).lineTo(75, 70).strokeColor('#1e3a8a').lineWidth(2).stroke();
-        doc.moveTo(70, 65).lineTo(70, 75).strokeColor('#1e3a8a').lineWidth(2).stroke();
-        // Título principal
-        doc.fontSize(18).font('Helvetica-Bold')
-           .fillColor('#ffffff')
-           .text('NUTRIWEB', 95, 55);
-        doc.fontSize(12).font('Helvetica')
-           .fillColor('#e0e7ff')
-           .text('Sistema de Gestión Nutricional', 95, 75);
-        doc.fontSize(14).font('Helvetica-Bold')
-           .fillColor('#ffffff')
-           .text('PLANIFICADOR DE COMIDAS', 95, 95);
-        // Caja de info
-        const infoY = 140;
-        doc.rect(40, infoY, 515, 60)
-           .fillAndStroke('#f8fafc', '#e2e8f0');
-        doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af');
-        doc.text('PACIENTE', 50, infoY + 10);
-        doc.fontSize(10).font('Helvetica').fillColor('#374151')
-           .text(`${dietPlan.patient.first_name} ${dietPlan.patient.last_name}`, 50, infoY + 25);
-        doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af')
-           .text('NUTRIÓLOGO', 50, infoY + 40);
-        doc.fontSize(10).font('Helvetica').fillColor('#374151')
-           .text(`Dr./Dra. ${dietPlan.nutritionist.first_name} ${dietPlan.nutritionist.last_name}`, 50, infoY + 55);
-        doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af')
-           .text('FECHA DE INICIO', 350, infoY + 10);
-        doc.fontSize(10).font('Helvetica').fillColor('#374151')
-           .text(new Date(dietPlan.start_date).toLocaleDateString('es-ES'), 350, infoY + 25);
-        doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af')
-           .text('FECHA DE FIN', 350, infoY + 40);
-        doc.fontSize(10).font('Helvetica').fillColor('#374151')
-           .text(new Date(dietPlan.end_date).toLocaleDateString('es-ES'), 350, infoY + 55);
-        doc.y = infoY + 80;
-        doc.moveDown(0.5);
-    }
-
-    /**
-     * 1. DATOS GENERALES DEL PACIENTE
-     */
-    private addMealPlannerPatientInfoSection(doc: any, dietPlan: any) {
-        const patient = dietPlan.patient;
-        const patientData: Record<string, string> = {
-            'Nombre Completo': `${patient.first_name} ${patient.last_name}`,
-            'Email': patient.email,
-            'Edad': patient.age ? `${patient.age} años` : 'N/A',
-            'Género': patient.gender || 'N/A',
-            'Teléfono': patient.phone || 'N/A'
-        };
-        this.addPDFSection(doc, '1. DATOS GENERALES DEL PACIENTE', patientData, false);
-    }
-
-    /**
-     * 2. DATOS DEL PLAN NUTRICIONAL
-     */
-    private addMealPlannerPlanInfoSection(doc: any, dietPlan: any) {
-        const planData: Record<string, string> = {
-            'Nombre del Plan': dietPlan.name,
-            'Estado': dietPlan.status,
-            'Duración': dietPlan.total_weeks ? `${dietPlan.total_weeks} semana(s)` : 'N/A',
-            'Calorías diarias objetivo': dietPlan.daily_calories_target ? `${dietPlan.daily_calories_target} kcal` : 'N/A',
-            'Proteínas': dietPlan.daily_macros_target?.protein ? `${dietPlan.daily_macros_target.protein} g` : 'N/A',
-            'Carbohidratos': dietPlan.daily_macros_target?.carbohydrates ? `${dietPlan.daily_macros_target.carbohydrates} g` : 'N/A',
-            'Grasas': dietPlan.daily_macros_target?.fats ? `${dietPlan.daily_macros_target.fats} g` : 'N/A',
-            'Notas': dietPlan.notes || 'N/A'
-        };
-        this.addPDFSection(doc, '2. DATOS DEL PLAN NUTRICIONAL', planData, false);
-    }
-
-    /**
-     * 3. PLANIFICACIÓN DE COMIDAS POR SEMANA (TABLA)
-     */
-    private addMealPlannerWeeklyMealsTableCompact(doc: any, dietPlan: any) {
-        if (!dietPlan.weekly_plans || dietPlan.weekly_plans.length === 0) {
-            doc.moveDown(1);
-            doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e40af')
-               .text('3. PLANIFICACIÓN DE COMIDAS', { align: 'left' });
-            doc.moveDown(0.5);
-            doc.fontSize(10).font('Helvetica').fillColor('#374151')
-               .text('No hay comidas planificadas para este plan.');
-            return;
-        }
-        dietPlan.weekly_plans.forEach((weekPlan: any, weekIndex: number) => {
-            doc.moveDown(1);
-            doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e40af')
-               .text(`3. PLANIFICACIÓN DE COMIDAS - SEMANA ${weekPlan.week_number}`, { align: 'left' });
-            doc.moveDown(0.2);
-            doc.fontSize(10).font('Helvetica-Bold').fillColor('#374151')
-               .text(`Período: ${new Date(weekPlan.start_date).toLocaleDateString('es-ES')} - ${new Date(weekPlan.end_date).toLocaleDateString('es-ES')}`);
-            doc.moveDown(0.2);
-            // Tabla de comidas
-            const tableTop = doc.y;
-            // Ajustar anchos: dejar más ancho para notas y descripción
-            const colWidths = [50, 50, 40, 120, 45, 45, 45, 45, 120];
-            const headers = ['Día', 'Tipo', 'Hora', 'Descripción', 'Calorías', 'Proteínas', 'Carbohidratos', 'Grasas', 'Notas'];
-            let x = 50;
-            headers.forEach((header, i) => {
-                doc.fontSize(9).font('Helvetica-Bold').fillColor('#1e40af')
-                   .text(header, x, tableTop, { width: colWidths[i], align: 'center' });
-                x += colWidths[i];
-            });
-            let y = tableTop + 16;
-            weekPlan.meals.forEach((meal: any) => {
-                x = 50;
-                const row = [
-                    meal.day || '',
-                    meal.meal_type || '',
-                    meal.meal_time || '',
-                    meal.meal_description || '',
-                    meal.total_calories ? `${meal.total_calories}` : '',
-                    meal.total_protein ? `${meal.total_protein}` : '',
-                    meal.total_carbs ? `${meal.total_carbs}` : '',
-                    meal.total_fats ? `${meal.total_fats}` : '',
-                    meal.notes || ''
-                ];
-                row.forEach((cell, i) => {
-                    // Notas y descripción: permitir salto de línea
-                    const options = (i === 3 || i === 8)
-                        ? { width: colWidths[i], align: 'left', lineBreak: true }
-                        : { width: colWidths[i], align: 'center' };
-                    doc.fontSize(8).font('Helvetica').fillColor('#374151')
-                       .text(cell, x, y, options);
-                    x += colWidths[i];
-                });
-                y += 24; // Más espacio para celdas con wrap
-                if (y > 750) {
-                    doc.addPage();
-                    y = 50;
-                }
-            });
-            doc.moveDown(1);
-        });
-    }
-
-    /**
-     * Sección genérica para datos (compacta, sin addPage)
-     */
-    private addPDFSection(doc: any, title: string, data: Record<string, string>, longText: boolean = false) {
-        doc.moveDown(1);
-        doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e40af')
-           .text(title, { align: 'left' });
-        doc.moveDown(0.2);
-        Object.entries(data).forEach(([key, value]) => {
-            doc.fontSize(10).font('Helvetica-Bold').fillColor('#374151')
-               .text(`${key}:`, { continued: true });
-            doc.fontSize(10).font('Helvetica').fillColor('#374151')
-               .text(` ${value}`);
-            if (longText) doc.moveDown(0.2);
-        });
-        doc.moveDown(0.5);
-    }
-
-    /**
-     * 🔧 HELPER: Añadir footer del PDF
-     */
-    private addMealPlannerPDFFooter(doc: any, dietPlan: any) {
-        doc.moveDown(2);
-        
-        // Línea separadora
-        doc.strokeColor('#e5e7eb').lineWidth(1)
-           .moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-        
-        doc.moveDown(0.5);
-        
-        // Información del footer
-        doc.fontSize(8).font('Helvetica').fillColor('#6b7280')
-           .text(`Generado el: ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}`, { align: 'center' });
-        
-        doc.fontSize(8).font('Helvetica').fillColor('#6b7280')
-           .text(`Plan: ${dietPlan.name} | Paciente: ${dietPlan.patient.first_name} ${dietPlan.patient.last_name}`, { align: 'center' });
-        
-        doc.fontSize(8).font('Helvetica').fillColor('#6b7280')
-           .text('NutriWeb - Sistema de Gestión Nutricional', { align: 'center' });
-    }
-
-    /**
-     * 🔧 HELPER: Obtener etiqueta del tipo de comida
-     */
-    private getMealTypeLabel(mealType?: string): string {
-        switch (mealType) {
-            case 'breakfast': return 'Desayuno';
-            case 'morning_snack': return 'Merienda Mañana';
-            case 'lunch': return 'Almuerzo';
-            case 'afternoon_snack': return 'Merienda Tarde';
-            case 'dinner': return 'Cena';
-            case 'evening_snack': return 'Merienda Noche';
-            default: return mealType || 'Comida';
+            throw new AppError('No se pudo generar el archivo PDF.', 500);
         }
     }
 }

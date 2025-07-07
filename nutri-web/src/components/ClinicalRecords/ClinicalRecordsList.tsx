@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Button, Badge, Modal, Form, Row, Col } from 'react-bootstrap';
+import { Card, Button, Badge, Row, Col } from 'react-bootstrap';
 import { 
-  MdAdd, 
   MdEdit, 
   MdDelete, 
   MdVisibility,
-  MdSearch,
-  MdFilterList,
-  MdSort,
   MdPerson,
   MdCalendarToday,
   MdDescription,
@@ -36,9 +32,7 @@ const ClinicalRecordsList: React.FC<ClinicalRecordsListProps> = ({
   canEdit = true,
   canDelete = true,
 }) => {
-  const [sortBy, setSortBy] = useState<'date' | 'nutritionist'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [filterBy, setFilterBy] = useState('');
+  const [filterBy] = useState('');
 
   // Filtrar expedientes
   const filteredRecords = records.filter(record => {
@@ -52,19 +46,9 @@ const ClinicalRecordsList: React.FC<ClinicalRecordsListProps> = ({
     );
   });
 
-  // Ordenar expedientes
+  // Ordenar expedientes por fecha (más recientes primero)
   const sortedRecords = [...filteredRecords].sort((a, b) => {
-    let comparison = 0;
-    
-    if (sortBy === 'date') {
-      comparison = new Date(a.record_date).getTime() - new Date(b.record_date).getTime();
-    } else if (sortBy === 'nutritionist') {
-      const nameA = `${a.nutritionist.first_name} ${a.nutritionist.last_name}`;
-      const nameB = `${b.nutritionist.first_name} ${b.nutritionist.last_name}`;
-      comparison = nameA.localeCompare(nameB);
-    }
-    
-    return sortOrder === 'asc' ? comparison : -comparison;
+    return new Date(b.record_date).getTime() - new Date(a.record_date).getTime();
   });
 
   const formatDate = (dateString: string) => {
@@ -75,23 +59,7 @@ const ClinicalRecordsList: React.FC<ClinicalRecordsListProps> = ({
     });
   };
 
-  const getRecordSummary = (record: ClinicalRecord) => {
-    const parts: string[] = [];
-    
-    if (record.consultation_reason) {
-      parts.push(record.consultation_reason);
-    }
-    
-    if (record.nutritional_diagnosis) {
-      parts.push(`Dx: ${record.nutritional_diagnosis}`);
-    }
 
-    if (record.anthropometric_measurements?.current_weight_kg) {
-      parts.push(`Peso: ${record.anthropometric_measurements.current_weight_kg}kg`);
-    }
-
-    return parts.join(' • ') || 'Sin resumen disponible';
-  };
 
   if (loading) {
     return (
@@ -254,7 +222,6 @@ const ClinicalRecordsList: React.FC<ClinicalRecordsListProps> = ({
       {/* Información adicional */}
       <div className="mt-3">
         <small className="text-muted">
-          <MdSearch className="me-1" />
           Mostrando {sortedRecords.length} de {records.length} expedientes
           {filterBy && ` (filtrados por "${filterBy}")`}
         </small>

@@ -92,6 +92,9 @@ export class DietPlan {
     meal_timing: any | null; // Horarios de comidas
 
     @Column({ type: 'jsonb', nullable: true })
+    meal_schedules: any | null; // Horarios detallados de comidas del NutritionalScheduleTab
+
+    @Column({ type: 'jsonb', nullable: true })
     nutritional_goals: any | null; // Objetivos nutricionales (agua, fibra, distribución calórica)
 
     @Column({ type: 'jsonb', nullable: true })

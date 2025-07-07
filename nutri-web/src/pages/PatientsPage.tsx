@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Alert, Badge, Form, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Alert, Badge, Form, Modal, Spinner } from 'react-bootstrap';
 import { usePatients } from '../hooks/usePatients';
-import type { Patient } from '../services/patientsService';
+import { useAuth } from '../hooks/useAuth';
+import type { Patient, CreatePatientRequest, UpdatePatientRequest } from '../services/patientsService';
 import patientsService from '../services/patientsService';
 
 // React Icons
@@ -22,18 +23,35 @@ import {
   MdLock,
   MdPerson,
   MdPhone,
-  MdCalendarToday
+  MdCalendarToday,
+  MdVisibility,
+  MdDescription
 } from 'react-icons/md';
-import { FaUsers, FaUserCircle, FaChartLine, FaUserPlus } from 'react-icons/fa';
+import { FaUsers, FaUserCircle, FaChartLine, FaUserPlus, FaUserMd } from 'react-icons/fa';
 import { BsGenderMale, BsGenderFemale, BsGenderAmbiguous } from 'react-icons/bs';
 import { HiOutlineDocumentText } from 'react-icons/hi';
 
 const PatientsPage: React.FC = () => {
+  console.log('🔍 [PatientsPage] Componente renderizado');
+
   const navigate = useNavigate();
-  const { patients, loading, error, createPatient, updatePatient, deletePatient, clearError } = usePatients();
+  const { user } = useAuth();
+  const { 
+    patients, 
+    selectedPatient, 
+    loading, 
+    error, 
+    stats,
+    refreshPatients, 
+    createPatient, 
+    updatePatient, 
+    deletePatient, 
+    selectPatient,
+    searchPatients,
+    clearError 
+  } = usePatients();
   
   const [viewMode, setViewMode] = useState<'list' | 'create' | 'edit'>('list');
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [temporaryCredentials, setTemporaryCredentials] = useState<any>(null);
@@ -53,6 +71,9 @@ const PatientsPage: React.FC = () => {
   });
 
   const [formLoading, setFormLoading] = useState(false);
+
+  // Definir problematicIds como array vacío (puedes reemplazarlo por la lógica real si aplica)
+  const problematicIds: string[] = [];
 
   // Calcular edad automáticamente desde fecha de nacimiento
   const calculateAgeFromBirthDate = (birthDate: string): string => {
@@ -128,48 +149,29 @@ const PatientsPage: React.FC = () => {
     });
   }, [formData.email, emailExists, emailCheckLoading, viewMode]);
 
-  // Filtrar pacientes por término de búsqueda y excluir IDs problemáticos
+  // Filtrado de pacientes
   const filteredPatients = useMemo(() => {
-    const problematicIds = [
-      '73a9ef86-60fc-4b3a-b8a0-8b87998b86a8',
-    ];
-
-    console.log('🔍 Filtrando pacientes:', {
-      total: patients.length,
-      searchTerm,
-      problematicIds
-    });
-
-    const filtered = patients.filter(patient => {
-      const matchesSearch = !searchTerm || 
-        patient.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        patient.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        patient.email?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const isNotProblematic = !problematicIds.includes(patient.id);
-      
-      if (!isNotProblematic) {
-        console.log('⚠️ Excluyendo paciente problemático:', {
-          id: patient.id,
-          name: `${patient.first_name} ${patient.last_name}`,
-          email: patient.email
-        });
+    // Log de depuración para ver el array original
+    console.log('🔎 Pacientes originales recibidos:', patients);
+    // Si no hay término de búsqueda ni exclusión, mostrar todos
+    if (!searchTerm && (!problematicIds || problematicIds.length === 0)) {
+      return patients;
+    }
+    // Filtro original (ajustar según lógica real)
+    return patients.filter(p => {
+      // Si hay problematicIds, excluirlos
+      if (problematicIds && problematicIds.includes(p.id)) return false;
+      // Si hay término de búsqueda, filtrar por nombre o email
+      if (searchTerm) {
+        const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
+        return fullName.includes(searchTerm.toLowerCase()) || (p.email && p.email.toLowerCase().includes(searchTerm.toLowerCase()));
       }
-      
-      return matchesSearch && isNotProblematic;
+      return true;
     });
-
-    console.log('✅ Pacientes filtrados:', {
-      original: patients.length,
-      filtered: filtered.length,
-      excluded: patients.length - filtered.length
-    });
-
-    return filtered;
-  }, [patients, searchTerm]);
+  }, [patients, searchTerm, problematicIds]);
 
   const handleCreatePatient = () => {
-    setSelectedPatient(null);
+    selectPatient(null);
     setFormData({
       email: '',
       first_name: '',
@@ -184,7 +186,7 @@ const PatientsPage: React.FC = () => {
   };
 
   const handleEditPatient = (patient: Patient) => {
-    setSelectedPatient(patient);
+    selectPatient(patient);
     
     let patientAge = '';
     if (patient.age) {
@@ -214,7 +216,7 @@ const PatientsPage: React.FC = () => {
   };
 
   const handleDeletePatient = (patient: Patient) => {
-    setSelectedPatient(patient);
+    selectPatient(patient);
     setShowDeleteModal(true);
   };
 
@@ -243,7 +245,7 @@ const PatientsPage: React.FC = () => {
       
       await deletePatient(selectedPatient.id);
       setShowDeleteModal(false);
-      setSelectedPatient(null);
+      selectPatient(null);
       
       console.log('✅ Paciente removido exitosamente');
     } catch (error) {
@@ -317,7 +319,7 @@ const PatientsPage: React.FC = () => {
 
   const handleCancelForm = () => {
     setViewMode('list');
-    setSelectedPatient(null);
+    selectPatient(null);
     clearError();
   };
 
@@ -353,6 +355,26 @@ const PatientsPage: React.FC = () => {
     }
     return null;
   };
+
+  // Log de depuración para el estado de pacientes
+  useEffect(() => {
+    console.log('🔍 [PatientsPage] Estado de pacientes actualizado:', {
+      patientsCount: patients.length,
+      loading,
+      error,
+      stats,
+      timestamp: new Date().toISOString()
+    });
+  }, [patients, loading, error, stats]);
+
+  // Log de depuración para el usuario autenticado
+  useEffect(() => {
+    console.log('🔍 [PatientsPage] Usuario autenticado:', user ? {
+      id: user.id,
+      email: user.email,
+      role: user.role?.name
+    } : null);
+  }, [user]);
 
   return (
     <Container fluid className="py-4">
@@ -611,6 +633,8 @@ const PatientsPage: React.FC = () => {
                           value={formData.first_name}
                           onChange={(e) => setFormData({...formData, first_name: e.target.value})}
                           required
+                          autoComplete="given-name"
+                          aria-label="Nombres del paciente"
                         />
                       </Form.Group>
                     </Col>
@@ -624,6 +648,8 @@ const PatientsPage: React.FC = () => {
                           value={formData.last_name}
                           onChange={(e) => setFormData({...formData, last_name: e.target.value})}
                           required
+                          autoComplete="family-name"
+                          aria-label="Apellidos del paciente"
                         />
                       </Form.Group>
                     </Col>
@@ -640,6 +666,8 @@ const PatientsPage: React.FC = () => {
                       isInvalid={emailExists}
                       isValid={!!(formData.email && !emailExists && !emailCheckLoading && viewMode === 'create')}
                       required
+                      autoComplete="email"
+                      aria-label="Email del paciente"
                     />
                     {emailCheckLoading && (
                       <Form.Text className="text-muted">
@@ -675,6 +703,8 @@ const PatientsPage: React.FC = () => {
                           type="tel"
                           value={formData.phone}
                           onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                          autoComplete="tel"
+                          aria-label="Teléfono del paciente"
                         />
                       </Form.Group>
                     </Col>
@@ -688,6 +718,8 @@ const PatientsPage: React.FC = () => {
                           value={formData.birth_date}
                           onChange={(e) => handleBirthDateChange(e.target.value)}
                           max={new Date().toISOString().split('T')[0]}
+                          autoComplete="bday"
+                          aria-label="Fecha de nacimiento del paciente"
                         />
                         <Form.Text>La edad se calculará automáticamente</Form.Text>
                       </Form.Group>
@@ -704,6 +736,7 @@ const PatientsPage: React.FC = () => {
                         value={`${formData.age} años`}
                         readOnly
                         className="bg-light"
+                        aria-label="Edad calculada automáticamente"
                       />
                       <Form.Text className="text-success">
                         ✓ Calculada automáticamente desde la fecha de nacimiento
@@ -718,6 +751,8 @@ const PatientsPage: React.FC = () => {
                       name="gender"
                       value={formData.gender}
                       onChange={(e) => setFormData({...formData, gender: e.target.value as 'male' | 'female' | 'other'})}
+                      autoComplete="sex"
+                      aria-label="Género del paciente"
                     >
                       <option value="male">Masculino</option>
                       <option value="female">Femenino</option>

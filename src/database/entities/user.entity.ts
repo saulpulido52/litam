@@ -62,6 +62,9 @@ export class User {
     @Column({ type: 'varchar', length: 50, nullable: true })
     gender!: string | null;
 
+    @Column({ type: 'varchar', length: 500, nullable: true })
+    profile_image!: string | null;
+
     @ManyToOne(() => Role, (role) => role.users, { eager: true, nullable: false })
     @JoinColumn({ name: 'role_id' })
     role!: Role;
@@ -97,6 +100,34 @@ export class User {
 
     @Column({ type: 'timestamptz', nullable: true })
     passwordChangedAt!: Date | null;
+
+    // --- CAMPOS PARA GOOGLE OAUTH ---
+    @Column({ type: 'varchar', length: 255, unique: true, nullable: true })
+    google_id!: string | null;
+
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    google_email!: string | null;
+
+    @Column({ type: 'text', nullable: true, select: false })
+    google_access_token!: string | null;
+
+    @Column({ type: 'text', nullable: true, select: false })
+    google_refresh_token!: string | null;
+
+    @Column({ type: 'timestamptz', nullable: true })
+    google_token_expires_at!: Date | null;
+
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    google_calendar_id!: string | null;
+
+    @Column({ type: 'boolean', default: false })
+    google_calendar_sync_enabled!: boolean;
+
+    @Column({ type: 'timestamptz', nullable: true })
+    google_calendar_last_sync!: Date | null;
+
+    @Column({ type: 'varchar', length: 50, default: 'local' })
+    auth_provider!: string;
 
     @OneToOne(() => PatientProfile, (profile) => profile.user, { cascade: true })
     patient_profile?: PatientProfile;

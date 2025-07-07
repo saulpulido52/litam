@@ -438,6 +438,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                       value={formData.recordDate}
                       onChange={(e) => handleBasicChange('recordDate', e.target.value)}
                       required
+                      autoComplete="off"
                     />
                   </div>
                 </div>
@@ -454,6 +455,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                       value={formData.expedientNumber}
                       onChange={(e) => handleBasicChange('expedientNumber', e.target.value)}
                       placeholder="Ej: EXP-001"
+                      autoComplete="off"
                     />
                   </div>
                 </div>
@@ -474,6 +476,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                   onChange={(e) => handleBasicChange('consultationReason', e.target.value)}
                   placeholder="Describe el motivo de la consulta..."
                   required
+                  autoComplete="off"
                 />
               </div>
             </div>

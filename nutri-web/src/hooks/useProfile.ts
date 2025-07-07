@@ -12,10 +12,19 @@ export const useProfile = () => {
     setLoading(true);
     setError(null);
     try {
+      console.log('useProfile - Loading profile...');
       const profileData = await profileService.getProfile();
+      console.log('useProfile - Profile loaded successfully:', profileData);
       setProfile(profileData);
     } catch (err: any) {
-      setError(err.message || 'Error al cargar el perfil');
+      console.error('useProfile - Error loading profile:', err);
+      const errorMessage = err.message || 'Error al cargar el perfil';
+      setError(errorMessage);
+      console.error('useProfile - Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
     } finally {
       setLoading(false);
     }
@@ -23,10 +32,13 @@ export const useProfile = () => {
 
   const loadStats = useCallback(async () => {
     try {
+      console.log('useProfile - Loading stats...');
       const statsData = await profileService.getProfileStats();
+      console.log('useProfile - Stats loaded successfully:', statsData);
       setStats(statsData);
     } catch (err: any) {
-      console.error('Error al cargar estadísticas:', err);
+      console.error('useProfile - Error loading stats:', err);
+      // No establecer error global para stats, solo log
     }
   }, []);
 
@@ -34,11 +46,20 @@ export const useProfile = () => {
     setLoading(true);
     setError(null);
     try {
+      console.log('useProfile - Updating profile with data:', data);
       const updatedProfile = await profileService.updateProfile(data);
+      console.log('useProfile - Profile updated successfully:', updatedProfile);
       setProfile(updatedProfile);
       return updatedProfile;
     } catch (err: any) {
-      setError(err.message || 'Error al actualizar el perfil');
+      console.error('useProfile - Error updating profile:', err);
+      const errorMessage = err.message || 'Error al actualizar el perfil';
+      setError(errorMessage);
+      console.error('useProfile - Update error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
       throw err;
     } finally {
       setLoading(false);
@@ -90,11 +111,6 @@ export const useProfile = () => {
   const clearError = () => {
     setError(null);
   };
-
-  useEffect(() => {
-    loadProfile();
-    loadStats();
-  }, [loadProfile, loadStats]);
 
   return {
     profile,

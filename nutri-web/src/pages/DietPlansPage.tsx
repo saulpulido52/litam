@@ -51,6 +51,7 @@ const DietPlansPage: React.FC = () => {
     createDietPlan,
     updateDietPlan,
     deleteDietPlan,
+    refreshStats,
     clearError,
     setError
   } = useDietPlans();
@@ -299,8 +300,29 @@ const DietPlansPage: React.FC = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este plan?')) {
       try {
         await deleteDietPlan(planId);
+        
+        // Recargar todos los datos relacionados
+        await Promise.all([
+          fetchAllDietPlans(),
+          refreshStats(),
+          patients.length > 0 ? loadAllClinicalRecords() : Promise.resolve()
+        ]);
+        
+        // Limpiar cualquier plan seleccionado si era el eliminado
+        if (selectedPlan?.id === planId) {
+          setSelectedPlan(null);
+        }
+        if (editingPlan?.id === planId) {
+          setEditingPlan(null);
+        }
+        if (selectedPlanForMeals?.id === planId) {
+          setSelectedPlanForMeals(null);
+        }
+        
         clearError();
+        console.log('✅ Plan eliminado y datos recargados exitosamente');
       } catch (error: any) {
+        console.error('❌ Error eliminando plan:', error);
         setError(error.message || 'Error al eliminar el plan');
       }
     }
@@ -1204,14 +1226,13 @@ const DietPlansPage: React.FC = () => {
       {selectedPlanForMeals && (
         <MealPlanner
           weeklyPlans={selectedPlanForMeals.weekly_plans || [] as any}
+          dietPlan={selectedPlanForMeals}
           onSave={handleSaveMealPlan}
           onClose={() => {
             setShowMealPlanner(false);
             setSelectedPlanForMeals(null);
           }}
           isOpen={showMealPlanner}
-          mealsPerDay={5}
-          mealTimes={{}}
         />
       )}
 

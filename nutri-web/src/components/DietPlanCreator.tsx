@@ -426,9 +426,11 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
               
               <div className="row">
                 <div className="col-md-6 mb-3">
-                  <label className="form-label">Paciente *</label>
+                  <label className="form-label" htmlFor="patient-select">Paciente *</label>
                   <select 
                     className="form-select"
+                    id="patient-select"
+                    name="patient-select"
                     value={formData.patientId}
                     onChange={(e) => setFormData({...formData, patientId: e.target.value})}
                     required
@@ -442,10 +444,12 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                   </select>
                 </div>
                 <div className="col-md-6 mb-3">
-                  <label className="form-label">Nombre del Plan *</label>
+                  <label className="form-label" htmlFor="plan-name">Nombre del Plan *</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    id="plan-name"
+                    name="plan-name"
                     placeholder={`Ej: ${getPlanTypeLabel()} de Equilibrio y Energía`}
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -454,38 +458,44 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                 </div>
               </div>
 
-              <div className="mb-3">
-                <label className="form-label">Descripción</label>
-                <textarea 
-                  className="form-control" 
-                  rows={3} 
-                  placeholder="Describe el objetivo y características del plan..."
-                  value={formData.description || ''}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                ></textarea>
+              <div className="row">
+                <div className="col-md-12 mb-3">
+                  <label className="form-label" htmlFor="plan-description">Descripción</label>
+                  <textarea
+                    className="form-control"
+                    id="plan-description"
+                    name="plan-description"
+                    rows={3}
+                    value={formData.description}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    placeholder="Describe el objetivo y enfoque del plan nutricional..."
+                  />
+                </div>
               </div>
 
               <div className="row">
                 <div className="col-md-6 mb-3">
-                  <label className="form-label">Fecha de Inicio *</label>
-                  <input 
-                    type="date" 
+                  <label className="form-label" htmlFor="start-date">Fecha de Inicio *</label>
+                  <input
+                    type="date"
                     className="form-control"
+                    id="start-date"
+                    name="start-date"
                     value={formData.startDate}
                     onChange={(e) => setFormData({...formData, startDate: e.target.value})}
                     required
                   />
                 </div>
                 <div className="col-md-6 mb-3">
-                  <label className="form-label">Fecha de Fin</label>
-                  <input 
-                    type="date" 
+                  <label className="form-label" htmlFor="end-date">Fecha de Fin</label>
+                  <input
+                    type="date"
                     className="form-control"
+                    id="end-date"
+                    name="end-date"
                     value={formData.endDate}
                     onChange={(e) => setFormData({...formData, endDate: e.target.value})}
-                    readOnly
                   />
-                  <small className="text-muted">Calculada automáticamente</small>
                 </div>
               </div>
             </div>

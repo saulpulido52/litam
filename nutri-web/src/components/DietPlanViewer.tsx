@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Clock, Target, FileText, Download, Edit, X, Settings, RotateCcw, Shield, AlertTriangle, Heart, Eye } from 'lucide-react';
+import { Clock, Target, FileText, Download, Edit, X, Settings, RotateCcw, Shield, AlertTriangle, Heart } from 'lucide-react';
 import type { DietPlan } from '../types/diet';
-import MealPlannerViewer from './MealPlannerViewer';
 
 interface DietPlanViewerProps {
   plan: DietPlan;
@@ -17,7 +16,6 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
   onClose
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'nutrition' | 'schedule' | 'restrictions'>('overview');
-  const [showMealPlannerViewer, setShowMealPlannerViewer] = useState(false);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
@@ -43,8 +41,6 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
       default: return 'Plan';
     }
   };
-
-
 
   const getStatusLabel = (status: string) => {
     const statusConfig = {
@@ -92,6 +88,18 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
       return total + weekCalories;
     }, 0);
   };
+
+  // Utilidad para obtener un campo desde el nivel superior o desde dietPlan
+  function getPlanField(plan: any, field: string) {
+    if (plan[field] !== undefined) return plan[field];
+    if (plan.dietPlan && plan.dietPlan[field] !== undefined) return plan.dietPlan[field];
+    return undefined;
+  }
+
+  // Utilidad para obtener los horarios de comidas
+  function getMealSchedules(plan: any) {
+    return getPlanField(plan, 'mealSchedules') || getPlanField(plan, 'meal_schedules') || getPlanField(plan, 'meal_timing') || null;
+  }
 
   const renderOverview = () => (
     <div className="row">
@@ -162,13 +170,6 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
                 </div>
               </div>
             </div>
-            <button 
-              className="btn btn-outline-primary btn-sm mt-2 w-100"
-              onClick={() => setShowMealPlannerViewer(true)}
-            >
-              <Eye size={14} className="me-1" />
-              Ver Detalles de Comidas
-            </button>
           </div>
         )}
         
@@ -330,204 +331,166 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
     </div>
   );
 
-  // Función comentada ya que se eliminó la pestaña de comidas
-  // const renderWeeklyMeals = () => {
-  //   if (!plan.weekly_plans || plan.weekly_plans.length === 0) {
-  //     return (
-  //       <div className="text-center py-4">
-  //         <div className="alert alert-info">
-  //           <h6>📋 Plan de Comidas</h6>
-  //           <p className="mb-3">No hay comidas planificadas para este plan nutricional.</p>
-  //           <p className="text-muted small">
-  //             Las comidas se pueden agregar usando el planificador de comidas.
-  //           </p>
-  //         </div>
-  //       </div>
-  //     );
-  //   }
+  const renderDetailedSchedule = () => {
+    // Usar la utilidad para obtener los datos de horarios
+    const scheduleData = getMealSchedules(plan);
+    if (!scheduleData) {
+      return (
+        <div className="text-center py-4">
+          <div className="alert alert-info">
+            <h6>⏰ Horarios de Comidas</h6>
+            <p className="mb-3">No hay horarios configurados para este plan nutricional.</p>
+            <p className="text-muted small">
+              Los horarios se pueden configurar en la pestaña "Horarios" del editor del plan.
+            </p>
+          </div>
+        </div>
+      );
+    }
 
-  //   return (
-  //     <div>
-  //       {/* Resumen de comidas planificadas */}
-  //       <div className="row mb-4">
-  //         <div className="col-md-3">
-  //           <div className="card text-center">
-  //             <div className="card-body">
-  //               <h4 className="text-primary">{plan.weekly_plans.length}</h4>
-  //               <small className="text-muted">Semanas</small>
-  //             </div>
-  //           </div>
-  //         </div>
-  //         <div className="col-md-3">
-  //           <div className="card text-center">
-  //             <div className="card-body">
-  //               <h4 className="text-success">{getTotalMealsCount()}</h4>
-  //               <small className="text-muted">Comidas</small>
-  //             </div>
-  //           </div>
-  //         </div>
-  //         <div className="col-md-3">
-  //           <div className="card text-center">
-  //             <div className="card-body">
-  //               <h4 className="text-warning">{getTotalCaloriesPlanned()}</h4>
-  //               <small className="text-muted">Calorías Totales</small>
-  //             </div>
-  //           </div>
-  //         </div>
-  //         <div className="col-md-3">
-  //           <div className="card text-center">
-  //             <div className="card-body">
-  //               <button 
-  //                 className="btn btn-primary btn-sm"
-  //                 onClick={() => setShowMealPlannerViewer(true)}
-  //               >
-  //                 <Eye size={14} className="me-1" />
-  //                 Ver Detalles
-  //               </button>
-  //             </div>
-  //           </div>
-  //         </div>
-  //       </div>
-
-  //       {/* Lista de semanas con comidas */}
-  //       {plan.weekly_plans.map((weekPlan, weekIndex) => (
-  //         <div key={weekIndex} className="card mb-3">
-  //           <div className="card-header">
-  //             <h6 className="mb-0">
-  //               <Calendar size={16} className="me-2" />
-  //               Semana {weekPlan.week_number}
-  //               <small className="text-muted ms-2">
-  //                 ({formatDate(weekPlan.start_date)} - {formatDate(weekPlan.end_date)})
-  //               </small>
-  //               {weekPlan.meals && weekPlan.meals.length > 0 && (
-  //                 <span className="badge bg-success ms-2">
-  //                   {weekPlan.meals.length} comidas
-  //                 </span>
-  //               )}
-  //             </h6>
-  //           </div>
-  //           <div className="card-body">
-  //             <div className="row mb-3">
-  //               <div className="col-md-3">
-  //                 <strong>Calorías diarias:</strong> {formatCalories(weekPlan.daily_calories_target)}
-  //               </div>
-  //               <div className="col-md-3">
-  //                 <strong>Proteínas:</strong> {weekPlan.daily_macros_target.protein}g
-  //               </div>
-  //               <div className="col-md-3">
-  //                 <strong>Carbohidratos:</strong> {weekPlan.daily_macros_target.carbohydrates}g
-  //               </div>
-  //               <div className="col-md-3">
-  //                 <strong>Grasas:</strong> {weekPlan.daily_macros_target.fats}g
-  //               </div>
-  //             </div>
+    return (
+      <div className="row">
+        {/* Horarios básicos */}
+        <div className="col-md-6">
+          <div className="card mb-4">
+            <div className="card-header">
+              <h6 className="mb-0">
+                <Clock size={16} className="me-2" />
+                Rutina Diaria
+              </h6>
+            </div>
+            <div className="card-body">
+              <div className="row mb-3">
+                <div className="col-6">
+                  <label className="form-label small">Hora de Despertar</label>
+                  <div className="fw-bold text-primary">{scheduleData.wakeUpTime || 'N/A'}</div>
+                </div>
+                <div className="col-6">
+                  <label className="form-label small">Hora de Dormir</label>
+                  <div className="fw-bold text-primary">{scheduleData.bedTime || 'N/A'}</div>
+                </div>
+              </div>
               
-  //             {weekPlan.meals && weekPlan.meals.length > 0 ? (
-  //               <div className="table-responsive">
-  //                 <table className="table table-sm">
-  //                   <thead>
-  //                     <tr>
-  //                       <th>Día</th>
-  //                       <th>Tipo</th>
-  //                       <th>Hora</th>
-  //                       <th>Descripción</th>
-  //                       <th>Calorías</th>
-  //                       <th>Macronutrientes</th>
-  //                       <th>Notas</th>
-  //                       </tr>
-  //                     </thead>
-  //                     <tbody>
-  //                       {weekPlan.meals.map((meal, mealIndex) => (
-  //                         <tr key={mealIndex}>
-  //                           <td>
-  //                             <span className="badge bg-light text-dark">
-  //                               {meal.day}
-  //                             </span>
-  //                           </td>
-  //                           <td>
-  //                             <span className="badge bg-primary">
-  //                               {getMealTypeLabel(meal.meal_type)}
-  //                             </span>
-  //                           </td>
-  //                           <td>
-  //                             <small className="text-muted">{meal.meal_time || '-'}</small>
-  //                           </td>
-  //                           <td>
-  //                             {meal.meal_description ? (
-  //                               <div className="small">
-  //                               {meal.meal_description}
-  //                             </div>
-  //                           ) : meal.foods && meal.foods.length > 0 ? (
-  //                             <div>
-  //                               {meal.foods.map((food, foodIndex) => (
-  //                                 <div key={foodIndex} className="small">
-  //                                 {food.food_name} ({food.quantity_grams}g)
-  //                               </div>
-  //                             ))}
-  //                           </div>
-  //                         ) : (
-  //                           <span className="text-muted">Sin descripción</span>
-  //                         )}
-  //                       </td>
-  //                       <td>
-  //                         <span className="fw-bold text-primary">
-  //                           {meal.total_calories || (meal.foods ? meal.foods.reduce((total, food) => total + food.calories, 0) : 0)} kcal
-  //                         </span>
-  //                       </td>
-  //                       <td>
-  //                         <div className="small">
-  //                         <div>P: {meal.total_protein || 0}g</div>
-  //                         <div>C: {meal.total_carbs || 0}g</div>
-  //                         <div>G: {meal.total_fats || 0}g</div>
-  //                       </div>
-  //                     </td>
-  //                     <td>
-  //                       <small className="text-muted">{meal.notes || '-'}</small>
-  //                     </td>
-  //                   </tr>
-  //                 ))}
-  //               </tbody>
-  //             </table>
-  //           </div>
-  //         ) : (
-  //           <div className="text-center py-3">
-  //             <p className="text-muted">No hay comidas planificadas para este plan</p>
-  //           </div>
-  //         )}
-              
-  //         {weekPlan.notes && (
-  //           <div className="mt-3">
-  //           <strong>Notas de la semana:</strong>
-  //           <p className="text-muted mb-0">{weekPlan.notes}</p>
-  //         </div>
-  //       )}
-  //     </div>
-  //   </div>
-  // ))}
-  //   </div>
-  // );
-  // };
+              {scheduleData.exerciseTime && (
+                <div className="row mb-3">
+                  <div className="col-6">
+                    <label className="form-label small">Hora de Ejercicio</label>
+                    <div className="fw-bold text-success">{scheduleData.exerciseTime}</div>
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label small">Duración</label>
+                    <div className="fw-bold text-success">{scheduleData.exerciseDuration || 0} min</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
-  // Función comentada ya que se eliminó la pestaña de comidas
-  // const renderPeriodMeals = () => {
-  //   if (!plan.period_plans || plan.period_plans.length === 0) {
-  //     return (
-  //       <div className="text-center py-4">
-  //         <p className="text-muted">No hay períodos planificados para este plan</p>
-  //       </div>
-  //     );
-  //   }
+        {/* Horarios de comidas detallados */}
+        <div className="col-md-6">
+          <div className="card mb-4">
+            <div className="card-header">
+              <h6 className="mb-0">
+                <Settings size={16} className="me-2" />
+                Horarios de Comidas
+              </h6>
+            </div>
+            <div className="card-body">
+              {scheduleData.mealsSchedule ? (
+                // Formato nuevo (mealSchedules)
+                <div className="d-flex flex-column gap-3">
+                  {scheduleData.mealsSchedule.map((meal: any, index: number) => (
+                    <div key={index} className="border rounded p-3">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <div className="d-flex align-items-center">
+                          <span className="me-2" style={{ fontSize: '20px' }}>{meal.icon}</span>
+                          <div>
+                            <div className="fw-bold">{meal.mealName}</div>
+                            <div className={`badge ${meal.isFlexible ? 'bg-warning' : 'bg-success'} small`}>
+                              {meal.isFlexible ? 'Flexible' : 'Fijo'}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-end">
+                          <div className="fw-bold">{meal.scheduledTime}</div>
+                          <small className="text-muted">{meal.duration} min</small>
+                        </div>
+                      </div>
+                      <div className="row">
+                        <div className="col-6">
+                          <small className="text-muted">Calorías:</small>
+                          <div className="fw-medium">{meal.calories} kcal</div>
+                        </div>
+                        <div className="col-6">
+                          <small className="text-muted">Notas:</small>
+                          <div className="fw-medium">{meal.notes || 'Sin notas'}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                // Formato antiguo (meal_timing)
+                <div className="d-flex flex-column gap-2">
+                  <div className="d-flex justify-content-between">
+                    <span>Desayuno</span>
+                    <span className="fw-medium">{scheduleData.breakfast || 'N/A'}</span>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span>Almuerzo</span>
+                    <span className="fw-medium">{scheduleData.lunch || 'N/A'}</span>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span>Cena</span>
+                    <span className="fw-medium">{scheduleData.dinner || 'N/A'}</span>
+                  </div>
+                  {scheduleData.morning_snack && (
+                    <div className="d-flex justify-content-between">
+                      <span>Merienda Mañana</span>
+                      <span className="fw-medium">{scheduleData.morning_snack}</span>
+                    </div>
+                  )}
+                  {scheduleData.afternoon_snack && (
+                    <div className="d-flex justify-content-between">
+                      <span>Merienda Tarde</span>
+                      <span className="fw-medium">{scheduleData.afternoon_snack}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
-  //   return plan.period_plans.map((periodPlan: any, periodIndex: number) => (
-  //     <div key={periodIndex} className="card mb-3">
-  //       <div className="card-header">
-  //         <h6 className="mb-0">
-  //           <Calendar size={16} className="me-2" />
-  //           {periodPlan.period_name || `Período ${periodPlan.period_number}`}
-  //           <small className="text-muted ms-2">
-  //             ({formatDate(periodPlan.start_date)} - {formatDate(periodPlan.end_date)})
-  //           </small>
-
+        {/* Recordatorios de hidratación */}
+        {scheduleData.waterReminders && scheduleData.waterReminders.length > 0 && (
+          <div className="col-12">
+            <div className="card">
+              <div className="card-header">
+                <h6 className="mb-0">
+                  <Heart size={16} className="me-2" />
+                  Recordatorios de Hidratación
+                </h6>
+              </div>
+              <div className="card-body">
+                <div className="row">
+                  {scheduleData.waterReminders.map((time: string, index: number) => (
+                    <div key={index} className="col-md-3 mb-2">
+                      <div className="text-center p-2 bg-light rounded">
+                        <div className="fw-bold text-primary">💧</div>
+                        <small className="text-muted">{time}</small>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderPathologicalRestrictions = () => {
     if (!plan.pathological_restrictions) {
@@ -1001,22 +964,11 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
               {renderFlexibilitySettings()}
             </div>
           )}
-          {activeTab === 'schedule' && (
-            <div>
-              {renderMealConfiguration()}
-            </div>
-          )}
+          {activeTab === 'schedule' && renderDetailedSchedule()}
           {activeTab === 'restrictions' && renderPathologicalRestrictions()}
         </div>
       </div>
 
-      {/* Modal del visualizador de comidas */}
-      {showMealPlannerViewer && (
-        <MealPlannerViewer
-          dietPlanId={plan.id}
-          onClose={() => setShowMealPlannerViewer(false)}
-        />
-      )}
     </div>
   );
 };

@@ -52,6 +52,16 @@ export class Appointment {
     @Column({ type: 'varchar', length: 500, nullable: true })
     meeting_link: string | null; // Enlace a videollamada (Zoom, Meet, etc.)
 
+    // --- CAMPOS PARA GOOGLE CALENDAR ---
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    google_calendar_event_id: string | null; // ID del evento en Google Calendar
+
+    @Column({ type: 'boolean', default: false })
+    synced_to_google_calendar: boolean; // Indica si la cita está sincronizada con Google Calendar
+
+    @Column({ type: 'timestamptz', nullable: true })
+    last_sync_to_google: Date | null; // Timestamp de la última sincronización con Google Calendar
+
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at!: Date;
 

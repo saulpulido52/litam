@@ -352,7 +352,12 @@ const AppointmentsPage: React.FC = () => {
                   <div className="row">
                     <div className="col-md-6 mb-3">
                       <label className="form-label" htmlFor="appointment-patient">Paciente</label>
-                      <select className="form-select" id="appointment-patient" name="appointment-patient">
+                      <select 
+                        className="form-select" 
+                        id="appointment-patient" 
+                        name="appointment-patient"
+                        aria-label="Seleccionar paciente para la cita"
+                      >
                         <option value="">Seleccionar paciente...</option>
                         <option value="1">María González</option>
                         <option value="2">Carlos Ruiz</option>
@@ -361,7 +366,12 @@ const AppointmentsPage: React.FC = () => {
                     </div>
                     <div className="col-md-6 mb-3">
                       <label className="form-label" htmlFor="appointment-type">Tipo de cita</label>
-                      <select className="form-select" id="appointment-type" name="appointment-type">
+                      <select 
+                        className="form-select" 
+                        id="appointment-type" 
+                        name="appointment-type"
+                        aria-label="Seleccionar tipo de cita"
+                      >
                         <option value="">Seleccionar tipo...</option>
                         <option value="consultation">Consulta inicial</option>
                         <option value="follow-up">Seguimiento</option>
@@ -379,6 +389,8 @@ const AppointmentsPage: React.FC = () => {
                           className="form-control" 
                           id="appointment-date"
                           name="appointment-date"
+                          autoComplete="off"
+                          aria-label="Fecha de la cita"
                         />
                       </div>
                     </div>
@@ -390,6 +402,8 @@ const AppointmentsPage: React.FC = () => {
                           className="form-control" 
                           id="appointment-time"
                           name="appointment-time"
+                          autoComplete="off"
+                          aria-label="Hora de la cita"
                         />
                       </div>
                     </div>
@@ -404,6 +418,7 @@ const AppointmentsPage: React.FC = () => {
                           name="location" 
                           id="presencial" 
                           value="presencial"
+                          aria-label="Cita presencial"
                         />
                         <label className="form-check-label" htmlFor="presencial">
                           Presencial
@@ -416,6 +431,7 @@ const AppointmentsPage: React.FC = () => {
                           name="location" 
                           id="virtual" 
                           value="virtual"
+                          aria-label="Cita virtual"
                         />
                         <label className="form-check-label" htmlFor="virtual">
                           Virtual
@@ -431,6 +447,8 @@ const AppointmentsPage: React.FC = () => {
                       name="appointment-notes"
                       rows={3} 
                       placeholder="Observaciones sobre la cita..."
+                      autoComplete="off"
+                      aria-label="Notas adicionales de la cita"
                     />
                   </div>
                 </form>

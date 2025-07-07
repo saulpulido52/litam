@@ -351,6 +351,54 @@ export class UpdateDietPlanDto {
     @ValidateNested({ each: true })
     @Type(() => MealDto)
     meals?: MealDto[];
+
+    // === NUEVOS CAMPOS PARA COMPLETAR TABS ===
+    @IsOptional()
+    mealSchedules?: any; // Horarios de comidas del NutritionalScheduleTab
+
+    @IsOptional()
+    mealTiming?: any; // Formato antiguo de horarios
+
+    @IsOptional()
+    mealFrequency?: {
+        breakfast?: boolean;
+        morning_snack?: boolean;
+        lunch?: boolean;
+        afternoon_snack?: boolean;
+        dinner?: boolean;
+        evening_snack?: boolean;
+    };
+
+    @IsOptional()
+    nutritionalGoals?: {
+        water_intake_liters?: number;
+        fiber_target_grams?: number;
+        calorie_distribution?: string;
+        meals_per_day?: number;
+    };
+
+    @IsOptional()
+    flexibilitySettings?: {
+        allow_meal_swapping?: boolean;
+        allow_portion_adjustment?: boolean;
+        allow_food_substitution?: boolean;
+        cheat_days_per_week?: number;
+        free_meals_per_week?: number;
+    };
+
+    @IsOptional()
+    pathologicalRestrictions?: {
+        // Acepta ambos formatos: camelCase y snake_case
+        medicalConditions?: any[];
+        medical_conditions?: any[];
+        allergies?: any[];
+        intolerances?: any[];
+        medications?: any[];
+        specialConsiderations?: any[];
+        special_considerations?: any[];
+        emergencyContacts?: any[];
+        emergency_contacts?: any[];
+    };
 }
 
 // DTO para solicitar generación de dieta por IA

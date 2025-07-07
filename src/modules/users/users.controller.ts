@@ -2,6 +2,40 @@
 import { Request, Response, NextFunction } from 'express';
 import userService from '../../modules/users/users.service'; // Ruta corregida
 import { AppError } from '../../utils/app.error';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
+// Configuración de multer para subida de archivos
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = path.join(__dirname, '../../../uploads/profile-images');
+        // Crear directorio si no existe
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `profile-${req.user?.id}-${uniqueSuffix}${path.extname(file.originalname)}`);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB máximo
+    },
+    fileFilter: (req, file, cb) => {
+        // Verificar tipo de archivo
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new AppError('Solo se permiten archivos de imagen.', 400));
+        }
+    }
+});
 
 class UserController {
     public async getMyProfile(req: Request, res: Response, next: NextFunction) {
@@ -40,6 +74,55 @@ class UserController {
         }
     }
 
+    public async uploadProfileImage(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user) {
+                return next(new AppError('Usuario no autenticado en la solicitud.', 401));
+            }
+
+            // Usar multer como middleware
+            upload.single('profile_image')(req, res, async (err) => {
+                if (err) {
+                    if (err instanceof multer.MulterError) {
+                        if (err.code === 'LIMIT_FILE_SIZE') {
+                            return next(new AppError('El archivo es demasiado grande. Máximo 5MB.', 400));
+                        }
+                    }
+                    return next(new AppError(err.message, 400));
+                }
+
+                if (!req.file) {
+                    return next(new AppError('No se proporcionó ningún archivo.', 400));
+                }
+
+                try {
+                    // Actualizar el perfil del usuario con la nueva imagen
+                    const imageUrl = `/uploads/profile-images/${req.file.filename}`;
+                    const updatedUser = await userService.updateProfileImage(req.user!.id, imageUrl);
+
+                    res.status(200).json({
+                        status: 'success',
+                        data: {
+                            profile_image: imageUrl,
+                            user: updatedUser
+                        },
+                    });
+                } catch (error: any) {
+                    // Si hay error, eliminar el archivo subido
+                    if (req.file && fs.existsSync(req.file.path)) {
+                        fs.unlinkSync(req.file.path);
+                    }
+                    throw error;
+                }
+            });
+        } catch (error: any) {
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al subir la imagen de perfil.', 500));
+        }
+    }
+
     public async updatePassword(req: Request, res: Response, next: NextFunction) {
         try {
             if (!req.user) {
@@ -74,7 +157,7 @@ class UserController {
             const stats = await userService.getProfileStats(req.user.id);
             res.status(200).json({
                 status: 'success',
-                data: { stats },
+                data: stats,
             });
         } catch (error: any) {
             if (error instanceof AppError) {
