@@ -8,6 +8,7 @@ import {
     ManageAvailabilityDto,
     SearchAvailabilityDto,
     AvailabilitySlotDto,
+    NutritionistScheduleAppointmentDto,
 } from '../../modules/appointments/appointment.dto';
 import { RoleName } from '../../database/entities/role.entity';
 import { AppointmentStatus } from '../../database/entities/appointment.entity';
@@ -138,6 +139,26 @@ class AppointmentController {
                 return next(error);
             }
             next(new AppError('Error al actualizar el estado de la cita.', 500));
+        }
+    }
+
+    public async scheduleAppointmentForPatient(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user || req.user.role.name !== RoleName.NUTRITIONIST) {
+                return next(new AppError('Acceso denegado. Solo los nutriólogos pueden crear citas para sus pacientes.', 403));
+            }
+            const appointment = await appointmentService.scheduleAppointmentForPatient(req.user.id, req.body as NutritionistScheduleAppointmentDto);
+            res.status(201).json({
+                status: 'success',
+                message: 'Cita agendada exitosamente.',
+                data: { appointment },
+            });
+        } catch (error: any) {
+            console.error('Error en AppointmentController.scheduleAppointmentForPatient:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al agendar la cita.', 500));
         }
     }
 }

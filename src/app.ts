@@ -80,17 +80,24 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // Compresión para mejorar rendimiento con múltiples usuarios
 app.use(compression());
 
-// Rate limiting general - 100 requests por 15 minutos por IP
+// Rate limiting general - MÁS PERMISIVO EN DESARROLLO
 const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100, // máximo 100 requests por ventana de tiempo
+    windowMs: process.env.NODE_ENV === 'production' ? 15 * 60 * 1000 : 5 * 60 * 1000, // 15 min en prod, 5 min en dev
+    max: process.env.NODE_ENV === 'production' ? 100 : 1000, // 100 en producción, 1000 en desarrollo
     message: {
         error: 'Demasiadas peticiones desde esta IP, por favor intenta de nuevo en 15 minutos.',
         code: 'RATE_LIMIT_EXCEEDED'
     },
     standardHeaders: true,
     legacyHeaders: false,
-    // Headers personalizados para accesibilidad
+    // Saltar rate limiting para localhost en desarrollo
+    skip: (req: Request) => {
+        if (process.env.NODE_ENV !== 'production') {
+            const ip = req.ip || req.connection.remoteAddress || '';
+            return ip.includes('127.0.0.1') || ip.includes('::1') || ip.includes('localhost');
+        }
+        return false;
+    },
     handler: (req: Request, res: Response) => {
         res.status(429).json({
             status: 'error',

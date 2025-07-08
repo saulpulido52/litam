@@ -11,6 +11,7 @@ import {
     AvailabilitySlotDto,
     ManageAvailabilityDto,
     SearchAvailabilityDto,
+    NutritionistScheduleAppointmentDto,
 } from '../../modules/appointments/appointment.dto';
 import { AppError } from '../../utils/app.error';
 import { RoleName } from '../../database/entities/role.entity';
@@ -45,16 +46,16 @@ class AppointmentService {
         const newAvailabilities: NutritionistAvailability[] = [];
         for (const slotDto of manageDto.slots) {
             // Validar que la hora de fin sea mayor que la de inicio
-            if (slotDto.endTimeMinutes <= slotDto.startTimeMinutes) {
-                throw new AppError(`La hora de fin (${slotDto.endTimeMinutes} min) debe ser mayor que la hora de inicio (${slotDto.startTimeMinutes} min) para el ${slotDto.dayOfWeek}.`, 400);
+            if (slotDto.end_time_minutes <= slotDto.start_time_minutes) {
+                throw new AppError(`La hora de fin (${slotDto.end_time_minutes} min) debe ser mayor que la hora de inicio (${slotDto.start_time_minutes} min) para el ${slotDto.day_of_week}.`, 400);
             }
 
             const newSlot = this.availabilityRepository.create({
                 nutritionist: nutritionist,
-                day_of_week: slotDto.dayOfWeek,
-                start_time_minutes: slotDto.startTimeMinutes,
-                end_time_minutes: slotDto.endTimeMinutes,
-                is_active: slotDto.isActive !== undefined ? slotDto.isActive : true, // Por defecto activo
+                day_of_week: slotDto.day_of_week,
+                start_time_minutes: slotDto.start_time_minutes,
+                end_time_minutes: slotDto.end_time_minutes,
+                is_active: slotDto.is_active !== undefined ? slotDto.is_active : true, // Por defecto activo
             });
             newAvailabilities.push(newSlot);
         }
@@ -169,6 +170,69 @@ class AppointmentService {
         // 2. Convertir startTime y endTime a minutos del día.
         // 3. Comprobar si startTime_minutes y endTime_minutes caen dentro de un slot disponible.
         // Esto puede ser complejo y se podría añadir en una fase posterior o refactorizar aquí.
+
+        const newAppointment = this.appointmentRepository.create({
+            patient: patient,
+            nutritionist: nutritionist,
+            start_time: startTime,
+            end_time: endTime,
+            notes: scheduleDto.notes,
+            meeting_link: scheduleDto.meetingLink,
+            status: AppointmentStatus.SCHEDULED,
+        });
+
+        await this.appointmentRepository.save(newAppointment);
+        return newAppointment;
+    }
+
+    public async scheduleAppointmentForPatient(nutritionistId: string, scheduleDto: NutritionistScheduleAppointmentDto) {
+        const nutritionist = await this.userRepository.findOne({
+            where: { id: nutritionistId, role: { name: RoleName.NUTRITIONIST } },
+        });
+        if (!nutritionist) {
+            throw new AppError('Nutriólogo no encontrado o no autorizado.', 403);
+        }
+
+        const patient = await this.userRepository.findOne({
+            where: { id: scheduleDto.patientId, role: { name: RoleName.PATIENT } },
+        });
+        if (!patient) {
+            throw new AppError('Paciente no encontrado.', 404);
+        }
+
+        // Verificar relación activa entre nutriólogo y paciente
+        const activeRelation = await this.relationRepository.findOne({
+            where: {
+                patient: { id: patient.id },
+                nutritionist: { id: nutritionist.id },
+                status: RelationshipStatus.ACTIVE,
+            },
+        });
+        if (!activeRelation) {
+            throw new AppError('El paciente no está vinculado activamente con este nutriólogo. No se pueden agendar citas.', 403);
+        }
+
+        const startTime = new Date(scheduleDto.startTime);
+        const endTime = new Date(scheduleDto.endTime);
+
+        if (startTime >= endTime) {
+            throw new AppError('La hora de inicio de la cita debe ser anterior a la hora de fin.', 400);
+        }
+        if (startTime < new Date()) {
+            throw new AppError('No se pueden agendar citas en el pasado.', 400);
+        }
+
+        // Verificar si hay citas superpuestas para el nutriólogo
+        const overlappingQuery = await this.appointmentRepository
+            .createQueryBuilder('appointment')
+            .where('appointment.nutritionist_user_id = :nutritionistId', { nutritionistId: nutritionist.id })
+            .andWhere('appointment.status = :status', { status: AppointmentStatus.SCHEDULED })
+            .andWhere('(:startTime < appointment.end_time AND :endTime > appointment.start_time)', { startTime, endTime })
+            .getOne();
+            
+        if (overlappingQuery) {
+            throw new AppError('Ya tienes una cita agendada que se superpone con esta franja horaria.', 409);
+        }
 
         const newAppointment = this.appointmentRepository.create({
             patient: patient,

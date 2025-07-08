@@ -13,13 +13,13 @@ import { User } from '../../database/entities/user.entity';
 
 // Enum para los días de la semana
 export enum DayOfWeek {
-    SUNDAY = 'sunday',
-    MONDAY = 'monday',
-    TUESDAY = 'tuesday',
-    WEDNESDAY = 'wednesday',
-    THURSDAY = 'thursday',
-    FRIDAY = 'friday',
-    SATURDAY = 'saturday',
+    SUNDAY = 'SUNDAY',
+    MONDAY = 'MONDAY',
+    TUESDAY = 'TUESDAY',
+    WEDNESDAY = 'WEDNESDAY',
+    THURSDAY = 'THURSDAY',
+    FRIDAY = 'FRIDAY',
+    SATURDAY = 'SATURDAY',
 }
 
 @Entity('nutritionist_availabilities')

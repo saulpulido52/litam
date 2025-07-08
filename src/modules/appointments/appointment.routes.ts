@@ -7,7 +7,8 @@ import {
     ScheduleAppointmentDto,
     UpdateAppointmentStatusDto,
     ManageAvailabilityDto,
-    SearchAvailabilityDto, // Asegúrate de importar esto también si lo usas en este archivo
+    SearchAvailabilityDto,
+    NutritionistScheduleAppointmentDto,
 } from '../../modules/appointments/appointment.dto';
 import { RoleName } from '../../database/entities/role.entity';
 import { AppointmentStatus } from '../../database/entities/appointment.entity'; // Asegúrate de importar esto
@@ -42,6 +43,14 @@ router.post(
     authorize(RoleName.PATIENT),
     validateMiddleware(ScheduleAppointmentDto),
     appointmentController.scheduleAppointment
+);
+
+// Agendar una cita para un paciente (Solo Nutriólogos)
+router.post(
+    '/schedule-for-patient',
+    authorize(RoleName.NUTRITIONIST),
+    validateMiddleware(NutritionistScheduleAppointmentDto),
+    appointmentController.scheduleAppointmentForPatient
 );
 
 // Obtener mis citas (Pacientes y Nutriólogos)

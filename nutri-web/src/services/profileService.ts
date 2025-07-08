@@ -254,10 +254,12 @@ class ProfileService {
 
   async uploadProfileImage(file: File): Promise<{ profile_image: string }> {
     try {
-      const response = await api.uploadFile<ApiResponse<{ profile_image: string }>>('/users/me/profile-image', file, 'profile_image');
+      const response = await api.uploadFile<{ profile_image: string; user: any }>('/users/me/profile-image', file, 'profile_image');
       
-      if (response.data?.status === 'success' && response.data?.data) {
-        return response.data.data;
+      console.log('📤 Upload response:', response);
+      
+      if (response.status === 'success' && response.data) {
+        return { profile_image: response.data.profile_image };
       } else {
         throw new Error('Estructura de respuesta inválida del servidor');
       }
