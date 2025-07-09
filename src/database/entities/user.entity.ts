@@ -26,6 +26,8 @@ import { Recipe } from '../../database/entities/recipe.entity';
 import { Conversation } from '../../database/entities/conversation.entity';
 import { Message } from '../../database/entities/message.entity';
 import { ClinicalRecord } from '../../database/entities/clinical_record.entity'; // <--- NUEVO
+import { NutritionistTier } from '../../database/entities/nutritionist_tier.entity';
+import { PatientTier } from '../../database/entities/patient_tier.entity';
 import bcrypt from 'bcrypt';
 
 export enum UserRegistrationType {
@@ -195,6 +197,15 @@ export class User {
 
     @OneToMany(() => ClinicalRecord, (record) => record.nutritionist)
     nutritionist_created_clinical_records!: ClinicalRecord[];
+
+    // --- RELACIONES PARA TIERS DE MONETIZACIÓN ---
+    @ManyToOne(() => NutritionistTier, (tier) => tier.nutritionists, { nullable: true })
+    @JoinColumn({ name: 'nutritionist_tier_id' })
+    nutritionist_tier?: NutritionistTier;
+
+    @ManyToOne(() => PatientTier, (tier) => tier.patients, { nullable: true })
+    @JoinColumn({ name: 'patient_tier_id' })
+    patient_tier?: PatientTier;
 
     isPasswordChangedRecently(decodedIat: number): boolean {
         return !!this.passwordChangedAt && this.passwordChangedAt.getTime() / 1000 > decodedIat;

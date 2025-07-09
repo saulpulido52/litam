@@ -15,46 +15,63 @@ export const useAuth = (): UseAuthReturn => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize auth state
+  // Initialize auth state - CORREGIDO PARA EVITAR BUCLES
   useEffect(() => {
+    let isMounted = true;
+    
     const initializeAuth = async () => {
       console.log('🔐 useAuth: Initializing authentication...');
       try {
         const isAuth = authService.isAuthenticated();
         console.log('🔐 useAuth: isAuthenticated =', isAuth);
         
-        if (isAuth) {
+        if (isAuth && isMounted) {
           const storedUser = authService.getCurrentUserFromStorage();
           console.log('🔐 useAuth: storedUser =', storedUser ? 'Found' : 'Not found');
           
-          if (storedUser) {
+          if (storedUser && isMounted) {
             setUser(storedUser);
             console.log('🔐 useAuth: User set from storage');
-          } else {
+          } else if (isMounted) {
             // Try to fetch current user from API
             try {
               console.log('🔐 useAuth: Fetching current user from API...');
               const currentUser = await authService.getCurrentUser();
-              setUser(currentUser);
-              console.log('🔐 useAuth: User fetched from API');
+              if (isMounted) {
+                setUser(currentUser);
+                console.log('🔐 useAuth: User fetched from API');
+              }
             } catch (error) {
               console.error('🔐 useAuth: Failed to fetch current user:', error);
-              authService.logout();
+              if (isMounted) {
+                authService.logout();
+                setUser(null);
+              }
             }
           }
-        } else {
+        } else if (isMounted) {
           console.log('🔐 useAuth: Not authenticated, no user set');
+          setUser(null);
         }
       } catch (error) {
         console.error('🔐 useAuth: Auth initialization error:', error);
+        if (isMounted) {
+          setUser(null);
+        }
       } finally {
-        setIsLoading(false);
-        console.log('🔐 useAuth: Initialization complete');
+        if (isMounted) {
+          setIsLoading(false);
+          console.log('🔐 useAuth: Initialization complete');
+        }
       }
     };
 
     initializeAuth();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Sin dependencias para evitar re-ejecución
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     setIsLoading(true);

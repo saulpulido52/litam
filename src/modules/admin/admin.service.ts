@@ -477,6 +477,70 @@ class AdminService {
         }
     }
 
+    /**
+     * Obtiene el query builder para las eliminaciones con filtros
+     */
+    public getEliminaciones(
+        fechaDesde?: string,
+        fechaHasta?: string,
+        nutriologoId?: string,
+        pacienteId?: string,
+        page: number = 1,
+        limit: number = 50
+    ) {
+        const queryBuilder = this.relationRepository
+            .createQueryBuilder('relation')
+            .leftJoinAndSelect('relation.patient', 'patient')
+            .leftJoinAndSelect('relation.nutritionist', 'nutritionist')
+            .where('relation.status = :status', { status: RelationshipStatus.INACTIVE })
+            .orderBy('relation.ended_at', 'DESC');
+
+        // Filtros opcionales
+        if (fechaDesde) {
+            queryBuilder.andWhere('relation.ended_at >= :fechaDesde', { fechaDesde });
+        }
+        if (fechaHasta) {
+            queryBuilder.andWhere('relation.ended_at <= :fechaHasta', { fechaHasta });
+        }
+        if (nutriologoId) {
+            queryBuilder.andWhere('nutritionist.id = :nutriologoId', { nutriologoId });
+        }
+        if (pacienteId) {
+            queryBuilder.andWhere('patient.id = :pacienteId', { pacienteId });
+        }
+
+        // Paginación
+        const skip = (page - 1) * limit;
+        queryBuilder.skip(skip).take(limit);
+
+        return queryBuilder;
+    }
+
+    /**
+     * Obtiene estadísticas de eliminaciones
+     */
+    public async getEliminacionesStats() {
+        const stats = await this.relationRepository
+            .createQueryBuilder('relation')
+            .where('relation.status = :status', { status: RelationshipStatus.INACTIVE })
+            .select([
+                'COUNT(DISTINCT relation.patient) as pacientesUnicos',
+                'COUNT(DISTINCT relation.nutritionist) as nutriologosInvolucrados',
+                'COUNT(*) as totalEliminaciones',
+                'COUNT(CASE WHEN relation.elimination_reason IS NOT NULL AND relation.elimination_reason != \'\' THEN 1 END) as conMotivo',
+                'COUNT(CASE WHEN relation.elimination_reason IS NULL OR relation.elimination_reason = \'\' THEN 1 END) as sinMotivo'
+            ])
+            .getRawOne();
+
+        return {
+            pacientesUnicos: stats.pacientesUnicos || 0,
+            nutriologosInvolucrados: stats.nutriologosInvolucrados || 0,
+            totalEliminaciones: stats.totalEliminaciones || 0,
+            conMotivo: stats.conMotivo || 0,
+            sinMotivo: stats.sinMotivo || 0
+        };
+    }
+
     public async getSystemHealth() {
         try {
             // Métricas básicas del sistema

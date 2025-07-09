@@ -46,4 +46,8 @@ router.get('/system/health', adminController.getSystemHealth);
 router.get('/system/integrity/diagnosis', adminController.diagnosisDataIntegrity);
 router.post('/system/integrity/repair', adminController.repairDataIntegrity);
 
+// --- AUDITORÍA DE ELIMINACIONES ---
+router.get('/eliminaciones', adminController.getEliminaciones);
+router.get('/eliminaciones/export', adminController.exportEliminaciones);
+
 export default router;

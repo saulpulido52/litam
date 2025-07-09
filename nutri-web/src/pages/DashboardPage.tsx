@@ -41,15 +41,15 @@ import '../styles/dashboard-modern.css';
 const DashboardPage: React.FC = () => {
   console.log('🔍 [DashboardPage] Componente renderizado');
 
-  const { user } = useAuth();
+  // HOOKS AL INICIO, SIEMPRE
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
   const { stats: dashboardData, loading: dashboardLoading, error: dashboardError, refreshStats: refreshDashboard } = useDashboard();
   const { patients, loading: patientsLoading } = usePatients();
-  const navigate = useNavigate();
-
   const [showDetailedStats, setShowDetailedStats] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
-  // Memoizar alertas
+  // Memoizados y callbacks
   const alerts = useMemo(() => {
     const alertsList: Array<{
       type: 'info' | 'warning' | 'success' | 'danger';
@@ -58,8 +58,6 @@ const DashboardPage: React.FC = () => {
       action?: string;
       onAction?: () => void;
     }> = [];
-
-    // Alertas de pacientes
     if (patients.length === 0 && !patientsLoading) {
       alertsList.push({
         type: 'info',
@@ -69,8 +67,6 @@ const DashboardPage: React.FC = () => {
         onAction: () => navigate('/patients')
       });
     }
-
-    // Alertas de citas
     if ((dashboardData?.total_appointments || 0) === 0) {
       alertsList.push({
         type: 'warning',
@@ -80,8 +76,6 @@ const DashboardPage: React.FC = () => {
         onAction: () => navigate('/calendar')
       });
     }
-
-    // Alertas de planes nutricionales
     if ((dashboardData?.total_diet_plans || 0) === 0) {
       alertsList.push({
         type: 'info',
@@ -91,11 +85,9 @@ const DashboardPage: React.FC = () => {
         onAction: () => navigate('/diet-plans')
       });
     }
-
     return alertsList;
   }, [patients.length, patientsLoading, dashboardData, navigate]);
 
-  // Memoizar métricas principales
   const mainMetrics = useMemo(() => [
     {
       title: 'Pacientes',
@@ -135,7 +127,6 @@ const DashboardPage: React.FC = () => {
     }
   ], [patients.length, patientsLoading, dashboardData, dashboardLoading]);
 
-  // Memoizar estadísticas de progreso
   const progressStats = useMemo(() => [
     {
       title: 'Pacientes Registrados',
@@ -160,11 +151,8 @@ const DashboardPage: React.FC = () => {
     }
   ], [patients.length, dashboardData]);
 
-  // Memoizar actividades recientes
   const recentActivities = useMemo(() => {
     const activities = [];
-
-    // Actividades de pacientes
     if (patients.length > 0) {
       activities.push({
         type: 'patient',
@@ -172,8 +160,6 @@ const DashboardPage: React.FC = () => {
         time: 'Hace 2 horas'
       });
     }
-
-    // Actividades de citas
     if ((dashboardData?.total_appointments || 0) > 0) {
       activities.push({
         type: 'appointment',
@@ -181,8 +167,6 @@ const DashboardPage: React.FC = () => {
         time: 'Hace 1 hora'
       });
     }
-
-    // Actividades de planes nutricionales
     if ((dashboardData?.total_diet_plans || 0) > 0) {
       activities.push({
         type: 'clinical_record',
@@ -190,14 +174,11 @@ const DashboardPage: React.FC = () => {
         time: 'Hace 3 horas'
       });
     }
-
-    // Actividades de progreso
     activities.push({
       type: 'progress',
       description: 'Progreso de paciente registrado',
       time: 'Hace 4 horas'
     });
-
     return activities;
   }, [patients, dashboardData]);
 
@@ -213,6 +194,51 @@ const DashboardPage: React.FC = () => {
   const handleViewAllActivities = useCallback(() => {
     navigate('/notifications');
   }, [navigate]);
+
+  // REDIRECCIÓN INMEDIATA PARA ADMIN
+  useEffect(() => {
+    if (!isLoading && user?.role?.name === 'admin') {
+      console.log('🔍 [DashboardPage] Usuario es admin, redirigiendo a /admin');
+      navigate('/admin', { replace: true });
+      return;
+    }
+  }, [isLoading, user, navigate]);
+
+  // NO RENDERIZAR NADA SI ESTÁ CARGANDO
+  if (isLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-100">
+        <div className="text-center">
+          <Spinner animation="border" variant="primary" />
+          <p className="mt-3">Cargando dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-100">
+        <div className="text-center">
+          <Alert variant="warning">
+            No hay usuario autenticado. Redirigiendo al login...
+          </Alert>
+        </div>
+      </div>
+    );
+  }
+
+  // SI ES ADMIN, NO RENDERIZAR NADA (ya debería haber sido redirigido)
+  if (user.role?.name === 'admin') {
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-100">
+        <div className="text-center">
+          <Spinner animation="border" variant="primary" />
+          <p className="mt-3">Redirigiendo al panel de administración...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (dashboardLoading) {
     return (

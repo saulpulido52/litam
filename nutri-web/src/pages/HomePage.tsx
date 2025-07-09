@@ -174,7 +174,7 @@ const HomePage: React.FC = () => {
                       👨‍⚕️ Panel Nutriólogo
                     </Button>
                   </Link>
-                  <Link to="/admin">
+                  <Link to="/admin/login">
                     <Button 
                       variant="outline-warning" 
                       size="lg" 

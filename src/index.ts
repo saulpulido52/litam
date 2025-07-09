@@ -4,6 +4,7 @@ import { AppDataSource } from './database/data-source';
 import { Role, RoleName } from './database/entities/role.entity';
 import { User } from './database/entities/user.entity';
 import { NutritionistProfile } from './database/entities/nutritionist_profile.entity';
+import monetizationService from './modules/monetization/monetization.service';
 import bcrypt from 'bcrypt';
 import http from 'http'; // Importar módulo http de Node.js
 import { Server as SocketIOServer } from 'socket.io'; // Importar Server de socket.io
@@ -334,7 +335,11 @@ async function initializeDatabase() {
             console.log('ℹ️  Nutriólogo por defecto ya existe');
         }
 
-        console.log('Base de datos inicializada, roles verificados y nutriólogo por defecto listo');
+        // 3. Inicializar tiers de monetización por defecto
+        await monetizationService.initializeDefaultTiers();
+        console.log('💰 Tiers de monetización inicializados');
+
+        console.log('Base de datos inicializada, roles verificados, nutriólogo por defecto y tiers de monetización listos');
     } catch (err) {
         console.error('Error during Data Source initialization or seeding:', err);
         process.exit(1);

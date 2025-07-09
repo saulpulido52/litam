@@ -2,26 +2,28 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import dotenv from 'dotenv';
-import { User } from '../database/entities/user.entity';
-import { Role } from '../database/entities/role.entity';
-import { PatientProfile } from '../database/entities/patient_profile.entity';
-import { NutritionistProfile } from '../database/entities/nutritionist_profile.entity';
-import { PatientNutritionistRelation } from '../database/entities/patient_nutritionist_relation.entity';
-import { Food } from '../database/entities/food.entity';
-import { MealItem } from '../database/entities/meal_item.entity';
-import { Meal } from '../database/entities/meal.entity';
-import { DietPlan } from '../database/entities/diet_plan.entity';
-import { Appointment } from '../database/entities/appointment.entity';
-import { NutritionistAvailability } from '../database/entities/nutritionist_availability.entity';
-import { PatientProgressLog } from '../database/entities/patient_progress_log.entity';
-import { SubscriptionPlan } from '../database/entities/subscription_plan.entity';
-import { UserSubscription } from '../database/entities/user_subscription.entity';
-import { PaymentTransaction } from '../database/entities/payment_transaction.entity';
-import { EducationalContent } from '../database/entities/educational_content.entity';
-import { Recipe, RecipeIngredient } from '../database/entities/recipe.entity';
-import { Conversation } from '../database/entities/conversation.entity';
-import { Message } from '../database/entities/message.entity';
-import { ClinicalRecord } from '../database/entities/clinical_record.entity';
+import { User } from './entities/user.entity';
+import { Role } from './entities/role.entity';
+import { PatientProfile } from './entities/patient_profile.entity';
+import { NutritionistProfile } from './entities/nutritionist_profile.entity';
+import { PatientNutritionistRelation } from './entities/patient_nutritionist_relation.entity';
+import { Food } from './entities/food.entity';
+import { MealItem } from './entities/meal_item.entity';
+import { Meal } from './entities/meal.entity';
+import { DietPlan } from './entities/diet_plan.entity';
+import { Appointment } from './entities/appointment.entity';
+import { NutritionistAvailability } from './entities/nutritionist_availability.entity';
+import { PatientProgressLog } from './entities/patient_progress_log.entity';
+import { SubscriptionPlan } from './entities/subscription_plan.entity';
+import { UserSubscription } from './entities/user_subscription.entity';
+import { PaymentTransaction } from './entities/payment_transaction.entity';
+import { EducationalContent } from './entities/educational_content.entity';
+import { Recipe, RecipeIngredient } from './entities/recipe.entity';
+import { Conversation } from './entities/conversation.entity';
+import { Message } from './entities/message.entity';
+import { ClinicalRecord } from './entities/clinical_record.entity';
+import { NutritionistTier } from './entities/nutritionist_tier.entity';
+import { PatientTier } from './entities/patient_tier.entity';
 
 dotenv.config();
 
@@ -79,6 +81,8 @@ export const AppDataSource = new DataSource({
         Conversation,
         Message,
         ClinicalRecord,
+        NutritionistTier,
+        PatientTier,
     ],
     migrations: ['src/database/migrations/**/*.ts'],
     subscribers: [],

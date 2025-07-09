@@ -21,6 +21,7 @@ import messagingRoutes from './modules/messaging/message.routes';
 import clinicalRecordRoutes from './modules/clinical_records/clinical_record.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
 import calendarRoutes from './modules/calendar/calendar.routes';
+import monetizationRoutes from './modules/monetization/monetization.routes';
 import { AppError } from './utils/app.error';
 
 // Extensión de tipos para Request
@@ -280,6 +281,7 @@ app.use('/api/messages', messagingRoutes);
 app.use('/api/clinical-records', clinicalRecordRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/calendar', calendarRoutes);
+app.use('/api/monetization', monetizationRoutes);
 
 // Manejo de rutas no encontradas con mejor información de accesibilidad
 app.all('*', (req: Request, res: Response, next: NextFunction) => {
