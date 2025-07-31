@@ -100,14 +100,14 @@ const AdminDashboard: React.FC = () => {
 
   // Verificar si el usuario es admin
   useEffect(() => {
-    if (user && user.role?.name !== 'ADMIN') {
+    if (user && user.role?.name !== 'admin') {
       navigate('/dashboard');
     }
   }, [user, navigate]);
 
   // Cargar datos al montar el componente
   useEffect(() => {
-    if (user?.role?.name === 'ADMIN') {
+    if (user?.role?.name === 'admin') {
       loadAllData();
     }
   }, [user, loadAllData]);
