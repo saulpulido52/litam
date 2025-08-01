@@ -5,15 +5,7 @@ export class AddMonetizationTiers1704073500000 implements MigrationInterface {
     name = 'AddMonetizationTiers1704073500000';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        // Crear enum para tipos de tier de nutriólogos
-        await queryRunner.query(`
-            CREATE TYPE "public"."nutritionist_tier_type_enum" AS ENUM('basic', 'premium')
-        `);
-
-        // Crear enum para modelos de pago de nutriólogos
-        await queryRunner.query(`
-            CREATE TYPE "public"."payment_model_enum" AS ENUM('commission', 'subscription')
-        `);
+        // No crear enums, usar varchar en su lugar
 
         // Crear tabla de tiers de nutriólogos
         await queryRunner.query(`
@@ -21,8 +13,8 @@ export class AddMonetizationTiers1704073500000 implements MigrationInterface {
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "name" character varying(100) NOT NULL,
                 "description" text,
-                "tier_type" "public"."nutritionist_tier_type_enum" NOT NULL,
-                "payment_model" "public"."payment_model_enum" NOT NULL,
+                "tier_type" character varying(20) NOT NULL,
+                "payment_model" character varying(20) NOT NULL,
                 "commission_rate" numeric(5,2),
                 "subscription_price" numeric(10,2),
                 "annual_price" numeric(10,2),
@@ -37,15 +29,7 @@ export class AddMonetizationTiers1704073500000 implements MigrationInterface {
             )
         `);
 
-        // Crear enum para tipos de tier de pacientes
-        await queryRunner.query(`
-            CREATE TYPE "public"."patient_tier_type_enum" AS ENUM('free', 'pro', 'premium')
-        `);
-
-        // Crear enum para modelos de pago de pacientes
-        await queryRunner.query(`
-            CREATE TYPE "public"."patient_payment_model_enum" AS ENUM('free', 'one_time', 'subscription')
-        `);
+        // No crear enums, usar varchar en su lugar
 
         // Crear tabla de tiers de pacientes
         await queryRunner.query(`
@@ -53,8 +37,8 @@ export class AddMonetizationTiers1704073500000 implements MigrationInterface {
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "name" character varying(100) NOT NULL,
                 "description" text,
-                "tier_type" "public"."patient_tier_type_enum" NOT NULL,
-                "payment_model" "public"."patient_payment_model_enum" NOT NULL,
+                "tier_type" character varying(20) NOT NULL,
+                "payment_model" character varying(20) NOT NULL,
                 "one_time_price" numeric(10,2),
                 "monthly_price" numeric(10,2),
                 "annual_price" numeric(10,2),
@@ -186,10 +170,6 @@ export class AddMonetizationTiers1704073500000 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE "patient_tiers"`);
         await queryRunner.query(`DROP TABLE "nutritionist_tiers"`);
 
-        // Eliminar enums
-        await queryRunner.query(`DROP TYPE "public"."patient_payment_model_enum"`);
-        await queryRunner.query(`DROP TYPE "public"."patient_tier_type_enum"`);
-        await queryRunner.query(`DROP TYPE "public"."payment_model_enum"`);
-        await queryRunner.query(`DROP TYPE "public"."nutritionist_tier_type_enum"`);
+        // No necesitamos eliminar enums ya que no los creamos
     }
 } 

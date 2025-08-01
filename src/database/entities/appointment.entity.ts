@@ -39,9 +39,9 @@ export class Appointment {
     end_time!: Date;
 
     @Column({
-        type: 'enum',
-        enum: AppointmentStatus,
-        default: AppointmentStatus.SCHEDULED,
+        type: 'varchar',
+        length: 20,
+        default: 'scheduled',
         nullable: false,
     })
     status!: AppointmentStatus;

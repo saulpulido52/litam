@@ -658,13 +658,24 @@ const ProfilePage: React.FC = () => {
                   </OptimizedButton>
         </div>
               ) : (
-                <OptimizedButton
-                  onClick={toggleEditing}
-                  variant="primary"
-                >
-                  <Edit size={16} className="me-2" />
-                  Editar Perfil
-                </OptimizedButton>
+                <div className="d-grid gap-2">
+                  <OptimizedButton
+                    onClick={toggleEditing}
+                    variant="primary"
+                  >
+                    <Edit size={16} className="me-2" />
+                    Editar Perfil
+                  </OptimizedButton>
+                  {profile?.role?.name === 'nutritionist' && (
+                    <OptimizedButton
+                      onClick={() => window.location.href = '/nutritionist-settings'}
+                      variant="outline-primary"
+                    >
+                      <Settings size={16} className="me-2" />
+                      Configuración Avanzada
+                    </OptimizedButton>
+                  )}
+                </div>
               )}
             </Card.Body>
           </Card>

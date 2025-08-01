@@ -1,10 +1,10 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class AddNutritionistValidationFields1752000000000 implements MigrationInterface {
-    name = 'AddNutritionistValidationFields1752000000000'
+export class AddMissingNutritionistValidationFields1754001000000 implements MigrationInterface {
+    name = 'AddMissingNutritionistValidationFields1754001000000'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        // Agregar nuevos campos para validación profesional
+        // Agregar campos de validación profesional que faltan
         await queryRunner.query(`
             ALTER TABLE "nutritionist_profiles" 
             ADD COLUMN "professional_id" varchar(20),
@@ -64,7 +64,5 @@ export class AddNutritionistValidationFields1752000000000 implements MigrationIn
             DROP COLUMN "professional_id_issuer",
             DROP COLUMN "professional_id"
         `);
-
-        // No necesitamos eliminar el tipo enum ya que no lo creamos
     }
-}
+} 

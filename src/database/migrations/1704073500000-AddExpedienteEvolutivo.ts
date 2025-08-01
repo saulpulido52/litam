@@ -4,25 +4,12 @@ export class AddExpedienteEvolutivo1704073500000 implements MigrationInterface {
     name = 'AddExpedienteEvolutivo1704073500000'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        // Crear el enum para tipos de expediente
-        await queryRunner.query(`
-            CREATE TYPE "tipo_expediente_enum" AS ENUM(
-                'inicial', 
-                'seguimiento', 
-                'urgencia', 
-                'control', 
-                'pre_operatorio', 
-                'post_operatorio', 
-                'consulta_especialidad', 
-                'anual', 
-                'telehealth'
-            )
-        `);
+        // No crear enum, usar varchar en su lugar
 
         // Agregar el campo tipo_expediente con valor por defecto
         await queryRunner.query(`
             ALTER TABLE "clinical_records" 
-            ADD COLUMN "tipo_expediente" "tipo_expediente_enum" NOT NULL DEFAULT 'inicial'
+            ADD COLUMN "tipo_expediente" character varying(50) NOT NULL DEFAULT 'inicial'
         `);
 
         // Agregar campo para referenciar el expediente base
@@ -88,7 +75,6 @@ export class AddExpedienteEvolutivo1704073500000 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "clinical_records" DROP COLUMN "expediente_base_id"`);
         await queryRunner.query(`ALTER TABLE "clinical_records" DROP COLUMN "tipo_expediente"`);
 
-        // Eliminar el enum
-        await queryRunner.query(`DROP TYPE "tipo_expediente_enum"`);
+        // No necesitamos eliminar el enum ya que no lo creamos
     }
 } 

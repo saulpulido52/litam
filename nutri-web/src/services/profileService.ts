@@ -104,7 +104,17 @@ class ProfileService {
 
   async updateProfile(data: ProfileData) {
     try {
-      const response = await api.patch<any>('/users/me', data);
+      console.log('ProfileService - Updating profile with data:', data);
+      
+      // Determinar si es un nutricionista y usar el endpoint correcto
+      const isNutritionist = data.license_number || data.specialties || data.experience_years;
+      
+      let endpoint = '/users/me';
+      if (isNutritionist) {
+        endpoint = '/nutritionists/profile';
+      }
+      
+      const response = await api.patch<any>(endpoint, data);
       const responseData = response.data;
       
       // Manejar ambos formatos de respuesta

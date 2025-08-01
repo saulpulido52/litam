@@ -41,7 +41,7 @@ export class NutritionistProfile {
     @Column({ type: 'date', nullable: true })
     graduation_date: Date | null; // Fecha de graduación
 
-    @Column({ type: 'enum', enum: ['pending', 'approved', 'rejected', 'under_review'], default: 'pending' })
+    @Column({ type: 'varchar', length: 20, default: 'pending' })
     verification_status: 'pending' | 'approved' | 'rejected' | 'under_review'; // Estado de verificación
 
     @Column({ type: 'text', nullable: true })

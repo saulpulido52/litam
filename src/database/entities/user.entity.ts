@@ -76,9 +76,9 @@ export class User {
     is_active!: boolean;
 
     @Column({
-        type: 'enum',
-        enum: UserRegistrationType,
-        default: UserRegistrationType.ONLINE,
+        type: 'varchar',
+        length: 20,
+        default: 'online',
         nullable: false,
     })
     registration_type!: UserRegistrationType;

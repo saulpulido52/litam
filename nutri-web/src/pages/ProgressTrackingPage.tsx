@@ -159,6 +159,20 @@ const ProgressTrackingPage: React.FC = () => {
     }
   }, [activeTab, selectedPatient]);
 
+  // --- NUEVO: Generar análisis automáticamente al entrar a la página ---
+  useEffect(() => {
+    const autoGenerateAnalysis = async () => {
+      if (selectedPatient && !analysisData && !autoGenerating) {
+        console.log('🔄 Generando análisis automático al cargar la página...');
+        await generateAutomaticProgress();
+      }
+    };
+
+    // Pequeño delay para asegurar que los datos estén cargados
+    const timer = setTimeout(autoGenerateAnalysis, 1000);
+    return () => clearTimeout(timer);
+  }, [selectedPatient, analysisData, autoGenerating]);
+
   const filteredEntries = selectedPatient 
     ? progressEntries.filter(entry => entry.patient_id === selectedPatient)
     : progressEntries;
@@ -179,29 +193,6 @@ const ProgressTrackingPage: React.FC = () => {
   const latestEntry = selectedPatientEntries[0];
   const previousEntry = selectedPatientEntries[1];
 
-  // Preparar datos para los gráficos
-  // const weightChartData = filteredEntries.map(entry => ({
-  //   date: entry.date,
-  //   weight: entry.weight,
-  //   targetWeight: selectedPatientData?.profile?.target_weight
-  // }));
-
-  // const bodyCompositionData = filteredEntries.map(entry => ({
-  //   date: entry.date,
-  //   bodyFat: entry.body_fat,
-  //   muscleMass: entry.muscle_mass,
-  //   weight: entry.weight
-  // }));
-
-  // const measurementsData = filteredEntries.map(entry => ({
-  //   date: entry.date,
-  //   waist: entry.waist,
-  //   hip: entry.waist * 1.1, // Simulado
-  //   chest: entry.waist * 1.05, // Simulado
-  //   arm: entry.waist * 0.35, // Simulado
-  //   thigh: entry.waist * 0.6 // Simulado
-  // }));
-
   return (
     <div className="container-fluid py-4">
       {/* Header */}
@@ -219,15 +210,6 @@ const ProgressTrackingPage: React.FC = () => {
         </div>
         <div className="col-md-4 text-end">
           <div className="d-flex gap-2 justify-content-end">
-            <button 
-              className="btn btn-success"
-              onClick={generateAutomaticProgress}
-              disabled={!selectedPatient || autoGenerating}
-              title="Genera análisis basado en expedientes clínicos y planes de dieta"
-            >
-              <Target size={18} className="me-2" />
-              {autoGenerating ? 'Generando...' : 'Análisis Automático'}
-            </button>
             <button 
               className="btn btn-primary"
               onClick={() => setShowAddModal(true)}
@@ -793,29 +775,8 @@ const ProgressTrackingPage: React.FC = () => {
                 <Target size={48} className="text-muted mb-3" />
                 <h5 className="text-muted">No hay análisis disponible</h5>
                 <p className="text-muted">
-                  {selectedPatient ? 'Genera un análisis automático para ver los resultados.' : 'Selecciona un paciente para generar un análisis.'}
+                  {selectedPatient ? 'El análisis se generará automáticamente al seleccionar un paciente.' : 'Selecciona un paciente para generar un análisis automático.'}
                 </p>
-                {selectedPatient && (
-                  <button 
-                    className="btn btn-success mt-3"
-                    onClick={generateAutomaticProgress}
-                    disabled={autoGenerating}
-                  >
-                    {autoGenerating ? (
-                      <>
-                        <div className="spinner-border spinner-border-sm me-2" role="status">
-                          <span className="visually-hidden">Cargando...</span>
-                        </div>
-                        Generando...
-                      </>
-                    ) : (
-                      <>
-                        <Target size={18} className="me-2" />
-                        Generar Análisis Automático
-                      </>
-                    )}
-                  </button>
-                )}
               </div>
             )}
           </div>

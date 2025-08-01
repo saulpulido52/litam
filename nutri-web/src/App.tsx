@@ -32,6 +32,7 @@ const ProgressTrackingPage = React.lazy(() => import('./pages/ProgressTrackingPa
 const ReportsPage = React.lazy(() => import('./pages/ReportsPage'));
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
+const NutritionistSettingsPage = React.lazy(() => import('./pages/NutritionistSettingsPage'));
 const ClinicalRecordsPage = React.lazy(() => import('./pages/ClinicalRecordsPage'));
 const SeguimientosPage = React.lazy(() => import('./pages/SeguimientosPage'));
 const ExpedientesInteligentesPage = React.lazy(() => import('./pages/ExpedientesInteligentesPage'));
@@ -241,6 +242,13 @@ const App: React.FC = () => {
             <ProtectedRoute>
               <Suspense fallback={<LoadingFallback />}>
                 <SettingsPage />
+              </Suspense>
+            </ProtectedRoute>
+          } />
+          <Route path="/nutritionist-settings" element={
+            <ProtectedRoute>
+              <Suspense fallback={<LoadingFallback />}>
+                <NutritionistSettingsPage />
               </Suspense>
             </ProtectedRoute>
           } />
