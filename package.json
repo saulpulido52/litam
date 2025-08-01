@@ -13,7 +13,12 @@
     "migration:run": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/database/data-source.ts",
     "migration:revert": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d src/database/data-source.ts",
     "seed:foods": "ts-node -r tsconfig-paths/register scripts/setup/create-sample-foods.ts",
-    "seed:recipes": "ts-node -r tsconfig-paths/register scripts/setup/create-sample-recipes.ts"
+    "seed:recipes": "ts-node -r tsconfig-paths/register scripts/setup/create-sample-recipes.ts",
+    "deploy:vercel": "cd nutri-web && vercel --prod",
+    "deploy:supabase": "supabase db push",
+    "deploy:all": "npm run deploy:supabase && npm run deploy:vercel",
+    "setup:vercel": "cd nutri-web && npm install && npm run build",
+    "setup:supabase": "supabase start && supabase db reset"
   },
   "keywords": [],
   "author": "",
