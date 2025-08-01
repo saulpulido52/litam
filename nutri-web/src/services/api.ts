@@ -129,7 +129,7 @@ class ApiService {
 
     // Load token from localStorage
     try {
-      this.loadToken();
+      this.initializeToken();
     } catch (error) {
       console.error('🔑 Error initializing token:', error);
     }
