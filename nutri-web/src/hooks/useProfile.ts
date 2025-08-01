@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import profileService from '../services/profileService';
 import type { ProfileData, PasswordUpdateData, NotificationSettings, ProfileStats } from '../services/profileService';
 
@@ -7,7 +7,7 @@ export const useProfile = () => {
   const [stats, setStats] = useState<ProfileStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  
   const loadProfile = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -94,11 +94,11 @@ export const useProfile = () => {
     }
   };
 
-  const deleteAccount = async (confirmPassword: string) => {
+  const deleteAccount = async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await profileService.deleteAccount(confirmPassword);
+      const result = await profileService.deleteAccount();
       return result;
     } catch (err: any) {
       setError(err.message || 'Error al eliminar la cuenta');

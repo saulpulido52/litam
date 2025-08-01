@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 
 interface MonetizationFeatures {
   canUseAI: boolean;
@@ -13,7 +12,7 @@ interface MonetizationFeatures {
 }
 
 export const useMonetization = (userId?: string) => {
-  const [features, setFeatures] = useState<MonetizationFeatures>({
+  const [features] = useState<MonetizationFeatures>({
     canUseAI: true, // TEMPORALMENTE ACTIVADO PARA DESARROLLO
     canHaveUnlimitedPatients: true, // TEMPORALMENTE ACTIVADO PARA DESARROLLO
     canUseAIFoodScanning: true, // TEMPORALMENTE ACTIVADO PARA DESARROLLO
@@ -23,7 +22,7 @@ export const useMonetization = (userId?: string) => {
     canUseAdvancedTracking: true, // TEMPORALMENTE ACTIVADO PARA DESARROLLO
     canUseDeviceIntegration: true, // TEMPORALMENTE ACTIVADO PARA DESARROLLO
   });
-  const [loading, setLoading] = useState(false); // Cambiado a false para desarrollo
+  // const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // TODO: Activar validaciones cuando el modelo de negocio esté listo
@@ -31,5 +30,5 @@ export const useMonetization = (userId?: string) => {
     console.log('🔧 Monetización desactivada temporalmente para desarrollo');
   }, [userId]);
 
-  return { features, loading };
+  return { features, loading: false };
 }; 

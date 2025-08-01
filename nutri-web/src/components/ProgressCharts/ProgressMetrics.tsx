@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, Target, Scale, Activity, Award, Calendar, Users } from 'lucide-react';
+import { TrendingUp, TrendingDown, Target, Scale, Award, Calendar, Activity, Users } from 'lucide-react';
 
 interface ProgressMetricsProps {
   patientName: string;

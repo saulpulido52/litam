@@ -5,56 +5,89 @@ import type {
   GenerateAIDietDto,
   WeeklyPlanDto 
 } from '../types/diet';
+import { cacheService, CACHE_KEYS, CACHE_TTL } from './cacheService';
 
 class DietPlansService {
-  // Obtener todos los planes de dieta del nutriólogo logueado
+  // **OPTIMIZACIÓN**: Helper para obtener ID del nutriólogo actual
+  private async getCurrentNutritionistId(): Promise<string> {
+    // En una implementación real, esto vendría del token JWT o estado de autenticación
+    // Por ahora, asumimos que está disponible en localStorage o mediante el authService
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    return userData.id || '';
+  }
+
+  // **OPTIMIZACIÓN**: Invalidar caché cuando se realizan operaciones que modifican datos
+  private invalidateRelatedCache(planId?: string, nutritionistId?: string, patientId?: string) {
+    if (planId) {
+      cacheService.delete(CACHE_KEYS.DIET_PLAN_BY_ID(planId));
+    }
+    if (nutritionistId) {
+      cacheService.invalidatePattern(`diet_plans:nutritionist:${nutritionistId}`);
+    }
+    if (patientId) {
+      cacheService.invalidatePattern(`diet_plans:patient:${patientId}`);
+    }
+  }
+
+  // **OPTIMIZACIÓN**: Obtener todos los planes de dieta del nutriólogo logueado con caché
   async getAllDietPlans(): Promise<DietPlan[]> {
-    try {
-      const response = await apiService.get<{ dietPlans: any[] }>('/diet-plans');
-      if (response.status !== 'success' || !response.data) {
-        throw new Error(response.message || 'Error fetching diet plans');
-      }
-      
-      // Extraer dietPlans de la estructura anidada y transformar
-      const backendPlans = response.data.dietPlans || [];
-      return backendPlans.map(plan => this.transformBackendPlan(plan));
-    } catch (error) {
-      console.error('Error fetching all diet plans:', error);
-      throw error;
-    }
+    // Obtener ID del nutriólogo del token (asumiendo que está disponible)
+    const nutritionistId = await this.getCurrentNutritionistId();
+    const cacheKey = CACHE_KEYS.DIET_PLANS_NUTRITIONIST(nutritionistId);
+
+    return await cacheService.memoize(
+      cacheKey,
+      async () => {
+        const response = await apiService.get<{ dietPlans: any[] }>('/diet-plans');
+        if (response.status !== 'success' || !response.data) {
+          throw new Error(response.message || 'Error fetching diet plans');
+        }
+        
+        // Extraer dietPlans de la estructura anidada y transformar
+        const backendPlans = response.data.dietPlans || [];
+        return backendPlans.map(plan => this.transformBackendPlan(plan));
+      },
+      CACHE_TTL.MEDIUM // 15 minutos
+    );
   }
 
-  // Obtener todos los planes de dieta para un paciente
+  // **OPTIMIZACIÓN**: Obtener todos los planes de dieta para un paciente con caché
   async getDietPlansForPatient(patientId: string): Promise<DietPlan[]> {
-    try {
-      const response = await apiService.get<{ dietPlans: any[] }>(`/diet-plans/patient/${patientId}`);
-      if (response.status !== 'success' || !response.data) {
-        throw new Error(response.message || 'Error fetching patient diet plans');
-      }
-      
-      // Extraer dietPlans de la estructura anidada y transformar
-      const backendPlans = response.data.dietPlans || [];
-      return backendPlans.map(plan => this.transformBackendPlan(plan));
-    } catch (error) {
-      console.error('Error fetching patient diet plans:', error);
-      throw error;
-    }
+    const cacheKey = CACHE_KEYS.DIET_PLANS_PATIENT(patientId);
+
+    return await cacheService.memoize(
+      cacheKey,
+      async () => {
+        const response = await apiService.get<{ dietPlans: any[] }>(`/diet-plans/patient/${patientId}`);
+        if (response.status !== 'success' || !response.data) {
+          throw new Error(response.message || 'Error fetching patient diet plans');
+        }
+        
+        // Extraer dietPlans de la estructura anidada y transformar
+        const backendPlans = response.data.dietPlans || [];
+        return backendPlans.map(plan => this.transformBackendPlan(plan));
+      },
+      CACHE_TTL.MEDIUM // 15 minutos
+    );
   }
 
-  // Obtener un plan de dieta específico
+  // **OPTIMIZACIÓN**: Obtener un plan de dieta específico con caché
   async getDietPlanById(dietPlanId: string): Promise<DietPlan> {
-    try {
-      const response = await apiService.get<{ dietPlan: any }>(`/diet-plans/${dietPlanId}`);
-      if (response.status !== 'success' || !response.data) {
-        throw new Error(response.message || 'Error fetching diet plan');
-      }
-      
-      // Extraer dietPlan de la estructura anidada y transformar
-      return this.transformBackendPlan(response.data.dietPlan);
-    } catch (error) {
-      console.error('Error fetching diet plan:', error);
-      throw error;
-    }
+    const cacheKey = CACHE_KEYS.DIET_PLAN_BY_ID(dietPlanId);
+
+    return await cacheService.memoize(
+      cacheKey,
+      async () => {
+        const response = await apiService.get<{ dietPlan: any }>(`/diet-plans/${dietPlanId}`);
+        if (response.status !== 'success' || !response.data) {
+          throw new Error(response.message || 'Error fetching diet plan');
+        }
+        
+        // Extraer dietPlan de la estructura anidada y transformar
+        return this.transformBackendPlan(response.data.dietPlan);
+      },
+      CACHE_TTL.SHORT // 5 minutos para datos específicos
+    );
   }
 
   // Crear un nuevo plan de dieta
@@ -89,6 +122,10 @@ class DietPlansService {
         console.log('🆔 ID del plan:', response.data.dietPlan.id);
         console.log('📝 Nombre:', response.data.dietPlan.name);
         console.log('👤 Paciente ID:', response.data.dietPlan.patient_id);
+        
+        // **OPTIMIZACIÓN**: Invalidar caché relacionado al crear nuevo plan
+        const nutritionistId = await this.getCurrentNutritionistId();
+        this.invalidateRelatedCache(response.data.dietPlan.id, nutritionistId, response.data.dietPlan.patient_id);
         
         // Verificar si se guardaron las restricciones patológicas
         if (response.data.dietPlan.pathological_restrictions) {
@@ -306,8 +343,7 @@ class DietPlansService {
         total: allPlans.length,
         active: allPlans.filter(plan => plan.status === 'active').length,
         completed: allPlans.filter(plan => plan.status === 'completed').length,
-        draft: allPlans.filter(plan => plan.status === 'draft').length,
-      };
+        draft: allPlans.filter(plan => plan.status === 'draft').length};
     } catch (error) {
       console.error('Error fetching diet plans stats:', error);
       throw error;

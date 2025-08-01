@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Table, Badge, ProgressBar, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Badge, Alert, ProgressBar} from 'react-bootstrap';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { getRevenueReport, getUsageReport, getConversionReport } from '../../services/monetizationService';
 

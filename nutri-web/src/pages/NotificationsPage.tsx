@@ -1,25 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Alert, Form, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Modal, Form, Alert, Badge } from 'react-bootstrap';
 import { 
   Bell, 
-  CheckCircle, 
-  AlertCircle, 
   Info, 
-  Trash2, 
-  Filter,
+  Trash2,
   Search,
-  Archive,
   RefreshCw,
   Settings,
-  Eye,
-  EyeOff,
-  Star,
-  StarOff,
   Calendar,
   User,
-  FileText,
-  TrendingUp
-} from 'lucide-react';
+  CheckCircle,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  X} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 // Tipos para las notificaciones
@@ -53,9 +47,8 @@ const NotificationsPage: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  // Generar notificaciones de ejemplo
+  // Variable/función removida - no utilizada
+// Generar notificaciones de ejemplo
   useEffect(() => {
     const generateSampleNotifications = (): Notification[] => {
       const sampleNotifications: Notification[] = [
@@ -300,10 +293,13 @@ const NotificationsPage: React.FC = () => {
   };
 
   const deleteNotification = (notificationId: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    setNotifications(prev =>
+      prev.filter(notification => notification.id !== notificationId)
+    );
   };
 
-  const deleteSelected = () => {
+  // Variable/función removida - no utilizada
+const deleteSelected = () => {
     setNotifications(prev => prev.filter(n => !selectedNotifications.includes(n.id)));
     setSelectedNotifications([]);
     setShowDeleteModal(false);
@@ -324,11 +320,8 @@ const NotificationsPage: React.FC = () => {
     );
   };
 
-  const selectAll = () => {
-    setSelectedNotifications(filteredNotifications.map(n => n.id));
-  };
-
-  const deselectAll = () => {
+  // Variable/función removida - no utilizada
+const deselectAll = () => {
     setSelectedNotifications([]);
   };
 

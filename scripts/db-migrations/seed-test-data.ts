@@ -1,8 +1,8 @@
 import 'dotenv/config';
-import { AppDataSource } from './src/database/data-source';
-import { Role, RoleName } from './src/database/entities/role.entity';
-import { User } from './src/database/entities/user.entity';
-import { NutritionistProfile } from './src/database/entities/nutritionist_profile.entity';
+import { AppDataSource } from '../../src/database/data-source';
+import { Role, RoleName } from '../../src/database/entities/role.entity';
+import { User } from '../../src/database/entities/user.entity';
+import { NutritionistProfile } from '../../src/database/entities/nutritionist_profile.entity';
 import bcrypt from 'bcrypt';
 
 async function seedTestData() {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import adminService from '../services/adminService';
 import type { 
   AdminUser, 
@@ -9,7 +9,7 @@ import type {
   AdminVerifyNutritionistDto,
   AdminUpdateUserSubscriptionDto,
   AdminUpdateSettingsDto,
-  EliminacionesResponse,
+  // EliminacionesResponse,
   EliminacionData
 } from '../services/adminService';
 
@@ -44,8 +44,7 @@ export const useAdmin = () => {
       inactiveUsers: 0,
       totalSubscriptions: 0,
       activeSubscriptions: 0,
-      expiredSubscriptions: 0,
-    }
+      expiredSubscriptions: 0}
   });
 
   // --- Gestión de Usuarios ---
@@ -67,8 +66,7 @@ export const useAdmin = () => {
           ...prev.stats,
           totalUsers: data.data.total,
           activeUsers: data.data.users.filter((u: AdminUser) => u.is_active).length,
-          inactiveUsers: data.data.users.filter((u: AdminUser) => !u.is_active).length,
-        },
+          inactiveUsers: data.data.users.filter((u: AdminUser) => !u.is_active).length},
         loading: false
       }));
     } catch (error: any) {
@@ -148,8 +146,7 @@ export const useAdmin = () => {
           ...prev.stats,
           totalSubscriptions: data.data.total,
           activeSubscriptions: data.data.subscriptions.filter((s: AdminUserSubscription) => s.status === 'active').length,
-          expiredSubscriptions: data.data.subscriptions.filter((s: AdminUserSubscription) => s.status === 'expired').length,
-        },
+          expiredSubscriptions: data.data.subscriptions.filter((s: AdminUserSubscription) => s.status === 'expired').length},
         loading: false
       }));
     } catch (error: any) {

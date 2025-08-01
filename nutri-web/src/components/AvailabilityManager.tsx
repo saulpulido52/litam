@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Plus, Trash2, Save, Calendar, RefreshCw } from 'lucide-react';
+import { Clock, Plus, Trash2, Save, Calendar } from 'lucide-react';
 import { useAvailability } from '../hooks/useAvailability';
 import type { AvailabilitySlot } from '../services/appointmentsService';
 import appointmentsService from '../services/appointmentsService';
-import { profileToAvailability, availabilityToProfile, validateSchedule } from '../utils/scheduleSync';
+// import { profileToAvailability, availabilityToProfile, validateSchedule } from '../utils/scheduleSync';
 
-interface AvailabilityManagerProps {
-  onSync?: (profileData: any) => void; // Callback para sincronizar con el perfil
-  profileSchedule?: any; // Datos del perfil para sincronización inicial
-}
+// interface AvailabilityManagerProps {
+//   onSync?: (profileData: any) => void; // Callback para sincronizar con el perfil
+//   profileSchedule?: any; // Datos del perfil para sincronización inicial
+// }
 
 const DAYS_OF_WEEK = [
   { key: 'MONDAY', label: 'Lunes' },
@@ -38,8 +38,7 @@ const AvailabilityManager: React.FC = () => {
       day_of_week: 'MONDAY',
       start_time_minutes: 540, // 9:00 AM
       end_time_minutes: 1020,  // 5:00 PM
-      is_active: true,
-    };
+      is_active: true};
     
     setEditingSlots([...editingSlots, newSlot]);
     setHasChanges(true);

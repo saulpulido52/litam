@@ -17,7 +17,7 @@ export const useClinicalRecords = (): UseClinicalRecordsReturn => {
   const [records, setRecords] = useState<ClinicalRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  
   const clearError = () => {
     setError(null);
   };
@@ -118,6 +118,5 @@ export const useClinicalRecords = (): UseClinicalRecordsReturn => {
     createRecord,
     updateRecord,
     deleteRecord,
-    clearError,
-  };
+    clearError};
 }; 

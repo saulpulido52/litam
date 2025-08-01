@@ -1,24 +1,17 @@
 // src/modules/commissions/commission.service.ts
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { NutritionistCommission, CommissionStatus, CommissionType } from '../../database/entities/nutritionist_commission.entity';
 import { User } from '../../database/entities/user.entity';
-import { Appointment } from '../../database/entities/appointment.entity';
-import { Relation } from '../../database/entities/relation.entity';
+import { Appointment, AppointmentStatus } from '../../database/entities/appointment.entity';
+import { PatientNutritionistRelation, RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
 import { AppError } from '../../utils/app.error';
 
-@Injectable()
 export class CommissionService {
     constructor(
-        @InjectRepository(NutritionistCommission)
         private commissionRepository: Repository<NutritionistCommission>,
-        @InjectRepository(User)
         private userRepository: Repository<User>,
-        @InjectRepository(Appointment)
         private appointmentRepository: Repository<Appointment>,
-        @InjectRepository(Relation)
-        private relationRepository: Repository<Relation>,
+        private relationRepository: Repository<PatientNutritionistRelation>
     ) {}
 
     // ==================== CALCULAR COMISIONES ====================
@@ -81,7 +74,7 @@ export class CommissionService {
         const totalPatients = await this.relationRepository.count({
             where: {
                 nutritionist: { id: nutritionistId },
-                status: 'active'
+                status: RelationshipStatus.ACTIVE
             }
         });
 
@@ -89,8 +82,8 @@ export class CommissionService {
         const totalConsultations = await this.appointmentRepository.count({
             where: {
                 nutritionist: { id: nutritionistId },
-                status: 'completed',
-                appointment_date: Between(startDate, endDate)
+                status: AppointmentStatus.COMPLETED,
+                start_time: Between(startDate, endDate)
             }
         });
 

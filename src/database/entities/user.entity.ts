@@ -28,6 +28,7 @@ import { Message } from '../../database/entities/message.entity';
 import { ClinicalRecord } from '../../database/entities/clinical_record.entity'; // <--- NUEVO
 import { NutritionistTier } from '../../database/entities/nutritionist_tier.entity';
 import { PatientTier } from '../../database/entities/patient_tier.entity';
+import { NutritionistReview } from '../../database/entities/nutritionist_review.entity';
 import bcrypt from 'bcrypt';
 
 export enum UserRegistrationType {
@@ -206,6 +207,13 @@ export class User {
     @ManyToOne(() => PatientTier, (tier) => tier.patients, { nullable: true })
     @JoinColumn({ name: 'patient_tier_id' })
     patient_tier?: PatientTier;
+
+    // --- RELACIONES PARA REVIEWS ---
+    @OneToMany(() => NutritionistReview, (review) => review.nutritionist)
+    received_reviews!: NutritionistReview[]; // Reviews que recibe como nutriólogo
+
+    @OneToMany(() => NutritionistReview, (review) => review.patient)
+    given_reviews!: NutritionistReview[]; // Reviews que da como paciente
 
     isPasswordChangedRecently(decodedIat: number): boolean {
         return !!this.passwordChangedAt && this.passwordChangedAt.getTime() / 1000 > decodedIat;

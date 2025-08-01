@@ -1,4 +1,4 @@
-# 🌐 NutriWeb - Dashboard del Nutriólogo
+# 🌐 Litam - Dashboard del Nutriólogo
 
 ## 📊 Dashboard Web Profesional para Nutriólogos
 
@@ -120,7 +120,7 @@ npm run preview
 ### **Variables de Entorno**
 ```env
 VITE_API_URL=http://localhost:3001/api
-VITE_APP_NAME=NutriWeb - Dashboard Nutriólogo
+VITE_APP_NAME=Litam - Dashboard Nutriólogo
 VITE_APP_VERSION=1.0.0
 ```
 

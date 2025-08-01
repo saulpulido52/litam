@@ -99,8 +99,7 @@ const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
       icon: <FileTextIcon className="icon" aria-hidden="true" />, 
       className: 'icon-default',
       ariaLabel: 'Actividad'
-    },
-  };
+    }};
 
   return (
     <div className="activity-card" role="region" aria-label={title}>

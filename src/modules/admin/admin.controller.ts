@@ -6,7 +6,12 @@ import {
     AdminUpdateUserDto,
     AdminVerifyNutritionistDto,
     AdminUpdateUserSubscriptionDto,
-    AdminUpdateSettingsDto, // Si se añade
+    AdminUpdateSettingsDto,
+    AdminCreateUserDto,
+    AdminCreateAppointmentDto,
+    AdminCreateFoodDto,
+    AdminCreateRecipeDto,
+    AdminCreateEducationalContentDto,
 } from '../../modules/admin/admin.dto';
 import { RoleName } from '../../database/entities/role.entity';
 import { SubscriptionStatus } from '../../database/entities/user_subscription.entity'; // Para tipo en query param
@@ -392,6 +397,476 @@ class AdminController {
             .join('\n');
 
         return csvContent;
+    }
+
+    // --- NUEVAS FUNCIONALIDADES COMPLETAS DE ADMINISTRACIÓN ---
+
+    // Crear usuarios
+    public async adminCreateUser(req: Request, res: Response, next: NextFunction) {
+        try {
+            const newUser = await adminService.adminCreateUser(req.body as AdminCreateUserDto);
+            res.status(201).json({
+                status: 'success',
+                message: 'Usuario creado exitosamente.',
+                data: { user: newUser },
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.adminCreateUser:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al crear el usuario.', 500));
+        }
+    }
+
+    // --- GESTIÓN DE CITAS ---
+
+    public async getAllAppointments(req: Request, res: Response, next: NextFunction) {
+        try {
+            const page = parseInt(req.query.page as string || '1', 10);
+            const limit = parseInt(req.query.limit as string || '20', 10);
+
+            const result = await adminService.getAllAppointments(page, limit);
+            res.status(200).json({
+                status: 'success',
+                ...result,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.getAllAppointments:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener las citas.', 500));
+        }
+    }
+
+    public async adminCreateAppointment(req: Request, res: Response, next: NextFunction) {
+        try {
+            const appointment = await adminService.adminCreateAppointment(req.body as AdminCreateAppointmentDto);
+            res.status(201).json({
+                status: 'success',
+                message: 'Cita creada exitosamente.',
+                data: { appointment },
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.adminCreateAppointment:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al crear la cita.', 500));
+        }
+    }
+
+    public async adminUpdateAppointment(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const appointment = await adminService.adminUpdateAppointment(id, req.body);
+            res.status(200).json({
+                status: 'success',
+                message: 'Cita actualizada exitosamente.',
+                data: { appointment },
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.adminUpdateAppointment:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al actualizar la cita.', 500));
+        }
+    }
+
+    public async adminDeleteAppointment(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            await adminService.adminDeleteAppointment(id);
+            res.status(204).json({
+                status: 'success',
+                data: null,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.adminDeleteAppointment:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al eliminar la cita.', 500));
+        }
+    }
+
+    // --- GESTIÓN DE EXPEDIENTES CLÍNICOS ---
+
+    public async getAllClinicalRecords(req: Request, res: Response, next: NextFunction) {
+        try {
+            const page = parseInt(req.query.page as string || '1', 10);
+            const limit = parseInt(req.query.limit as string || '20', 10);
+
+            const result = await adminService.getAllClinicalRecords(page, limit);
+            res.status(200).json({
+                status: 'success',
+                ...result,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.getAllClinicalRecords:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener los expedientes clínicos.', 500));
+        }
+    }
+
+    public async adminDeleteClinicalRecord(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            await adminService.adminDeleteClinicalRecord(id);
+            res.status(204).json({
+                status: 'success',
+                data: null,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.adminDeleteClinicalRecord:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al eliminar el expediente clínico.', 500));
+        }
+    }
+
+    // --- GESTIÓN DE ALIMENTOS ---
+
+    public async getAllFoods(req: Request, res: Response, next: NextFunction) {
+        try {
+            const page = parseInt(req.query.page as string || '1', 10);
+            const limit = parseInt(req.query.limit as string || '20', 10);
+
+            const result = await adminService.getAllFoods(page, limit);
+            res.status(200).json({
+                status: 'success',
+                ...result,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.getAllFoods:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener los alimentos.', 500));
+        }
+    }
+
+    public async adminCreateFood(req: Request, res: Response, next: NextFunction) {
+        try {
+            const food = await adminService.adminCreateFood(req.body as AdminCreateFoodDto);
+            res.status(201).json({
+                status: 'success',
+                message: 'Alimento creado exitosamente.',
+                data: { food },
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.adminCreateFood:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al crear el alimento.', 500));
+        }
+    }
+
+    public async adminUpdateFood(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const food = await adminService.adminUpdateFood(id, req.body);
+            res.status(200).json({
+                status: 'success',
+                message: 'Alimento actualizado exitosamente.',
+                data: { food },
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.adminUpdateFood:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al actualizar el alimento.', 500));
+        }
+    }
+
+    public async adminDeleteFood(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            await adminService.adminDeleteFood(id);
+            res.status(204).json({
+                status: 'success',
+                data: null,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.adminDeleteFood:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al eliminar el alimento.', 500));
+        }
+    }
+
+    // --- GESTIÓN DE RECETAS ---
+
+    public async getAllRecipes(req: Request, res: Response, next: NextFunction) {
+        try {
+            const page = parseInt(req.query.page as string || '1', 10);
+            const limit = parseInt(req.query.limit as string || '20', 10);
+
+            const result = await adminService.getAllRecipes(page, limit);
+            res.status(200).json({
+                status: 'success',
+                ...result,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.getAllRecipes:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener las recetas.', 500));
+        }
+    }
+
+    public async adminCreateRecipe(req: Request, res: Response, next: NextFunction) {
+        try {
+            const recipe = await adminService.adminCreateRecipe(req.body as AdminCreateRecipeDto);
+            res.status(201).json({
+                status: 'success',
+                message: 'Receta creada exitosamente.',
+                data: { recipe },
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.adminCreateRecipe:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al crear la receta.', 500));
+        }
+    }
+
+    public async adminDeleteRecipe(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            await adminService.adminDeleteRecipe(id);
+            res.status(204).json({
+                status: 'success',
+                data: null,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.adminDeleteRecipe:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al eliminar la receta.', 500));
+        }
+    }
+
+    // --- GESTIÓN DE CONTENIDO EDUCATIVO ---
+
+    public async getAllEducationalContent(req: Request, res: Response, next: NextFunction) {
+        try {
+            const page = parseInt(req.query.page as string || '1', 10);
+            const limit = parseInt(req.query.limit as string || '20', 10);
+
+            const result = await adminService.getAllEducationalContent(page, limit);
+            res.status(200).json({
+                status: 'success',
+                ...result,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.getAllEducationalContent:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener el contenido educativo.', 500));
+        }
+    }
+
+    public async adminCreateEducationalContent(req: Request, res: Response, next: NextFunction) {
+        try {
+            const content = await adminService.adminCreateEducationalContent(req.body as AdminCreateEducationalContentDto);
+            res.status(201).json({
+                status: 'success',
+                message: 'Contenido educativo creado exitosamente.',
+                data: { content },
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.adminCreateEducationalContent:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al crear el contenido educativo.', 500));
+        }
+    }
+
+    public async adminDeleteEducationalContent(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            await adminService.adminDeleteEducationalContent(id);
+            res.status(204).json({
+                status: 'success',
+                data: null,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.adminDeleteEducationalContent:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al eliminar el contenido educativo.', 500));
+        }
+    }
+
+    // --- GESTIÓN DE TRANSACCIONES ---
+
+    public async getAllPaymentTransactions(req: Request, res: Response, next: NextFunction) {
+        try {
+            const page = parseInt(req.query.page as string || '1', 10);
+            const limit = parseInt(req.query.limit as string || '20', 10);
+
+            const result = await adminService.getAllPaymentTransactions(page, limit);
+            res.status(200).json({
+                status: 'success',
+                ...result,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.getAllPaymentTransactions:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener las transacciones.', 500));
+        }
+    }
+
+    // --- GESTIÓN DE RESEÑAS ---
+
+    public async getAllReviews(req: Request, res: Response, next: NextFunction) {
+        try {
+            const page = parseInt(req.query.page as string || '1', 10);
+            const limit = parseInt(req.query.limit as string || '20', 10);
+
+            const result = await adminService.getAllReviews(page, limit);
+            res.status(200).json({
+                status: 'success',
+                ...result,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.getAllReviews:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener las reseñas.', 500));
+        }
+    }
+
+    public async adminDeleteReview(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            await adminService.adminDeleteReview(id);
+            res.status(204).json({
+                status: 'success',
+                data: null,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.adminDeleteReview:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al eliminar la reseña.', 500));
+        }
+    }
+
+    // --- GESTIÓN DE PLANTILLAS ---
+
+    public async getAllTemplates(req: Request, res: Response, next: NextFunction) {
+        try {
+            const page = parseInt(req.query.page as string || '1', 10);
+            const limit = parseInt(req.query.limit as string || '20', 10);
+
+            const result = await adminService.getAllTemplates(page, limit);
+            res.status(200).json({
+                status: 'success',
+                ...result,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.getAllTemplates:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener las plantillas.', 500));
+        }
+    }
+
+    public async adminDeleteTemplate(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            await adminService.adminDeleteTemplate(id);
+            res.status(204).json({
+                status: 'success',
+                data: null,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.adminDeleteTemplate:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al eliminar la plantilla.', 500));
+        }
+    }
+
+    // --- GESTIÓN DE CONVERSACIONES Y MENSAJES ---
+
+    public async getAllConversations(req: Request, res: Response, next: NextFunction) {
+        try {
+            const page = parseInt(req.query.page as string || '1', 10);
+            const limit = parseInt(req.query.limit as string || '20', 10);
+
+            const result = await adminService.getAllConversations(page, limit);
+            res.status(200).json({
+                status: 'success',
+                ...result,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.getAllConversations:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener las conversaciones.', 500));
+        }
+    }
+
+    public async getAllMessages(req: Request, res: Response, next: NextFunction) {
+        try {
+            const conversationId = req.query.conversationId as string | undefined;
+            const page = parseInt(req.query.page as string || '1', 10);
+            const limit = parseInt(req.query.limit as string || '50', 10);
+
+            const result = await adminService.getAllMessages(conversationId, page, limit);
+            res.status(200).json({
+                status: 'success',
+                ...result,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.getAllMessages:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener los mensajes.', 500));
+        }
+    }
+
+    // --- MÉTRICAS AVANZADAS ---
+
+    public async getAdvancedSystemMetrics(req: Request, res: Response, next: NextFunction) {
+        try {
+            const metrics = await adminService.getAdvancedSystemMetrics();
+            res.status(200).json({
+                status: 'success',
+                data: metrics,
+            });
+        } catch (error: any) {
+            console.error('Error en AdminController.getAdvancedSystemMetrics:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener métricas avanzadas del sistema.', 500));
+        }
     }
 
     /**

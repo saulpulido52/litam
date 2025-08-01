@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner} from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
@@ -36,12 +36,11 @@ const LoginPage: React.FC = () => {
 
     try {
       // Verificar que el backend esté funcionando
-      const healthResponse = await fetch('http://localhost:4000/api/health', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+      const healthResponse = await fetch(`${apiUrl}/health`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+          'Content-Type': 'application/json'}});
 
       if (healthResponse.ok) {
         setLoginState(prev => ({

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, Users, Calendar, FileText, Download, Eye, Target, DollarSign } from 'lucide-react';
+import { BarChart3, Calendar, Download, Target, DollarSign, Users, TrendingUp, Eye, FileText } from 'lucide-react';
 
 interface ReportData {
   month: string;

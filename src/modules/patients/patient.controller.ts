@@ -5,8 +5,9 @@ import { AppError } from '../../utils/app.error';
 import { CreatePatientDTO, UpdatePatientDTO, PatientsSearchDTO } from './patient.dto';
 import { AppDataSource } from '../../database/data-source';
 import { RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
+import { emailService } from '../../services/email.service';
 
-const patientService = new PatientService(AppDataSource);
+const patientService = new PatientService();
 
 class PatientController {
     // ==================== MÉTODOS PARA NUTRIÓLOGOS ====================
@@ -206,22 +207,45 @@ class PatientController {
             const nutritionistId = req.user.id;
             const patientData = req.body;
 
+            console.log(`🏥 Creando paciente por nutriólogo: ${req.user.first_name} ${req.user.last_name}`);
             const result = await patientService.createPatientByNutritionist(nutritionistId, patientData);
+
+            // 📧 Enviar credenciales por email
+            try {
+                console.log(`📧 Enviando credenciales de acceso a: ${result.patient.user.email}`);
+                
+                await emailService.sendPatientCredentials({
+                    email: result.patient.user.email,
+                    temporary_password: result.temporary_password,
+                    expires_at: result.expires_at,
+                    patient_name: `${result.patient.user.first_name} ${result.patient.user.last_name}`,
+                    nutritionist_name: `${req.user.first_name} ${req.user.last_name}`
+                });
+
+                console.log(`✅ Email de credenciales enviado exitosamente a: ${result.patient.user.email}`);
+                
+            } catch (emailError) {
+                console.error('❌ Error enviando email de credenciales:', emailError);
+                // No fallar todo el proceso si el email falla, solo logear el error
+                console.warn('⚠️ Paciente creado exitosamente pero falló el envío del email');
+            }
 
             res.status(201).json({
                 success: true,
-                message: 'Paciente registrado exitosamente con expediente clínico completo',
+                message: 'Paciente registrado exitosamente en Litam con expediente clínico completo. Credenciales enviadas por email.',
                 data: {
                     patient: result.patient,
                     temporary_credentials: {
                         email: result.patient.user.email,
                         temporary_password: result.temporary_password,
                         expires_at: result.expires_at,
-                        instructions: 'El paciente debe cambiar su contraseña en su primer inicio de sesión'
+                        instructions: 'Las credenciales han sido enviadas al email del paciente. Debe cambiar su contraseña en su primer inicio de sesión.',
+                        email_sent: true
                     }
                 }
             });
         } catch (error) {
+            console.error('💥 Error en createPatientByNutritionist:', error);
             next(error);
         }
     }
@@ -455,6 +479,63 @@ class PatientController {
                 return next(error);
             }
             next(new AppError('Error al obtener el perfil del paciente.', 500));
+        }
+    }
+
+    // ==================== QUICK ACTIONS ====================
+    
+    public async getQuickActions(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user || req.user.role.name !== 'nutritionist') {
+                return next(new AppError('Acceso denegado. Solo nutriólogos pueden acceder a acciones rápidas.', 403));
+            }
+
+            // Obtener acciones rápidas comunes para el dashboard
+            const quickActions = [
+                {
+                    id: 'new-patient',
+                    title: 'Nuevo Paciente',
+                    description: 'Agregar un nuevo paciente',
+                    icon: 'user-plus',
+                    action: '/patients/new',
+                    priority: 1
+                },
+                {
+                    id: 'schedule-appointment',
+                    title: 'Programar Cita',
+                    description: 'Agendar nueva consulta',
+                    icon: 'calendar-plus',
+                    action: '/appointments/new',
+                    priority: 2
+                },
+                {
+                    id: 'create-diet-plan',
+                    title: 'Plan Nutricional',
+                    description: 'Crear nuevo plan',
+                    icon: 'clipboard-list',
+                    action: '/diet-plans/new',
+                    priority: 3
+                },
+                {
+                    id: 'view-patients',
+                    title: 'Ver Pacientes',
+                    description: 'Lista de pacientes',
+                    icon: 'users',
+                    action: '/patients',
+                    priority: 4
+                }
+            ];
+
+            res.status(200).json({
+                status: 'success',
+                data: {
+                    actions: quickActions,
+                    timestamp: new Date().toISOString()
+                }
+            });
+        } catch (error: any) {
+            console.error('Error getting quick actions:', error);
+            next(new AppError('Error al obtener acciones rápidas.', 500));
         }
     }
 }

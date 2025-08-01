@@ -181,7 +181,7 @@ class ProfileService {
     }
   }
 
-  async deleteAccount(confirmPassword: string) {
+  async deleteAccount() {
     const response = await api.delete<ApiResponse<{ message: string }>>('/users/me');
     // El backend devuelve: { status: 'success', data: { message } }
     if (response.data?.status === 'success' && response.data?.data) {

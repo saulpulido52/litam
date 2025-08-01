@@ -10,6 +10,8 @@ export interface UseAppointmentsReturn {
   createAppointment: (data: CreateAppointmentDto) => Promise<void>;
   createAppointmentForPatient: (data: CreateAppointmentForPatientDto) => Promise<void>;
   updateAppointmentStatus: (id: string, data: UpdateAppointmentStatusDto) => Promise<void>;
+  updateAppointment: (id: string, data: any) => Promise<void>;
+  deleteAppointment: (id: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -87,6 +89,36 @@ export const useAppointments = (): UseAppointmentsReturn => {
     }
   }, [loadAppointments]);
 
+  const updateAppointment = useCallback(async (id: string, data: any) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await appointmentsService.updateAppointment(id, data);
+      await loadAppointments(); // Recargar después de actualizar
+    } catch (err: any) {
+      console.error('Error updating appointment:', err);
+      setError(err.message || 'Error al actualizar la cita');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [loadAppointments]);
+
+  const deleteAppointment = useCallback(async (id: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await appointmentsService.deleteAppointment(id);
+      await loadAppointments(); // Recargar después de eliminar
+    } catch (err: any) {
+      console.error('Error deleting appointment:', err);
+      setError(err.message || 'Error al eliminar la cita');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [loadAppointments]);
+
   useEffect(() => {
     // Carga inicial simple
     if (!hasInitialized) {
@@ -103,6 +135,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
     createAppointment,
     createAppointmentForPatient,
     updateAppointmentStatus,
-    clearError,
-  };
+    updateAppointment,
+    deleteAppointment,
+    clearError};
 };

@@ -1,5 +1,5 @@
 import apiService from './api';
-import type { LoginCredentials, AuthResponse, User } from '../types';
+import type { LoginCredentials, AuthResponse, User} from '../types';
 
 export class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
@@ -16,8 +16,7 @@ export class AuthService {
     return {
       status: response.status,
       message: response.message,
-      data: response.data!,
-    };
+      data: response.data!};
   }
 
   async logout(): Promise<void> {
@@ -32,14 +31,25 @@ export class AuthService {
   }
 
   async getCurrentUser(): Promise<User> {
-    const response = await apiService.get<User>('/users/me');
-    
-    if (response.status === 'success' && response.data) {
-      localStorage.setItem('user', JSON.stringify(response.data));
-      return response.data;
+    try {
+      const response = await apiService.get<User>('/users/me');
+      
+      if (response.status === 'success' && response.data) {
+        localStorage.setItem('user', JSON.stringify(response.data));
+        return response.data;
+      }
+      
+      throw new Error('Failed to get current user');
+    } catch (error) {
+      console.error('🔐 getCurrentUser error:', error);
+      // Return stored user if API fails
+      const storedUser = this.getCurrentUserFromStorage();
+      if (storedUser) {
+        console.log('🔐 Returning stored user due to API failure');
+        return storedUser;
+      }
+      throw error;
     }
-    
-    throw new Error('Failed to get current user');
   }
 
   getCurrentUserFromStorage(): User | null {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { dashboardService } from '../services/dashboardService';
 import type { SimpleDashboardStats } from '../services/dashboardService';
 
@@ -76,6 +76,5 @@ export const useDashboard = () => {
     getRecentPatients: () => Promise.resolve([]),
     getPerformanceMetrics: () => Promise.resolve(null),
     getClinicalRecordsSummary: () => Promise.resolve(null),
-    getDietPlansSummary: () => Promise.resolve(null),
-  };
+    getDietPlansSummary: () => Promise.resolve(null)};
 }; 

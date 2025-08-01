@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Alert, Spinner, Form, Badge } from 'react-bootstrap';
+import { Card, Button, Alert, Badge, Form, Spinner } from 'react-bootstrap';
 import { Calendar, RefreshCw, Settings, AlertCircle } from 'lucide-react';
 
 interface GoogleCalendarConfigProps {
@@ -23,7 +23,6 @@ interface SyncStatus {
 }
 
 const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({ 
-    onConfigChange, 
     className = '' 
 }) => {
     const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
@@ -43,13 +42,12 @@ const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const response = await fetch('http://localhost:4000/api/auth/google/status', {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+    const response = await fetch(`${apiUrl}/auth/google/status`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
+                    'Authorization': `Bearer ${token}`}});
 
             if (response.ok) {
                 const data = await response.json();
@@ -65,13 +63,12 @@ const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const response = await fetch('http://localhost:4000/api/calendar/google/calendars', {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+    const response = await fetch(`${apiUrl}/calendar/google/calendars`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
+                    'Authorization': `Bearer ${token}`}});
 
             if (response.ok) {
                 const data = await response.json();
@@ -98,14 +95,13 @@ const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({
                 throw new Error('No hay token de autenticación');
             }
 
-            const response = await fetch('http://localhost:4000/api/calendar/google/primary-calendar', {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+    const response = await fetch(`${apiUrl}/calendar/google/primary-calendar`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({ calendarId: selectedCalendar }),
-            });
+                    'Authorization': `Bearer ${token}`},
+                body: JSON.stringify({ calendarId: selectedCalendar })});
 
             if (!response.ok) {
                 throw new Error('Error al configurar calendario principal');
@@ -132,14 +128,13 @@ const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({
                 throw new Error('No hay token de autenticación');
             }
 
-            const response = await fetch('http://localhost:4000/api/calendar/google/toggle-sync', {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+    const response = await fetch(`${apiUrl}/calendar/google/toggle-sync`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({ enabled }),
-            });
+                    'Authorization': `Bearer ${token}`},
+                body: JSON.stringify({ enabled })});
 
             if (!response.ok) {
                 throw new Error('Error al cambiar estado de sincronización');
@@ -166,13 +161,12 @@ const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({
                 throw new Error('No hay token de autenticación');
             }
 
-            const response = await fetch('http://localhost:4000/api/calendar/google/sync-to-calendar', {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+    const response = await fetch(`${apiUrl}/calendar/google/sync-to-calendar`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
+                    'Authorization': `Bearer ${token}`}});
 
             if (!response.ok) {
                 throw new Error('Error al sincronizar citas con Google Calendar');
@@ -200,13 +194,12 @@ const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({
                 throw new Error('No hay token de autenticación');
             }
 
-            const response = await fetch('http://localhost:4000/api/calendar/google/sync-from-calendar', {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+    const response = await fetch(`${apiUrl}/calendar/google/sync-from-calendar`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
+                    'Authorization': `Bearer ${token}`}});
 
             if (!response.ok) {
                 throw new Error('Error al sincronizar desde Google Calendar');
@@ -285,7 +278,7 @@ const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({
                             <h6>Calendario Principal</h6>
                             <Form.Select
                                 value={selectedCalendar}
-                                onChange={(e) => setSelectedCalendar(e.target.value)}
+                                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedCalendar(e.target.value)}
                                 className="mb-2"
                             >
                                 <option value="">Seleccionar calendario...</option>
@@ -323,7 +316,7 @@ const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({
                                     type="switch"
                                     id="sync-switch"
                                     checked={syncStatus.calendarSyncEnabled}
-                                    onChange={(e) => handleToggleSync(e.target.checked)}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleToggleSync(e.target.checked)}
                                     disabled={isLoading}
                                 />
                                 <label htmlFor="sync-switch" className="ms-2">

@@ -3,15 +3,14 @@ import {
     Table, 
     Card, 
     Button, 
-    Form, 
     Row, 
-    Col, 
-    Badge, 
+    Col,
+    Modal,
+    Accordion,
+    Badge,
     Alert,
     Spinner,
-    Pagination,
-    Modal,
-    Accordion
+    Form
 } from 'react-bootstrap';
 
 interface LogEntry {
@@ -31,29 +30,29 @@ interface LogEntry {
     metadata?: any;
 }
 
-interface LogsResponse {
-    logs: LogEntry[];
-    stats: {
-        total: number;
-        info: number;
-        warn: number;
-        error: number;
-        debug: number;
-    };
-    pagination: {
-        page: number;
-        limit: number;
-        totalPages: number;
-        totalItems: number;
-    };
-}
+// interface LogsResponse {
+//     logs: LogEntry[];
+//     stats: {
+//         total: number;
+//         info: number;
+//         warn: number;
+//         error: number;
+//         debug: number;
+//     };
+//     pagination: {
+//         page: number;
+//         limit: number;
+//         totalPages: number;
+//         totalItems: number;
+//     };
+// }
 
 const AdminLogsAvanzados: React.FC = () => {
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [stats, setStats] = useState<any>(null);
-    const [pagination, setPagination] = useState<any>(null);
+    // const [pagination, setPagination] = useState<any>(null);
     const [filters, setFilters] = useState({
         level: '',
         userId: '',
@@ -231,7 +230,7 @@ const AdminLogsAvanzados: React.FC = () => {
                                             <Form.Label>Nivel</Form.Label>
                                             <Form.Select
                                                 value={filters.level}
-                                                onChange={(e) => handleFilterChange('level', e.target.value)}
+                                                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleFilterChange('level', e.target.value)}
                                             >
                                                 <option value="">Todos</option>
                                                 <option value="info">Info</option>
@@ -248,7 +247,7 @@ const AdminLogsAvanzados: React.FC = () => {
                                                 type="text"
                                                 placeholder="ID del usuario"
                                                 value={filters.userId}
-                                                onChange={(e) => handleFilterChange('userId', e.target.value)}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('userId', e.target.value)}
                                             />
                                         </Form.Group>
                                     </Col>
@@ -259,7 +258,7 @@ const AdminLogsAvanzados: React.FC = () => {
                                                 type="text"
                                                 placeholder="Endpoint"
                                                 value={filters.endpoint}
-                                                onChange={(e) => handleFilterChange('endpoint', e.target.value)}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('endpoint', e.target.value)}
                                             />
                                         </Form.Group>
                                     </Col>
@@ -269,7 +268,7 @@ const AdminLogsAvanzados: React.FC = () => {
                                             <Form.Control
                                                 type="date"
                                                 value={filters.fechaDesde}
-                                                onChange={(e) => handleFilterChange('fechaDesde', e.target.value)}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('fechaDesde', e.target.value)}
                                             />
                                         </Form.Group>
                                     </Col>
@@ -279,7 +278,7 @@ const AdminLogsAvanzados: React.FC = () => {
                                             <Form.Control
                                                 type="date"
                                                 value={filters.fechaHasta}
-                                                onChange={(e) => handleFilterChange('fechaHasta', e.target.value)}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('fechaHasta', e.target.value)}
                                             />
                                         </Form.Group>
                                     </Col>
@@ -290,7 +289,7 @@ const AdminLogsAvanzados: React.FC = () => {
                                                 type="text"
                                                 placeholder="Buscar en mensajes"
                                                 value={filters.search}
-                                                onChange={(e) => handleFilterChange('search', e.target.value)}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('search', e.target.value)}
                                             />
                                         </Form.Group>
                                     </Col>
@@ -409,7 +408,7 @@ const AdminLogsAvanzados: React.FC = () => {
                                                 <div>
                                                     <small>{log.userEmail}</small>
                                                     <br />
-                                                    <Badge bg="secondary" size="sm">{log.userRole}</Badge>
+                                                    <Badge bg="secondary">{log.userRole}</Badge>
                                                 </div>
                                             ) : (
                                                 <span className="text-muted">-</span>

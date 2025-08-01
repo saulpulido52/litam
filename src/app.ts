@@ -9,8 +9,10 @@ import authRoutes from './modules/auth/auth.routes';
 import userRoutes from './modules/users/users.routes';
 import patientRoutes from './modules/patients/patient.routes';
 import nutritionistRoutes from './modules/nutritionists/nutritionist.routes';
+import nutritionistRegistrationRoutes from './modules/nutritionists/nutritionist-registration.routes';
 import relationRoutes from './modules/relations/relation.routes';
 import foodRoutes from './modules/foods/food.routes';
+import recipeRoutes from './modules/foods/recipe.routes';
 import dietPlanRoutes from './modules/diet_plans/diet_plan.routes';
 import appointmentRoutes from './modules/appointments/appointment.routes';
 import progressTrackingRoutes from './modules/progress_tracking/progress_tracking.routes';
@@ -22,7 +24,15 @@ import clinicalRecordRoutes from './modules/clinical_records/clinical_record.rou
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
 import calendarRoutes from './modules/calendar/calendar.routes';
 import monetizationRoutes from './modules/monetization/monetization.routes';
+import templateRoutes from './modules/templates/weekly-plan-template.routes';
+import growthChartsRoutes from './modules/growth_charts/growth_charts.routes';
+import growthAlertsRoutes from './modules/growth_charts/growth_alerts.routes';
+import pdfExportRoutes from './modules/growth_charts/pdf_export.routes';
+import clinicalIntegrationRoutes from './modules/growth_charts/clinical_integration.routes';
+import emailRoutes from './modules/email/email.routes';
 import { AppError } from './utils/app.error';
+import { resilienceMiddleware } from './middleware/resilience.middleware';
+import { mobileOptimizationMiddleware, mobileMetricsMiddleware } from './middleware/mobile-optimization.middleware';
 
 // Extensión de tipos para Request
 declare global {
@@ -58,22 +68,78 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-// Headers adicionales para accesibilidad y compatibilidad
+// **HEADERS OPTIMIZADOS PARA CDN Y CACHING AGRESIVO**
 app.use((req: Request, res: Response, next: NextFunction) => {
-    // Headers para accesibilidad
+    // Headers de seguridad
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
     
-    // Headers para compatibilidad con navegadores
+    // Headers para compatibilidad con navegadores y CDN
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-User-ID');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-User-ID, X-Platform, X-Device-ID');
     
-    // Headers para mejorar la experiencia de usuario
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+    // **CONFIGURACIÓN DE CACHE INTELIGENTE PARA MILES DE USUARIOS**
+    const userAgent = req.get('User-Agent') || '';
+    const path = req.path;
+    const method = req.method;
+    
+    // **CACHE AGRESIVO PARA RECURSOS ESTÁTICOS**
+    if (path.includes('/assets/') || path.includes('/images/') || path.includes('/css/') || path.includes('/js/')) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1 año
+        res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString());
+    }
+    // **CACHE PARA APIs DE DATOS PÚBLICOS (nutriólogos info, etc.)**
+    else if (method === 'GET' && (path.includes('/api/nutritionists/public') || path.includes('/api/public/'))) {
+        res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=3600'); // 30min client, 1h CDN
+        res.setHeader('Vary', 'Accept-Encoding, User-Agent');
+    }
+    // **CACHE PARA DATOS DE PERFIL (menos frecuentes cambios)**
+    else if (method === 'GET' && path.includes('/api/profile/')) {
+        res.setHeader('Cache-Control', 'private, max-age=300'); // 5 minutos para perfil
+    }
+    // **CACHE PARA DATOS MÉDICOS (muy corto por privacidad)**
+    else if (path.includes('/api/patients/') || path.includes('/api/appointments/')) {
+        res.setHeader('Cache-Control', 'private, max-age=60'); // 1 minuto máximo
+        res.setHeader('Pragma', 'no-cache');
+    }
+    // **SIN CACHE PARA APIS DINÁMICAS Y SENSIBLES**
+    else if (path.includes('/api/auth/') || path.includes('/api/admin/') || method !== 'GET') {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+    // **CACHE MODERADO PARA APIS GENERALES**
+    else {
+        res.setHeader('Cache-Control', 'private, max-age=180'); // 3 minutos por defecto
+    }
+    
+    // **HEADERS ESPECÍFICOS PARA MÓVILES**
+    if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iOS')) {
+        res.setHeader('X-Mobile-Optimized', 'true');
+        res.setHeader('X-Compression', 'gzip, br'); // Compresión preferida para móviles
+        
+        // Cache más agresivo para móviles (redes lentas)
+        if (method === 'GET' && !path.includes('/api/auth/')) {
+            const currentCache = res.getHeader('Cache-Control') as string;
+            if (currentCache && !currentCache.includes('no-cache')) {
+                // Duplicar el tiempo de cache para móviles
+                const maxAgeMatch = currentCache.match(/max-age=(\d+)/);
+                if (maxAgeMatch) {
+                    const newMaxAge = Math.min(parseInt(maxAgeMatch[1]) * 2, 3600); // Max 1 hora
+                    res.setHeader('Cache-Control', currentCache.replace(/max-age=\d+/, `max-age=${newMaxAge}`));
+                }
+            }
+        }
+    }
+    
+    // **HEADERS PARA CDN (Cloudflare, etc.)**
+    if (process.env.NODE_ENV === 'production') {
+        res.setHeader('CF-Cache-Status', 'DYNAMIC'); // Cloudflare
+        res.setHeader('X-Served-By', 'nutri-backend');
+        res.setHeader('X-Cache-Tags', `path:${path.split('/')[2] || 'general'}`);
+    }
     
     next();
 });
@@ -81,95 +147,256 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // Compresión para mejorar rendimiento con múltiples usuarios
 app.use(compression());
 
-// Rate limiting general - MÁS PERMISIVO EN DESARROLLO
-const generalLimiter = rateLimit({
-    windowMs: process.env.NODE_ENV === 'production' ? 15 * 60 * 1000 : 5 * 60 * 1000, // 15 min en prod, 5 min en dev
-    max: process.env.NODE_ENV === 'production' ? 100 : 1000, // 100 en producción, 1000 en desarrollo
+// **MIDDLEWARE DE RESILENCIA PARA MILES DE USUARIOS**
+app.use(resilienceMiddleware);
+
+// **OPTIMIZACIONES ESPECÍFICAS PARA MÓVILES**
+app.use(mobileOptimizationMiddleware);
+
+// **MÉTRICAS PARA MÓVILES**
+app.use(mobileMetricsMiddleware);
+
+// **RATE LIMITING INTELIGENTE PARA MILES DE USUARIOS CONCURRENTES**
+
+// **LIMITER PARA NUTRIÓLOGOS WEB (Mayor capacidad)**
+const nutritionistLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: process.env.NODE_ENV === 'production' ? 500 : 1000, // 500 req/15min para nutriólogos
     message: {
-        error: 'Demasiadas peticiones desde esta IP, por favor intenta de nuevo en 15 minutos.',
-        code: 'RATE_LIMIT_EXCEEDED'
+        error: 'Límite de requests excedido para profesionales. Intenta en 15 minutos.',
+        code: 'NUTRITIONIST_RATE_LIMIT_EXCEEDED',
+        userType: 'nutritionist'
     },
     standardHeaders: true,
     legacyHeaders: false,
-    // Saltar rate limiting para localhost en desarrollo
-    skip: (req: Request) => {
-        if (process.env.NODE_ENV !== 'production') {
-            const ip = req.ip || req.connection.remoteAddress || '';
-            return ip.includes('127.0.0.1') || ip.includes('::1') || ip.includes('localhost');
-        }
-        return false;
+    keyGenerator: (req: Request) => {
+        const realIp = getRealIP(req);
+        const userType = req.headers['x-user-type'] || 'web';
+        return `nutritionist:${realIp}:${userType}`;
     },
+    skip: skipHealthChecks
+});
+
+// **LIMITER PARA PACIENTES MÓVIL (Optimizado para conexiones lentas)**
+const patientMobileLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 minutos - ventana más corta para móviles
+    max: process.env.NODE_ENV === 'production' ? 300 : 500, // 300 req/10min para pacientes móvil
+    message: {
+        error: 'Límite de requests excedido. Intenta en unos minutos.',
+        code: 'PATIENT_RATE_LIMIT_EXCEEDED',
+        userType: 'patient_mobile'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req: Request) => {
+        const realIp = getRealIP(req);
+        const deviceId = req.headers['x-device-id'] || 'unknown';
+        return `patient_mobile:${realIp}:${deviceId}`;
+    },
+    skip: skipHealthChecks
+});
+
+// **LIMITER GENERAL (Fallback para requests no clasificados)**
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: process.env.NODE_ENV === 'production' ? 400 : 1000, // Balance entre web y móvil
+    message: {
+        error: 'Demasiadas peticiones desde esta IP, por favor intenta de nuevo más tarde.',
+        code: 'GENERAL_RATE_LIMIT_EXCEEDED'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: getRealIP,
+    skip: skipHealthChecks,
     handler: (req: Request, res: Response) => {
+        const retryAfter = process.env.NODE_ENV === 'production' ? 15 * 60 : 5 * 60;
         res.status(429).json({
             status: 'error',
-            message: 'Demasiadas peticiones desde esta IP, por favor intenta de nuevo en 15 minutos.',
-            code: 'RATE_LIMIT_EXCEEDED',
-            retryAfter: Math.ceil(15 * 60 / 1000) // segundos
+            message: 'Demasiadas peticiones desde esta IP, por favor intenta de nuevo más tarde.',
+            code: 'GENERAL_RATE_LIMIT_EXCEEDED',
+            retryAfter: retryAfter,
+            suggestion: 'Considera usar la app móvil para mejor rendimiento'
         });
     }
 });
 
-// Rate limiting para autenticación - RELAJADO PARA DESARROLLO
+// **UTILIDADES HELPER PARA RATE LIMITING**
+function getRealIP(req: Request): string {
+    const realIp = req.headers['x-real-ip'] as string ||
+                  req.headers['x-forwarded-for'] as string ||
+                  req.headers['cf-connecting-ip'] as string || // Cloudflare
+                  req.ip ||
+                  req.connection.remoteAddress ||
+                  'unknown';
+    
+    return Array.isArray(realIp) ? realIp[0] : realIp.split(',')[0].trim();
+}
+
+function skipHealthChecks(req: Request): boolean {
+    if (process.env.NODE_ENV !== 'production') {
+        const ip = req.ip || req.connection.remoteAddress || '';
+        if (ip.includes('127.0.0.1') || ip.includes('::1') || ip.includes('localhost')) {
+            return true;
+        }
+    }
+    
+    // Rutas que no necesitan rate limiting
+    const skipPaths = [
+        '/api/health',
+        '/health',
+        '/api/status',
+        '/metrics'
+    ];
+    
+    return skipPaths.includes(req.path);
+}
+
+// **MIDDLEWARE INTELIGENTE DE RATE LIMITING**
+const intelligentRateLimit = (req: Request, res: Response, next: NextFunction) => {
+    const userAgent = req.get('User-Agent') || '';
+    const userType = req.headers['x-user-type'] as string;
+    const path = req.path;
+    
+    // Determinar qué limiter usar
+    if (userType === 'nutritionist' || path.includes('/admin/') || path.includes('/dashboard/')) {
+        return nutritionistLimiter(req, res, next);
+    }
+    
+    // Detectar clientes móviles
+    if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iOS') || 
+        req.headers['x-platform'] === 'mobile') {
+        return patientMobileLimiter(req, res, next);
+    }
+    
+    // Fallback a general limiter
+    return generalLimiter(req, res, next);
+};
+
+// **RATE LIMITING PARA AUTENTICACIÓN - OPTIMIZADO PARA SUPABASE**
 const authLimiter = rateLimit({
-    windowMs: process.env.NODE_ENV === 'production' ? 15 * 60 * 1000 : 5 * 60 * 1000, // 15 min en prod, 5 min en dev
-    max: process.env.NODE_ENV === 'production' ? 5 : 50, // 5 en producción, 50 en desarrollo
+    windowMs: process.env.NODE_ENV === 'production' ? 15 * 60 * 1000 : 5 * 60 * 1000,
+    max: process.env.NODE_ENV === 'production' ? 10 : 50, // Más permisivo en prod (UX mejor)
     message: {
         error: 'Demasiados intentos de inicio de sesión, por favor intenta de nuevo en unos minutos.',
         code: 'AUTH_RATE_LIMIT_EXCEEDED'
     },
     skipSuccessfulRequests: true,
-    // En desarrollo, ser menos restrictivo
+    
+    // **MISMA CONFIGURACIÓN DE IP QUE GENERAL LIMITER**
+    keyGenerator: (req: Request) => {
+        const realIp = req.headers['x-real-ip'] as string ||
+                      req.headers['x-forwarded-for'] as string ||
+                      req.ip ||
+                      req.connection.remoteAddress ||
+                      'unknown';
+        return Array.isArray(realIp) ? realIp[0] : realIp.split(',')[0].trim();
+    },
+    
     skip: (req: Request) => {
-        // Saltar rate limiting para localhost en desarrollo
         if (process.env.NODE_ENV !== 'production') {
             const ip = req.ip || req.connection.remoteAddress || '';
             return ip.includes('127.0.0.1') || ip.includes('::1') || ip.includes('localhost');
         }
         return false;
     },
-    // Headers personalizados para accesibilidad
+    
     handler: (req: Request, res: Response) => {
-        const retryAfter = process.env.NODE_ENV === 'production' ? Math.ceil(15 * 60 / 1000) : Math.ceil(5 * 60 / 1000);
+        const retryAfter = process.env.NODE_ENV === 'production' ? 15 * 60 : 5 * 60;
         res.status(429).json({
             status: 'error',
             message: 'Demasiados intentos de inicio de sesión, por favor intenta de nuevo en unos minutos.',
             code: 'AUTH_RATE_LIMIT_EXCEEDED',
-            retryAfter: retryAfter
+            retryAfter: retryAfter,
+            // Información adicional para debugging en desarrollo
+            ...(process.env.NODE_ENV === 'development' && {
+                debug: {
+                    ip: req.ip,
+                    headers: req.headers
+                }
+            })
         });
     }
 });
 
-// Aplicar rate limiting general
-app.use('/api/', generalLimiter);
+// **APLICAR RATE LIMITING INTELIGENTE**
+app.use('/api/', intelligentRateLimit);
 
-// Configurar CORS optimizado para múltiples usuarios y accesibilidad
+// **CONFIGURACIÓN CORS OPTIMIZADA PARA VERCEL Y PRODUCCIÓN**
 app.use(cors({
     origin: function (origin, callback) {
         // Permitir requests sin origin (mobile apps, postman, etc.)
         if (!origin) return callback(null, true);
         
-        // Lista de orígenes permitidos (expandir según necesidades)
+        // **CONFIGURACIÓN FLEXIBLE PARA DESARROLLO Y PRODUCCIÓN**
         const allowedOrigins = [
+            // Desarrollo local
             'http://localhost:5000',
-            'http://localhost:5001', // Puerto alternativo para frontend
+            'http://localhost:5001',
             'http://localhost:3000',
             'http://127.0.0.1:5000',
-            'http://127.0.0.1:5001', // Puerto alternativo para frontend
+            'http://127.0.0.1:5001',
             'http://127.0.0.1:3000',
-            // Añadir dominios de producción aquí cuando sea necesario
+            
+            // **DOMINIOS DE PRODUCCIÓN**
+            // Agregar tu dominio de Vercel aquí
+            ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : []),
+            
+            // Dominios de Vercel (patrones automáticos)
+            ...(process.env.VERCEL_URL ? [
+                `https://${process.env.VERCEL_URL}`,
+                `https://${process.env.VERCEL_URL.replace('https://', '')}`
+            ] : [])
         ];
         
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        // **VERIFICACIÓN FLEXIBLE PARA VERCEL**
+        const isAllowed = allowedOrigins.some(allowedOrigin => {
+            // Exact match
+            if (origin === allowedOrigin) return true;
+            
+            // Vercel preview URLs (nutri-*.vercel.app)
+            if (process.env.NODE_ENV !== 'development' && 
+                origin.match(/https:\/\/nutri-[a-z0-9-]+\.vercel\.app$/)) {
+                return true;
+            }
+            
+            // Custom domain patterns
+            if (process.env.FRONTEND_DOMAIN && 
+                origin.includes(process.env.FRONTEND_DOMAIN)) {
+                return true;
+            }
+            
+            return false;
+        });
+        
+        if (isAllowed) {
             callback(null, true);
         } else {
-            callback(new Error('No permitido por CORS'));
+            console.warn(`🚫 CORS: Origin no permitido: ${origin}`);
+            // En desarrollo, ser más permisivo
+            if (process.env.NODE_ENV === 'development') {
+                callback(null, true);
+            } else {
+                callback(new Error('No permitido por CORS'));
+            }
         }
     },
+    
+    // **CONFIGURACIONES OPTIMIZADAS PARA VERCEL**
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-User-ID'],
-    maxAge: 86400, // Cache preflight requests por 24 horas
-    // Opciones adicionales para compatibilidad
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
+    allowedHeaders: [
+        'Content-Type', 
+        'Authorization', 
+        'X-Requested-With', 
+        'X-User-ID',
+        'X-Vercel-Forwarded-For', // Headers específicos de Vercel
+        'X-Real-IP',
+        'Accept',
+        'Origin',
+        'Referer'
+    ],
+    exposedHeaders: ['X-Total-Count', 'X-Page-Count'], // Para paginación
+    maxAge: process.env.NODE_ENV === 'production' ? 86400 : 3600, // 24h en prod, 1h en dev
     preflightContinue: false,
     optionsSuccessStatus: 204
 }));
@@ -269,8 +496,10 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/nutritionists', nutritionistRoutes);
+app.use('/api/nutritionists', nutritionistRegistrationRoutes);
 app.use('/api/relations', relationRoutes);
 app.use('/api/foods', foodRoutes);
+app.use('/api/recipes', recipeRoutes);
 app.use('/api/diet-plans', dietPlanRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/progress-tracking', progressTrackingRoutes);
@@ -282,6 +511,12 @@ app.use('/api/clinical-records', clinicalRecordRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/monetization', monetizationRoutes);
+app.use('/api/templates', templateRoutes);
+app.use('/api/growth-charts', growthChartsRoutes);
+app.use('/api/growth-charts/alerts', growthAlertsRoutes);
+app.use('/api/growth-charts/export', pdfExportRoutes);
+app.use('/api/growth-charts/clinical-integration', clinicalIntegrationRoutes);
+app.use('/api/email', emailRoutes);
 
 // Manejo de rutas no encontradas con mejor información de accesibilidad
 app.all('*', (req: Request, res: Response, next: NextFunction) => {

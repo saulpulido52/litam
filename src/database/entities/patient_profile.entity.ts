@@ -50,7 +50,7 @@ export class PatientProfile {
     diagnosed_since: string | null; // ¿Desde cuándo?
 
     @Column({ type: 'text', nullable: true })
-    important_diseases_history: string | null; // ¿Ha padecido alguna enfermedad importante?
+    important_diseases_history: string | null;
 
     @Column({ type: 'text', nullable: true })
     current_treatments: string | null; // ¿Actualmente toma algún tratamiento especial?
@@ -104,7 +104,7 @@ export class PatientProfile {
 
     // ==================== CONSUMO DE SUSTANCIAS ====================
     @Column({ type: 'varchar', length: 100, nullable: true })
-    alcohol_consumption: string | null; // frecuencia y cantidad
+    alcohol_consumption: string | null;
 
     @Column({ type: 'varchar', length: 100, nullable: true })
     tobacco_consumption: string | null;
@@ -250,6 +250,182 @@ export class PatientProfile {
 
     @Column('jsonb', { array: true, nullable: true })
     clinical_studies_docs: { id: string; filename: string; url: string; upload_date: Date; description: string }[] | null;
+
+    // ==================== CAMPOS ESPECÍFICOS PARA PACIENTES PEDIÁTRICOS ====================
+    
+    // Identificador de tipo de paciente
+    @Column({ type: 'boolean', default: false })
+    is_pediatric_patient: boolean; // Indica si es paciente pediátrico (< 18 años)
+
+    // Datos del cuidador/tutor responsable
+    @Column({ type: 'jsonb', nullable: true })
+    caregiver_info: {
+        primary_caregiver_name?: string;
+        primary_caregiver_relationship?: string; // madre, padre, abuela, tutor legal, etc.
+        primary_caregiver_phone?: string;
+        primary_caregiver_email?: string;
+        secondary_caregiver_name?: string;
+        secondary_caregiver_relationship?: string;
+        secondary_caregiver_phone?: string;
+        emergency_contact_name?: string;
+        emergency_contact_phone?: string;
+        emergency_contact_relationship?: string;
+    } | null;
+
+    // Datos del embarazo y nacimiento
+    @Column({ type: 'jsonb', nullable: true })
+    birth_history: {
+        gestational_age_weeks?: number; // Semanas de gestación al nacer
+        birth_weight_kg?: number; // Peso al nacer en kg
+        birth_length_cm?: number; // Talla al nacer en cm
+        birth_head_circumference_cm?: number; // Perímetro cefálico al nacer
+        delivery_type?: string; // natural, cesárea, fórceps, etc.
+        delivery_complications?: string; // Complicaciones durante el parto
+        apgar_score?: {
+            one_minute?: number;
+            five_minutes?: number;
+        };
+        pregnancy_complications?: string; // Complicaciones durante el embarazo
+        medications_during_pregnancy?: string; // Medicamentos durante el embarazo
+    } | null;
+
+    // Historial de lactancia y alimentación temprana
+    @Column({ type: 'jsonb', nullable: true })
+    feeding_history: {
+        breastfeeding_duration_months?: number; // Duración de lactancia materna en meses
+        exclusive_breastfeeding_months?: number; // Lactancia materna exclusiva
+        formula_feeding?: boolean; // Si recibió fórmula
+        formula_type?: string; // Tipo de fórmula utilizada
+        complementary_feeding_start_months?: number; // Inicio de alimentación complementaria
+        first_solid_foods?: string; // Primeros alimentos sólidos
+        feeding_difficulties?: string; // Dificultades de alimentación
+        food_allergies_onset?: string; // Aparición de alergias alimentarias
+    } | null;
+
+    // Desarrollo psicomotor
+    @Column({ type: 'jsonb', nullable: true })
+    developmental_milestones: {
+        head_control_months?: number; // Control cefálico
+        sitting_unsupported_months?: number; // Sentarse sin apoyo
+        crawling_months?: number; // Gateo
+        walking_months?: number; // Caminata independiente
+        first_words_months?: number; // Primeras palabras
+        toilet_training_months?: number; // Control de esfínteres
+        current_developmental_concerns?: string; // Preocupaciones actuales de desarrollo
+        developmental_delays?: string; // Retrasos del desarrollo identificados
+    } | null;
+
+    // Historial de crecimiento específico
+    @Column({ type: 'jsonb', nullable: true })
+    pediatric_growth_history: {
+        growth_chart_source?: string; // OMS, CDC, etc.
+        historical_percentiles?: {
+            date: Date;
+            age_months: number;
+            weight_percentile?: number;
+            height_percentile?: number;
+            bmi_percentile?: number;
+            head_circumference_percentile?: number;
+        }[];
+        growth_concerns?: string; // Preocupaciones de crecimiento
+        growth_velocity_issues?: boolean; // Problemas de velocidad de crecimiento
+        previous_growth_interventions?: string; // Intervenciones previas
+    } | null;
+
+    // Datos escolares y sociales
+    @Column({ type: 'jsonb', nullable: true })
+    school_social_info: {
+        school_name?: string;
+        school_grade?: string;
+        school_lunch_program?: boolean; // Participa en programa de almuerzo escolar
+        school_feeding_accommodations?: string; // Acomodaciones especiales en la escuela
+        physical_activity_at_school?: string; // Actividad física en la escuela
+        academic_performance?: string; // Rendimiento académico
+        social_interactions?: string; // Interacciones sociales
+        behavioral_concerns?: string; // Preocupaciones conductuales
+    } | null;
+
+    // Historial de vacunación (básico)
+    @Column({ type: 'jsonb', nullable: true })
+    vaccination_status: {
+        up_to_date?: boolean; // Vacunas al día
+        missed_vaccines?: string[]; // Vacunas faltantes
+        vaccine_reactions?: string; // Reacciones a vacunas
+        last_vaccine_date?: Date; // Última fecha de vacunación
+        vaccination_concerns?: string; // Preocupaciones sobre vacunación
+    } | null;
+
+    // Hábitos específicos pediátricos
+    @Column({ type: 'jsonb', nullable: true })
+    pediatric_habits: {
+        sleep_hours_per_night?: number; // Horas de sueño por noche
+        sleep_difficulties?: string; // Dificultades del sueño
+        nap_schedule?: string; // Horario de siestas
+        screen_time_hours_daily?: number; // Tiempo de pantalla diario
+        favorite_foods?: string[]; // Alimentos favoritos específicos
+        food_refusal_behaviors?: string; // Comportamientos de rechazo a alimentos
+        eating_independence_level?: string; // Nivel de independencia al comer
+        utensil_skills?: string; // Habilidades con utensilios
+        mealtime_behaviors?: string; // Comportamientos durante las comidas
+    } | null;
+
+    // Mediciones antropométricas pediátricas específicas
+    @Column({ type: 'jsonb', nullable: true })
+    pediatric_measurements: {
+        head_circumference_current_cm?: number; // Perímetro cefálico actual
+        arm_circumference_cm?: number; // Circunferencia del brazo
+        growth_velocity_data?: {
+            period_start: Date;
+            period_end: Date;
+            weight_gain_kg?: number;
+            height_gain_cm?: number;
+            head_circumference_gain_cm?: number;
+        }[];
+        body_composition?: {
+            muscle_mass_percentage?: number;
+            fat_percentage?: number;
+            hydration_level?: string;
+        };
+    } | null;
+
+    // Historial médico pediátrico específico
+    @Column({ type: 'jsonb', nullable: true })
+    pediatric_medical_history: {
+        frequent_illnesses?: string[]; // Enfermedades frecuentes
+        hospitalizations?: {
+            date: Date;
+            reason: string;
+            duration_days: number;
+        }[];
+        chronic_conditions?: string[]; // Condiciones crónicas específicas
+        medications_current?: {
+            name: string;
+            dose: string;
+            frequency: string;
+            prescribing_doctor: string;
+        }[];
+        supplements_pediatric?: {
+            name: string;
+            dose: string;
+            reason: string;
+            duration: string;
+        }[];
+        growth_hormone_therapy?: boolean; // Terapia con hormona de crecimiento
+        nutritional_therapy_history?: string; // Historial de terapia nutricional
+    } | null;
+
+    // Evaluación nutricional pediátrica específica
+    @Column({ type: 'jsonb', nullable: true })
+    pediatric_nutrition_assessment: {
+        nutritional_risk_factors?: string[]; // Factores de riesgo nutricional
+        feeding_skills_assessment?: string; // Evaluación de habilidades de alimentación
+        texture_progression?: string; // Progresión de texturas
+        cultural_dietary_factors?: string; // Factores dietéticos culturales
+        family_meal_patterns?: string; // Patrones familiares de comidas
+        food_security_status?: string; // Seguridad alimentaria del hogar
+        special_dietary_needs?: string; // Necesidades dietéticas especiales
+        growth_chart_interpretation?: string; // Interpretación de curvas de crecimiento
+    } | null;
 
     // ==================== CAMPOS DE AUDITORÍA ====================
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })

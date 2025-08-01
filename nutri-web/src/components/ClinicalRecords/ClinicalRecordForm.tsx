@@ -19,8 +19,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
   patientName,
   onSubmit,
   onCancel,
-  loading = false,
-}) => {
+  loading = false}) => {
   const isEditing = !!record;
   
   // Estados para el flujo paso a paso
@@ -45,8 +44,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       colitis: record?.current_problems?.colitis || false,
       mouth_mechanics: record?.current_problems?.mouth_mechanics || '',
       other_problems: record?.current_problems?.other_problems || '',
-      observations: record?.current_problems?.observations || '',
-    },
+      observations: record?.current_problems?.observations || ''},
 
     // Mediciones antropométricas
     anthropometricMeasurements: {
@@ -54,16 +52,14 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       habitualWeightKg: record?.anthropometric_measurements?.habitual_weight_kg || '',
       heightM: record?.anthropometric_measurements?.height_m || '',
       waistCircCm: record?.anthropometric_measurements?.waist_circ_cm || '',
-      hipCircCm: record?.anthropometric_measurements?.hip_circ_cm || '',
-    },
+      hipCircCm: record?.anthropometric_measurements?.hip_circ_cm || ''},
 
     // Presión arterial
     bloodPressure: {
       knowsBp: record?.blood_pressure?.knows_bp || false,
       habitualBp: record?.blood_pressure?.habitual_bp || '',
       systolic: record?.blood_pressure?.systolic || '',
-      diastolic: record?.blood_pressure?.diastolic || '',
-    },
+      diastolic: record?.blood_pressure?.diastolic || ''},
 
     // Historia dietética
     dietaryHistory: {
@@ -74,8 +70,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       dislikedFoods: record?.dietary_history?.disliked_foods?.join(', ') || '',
       malestarAlergiaFoods: record?.dietary_history?.malestar_alergia_foods?.join(', ') || '',
       takesSupplements: record?.dietary_history?.takes_supplements || false,
-      supplementDetails: record?.dietary_history?.supplement_details || '',
-    },
+      supplementDetails: record?.dietary_history?.supplement_details || ''},
 
     // Enfermedades diagnosticadas
     diagnosedDiseases: {
@@ -89,8 +84,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       takesSpecialTreatment: record?.diagnosed_diseases?.takes_special_treatment || false,
       specialTreatmentDetails: record?.diagnosed_diseases?.special_treatment_details || '',
       hasSurgery: record?.diagnosed_diseases?.has_surgery || false,
-      surgeryDetails: record?.diagnosed_diseases?.surgery_details || '',
-    },
+      surgeryDetails: record?.diagnosed_diseases?.surgery_details || ''},
 
     // Antecedentes Familiares
     familyMedicalHistory: {
@@ -100,8 +94,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       cancer: record?.family_medical_history?.cancer || false,
       hypoHyperthyroidism: record?.family_medical_history?.hypo_hyperthyroidism || false,
       dyslipidemia: record?.family_medical_history?.dyslipidemia || false,
-      otherHistory: record?.family_medical_history?.other_history || '',
-    },
+      otherHistory: record?.family_medical_history?.other_history || ''},
 
     // Estilo de Vida
     activityLevelDescription: record?.activity_level_description || '',
@@ -110,21 +103,18 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       type: record?.physical_exercise?.type || '',
       frequency: record?.physical_exercise?.frequency || '',
       duration: record?.physical_exercise?.duration || '',
-      sinceWhen: record?.physical_exercise?.since_when || '',
-    },
+      sinceWhen: record?.physical_exercise?.since_when || ''},
     consumptionHabits: {
       alcohol: record?.consumption_habits?.alcohol || '',
       tobacco: record?.consumption_habits?.tobacco || '',
       coffee: record?.consumption_habits?.coffee || '',
-      otherSubstances: record?.consumption_habits?.other_substances || '',
-    },
+      otherSubstances: record?.consumption_habits?.other_substances || ''},
     waterConsumptionLiters: record?.water_consumption_liters || '',
 
     // Diagnóstico y plan
     nutritionalDiagnosis: record?.nutritional_diagnosis || '',
     nutritionalPlanAndManagement: record?.nutritional_plan_and_management || '',
-    evolutionAndFollowUpNotes: record?.evolution_and_follow_up_notes || '',
-  });
+    evolutionAndFollowUpNotes: record?.evolution_and_follow_up_notes || ''});
 
   // Configuración de pasos
   const steps = [
@@ -196,23 +186,20 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         .then(count => {
           setFormData(prev => ({
             ...prev,
-            expedientNumber: (count + 1).toString(),
-          }));
+            expedientNumber: (count + 1).toString()}));
         })
         .catch(error => {
           console.error('Error al obtener el conteo de expedientes:', error);
           // Si falla, usar 1 como número por defecto
           setFormData(prev => ({
             ...prev,
-            expedientNumber: '1',
-          }));
+            expedientNumber: '1'}));
         });
     }
     // Fecha de creación automática
     setFormData(prev => ({
       ...prev,
-      recordDate: new Date().toISOString().split('T')[0],
-    }));
+      recordDate: new Date().toISOString().split('T')[0]}));
   }, [patientId, isEditing]);
 
   const validateBloodPressure = (systolic: number, diastolic: number): string[] => {
@@ -240,9 +227,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         ...prev,
         [section]: {
           ...sectionData,
-          [field]: value,
-        },
-      };
+          [field]: value}};
     });
 
     // Validar presión arterial en tiempo real
@@ -271,8 +256,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
   const handleBasicChange = (field: string, value: any) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value,
-    }));
+      [field]: value}));
   };
 
   const calculateBMI = () => {
@@ -310,23 +294,20 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         colitis: Boolean(formData.currentProblems.colitis),
         mouth_mechanics: formData.currentProblems.mouth_mechanics || undefined,
         other_problems: formData.currentProblems.other_problems || undefined,
-        observations: formData.currentProblems.observations || undefined,
-      },
+        observations: formData.currentProblems.observations || undefined},
 
       anthropometricMeasurements: {
         currentWeightKg: parseFloat(formData.anthropometricMeasurements.currentWeightKg as string) || undefined,
         habitualWeightKg: parseFloat(formData.anthropometricMeasurements.habitualWeightKg as string) || undefined,
         heightM: parseFloat(formData.anthropometricMeasurements.heightM as string) || undefined,
         waistCircCm: parseFloat(formData.anthropometricMeasurements.waistCircCm as string) || undefined,
-        hipCircCm: parseFloat(formData.anthropometricMeasurements.hipCircCm as string) || undefined,
-      },
+        hipCircCm: parseFloat(formData.anthropometricMeasurements.hipCircCm as string) || undefined},
 
       bloodPressure: {
         knowsBp: Boolean(formData.bloodPressure.knowsBp),
         systolic: parseFloat(formData.bloodPressure.systolic as string) || undefined,
         diastolic: parseFloat(formData.bloodPressure.diastolic as string) || undefined,
-        habitualBp: formData.bloodPressure.habitualBp || undefined,
-      },
+        habitualBp: formData.bloodPressure.habitualBp || undefined},
 
       dietaryHistory: {
         receivedNutritionalGuidance: Boolean(formData.dietaryHistory.receivedNutritionalGuidance),
@@ -336,8 +317,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         dislikedFoods: formData.dietaryHistory.dislikedFoods ? formData.dietaryHistory.dislikedFoods.split(',').map((f: string) => f.trim()) : undefined,
         malestarAlergiaFoods: formData.dietaryHistory.malestarAlergiaFoods ? formData.dietaryHistory.malestarAlergiaFoods.split(',').map((f: string) => f.trim()) : undefined,
         takesSupplements: Boolean(formData.dietaryHistory.takesSupplements),
-        supplementDetails: formData.dietaryHistory.supplementDetails || undefined,
-      },
+        supplementDetails: formData.dietaryHistory.supplementDetails || undefined},
 
       diagnosedDiseases: {
         hasDisease: Boolean(formData.diagnosedDiseases.hasDisease),
@@ -352,8 +332,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         takesSpecialTreatment: Boolean(formData.diagnosedDiseases.takesSpecialTreatment),
         specialTreatmentDetails: formData.diagnosedDiseases.specialTreatmentDetails || undefined,
         hasSurgery: Boolean(formData.diagnosedDiseases.hasSurgery),
-        surgeryDetails: formData.diagnosedDiseases.surgeryDetails || undefined,
-      },
+        surgeryDetails: formData.diagnosedDiseases.surgeryDetails || undefined},
 
       // Antecedentes Familiares
       familyMedicalHistory: {
@@ -363,8 +342,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         cancer: Boolean(formData.familyMedicalHistory.cancer),
         hypoHyperthyroidism: Boolean(formData.familyMedicalHistory.hypoHyperthyroidism),
         dyslipidemia: Boolean(formData.familyMedicalHistory.dyslipidemia),
-        otherHistory: formData.familyMedicalHistory.otherHistory || undefined,
-      },
+        otherHistory: formData.familyMedicalHistory.otherHistory || undefined},
 
       // Estilo de Vida
       activityLevelDescription: formData.activityLevelDescription || undefined,
@@ -373,20 +351,17 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         type: formData.physicalExercise.type || undefined,
         frequency: formData.physicalExercise.frequency || undefined,
         duration: formData.physicalExercise.duration || undefined,
-        sinceWhen: formData.physicalExercise.sinceWhen || undefined,
-      },
+        sinceWhen: formData.physicalExercise.sinceWhen || undefined},
       consumptionHabits: {
         alcohol: formData.consumptionHabits.alcohol || undefined,
         tobacco: formData.consumptionHabits.tobacco || undefined,
         coffee: formData.consumptionHabits.coffee || undefined,
-        otherSubstances: formData.consumptionHabits.otherSubstances || undefined,
-      },
+        otherSubstances: formData.consumptionHabits.otherSubstances || undefined},
       waterConsumptionLiters: parseFloat(formData.waterConsumptionLiters as string) || undefined,
 
       nutritionalDiagnosis: formData.nutritionalDiagnosis || undefined,
       nutritionalPlanAndManagement: formData.nutritionalPlanAndManagement || undefined,
-      evolutionAndFollowUpNotes: formData.evolutionAndFollowUpNotes || undefined,
-    };
+      evolutionAndFollowUpNotes: formData.evolutionAndFollowUpNotes || undefined};
 
     onSubmit(submitData);
   };

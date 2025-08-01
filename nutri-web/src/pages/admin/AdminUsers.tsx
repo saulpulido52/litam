@@ -3,34 +3,28 @@ import {
   Card, 
   Table, 
   Button, 
-  Badge, 
-  Form, 
   InputGroup, 
   Modal, 
-  Alert, 
-  Spinner, 
   Row, 
   Col,
   Dropdown,
-  Pagination
-} from 'react-bootstrap';
+  Badge,
+  Form,
+  Spinner} from 'react-bootstrap';
 import { 
   MdAssignmentInd, 
   MdSearch, 
   MdAdd, 
-  MdEdit, 
+  MdEdit,
+  MdRefresh,
+  MdWarning, 
   MdDelete, 
   MdVisibility, 
   MdMoreVert,
   MdBlock,
   MdCheckCircle,
-  MdRefresh,
   MdFilterList,
-  MdPerson,
-  MdAdminPanelSettings,
-  MdWarning,
-  MdInfo
-} from 'react-icons/md';
+  MdPerson} from 'react-icons/md';
 
 interface User {
   id: string;
@@ -48,16 +42,15 @@ interface User {
 const AdminUsers: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  // Variable/función removida - no utilizada
+const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
-  // Datos de ejemplo para demostración
+  // Variable/función removida - no utilizada
+// Variable/función removida - no utilizada
+// Datos de ejemplo para demostración
   const mockUsers: User[] = [
     {
       id: '1',
@@ -259,14 +252,14 @@ const AdminUsers: React.FC = () => {
                 <Form.Control
                   placeholder="Buscar usuarios..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                 />
               </InputGroup>
             </Col>
             <Col md={3}>
               <Form.Select
                 value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setRoleFilter(e.target.value)}
               >
                 <option value="all">Todos los roles</option>
                 <option value="admin">Administradores</option>
@@ -277,7 +270,7 @@ const AdminUsers: React.FC = () => {
             <Col md={3}>
               <Form.Select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatusFilter(e.target.value)}
               >
                 <option value="all">Todos los estados</option>
                 <option value="active">Activos</option>

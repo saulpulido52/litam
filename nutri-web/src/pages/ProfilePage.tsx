@@ -1,29 +1,32 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Alert, Tab, Nav, Spinner, Image } from 'react-bootstrap';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+// **IMPORTACIONES OPTIMIZADAS**
+import { Container, Row, Col, Card, Button, Alert, Badge, Spinner, Tab, Nav, Image } from 'react-bootstrap';
+
+// **LAZY LOADING DE ICONOS - Solo importar los necesarios**
 import { 
+  Users, 
   User, 
   Save, 
   Edit, 
   Shield, 
   Bell, 
   BarChart3, 
-  Stethoscope, 
-  Eye,
-  EyeOff,
+  Stethoscope,
   Lock,
   Award,
-  Users,
   Calendar,
-  Star,
-  CheckCircle,
-  AlertTriangle,
   Camera,
+  Settings,
+  RefreshCw,
+  CheckCircle,
+  Star,
   FileText,
   AlertCircle,
-  Settings,
-  RefreshCw
+  AlertTriangle,
+  Eye,
+  EyeOff
 } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+
 import { useProfile } from '../hooks/useProfile';
 import profileService from '../services/profileService';
 import GoogleAuth from '../components/GoogleAuth';
@@ -110,7 +113,7 @@ const OptimizedButton = React.memo(({
   className?: string;
   type?: 'button' | 'submit' | 'reset';
 }) => {
-  const handleClick = useCallback((e: React.MouseEvent) => {
+  const handleClick = useCallback(() => {
     if (!disabled && !loading && onClick) {
       onClick();
     }
@@ -292,6 +295,37 @@ const ProfilePage: React.FC = () => {
     }
   }, [profile]);
 
+  useEffect(() => {
+    if (profile && profile.nutritionist_profile) {
+      setFormState({
+        personal: {
+          first_name: profile.first_name || '',
+          last_name: profile.last_name || '',
+          email: profile.email || '',
+          phone: profile.phone || '',
+          birth_date: profile.birth_date || '',
+          gender: profile.gender || ''},
+        professional: {
+          license_number: profile.nutritionist_profile.license_number || '',
+          license_issuing_authority: profile.nutritionist_profile.license_issuing_authority || '',
+          experience_years: profile.nutritionist_profile.years_of_experience || 0,
+          consultation_fee: profile.nutritionist_profile.consultation_fee || 0,
+          specialties: profile.nutritionist_profile.specialties || [],
+          languages: profile.nutritionist_profile.languages || [],
+          treatment_approach: profile.nutritionist_profile.treatment_approach || '',
+          education: profile.nutritionist_profile.education || [],
+          certifications: profile.nutritionist_profile.certifications || [],
+          areas_of_interest: profile.nutritionist_profile.areas_of_interest || []},
+        practice: {
+          clinic_address: profile.nutritionist_profile?.clinic_address || '',
+          consultation_hours: profile.nutritionist_profile?.consultation_hours || '',
+          bio: profile.nutritionist_profile?.bio || '',
+          professional_summary: profile.nutritionist_profile?.professional_summary || ''
+        }
+      });
+    }
+  }, [profile]);
+
   // Handlers optimizados
   const handleInputChange = useCallback((section: string, field: string, value: any) => {
     setFormState(prev => ({
@@ -343,6 +377,10 @@ const ProfilePage: React.FC = () => {
       console.log('ProfilePage - Sending cleaned data:', cleanedData);
       
       await updateProfile(cleanedData);
+      
+      // Recargar el perfil para obtener los datos actualizados
+      await loadProfile();
+      
       setUiState(prev => ({ 
       ...prev,
         isEditing: false,
@@ -359,7 +397,7 @@ const ProfilePage: React.FC = () => {
         showErrorAlert: true 
       }));
     }
-  }, [formState, updateProfile]);
+  }, [formState, updateProfile, loadProfile]);
 
   const handlePasswordChange = useCallback((field: string, value: string) => {
     setPasswordState(prev => ({ ...prev, [field]: value }));
@@ -1161,10 +1199,10 @@ const ProfilePage: React.FC = () => {
                           <div className="alert alert-info">
                             <h6>¿Cómo funciona la sincronización?</h6>
                             <ul className="mb-0">
-                              <li>Las citas creadas en NutriWeb se sincronizan automáticamente con tu Google Calendar</li>
+                              <li>Las citas creadas en Litam se sincronizan automáticamente con tu Google Calendar</li>
                               <li>Los recordatorios se configuran automáticamente (24h antes por email, 30min antes por popup)</li>
                               <li>Puedes sincronizar manualmente en cualquier momento</li>
-                              <li>Los cambios en Google Calendar también se reflejan en NutriWeb</li>
+                              <li>Los cambios en Google Calendar también se reflejan en Litam</li>
                             </ul>
                           </div>
                         </Card.Body>

@@ -1,124 +1,152 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useAppointments } from '../hooks/useAppointments';
-import { useAuth } from '../hooks/useAuth';
+import { Card, Badge} from 'react-bootstrap';
+import { Bug, Calendar, Clock, AlertCircle, User } from 'lucide-react';
 
 const DebugAppointments: React.FC = () => {
-  const { appointments, loading, error, loadAppointments } = useAppointments();
-  const { user, isAuthenticated } = useAuth();
-  const [debugInfo, setDebugInfo] = useState<any>({});
+  const { appointments, loading, error } = useAppointments();
 
-  useEffect(() => {
-    const gatherDebugInfo = async () => {
-      const info = {
-        user: user ? {
-          id: user.id,
-          email: user.email,
-          role: user.role?.name
-        } : null,
-        isAuthenticated,
-        token: localStorage.getItem('access_token') ? 'Presente' : 'Ausente',
-        appointmentsCount: appointments.length,
-        loading,
-        error,
-        backendUrl: import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
-      };
-      
-      setDebugInfo(info);
-    };
-
-    gatherDebugInfo();
-  }, [user, isAuthenticated, appointments, loading, error]);
-
-  const testAppointments = async () => {
+  const formatDate = (dateStr: string) => {
     try {
-      console.log('🧪 Testing appointments connection...');
-      await loadAppointments();
-      console.log('✅ Appointments loaded successfully');
-    } catch (error) {
-      console.error('❌ Error testing appointments:', error);
-    }
-  };
-
-  const handleLogin = async () => {
-    try {
-      const response = await fetch('http://localhost:4000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: 'nutri.admin@sistema.com',
-          password: 'nutri123'
-        })
-      });
-
-      const data = await response.json();
-      if (data.status === 'success') {
-        localStorage.setItem('access_token', data.data.token);
-        localStorage.setItem('user', JSON.stringify(data.data.user));
-        window.location.reload();
-      }
-    } catch (error) {
-      console.error('Error logging in:', error);
+      return new Date(dateStr).toLocaleString('es-ES');
+    } catch {
+      return dateStr;
     }
   };
 
   return (
-    <div className="card">
-      <div className="card-header">
-        <h5>🔍 Debug Appointments</h5>
-      </div>
-      <div className="card-body">
+    <Card className="mt-4 border-warning">
+      <Card.Header className="bg-warning text-dark">
+        <h6 className="mb-0">
+          <Bug size={16} className="me-2" />
+          Debug: Estado de Citas
+        </h6>
+      </Card.Header>
+      <Card.Body>
         <div className="row">
-          <div className="col-md-6">
-            <h6>Estado de Autenticación</h6>
-            <ul className="list-unstyled">
-              <li>Usuario: {debugInfo.user ? `${debugInfo.user.email} (${debugInfo.user.role})` : 'No autenticado'}</li>
-              <li>Autenticado: {debugInfo.isAuthenticated ? '✅ Sí' : '❌ No'}</li>
-              <li>Token: {debugInfo.token}</li>
-            </ul>
+          {/* Estado General */}
+          <div className="col-md-4">
+            <h6>📊 Estado del Hook</h6>
+            <div className="mb-2">
+              <Badge bg={loading ? 'warning' : 'success'}>
+                {loading ? 'Cargando...' : 'Cargado'}
+              </Badge>
+            </div>
+            {error && (
+              <div className="mb-2">
+                <Badge bg="danger">
+                  <AlertCircle size={12} className="me-1" />
+                  Error: {error}
+                </Badge>
+              </div>
+            )}
+            <div>
+              <strong>Total citas:</strong> {appointments?.length || 0}
+            </div>
           </div>
-          <div className="col-md-6">
-            <h6>Estado de Citas</h6>
-            <ul className="list-unstyled">
-              <li>Citas cargadas: {debugInfo.appointmentsCount}</li>
-              <li>Cargando: {loading ? '✅ Sí' : '❌ No'}</li>
-              <li>Error: {error || 'Ninguno'}</li>
-              <li>Backend URL: {debugInfo.backendUrl}</li>
-            </ul>
+
+          {/* Datos Crudos */}
+          <div className="col-md-8">
+            <h6>🔍 Datos del Backend</h6>
+            {appointments && appointments.length > 0 ? (
+              <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                {appointments.map((apt, index) => (
+                  <div key={index} className="border rounded p-2 mb-2 small">
+                    <div><strong>ID:</strong> {apt.id}</div>
+                    <div><strong>Paciente:</strong> {apt.patient?.first_name} {apt.patient?.last_name}</div>
+                    <div><strong>Inicio:</strong> {formatDate(apt.start_time)}</div>
+                    <div><strong>Fin:</strong> {formatDate(apt.end_time)}</div>
+                    <div><strong>Estado:</strong> {apt.status}</div>
+                    <div><strong>Notas:</strong> {apt.notes || 'Sin notas'}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-muted">
+                <Calendar size={24} className="d-block mx-auto mb-2" />
+                <div className="text-center">No hay citas disponibles</div>
+              </div>
+            )}
           </div>
-        </div>
-        
-        <div className="mt-3">
-          <button 
-            className="btn btn-primary me-2"
-            onClick={testAppointments}
-            disabled={loading}
-          >
-            🧪 Probar Conexión
-          </button>
-          <button 
-            className="btn btn-secondary"
-            onClick={handleLogin}
-          >
-            🔑 Login de Prueba
-          </button>
         </div>
 
-        {appointments.length > 0 && (
+        {/* Análisis por Fechas */}
+        {appointments && appointments.length > 0 && (
           <div className="mt-3">
-            <h6>Primeras 3 citas:</h6>
-            <ul className="list-unstyled">
-              {appointments.slice(0, 3).map((apt, index) => (
-                <li key={apt.id}>
-                  {index + 1}. {apt.patient?.first_name} {apt.patient?.last_name} - {new Date(apt.start_time).toLocaleDateString()}
-                </li>
-              ))}
-            </ul>
+            <h6>📅 Análisis por Fechas</h6>
+            <div className="row">
+              {(() => {
+                const eventsByDate: { [key: string]: number } = {};
+                const today = new Date().toISOString().split('T')[0];
+                
+                appointments.forEach(apt => {
+                  const date = new Date(apt.start_time).toISOString().split('T')[0];
+                  eventsByDate[date] = (eventsByDate[date] || 0) + 1;
+                });
+
+                return Object.entries(eventsByDate).map(([date, count]) => (
+                  <div key={date} className="col-md-6 mb-2">
+                    <div className={`p-2 rounded ${date === today ? 'bg-primary text-white' : 'bg-light'}`}>
+                      <div className="d-flex justify-content-between">
+                        <span>
+                          <Clock size={14} className="me-1" />
+                          {new Date(date).toLocaleDateString('es-ES')}
+                          {date === today && ' (HOY)'}
+                        </span>
+                        <Badge bg={date === today ? 'light' : 'primary'} text={date === today ? 'dark' : 'white'}>
+                          {count} cita{count !== 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
           </div>
         )}
-      </div>
-    </div>
+
+        {/* Citas de Hoy */}
+        {appointments && appointments.length > 0 && (
+          <div className="mt-3">
+            <h6>🔥 Citas de Hoy</h6>
+            {(() => {
+              const today = new Date().toISOString().split('T')[0];
+              const todayAppointments = appointments.filter(apt => {
+                const aptDate = new Date(apt.start_time).toISOString().split('T')[0];
+                return aptDate === today;
+              });
+
+              if (todayAppointments.length === 0) {
+                return <div className="text-muted small">No hay citas programadas para hoy</div>;
+              }
+
+              return (
+                <div className="row">
+                  {todayAppointments.map((apt, index) => (
+                    <div key={index} className="col-md-6 mb-2">
+                      <div className="bg-success text-white p-2 rounded">
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div>
+                            <User size={14} className="me-1" />
+                            {apt.patient?.first_name} {apt.patient?.last_name}
+                          </div>
+                          <div>
+                            {new Date(apt.start_time).toLocaleTimeString('es-ES', { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+      </Card.Body>
+    </Card>
   );
 };
 

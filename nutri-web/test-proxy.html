@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Backend Connectivity</title>
+</head>
+<body>
+    <h1>Test Backend Connectivity via Vite Proxy</h1>
+    <button onclick="testBackend()">Test Backend</button>
+    <button onclick="testLogin()">Test Login</button>
+    <button onclick="testProgress()">Test Progress</button>
+    <div id="results"></div>
+
+    <script>
+        const log = (message) => {
+            document.getElementById('results').innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        };
+
+        async function testBackend() {
+            log('🔍 Testing backend connectivity...');
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'GET'
+                });
+                log('✅ Backend responds! Status: ' + response.status);
+                const text = await response.text();
+                log('📄 Response: ' + text.substring(0, 200) + '...');
+            } catch (error) {
+                log('❌ Backend error: ' + error.message);
+            }
+        }
+
+        async function testLogin() {
+            log('🔐 Testing login...');
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'nutritionist@demo.com',
+                        password: 'demo123'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ Login successful!');
+                    log('📋 User: ' + data.user?.email);
+                    window.authToken = data.access_token;
+                    log('🔑 Token saved for progress test');
+                } else {
+                    log('❌ Login failed: ' + response.status);
+                    const text = await response.text();
+                    log('📄 Error: ' + text.substring(0, 200));
+                }
+            } catch (error) {
+                log('❌ Login error: ' + error.message);
+            }
+        }
+
+        async function testProgress() {
+            if (!window.authToken) {
+                log('⚠️ Please login first!');
+                return;
+            }
+
+            const patientId = '66f1ff30-6075-4fc0-8ceb-a3fd0bf2d90f';
+            log('📊 Testing progress for patient: ' + patientId);
+
+            try {
+                // Test get progress
+                const progressResponse = await fetch('/api/progress-tracking/patient/' + patientId, {
+                    headers: { 'Authorization': 'Bearer ' + window.authToken }
+                });
+
+                if (progressResponse.ok) {
+                    const progressData = await progressResponse.json();
+                    log('✅ Progress data received!');
+                    log('📋 Logs count: ' + (progressData.data?.logs?.length || 0));
+                    log('📄 Full response: ' + JSON.stringify(progressData, null, 2).substring(0, 500) + '...');
+                } else {
+                    log('❌ Progress failed: ' + progressResponse.status);
+                }
+
+                // Test automatic analysis
+                log('🤖 Testing automatic analysis...');
+                const analysisResponse = await fetch('/api/progress-tracking/patient/' + patientId + '/generate-automatic', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + window.authToken }
+                });
+
+                if (analysisResponse.ok) {
+                    const analysisData = await analysisResponse.json();
+                    log('✅ Analysis generated!');
+                    log('📈 Timeline data points: ' + (analysisData.data?.analysis?.timelineData?.length || 0));
+                    log('📋 New logs count: ' + (analysisData.data?.logs?.length || 0));
+                    log('📄 Analysis structure: ' + JSON.stringify(Object.keys(analysisData.data?.analysis || {})));
+                } else {
+                    log('❌ Analysis failed: ' + analysisResponse.status);
+                    const text = await analysisResponse.text();
+                    log('📄 Error: ' + text.substring(0, 200));
+                }
+
+            } catch (error) {
+                log('❌ Progress test error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html> 

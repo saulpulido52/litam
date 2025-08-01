@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clock, Target, FileText, Download, Edit, X, Settings, RotateCcw, Shield, AlertTriangle, Heart } from 'lucide-react';
+import { Clock, Target, Download, Edit, X, Settings, RotateCcw, Shield, FileText, Heart, AlertTriangle} from 'lucide-react';
 import type { DietPlan } from '../types/diet';
 
 interface DietPlanViewerProps {

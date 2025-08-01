@@ -1,47 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Button, Badge, Alert, Spinner, ListGroup } from 'react-bootstrap';
+import { Row, Col, Card, Button, Spinner, Alert, Badge, ListGroup} from 'react-bootstrap';
 import { useAdmin } from '../../hooks/useAdmin';
-import type { DataIntegrityReport } from '../../services/adminService';
 
 // React Icons
 import { 
   MdBuild,
-  MdRefresh,
-  MdCheckCircle,
   MdError,
-  MdWarning,
-  MdInfo,
   MdAutoFixHigh,
-  MdBackup,
-  MdRestore,
-  MdSecurity,
-  MdDataUsage,
-  MdAnalytics,
   MdReport,
   MdBugReport,
   MdVisibility,
-  MdPlayArrow,
-  MdStop,
-  MdSave,
-  MdClose,
-  MdAccessTime
+  MdWarning,
+  MdInfo,
+  MdRefresh
 } from 'react-icons/md';
 import { 
   FaDatabase,
-  FaServer,
   FaExclamationTriangle,
-  FaExclamationCircle,
   FaInfoCircle,
-  FaCheckCircle,
-  FaClock,
-  FaShieldAlt,
-  FaTools,
-  FaWrench,
-  FaCog,
-  FaSync,
-  FaPlay,
-  FaPause,
-  FaStop
+  FaCheckCircle
 } from 'react-icons/fa';
 
 const AdminDataIntegrityTab: React.FC = () => {
@@ -83,7 +60,7 @@ const AdminDataIntegrityTab: React.FC = () => {
       case 'critical':
         return <FaExclamationTriangle className="text-danger" />;
       case 'high':
-        return <FaExclamationCircle className="text-warning" />;
+        return <FaExclamationTriangle className="text-warning" />;
       case 'medium':
         return <FaInfoCircle className="text-info" />;
       case 'low':
@@ -223,7 +200,7 @@ const AdminDataIntegrityTab: React.FC = () => {
           <Card className="border-0 shadow-sm">
             <Card.Header>
               <h6 className="mb-0">
-                <FaTools className="me-2 text-warning" />
+                <FaDatabase className="me-2 text-warning" />
                 Configuración de Reparación
               </h6>
             </Card.Header>
@@ -383,7 +360,7 @@ const AdminDataIntegrityTab: React.FC = () => {
         <Row className="mb-4">
           <Col>
             <Alert variant="warning">
-              <FaExclamationCircle className="me-2" />
+              <FaExclamationTriangle className="me-2" />
               <strong>Atención:</strong> Se detectaron problemas de alta prioridad que deberían ser revisados.
             </Alert>
           </Col>

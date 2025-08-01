@@ -1,8 +1,8 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Spinner, Alert, Button } from 'react-bootstrap';
-import { MdAdminPanelSettings, MdSecurity, MdWarning } from 'react-icons/md';
+import { Spinner, Button, Alert } from 'react-bootstrap';
+import { MdAdminPanelSettings, MdSecurity, MdWarning} from 'react-icons/md';
 
 interface AdminRouteProps {
   children: React.ReactNode;

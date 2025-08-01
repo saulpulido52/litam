@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Badge, Button, Alert, Table, Modal, Form, Container } from 'react-bootstrap';
+import { Card, Row, Col, Button, Table, Modal, Container, Badge, Alert, Form } from 'react-bootstrap';
 import { 
-  DollarSign, 
-  Users, 
-  TrendingUp, 
   Crown,
-  Star,
-  Settings,
   Edit,
   Plus,
   Trash,
-  Eye,
+  Users,
   CheckCircle,
   AlertTriangle
 } from 'lucide-react';
@@ -73,9 +68,9 @@ const AdminMonetization: React.FC = () => {
   const [patientTiers, setPatientTiers] = useState<PatientTier[]>([]);
   const [stats, setStats] = useState<MonetizationStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showNutritionistModal, setShowNutritionistModal] = useState(false);
-  const [showPatientModal, setShowPatientModal] = useState(false);
-  const [editingTier, setEditingTier] = useState<NutritionistTier | PatientTier | null>(null);
+  // const [showNutritionistModal, setShowNutritionistModal] = useState(false);
+  // const [showPatientModal, setShowPatientModal] = useState(false);
+  // const [editingTier, setEditingTier] = useState<NutritionistTier | PatientTier | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [assignType, setAssignType] = useState<'nutritionist' | 'patient' | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -102,7 +97,7 @@ const AdminMonetization: React.FC = () => {
         setPatientTiers(ptiers);
         setStats({ nutritionists: nstats, patients: pstats });
         setNutritionists(nlist);
-        setPatients(plist);
+        setPatients(plist.users || []);
       } catch (e) {}
       setLoading(false);
     };
@@ -483,7 +478,7 @@ const AdminMonetization: React.FC = () => {
         <Modal.Body>
           <Form.Group>
             <Form.Label>Selecciona el nuevo tier</Form.Label>
-            <Form.Select value={selectedTierId || ''} onChange={e => setSelectedTierId(e.target.value)}>
+            <Form.Select value={selectedTierId || ''} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedTierId(e.target.value)}>
               <option value="">Selecciona...</option>
               {(assignType === 'nutritionist' ? nutritionistTiers : patientTiers).map(tier => (
                 <option key={tier.id} value={tier.id}>{tier.name}</option>

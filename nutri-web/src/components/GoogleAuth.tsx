@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Alert, Spinner } from 'react-bootstrap';
-import { useAuth } from '../hooks/useAuth';
+// import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 
 interface GoogleAuthProps {
@@ -18,7 +18,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({
 }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { login } = useAuth();
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -60,12 +60,11 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({
 
         try {
             // Obtener URL de autorización de Google
-            const response = await fetch('http://localhost:4000/api/auth/google/init', {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+      const response = await fetch(`${apiUrl}/auth/google/init`, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+                    'Content-Type': 'application/json'}});
 
             if (!response.ok) {
                 throw new Error('Error al iniciar autenticación con Google');
@@ -97,13 +96,12 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({
                 throw new Error('No hay token de autenticación');
             }
 
-            const response = await fetch('http://localhost:4000/api/auth/google/disconnect', {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+      const response = await fetch(`${apiUrl}/auth/google/disconnect`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
+                    'Authorization': `Bearer ${token}`}});
 
             if (!response.ok) {
                 throw new Error('Error al desconectar cuenta de Google');
@@ -137,13 +135,12 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({
                 return null;
             }
 
-            const response = await fetch('http://localhost:4000/api/auth/google/status', {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+      const response = await fetch(`${apiUrl}/auth/google/status`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
+                    'Authorization': `Bearer ${token}`}});
 
             if (!response.ok) {
                 throw new Error('Error al obtener estado de conexión con Google');

@@ -9,7 +9,7 @@ import bcrypt from 'bcrypt';
 import http from 'http'; // Importar módulo http de Node.js
 import { Server as SocketIOServer } from 'socket.io'; // Importar Server de socket.io
 
-const PORT = process.env.PORT || 4000;
+const PORT = Number(process.env.PORT) || 4000;
 
 // Crear el servidor HTTP para Express y Socket.IO
 const server = http.createServer(app);
@@ -350,10 +350,10 @@ async function initializeDatabase() {
 async function startServer() {
     await initializeDatabase();
 
-    server.listen(PORT, () => {
+    server.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Server is running on port ${PORT}`);
-        console.log(`📡 API available at http://localhost:${PORT}/api`);
-        console.log(`🔌 Socket.IO available on ws://localhost:${PORT}`);
+        console.log(`📡 API available at http://0.0.0.0:${PORT}/api`);
+        console.log(`🔌 Socket.IO available on ws://0.0.0.0:${PORT}`);
         console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
         console.log(`💾 Database: ${process.env.DB_DATABASE || 'default'}`);
         console.log(`👥 Ready for multiple concurrent users`);

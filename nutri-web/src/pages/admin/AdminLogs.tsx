@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Badge, Button, Alert, Table, Form } from 'react-bootstrap';
+import { Card, Row, Col, Button, Table, Form, Alert, Badge} from 'react-bootstrap';
 import { 
   FileText, 
   Search, 
-  Filter, 
   Download, 
   RefreshCw,
-  AlertTriangle,
   Info,
-  Clock
+  Clock,
+  AlertTriangle
 } from 'lucide-react';
 
 interface LogEntry {

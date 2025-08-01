@@ -53,8 +53,7 @@ class DietPlanService {
         `${apiUrl}/diet-plans/${planId}/generate-meal-planner-pdf`,
         {
           responseType: 'blob',
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }
+          headers: token ? { Authorization: `Bearer ${token}` } : {}}
       );
       return response.data;
     } catch (error) {

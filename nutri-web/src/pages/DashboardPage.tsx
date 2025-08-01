@@ -1,35 +1,26 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Alert, Spinner, ProgressBar } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Alert, Badge, Spinner, ProgressBar} from 'react-bootstrap';
 import { 
   Users, 
   Calendar, 
-  TrendingUp, 
-  Activity, 
   BarChart3, 
   Clock,
-  Star, 
-  CheckCircle,
-  AlertTriangle,
   Plus,
-  Eye,
-  EyeOff,
   RefreshCw,
   Settings,
   Bell,
-  User,
-  FileText,
   Award,
   Target,
-  Heart,
   Zap,
   ArrowUp,
   ArrowDown,
-  Minus,
-  Home,
-  MessageSquare,
   PieChart,
   BarChart,
-  LineChart
+  LineChart,
+  Brain,
+  FileText,
+  AlertTriangle,
+  CheckCircle
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useDashboard } from '../hooks/useDashboard';
@@ -37,9 +28,10 @@ import { usePatients } from '../hooks/usePatients';
 import { useNavigate } from 'react-router-dom';
 import RecentActivitiesCard from '../components/RecentActivitiesCard';
 import '../styles/dashboard-modern.css';
+import apiService from '../services/api';
 
 const DashboardPage: React.FC = () => {
-  console.log('🔍 [DashboardPage] Componente renderizado');
+  // console.log('🔍 [DashboardPage] Componente renderizado');
 
   // HOOKS AL INICIO, SIEMPRE
   const { user, isLoading } = useAuth();
@@ -48,6 +40,24 @@ const DashboardPage: React.FC = () => {
   const { patients, loading: patientsLoading } = usePatients();
   const [showDetailedStats, setShowDetailedStats] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
+
+  // **DEBUGGING TEMPORAL DE AUTENTICACIÓN - REDUCIDO**
+  useEffect(() => {
+    const debugAuth = () => {
+      const token = apiService.getToken();
+      const storageToken = localStorage.getItem('access_token');
+      
+      // Solo debug si hay problemas de autenticación
+      if (storageToken && !token) {
+        console.log('🔄 Detected token mismatch, forcing reload...');
+        apiService.forceTokenReload();
+      }
+    };
+    
+    debugAuth();
+    const interval = setInterval(debugAuth, 30000); // Debug cada 30 segundos
+    return () => clearInterval(interval);
+  }, [user, isLoading]);
 
   // Memoizados y callbacks
   const alerts = useMemo(() => {
@@ -313,6 +323,45 @@ const DashboardPage: React.FC = () => {
             </div>
           </Col>
         </Row>
+
+      {/* Card Promocional - Expedientes Inteligentes */}
+      <Row className="mb-4">
+        <Col>
+          <Card className="border-primary shadow-sm">
+            <Card.Body className="py-4">
+              <Row className="align-items-center">
+                <Col md={8}>
+                  <div className="d-flex align-items-center mb-2">
+                    <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                      <Brain className="text-primary" size={24} />
+                    </div>
+                    <div>
+                      <h5 className="mb-1 fw-bold text-primary">Expedientes Inteligentes ✨</h5>
+                      <p className="text-muted mb-0">Sistema automatizado con IA - Reduce el tiempo de consulta en 75%</p>
+                    </div>
+                  </div>
+                  <div className="d-flex flex-wrap gap-2">
+                    <Badge bg="success" className="px-2 py-1">🤖 Detección Automática</Badge>
+                    <Badge bg="info" className="px-2 py-1">📊 Comparativos Automáticos</Badge>
+                    <Badge bg="warning" className="px-2 py-1">⚡ Seguimientos de 5 min</Badge>
+                  </div>
+                </Col>
+                <Col md={4} className="text-end">
+                  <Button 
+                    variant="primary" 
+                    size="lg"
+                    onClick={() => navigate('/expedientes-inteligentes')}
+                    className="px-4"
+                  >
+                    <Zap size={18} className="me-2" />
+                    Explorar Ahora
+                  </Button>
+                </Col>
+              </Row>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
       {/* Alertas - Mejor espaciado */}
       {alerts.length > 0 && (

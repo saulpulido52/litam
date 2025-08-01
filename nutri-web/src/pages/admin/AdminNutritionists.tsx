@@ -3,44 +3,29 @@ import {
   Card, 
   Table, 
   Button, 
-  Badge, 
-  Form, 
   InputGroup, 
   Modal, 
-  Alert, 
-  Spinner, 
   Row, 
   Col,
   Dropdown,
-  ProgressBar
-} from 'react-bootstrap';
+  Badge,
+  Form,
+  Spinner} from 'react-bootstrap';
 import { 
   MdPerson, 
   MdSearch, 
   MdAdd, 
-  MdEdit, 
+  MdEdit,
+  MdWarning,
+  MdVerified, 
   MdDelete, 
   MdVisibility, 
   MdMoreVert,
   MdBlock,
   MdCheckCircle,
-  MdRefresh,
   MdFilterList,
-  MdVerified,
-  MdWarning,
-  MdInfo,
-  MdPeople,
-  MdAssignment,
-  MdTrendingUp,
-  MdTrendingDown,
   MdStar,
-  MdStarBorder,
-  MdEmail,
-  MdPhone,
-  MdLocationOn,
-  MdWork,
-  MdSchool
-} from 'react-icons/md';
+  MdStarBorder} from 'react-icons/md';
 
 interface Nutritionist {
   id: string;
@@ -71,8 +56,8 @@ interface Nutritionist {
 const AdminNutritionists: React.FC = () => {
   const [nutritionists, setNutritionists] = useState<Nutritionist[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  // Variable/función removida - no utilizada
+const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [verificationFilter, setVerificationFilter] = useState('all');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -262,11 +247,8 @@ const AdminNutritionists: React.FC = () => {
     return <div className="d-flex">{stars}</div>;
   };
 
-  const getCompletionRate = (completed: number, total: number) => {
-    return total > 0 ? Math.round((completed / total) * 100) : 0;
-  };
-
-  if (loading) {
+  // Variable/función removida - no utilizada
+if (loading) {
     return (
       <div className="text-center py-5">
         <Spinner animation="border" variant="primary" />
@@ -339,14 +321,14 @@ const AdminNutritionists: React.FC = () => {
                 <Form.Control
                   placeholder="Buscar nutriólogos..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                 />
               </InputGroup>
             </Col>
             <Col md={3}>
               <Form.Select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatusFilter(e.target.value)}
               >
                 <option value="all">Todos los estados</option>
                 <option value="active">Activos</option>
@@ -356,7 +338,7 @@ const AdminNutritionists: React.FC = () => {
             <Col md={3}>
               <Form.Select
                 value={verificationFilter}
-                onChange={(e) => setVerificationFilter(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setVerificationFilter(e.target.value)}
               >
                 <option value="all">Todos los verificados</option>
                 <option value="verified">Verificados</option>

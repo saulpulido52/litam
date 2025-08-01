@@ -862,6 +862,9 @@ export class PatientResponseDTO {
     created_at!: Date;
     updated_at!: Date;
     
+    // Información pediátrica
+    is_pediatric_patient?: boolean;
+    
     // Campos calculados
     bmi?: number;
     bmi_category?: string;

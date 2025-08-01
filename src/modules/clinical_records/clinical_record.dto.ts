@@ -14,8 +14,93 @@ import {
     IsDateString,
     IsObject,
     IsUrl,
+    IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { TipoExpediente } from '../../database/entities/clinical_record.entity';
+
+// ============== NUEVOS DTOs PARA EL SISTEMA EVOLUTIVO DE EXPEDIENTES ==============
+
+export class SeguimientoMetadataDto {
+    @IsOptional() @IsNumber() @Min(0) @Max(100) adherencia_plan?: number;
+    @IsOptional() @IsString() @Length(0, 1000) dificultades?: string;
+    @IsOptional() @IsNumber() @Min(1) @Max(5) satisfaccion?: number;
+    @IsOptional() @IsBoolean() cambios_medicamentos?: boolean;
+    @IsOptional() @IsString() @Length(0, 1000) nuevos_sintomas?: string;
+    @IsOptional() @IsString() @Length(0, 1000) mejoras_notadas?: string;
+    @IsOptional() @IsString() @Length(0, 1000) proximos_objetivos?: string;
+}
+
+export class AnalisisRiesgoBeneficioDto {
+    @IsOptional() @IsString() @Length(0, 500) decision?: string;
+    @IsOptional() @IsArray() @IsString({ each: true }) riesgos?: string[];
+    @IsOptional() @IsArray() @IsString({ each: true }) beneficios?: string[];
+    @IsOptional() @IsArray() @IsString({ each: true }) alternativas?: string[];
+    @IsOptional() @IsString() @Length(0, 1000) razonamiento?: string;
+}
+
+export class JuicioClinicoDto {
+    @IsOptional() @IsString() @Length(0, 1000) evaluacion_situacion?: string;
+    @IsOptional() @IsString() @Length(0, 1000) respuesta_congruente?: string;
+    @IsOptional() @IsArray() @IsString({ each: true }) factores_objetivos?: string[];
+    @IsOptional() @IsArray() @IsString({ each: true }) factores_subjetivos?: string[];
+    @IsOptional() @IsString() @Length(0, 1000) justificacion?: string;
+}
+
+export class CapacidadPacienteDto {
+    @IsOptional() @IsBoolean() comprende_medicamentos?: boolean;
+    @IsOptional() @IsBoolean() conoce_sintomas_alarma?: boolean;
+    @IsOptional() @IsBoolean() sabe_contacto_emergencia?: boolean;
+    @IsOptional() @IsBoolean() puede_auto_monitoreo?: boolean;
+    @IsOptional() @IsBoolean() requiere_apoyo_familiar?: boolean;
+    @IsOptional() @IsIn(['alto', 'medio', 'bajo']) nivel_independencia?: 'alto' | 'medio' | 'bajo';
+    @IsOptional() @IsString() @Length(0, 500) observaciones?: string;
+}
+
+export class DeteccionExpedienteDto {
+    @IsUUID('4', { message: 'El ID del paciente debe ser un UUID válido.' })
+    patientId!: string;
+
+    @IsOptional() @IsString() @Length(0, 2000) 
+    motivoConsulta?: string;
+
+    @IsOptional() @IsBoolean() 
+    esProgramada?: boolean;
+
+    @IsOptional() @IsString() @Length(0, 100)
+    tipoConsultaSolicitada?: string;
+}
+
+export class RespuestaDeteccionExpedienteDto {
+    tipoSugerido: TipoExpediente;
+    razon: string;
+    expedienteBaseId?: string;
+    datosHeredables?: any;
+    requiereConfirmacion: boolean;
+    alertas?: string[];
+}
+
+export class DatosPreviosPacienteDto {
+    ultimoExpediente?: any;
+    datosEstaticos?: {
+        antecedentes_familiares?: any;
+        alergias?: any;
+        enfermedades_cronicas?: any;
+        cirugias_previas?: any;
+    };
+    ultimasMediciones?: {
+        peso?: number;
+        altura?: number;
+        imc?: number;
+        presion_sistolica?: number;
+        presion_diastolica?: number;
+        fecha?: string;
+    };
+    tendencias?: {
+        peso?: 'subiendo' | 'bajando' | 'estable';
+        presion?: 'mejorando' | 'empeorando' | 'estable';
+    };
+}
 
 // --- DTOs para campos JSONB anidados ---
 
@@ -270,4 +355,26 @@ export class CreateUpdateClinicalRecordDto {
     @IsOptional() @IsString() @Length(0, 4000) evolutionAndFollowUpNotes?: string;
 
     @IsOptional() @IsString() @IsUrl() graphUrl?: string;
+
+    // NUEVOS CAMPOS PARA SISTEMA EVOLUTIVO DE EXPEDIENTES
+
+    @IsOptional() @IsIn(Object.values(TipoExpediente)) 
+    tipoExpediente?: TipoExpediente;
+
+    @IsOptional() @IsUUID('4') 
+    expedienteBaseId?: string;
+
+    @IsOptional() @IsObject() @ValidateNested() @Type(() => SeguimientoMetadataDto)
+    seguimientoMetadata?: SeguimientoMetadataDto;
+
+    @IsOptional() @IsObject() @ValidateNested() @Type(() => AnalisisRiesgoBeneficioDto)
+    analisisRiesgoBeneficio?: AnalisisRiesgoBeneficioDto;
+
+    @IsOptional() @IsObject() @ValidateNested() @Type(() => JuicioClinicoDto)
+    juicioClinico?: JuicioClinicoDto;
+
+    @IsOptional() @IsObject() @ValidateNested() @Type(() => CapacidadPacienteDto)
+    capacidadPaciente?: CapacidadPacienteDto;
 }
+
+export type UpdateClinicalRecordDto = CreateUpdateClinicalRecordDto;

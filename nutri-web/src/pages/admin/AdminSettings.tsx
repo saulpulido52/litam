@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Badge, Button, Alert, Form } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Card, Row, Col, Button, Form, Alert} from 'react-bootstrap';
 import { 
   Settings, 
   Shield, 
@@ -8,8 +8,7 @@ import {
   Database,
   Save,
   RefreshCw,
-  CheckCircle
-} from 'lucide-react';
+  CheckCircle} from 'lucide-react';
 
 interface SystemSettings {
   general: {
@@ -51,7 +50,7 @@ interface SystemSettings {
 const AdminSettings: React.FC = () => {
   const [settings, setSettings] = useState<SystemSettings>({
     general: {
-      siteName: 'NutriWeb',
+      siteName: 'Litam',
       siteDescription: 'Sistema de gestión nutricional profesional',
       timezone: 'America/Mexico_City',
       language: 'es',
@@ -67,10 +66,10 @@ const AdminSettings: React.FC = () => {
     email: {
       smtpHost: 'smtp.gmail.com',
       smtpPort: 587,
-      smtpUser: 'admin@nutriweb.com',
+      smtpUser: 'litam@wexdoc.com',
       smtpPassword: '********',
-      fromEmail: 'noreply@nutriweb.com',
-      fromName: 'NutriWeb Sistema'
+      fromEmail: 'litam@wexdoc.com',
+      fromName: 'Litam Sistema'
     },
     notifications: {
       emailNotifications: true,
@@ -86,8 +85,9 @@ const AdminSettings: React.FC = () => {
     }
   });
 
-  const [loading, setLoading] = useState(false);
+  // Variable/función removida - no utilizada
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const handleSave = async () => {
@@ -148,7 +148,7 @@ const AdminSettings: React.FC = () => {
                 <Form.Control 
                   type="text" 
                   value={settings.general.siteName}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     general: { ...settings.general, siteName: e.target.value }
                   })}
@@ -161,7 +161,7 @@ const AdminSettings: React.FC = () => {
                 <Form.Control 
                   type="text" 
                   value={settings.general.siteDescription}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     general: { ...settings.general, siteDescription: e.target.value }
                   })}
@@ -175,7 +175,7 @@ const AdminSettings: React.FC = () => {
                 <Form.Label>Zona Horaria</Form.Label>
                 <Form.Select 
                   value={settings.general.timezone}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSettings({
                     ...settings,
                     general: { ...settings.general, timezone: e.target.value }
                   })}
@@ -191,7 +191,7 @@ const AdminSettings: React.FC = () => {
                 <Form.Label>Idioma</Form.Label>
                 <Form.Select 
                   value={settings.general.language}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSettings({
                     ...settings,
                     general: { ...settings.general, language: e.target.value }
                   })}
@@ -208,7 +208,7 @@ const AdminSettings: React.FC = () => {
                   type="switch" 
                   id="maintenance-mode" 
                   checked={settings.general.maintenanceMode}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     general: { ...settings.general, maintenanceMode: e.target.checked }
                   })}
@@ -235,7 +235,7 @@ const AdminSettings: React.FC = () => {
                 <Form.Control 
                   type="number" 
                   value={settings.security.sessionTimeout}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     security: { ...settings.security, sessionTimeout: parseInt(e.target.value) }
                   })}
@@ -248,7 +248,7 @@ const AdminSettings: React.FC = () => {
                 <Form.Control 
                   type="number" 
                   value={settings.security.maxLoginAttempts}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     security: { ...settings.security, maxLoginAttempts: parseInt(e.target.value) }
                   })}
@@ -263,7 +263,7 @@ const AdminSettings: React.FC = () => {
                 <Form.Control 
                   type="number" 
                   value={settings.security.passwordMinLength}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     security: { ...settings.security, passwordMinLength: parseInt(e.target.value) }
                   })}
@@ -277,7 +277,7 @@ const AdminSettings: React.FC = () => {
                   type="switch" 
                   id="two-factor" 
                   checked={settings.security.requireTwoFactor}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     security: { ...settings.security, requireTwoFactor: e.target.checked }
                   })}
@@ -293,7 +293,7 @@ const AdminSettings: React.FC = () => {
                   type="switch" 
                   id="audit-log" 
                   checked={settings.security.enableAuditLog}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     security: { ...settings.security, enableAuditLog: e.target.checked }
                   })}
@@ -320,7 +320,7 @@ const AdminSettings: React.FC = () => {
                 <Form.Control 
                   type="text" 
                   value={settings.email.smtpHost}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     email: { ...settings.email, smtpHost: e.target.value }
                   })}
@@ -333,7 +333,7 @@ const AdminSettings: React.FC = () => {
                 <Form.Control 
                   type="number" 
                   value={settings.email.smtpPort}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     email: { ...settings.email, smtpPort: parseInt(e.target.value) }
                   })}
@@ -348,7 +348,7 @@ const AdminSettings: React.FC = () => {
                 <Form.Control 
                   type="text" 
                   value={settings.email.smtpUser}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     email: { ...settings.email, smtpUser: e.target.value }
                   })}
@@ -361,7 +361,7 @@ const AdminSettings: React.FC = () => {
                 <Form.Control 
                   type="password" 
                   value={settings.email.smtpPassword}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     email: { ...settings.email, smtpPassword: e.target.value }
                   })}
@@ -376,7 +376,7 @@ const AdminSettings: React.FC = () => {
                 <Form.Control 
                   type="email" 
                   value={settings.email.fromEmail}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     email: { ...settings.email, fromEmail: e.target.value }
                   })}
@@ -389,7 +389,7 @@ const AdminSettings: React.FC = () => {
                 <Form.Control 
                   type="text" 
                   value={settings.email.fromName}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     email: { ...settings.email, fromName: e.target.value }
                   })}
@@ -425,7 +425,7 @@ const AdminSettings: React.FC = () => {
                   type="switch" 
                   id="email-notifications" 
                   checked={settings.notifications.emailNotifications}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     notifications: { ...settings.notifications, emailNotifications: e.target.checked }
                   })}
@@ -439,7 +439,7 @@ const AdminSettings: React.FC = () => {
                   type="switch" 
                   id="sms-notifications" 
                   checked={settings.notifications.smsNotifications}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     notifications: { ...settings.notifications, smsNotifications: e.target.checked }
                   })}
@@ -455,7 +455,7 @@ const AdminSettings: React.FC = () => {
                   type="switch" 
                   id="push-notifications" 
                   checked={settings.notifications.pushNotifications}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     notifications: { ...settings.notifications, pushNotifications: e.target.checked }
                   })}
@@ -469,7 +469,7 @@ const AdminSettings: React.FC = () => {
                   type="switch" 
                   id="admin-alerts" 
                   checked={settings.notifications.adminAlerts}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     notifications: { ...settings.notifications, adminAlerts: e.target.checked }
                   })}
@@ -495,7 +495,7 @@ const AdminSettings: React.FC = () => {
                 <Form.Label>Frecuencia de Backup</Form.Label>
                 <Form.Select 
                   value={settings.database.backupFrequency}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSettings({
                     ...settings,
                     database: { ...settings.database, backupFrequency: e.target.value }
                   })}
@@ -513,7 +513,7 @@ const AdminSettings: React.FC = () => {
                 <Form.Control 
                   type="number" 
                   value={settings.database.backupRetention}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     database: { ...settings.database, backupRetention: parseInt(e.target.value) }
                   })}
@@ -529,7 +529,7 @@ const AdminSettings: React.FC = () => {
                   type="switch" 
                   id="auto-optimization" 
                   checked={settings.database.autoOptimization}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     database: { ...settings.database, autoOptimization: e.target.checked }
                   })}
@@ -542,7 +542,7 @@ const AdminSettings: React.FC = () => {
                 <Form.Control 
                   type="number" 
                   value={settings.database.connectionPool}
-                  onChange={(e) => setSettings({
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings({
                     ...settings,
                     database: { ...settings.database, connectionPool: parseInt(e.target.value) }
                   })}

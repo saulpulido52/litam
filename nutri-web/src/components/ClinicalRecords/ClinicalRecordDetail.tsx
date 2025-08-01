@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { ClinicalRecord } from '../../types';
 import LaboratoryDocuments from './LaboratoryDocuments';
 import DrugNutrientInteractions from './DrugNutrientInteractions';
+import GrowthChartsPDFExport from '../GrowthCharts/GrowthChartsPDFExport';
 
 interface ClinicalRecordDetailProps {
   record: ClinicalRecord;
@@ -18,16 +19,14 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
   onDelete,
   onClose,
   canEdit = true,
-  canDelete = true,
-}) => {
+  canDelete = true}) => {
   const [activeTab, setActiveTab] = useState('basic');
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric',
-    });
+      day: 'numeric'});
   };
 
   const formatDateTime = (dateString: string) => {
@@ -36,8 +35,7 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit',
-    });
+      minute: '2-digit'});
   };
 
   const calculateBMI = (weight?: number, height?: number) => {
@@ -219,6 +217,14 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                 onClick={() => setActiveTab('interactions')}
               >
                 <i className="fas fa-pills me-1"></i>Fármaco-Nutriente
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'growth' ? 'active' : ''}`}
+                onClick={() => setActiveTab('growth')}
+              >
+                <i className="fas fa-chart-line me-1"></i>Crecimiento Pediátrico
               </button>
             </li>
           </ul>
@@ -1129,6 +1135,32 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                     window.location.reload(); // Simple refresh, can be improved with proper state management
                   }}
                   canEdit={canEdit}
+                />
+              </div>
+            )}
+
+            {/* Pestaña: Crecimiento Pediátrico */}
+            {activeTab === 'growth' && (
+              <div className="tab-pane fade show active">
+                <div className="alert alert-info mb-3">
+                  <i className="fas fa-info-circle me-2"></i>
+                  <strong>Análisis de Crecimiento Pediátrico</strong>
+                  <p className="mb-1 mt-2">
+                    Esta sección permite generar reportes de crecimiento pediátrico basados en las mediciones 
+                    antropométricas registradas en el expediente clínico del paciente.
+                  </p>
+                  {record.patient.age && (
+                    <p className="mb-0">
+                      <small>
+                        Edad del paciente: {record.patient.age} años
+                      </small>
+                    </p>
+                  )}
+                </div>
+                
+                <GrowthChartsPDFExport 
+                  patientId={record.patient.id}
+                  patientName={`${record.patient.first_name} ${record.patient.last_name}`}
                 />
               </div>
             )}

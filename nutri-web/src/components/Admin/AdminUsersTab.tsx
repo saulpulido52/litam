@@ -1,55 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Button, Table, Badge, Modal, Form, Alert, Spinner, InputGroup } from 'react-bootstrap';
+import { Row, Col, Card, Button, Table, Modal, InputGroup, Badge, Form, Spinner, Alert } from 'react-bootstrap';
 import { useAdmin } from '../../hooks/useAdmin';
-import type { AdminUser, AdminUpdateUserDto, AdminVerifyNutritionistDto } from '../../services/adminService';
+import type { AdminUser, AdminUpdateUserDto } from '../../services/adminService';
 
 // React Icons
 import { 
-  MdAdd,
+  // MdAdd,
   MdEdit,
   MdDelete,
-  MdVisibility,
-  MdSearch,
-  MdFilterList,
-  MdRefresh,
   MdCheckCircle,
   MdCancel,
-  MdWarning,
   MdPerson,
-  MdEmail,
-  MdPhone,
-  MdCalendarToday,
-  MdSecurity,
+  // MdSecurity,
   MdVerified,
-  MdLock,
-  MdLockOpen,
+  // MdLock,
+  // MdLockOpen,
   MdSave,
-  MdClose
+  MdClose,
+  MdRefresh,
+  MdWarning,
+  MdEmail,
+  MdCalendarToday
 } from 'react-icons/md';
-import { 
-  FaUsers, 
-  FaUserShield, 
-  FaUserCheck, 
-  FaUserTimes,
-  FaUserCog,
-  FaUserEdit,
-  FaUserPlus,
-  FaTrash,
-  FaEye,
-  FaSearch,
-  FaFilter
-} from 'react-icons/fa';
 
 const AdminUsersTab: React.FC = () => {
   const {
     users,
     loading,
-    error,
     loadUsers,
     updateUser,
     deleteUser,
-    verifyNutritionist,
-    clearError
+    verifyNutritionist
   } = useAdmin();
 
   const [showUserModal, setShowUserModal] = useState(false);
@@ -182,7 +163,7 @@ const AdminUsersTab: React.FC = () => {
           <div className="d-flex justify-content-between align-items-center">
             <div>
               <h5 className="mb-0">
-                <FaUsers className="me-2 text-primary" />
+                <MdPerson className="me-2 text-primary" />
                 Gestión de Usuarios
               </h5>
               <p className="text-muted mb-0">
@@ -207,7 +188,7 @@ const AdminUsersTab: React.FC = () => {
         <Col md={4}>
           <InputGroup>
             <InputGroup.Text>
-              <FaSearch />
+              <MdRefresh />
             </InputGroup.Text>
             <Form.Control
               type="text"
@@ -248,7 +229,7 @@ const AdminUsersTab: React.FC = () => {
               setStatusFilter('');
             }}
           >
-            <MdFilterList className="me-1" />
+            <MdRefresh className="me-1" />
             Limpiar
           </Button>
         </Col>

@@ -2,16 +2,15 @@ import { useState, useEffect } from 'react';
 import { 
   Calendar, 
   Clock, 
-  Target, 
-  Users, 
   Plus, 
   Sparkles,
   Copy,
   Save,
   X,
   AlertCircle,
-  CheckCircle
-} from 'lucide-react';
+  CheckCircle,
+  Users,
+  Target} from 'lucide-react';
 import type { CreateDietPlanDto, GenerateAIDietDto, DietPlan } from '../types/diet';
 import type { Patient } from '../types/patient';
 import type { ClinicalRecord } from '../types/clinical-record';

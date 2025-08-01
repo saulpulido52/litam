@@ -4,8 +4,7 @@ import type {
   CreateClinicalRecordDto,
   UpdateClinicalRecordDto,
   ClinicalRecordStats,
-  TransferResult,
-} from '../types';
+  TransferResult} from '../types';
 
 class ClinicalRecordsService {
   private baseUrl = '/clinical-records';
@@ -129,8 +128,7 @@ class ClinicalRecordsService {
       {
         patientId,
         fromNutritionistId,
-        toNutritionistId,
-      }
+        toNutritionistId}
     );
     
     if (response.status !== 'success' || !response.data) {
@@ -213,8 +211,7 @@ class ClinicalRecordsService {
 
     return {
       isValid: errors.length === 0,
-      errors,
-    };
+      errors};
   }
 
   // Calcular IMC si tenemos peso y altura
@@ -241,8 +238,7 @@ class ClinicalRecordsService {
 
     return {
       bmi: Math.round(bmi * 10) / 10,
-      category,
-    };
+      category};
   }
 
   // Formatear fecha para mostrar
@@ -250,8 +246,7 @@ class ClinicalRecordsService {
     return new Date(dateString).toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric',
-    });
+      day: 'numeric'});
   }
 
   // Formatear fecha y hora
@@ -261,8 +256,7 @@ class ClinicalRecordsService {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit',
-    });
+      minute: '2-digit'});
   }
 
   // === DOCUMENTOS DE LABORATORIO ===

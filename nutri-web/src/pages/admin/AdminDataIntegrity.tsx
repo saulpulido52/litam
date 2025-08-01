@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Badge, Button, Alert, ProgressBar } from 'react-bootstrap';
+import { Card, Row, Col, Button, Badge, Alert, ProgressBar} from 'react-bootstrap';
 import { 
   Shield, 
-  AlertTriangle, 
-  CheckCircle, 
   Database, 
   RefreshCw,
+  AlertTriangle,
   FileText,
-  Users,
-  Calendar
+  CheckCircle
 } from 'lucide-react';
 
 interface DataCheck {

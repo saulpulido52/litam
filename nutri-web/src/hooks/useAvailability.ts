@@ -16,7 +16,7 @@ export const useAvailability = (): UseAvailabilityReturn => {
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  
   const clearError = () => setError(null);
 
   const loadAvailability = async () => {
@@ -71,6 +71,5 @@ export const useAvailability = (): UseAvailabilityReturn => {
     loadAvailability,
     updateAvailability,
     searchNutritionistAvailability,
-    clearError,
-  };
+    clearError};
 };

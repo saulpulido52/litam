@@ -3,14 +3,14 @@ import {
     Card, 
     Button, 
     Table, 
-    Alert, 
-    Spinner, 
     Modal,
-    Form,
-    ProgressBar,
-    Badge,
     Row,
-    Col
+    Col,
+    Badge,
+    Alert,
+    Spinner,
+    Form,
+    ProgressBar
 } from 'react-bootstrap';
 
 interface BackupInfo {
@@ -145,7 +145,7 @@ const AdminBackupRestore: React.FC = () => {
         }
     };
 
-    const restoreBackup = async (backupId: string) => {
+    const restoreBackup = async (_backupId: string) => {
         setLoading(true);
         setRestoreProgress(0);
         
@@ -411,7 +411,7 @@ const AdminBackupRestore: React.FC = () => {
                             <Form.Label>Tipo de Backup</Form.Label>
                             <Form.Select
                                 value={backupType}
-                                onChange={(e) => setBackupType(e.target.value as any)}
+                                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setBackupType(e.target.value as any)}
                             >
                                 <option value="full">Completo</option>
                                 <option value="incremental">Incremental</option>
@@ -424,7 +424,7 @@ const AdminBackupRestore: React.FC = () => {
                                 as="textarea"
                                 rows={3}
                                 value={backupDescription}
-                                onChange={(e) => setBackupDescription(e.target.value)}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBackupDescription(e.target.value)}
                                 placeholder="Descripción del backup..."
                             />
                         </Form.Group>

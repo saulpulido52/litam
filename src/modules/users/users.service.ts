@@ -70,17 +70,58 @@ class UserService {
             // Actualizar campos de credenciales profesionales
             if (updateDto.license_number !== undefined) nutritionistProfile.license_number = updateDto.license_number;
             if (updateDto.license_issuing_authority !== undefined) nutritionistProfile.license_issuing_authority = updateDto.license_issuing_authority;
-            if (updateDto.specialties !== undefined) nutritionistProfile.specialties = updateDto.specialties;
+            if (updateDto.specialties !== undefined) {
+                if (typeof updateDto.specialties === 'string') {
+                    nutritionistProfile.specialties = [updateDto.specialties];
+                } else if (Array.isArray(updateDto.specialties)) {
+                    nutritionistProfile.specialties = updateDto.specialties;
+                } else {
+                    nutritionistProfile.specialties = null;
+                }
+            }
             if (updateDto.years_of_experience !== undefined) nutritionistProfile.years_of_experience = updateDto.years_of_experience;
 
-            // Actualizar campos de formación
-            if (updateDto.education !== undefined) nutritionistProfile.education = updateDto.education;
-            if (updateDto.certifications !== undefined) nutritionistProfile.certifications = updateDto.certifications;
-            if (updateDto.areas_of_interest !== undefined) nutritionistProfile.areas_of_interest = updateDto.areas_of_interest;
+            // Actualizar campos de formación (manejar arrays correctamente)
+            if (updateDto.education !== undefined) {
+                // Si es un string, convertirlo a array
+                if (typeof updateDto.education === 'string') {
+                    nutritionistProfile.education = [updateDto.education];
+                } else if (Array.isArray(updateDto.education)) {
+                    nutritionistProfile.education = updateDto.education;
+                } else {
+                    nutritionistProfile.education = null;
+                }
+            }
+            if (updateDto.certifications !== undefined) {
+                if (typeof updateDto.certifications === 'string') {
+                    nutritionistProfile.certifications = [updateDto.certifications];
+                } else if (Array.isArray(updateDto.certifications)) {
+                    nutritionistProfile.certifications = updateDto.certifications;
+                } else {
+                    nutritionistProfile.certifications = null;
+                }
+            }
+            if (updateDto.areas_of_interest !== undefined) {
+                if (typeof updateDto.areas_of_interest === 'string') {
+                    nutritionistProfile.areas_of_interest = [updateDto.areas_of_interest];
+                } else if (Array.isArray(updateDto.areas_of_interest)) {
+                    nutritionistProfile.areas_of_interest = updateDto.areas_of_interest;
+                } else {
+                    nutritionistProfile.areas_of_interest = null;
+                }
+            }
 
             // Actualizar campos de práctica profesional
             if (updateDto.treatment_approach !== undefined) nutritionistProfile.treatment_approach = updateDto.treatment_approach;
-            if (updateDto.languages !== undefined) nutritionistProfile.languages = updateDto.languages;
+            if (updateDto.languages !== undefined) {
+                if (typeof updateDto.languages === 'string') {
+                    nutritionistProfile.languages = [updateDto.languages];
+                } else if (Array.isArray(updateDto.languages)) {
+                    nutritionistProfile.languages = updateDto.languages;
+                } else {
+                    nutritionistProfile.languages = null;
+                }
+            }
             if (updateDto.consultation_fee !== undefined) nutritionistProfile.consultation_fee = updateDto.consultation_fee;
 
             // Actualizar campos existentes

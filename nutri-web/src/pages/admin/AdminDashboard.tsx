@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Row, Col } from 'react-bootstrap';
-import { MdAdminPanelSettings, MdPeople, MdPerson, MdAssignmentInd, MdHealthAndSafety } from 'react-icons/md';
+import { MdAdminPanelSettings, MdAssignmentInd, MdPerson, MdPeople, MdHealthAndSafety} from 'react-icons/md';
 
 const AdminDashboard: React.FC = () => {
   return (

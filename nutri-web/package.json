@@ -6,8 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:analyze": "tsc -b && vite build --mode analyze",
+    "build:production": "NODE_ENV=production tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "bundle-analyzer": "npx vite-bundle-analyzer dist",
+    "size-limit": "npx size-limit"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.81.2",
@@ -17,6 +21,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.522.0",
+    "pg": "^8.16.3",
     "puppeteer": "^24.12.0",
     "react": "^19.1.0",
     "react-bootstrap": "^2.10.10",
@@ -25,6 +30,7 @@
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.6.2",
     "recharts": "^2.15.4",
+    "socket.io-client": "^4.8.1",
     "zod": "^3.25.67"
   },
   "devDependencies": {

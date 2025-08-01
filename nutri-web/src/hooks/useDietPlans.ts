@@ -38,8 +38,7 @@ export const useDietPlans = (): UseDietPlansReturn => {
     total: 0,
     active: 0,
     completed: 0,
-    draft: 0,
-  });
+    draft: 0});
 
   const clearError = useCallback(() => {
     setError(null);
@@ -214,8 +213,7 @@ export const useDietPlans = (): UseDietPlansReturn => {
       total: safeDietPlans.length,
       active: safeDietPlans.filter(plan => plan.status === 'active').length,
       completed: safeDietPlans.filter(plan => plan.status === 'completed').length,
-      draft: safeDietPlans.filter(plan => plan.status === 'draft').length,
-    };
+      draft: safeDietPlans.filter(plan => plan.status === 'draft').length};
     setStats(newStats);
   }, [dietPlans]);
 
@@ -234,6 +232,5 @@ export const useDietPlans = (): UseDietPlansReturn => {
     addWeekToPlan,
     refreshStats,
     clearError,
-    setError,
-  };
+    setError};
 }; 

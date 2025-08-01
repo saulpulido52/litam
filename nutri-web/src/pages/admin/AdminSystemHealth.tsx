@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Badge, ProgressBar, Alert, Button } from 'react-bootstrap';
+import { Card, Row, Col, Button, Badge, Alert, ProgressBar } from 'react-bootstrap';
 import { 
   RefreshCw, 
-  AlertTriangle, 
-  CheckCircle, 
   Server, 
   Database, 
-  Globe 
+  Globe,
+  CheckCircle,
+  AlertTriangle
 } from 'lucide-react';
 
 interface SystemMetrics {

@@ -71,6 +71,13 @@ export interface SearchAvailabilityDto {
   dayOfWeek?: 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
 }
 
+export interface AvailableSlot {
+  time: string; // HH:MM format
+  start_time: string; // ISO string
+  end_time: string; // ISO string
+  duration_minutes: number;
+}
+
 class AppointmentsService {
   
   // ==================== GESTIÓN DE DISPONIBILIDAD ====================
@@ -139,6 +146,53 @@ class AppointmentsService {
     } catch (error: any) {
       console.error('Error searching nutritionist availability:', error);
       const message = error.response?.data?.message || 'Error al buscar disponibilidad del nutriólogo';
+      throw new Error(message);
+    }
+  }
+
+  /**
+   * Obtener citas existentes de un nutriólogo por rango de fechas
+   */
+  async getNutritionistAppointmentsByDateRange(nutritionistId: string, startDate: string, endDate: string): Promise<AppointmentType[]> {
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('startDate', startDate);
+      queryParams.append('endDate', endDate);
+
+      const url = `/appointments/nutritionist/${nutritionistId}/appointments?${queryParams.toString()}`;
+      const response = await apiService.get<{ appointments: AppointmentType[] }>(url);
+      
+      if (response.status !== 'success' || !response.data) {
+        throw new Error(response.message || 'Error al obtener citas');
+      }
+      
+      return response.data.appointments;
+    } catch (error: any) {
+      console.error('Error getting nutritionist appointments by date range:', error);
+      const message = error.response?.data?.message || 'Error al obtener citas del nutriólogo';
+      throw new Error(message);
+    }
+  }
+
+  /**
+   * Obtener slots disponibles para una fecha específica
+   */
+  async getAvailableSlots(nutritionistId: string, date: string): Promise<AvailableSlot[]> {
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('date', date);
+
+      const url = `/appointments/nutritionist/${nutritionistId}/available-slots?${queryParams.toString()}`;
+      const response = await apiService.get<{ availableSlots: AvailableSlot[] }>(url);
+      
+      if (response.status !== 'success' || !response.data) {
+        throw new Error(response.message || 'Error al obtener slots disponibles');
+      }
+      
+      return response.data.availableSlots;
+    } catch (error: any) {
+      console.error('Error getting available slots:', error);
+      const message = error.response?.data?.message || 'Error al obtener horarios disponibles';
       throw new Error(message);
     }
   }
@@ -217,6 +271,47 @@ class AppointmentsService {
     } catch (error: any) {
       console.error('Error updating appointment status:', error);
       const message = error.response?.data?.message || 'Error al actualizar estado de la cita';
+      throw new Error(message);
+    }
+  }
+
+  /**
+   * Eliminar una cita completamente
+   */
+  async deleteAppointment(appointmentId: string): Promise<void> {
+    try {
+      const response = await apiService.delete(`/appointments/${appointmentId}`);
+      
+      if (response.status !== 'success') {
+        throw new Error(response.message || 'Error al eliminar la cita');
+      }
+    } catch (error: any) {
+      console.error('Error deleting appointment:', error);
+      const message = error.response?.data?.message || 'Error al eliminar la cita';
+      throw new Error(message);
+    }
+  }
+
+  /**
+   * Actualizar una cita completa (fecha, hora, notas)
+   */
+  async updateAppointment(appointmentId: string, updateData: {
+    start_time?: string;
+    end_time?: string;
+    notes?: string;
+    status?: string;
+  }): Promise<AppointmentType> {
+    try {
+      const response = await apiService.patch<{ appointment: AppointmentType }>(`/appointments/${appointmentId}`, updateData);
+      
+      if (response.status !== 'success' || !response.data) {
+        throw new Error(response.message || 'Error al actualizar la cita');
+      }
+      
+      return response.data.appointment;
+    } catch (error: any) {
+      console.error('Error updating appointment:', error);
+      const message = error.response?.data?.message || 'Error al actualizar la cita';
       throw new Error(message);
     }
   }

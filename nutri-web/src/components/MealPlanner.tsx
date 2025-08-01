@@ -1,28 +1,39 @@
-import React, { useState, useEffect } from 'react';
+// nutri-web/src/components/MealPlanner.tsx
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { 
   Plus,
   Trash2,
   Calendar,
   Save,
   Target,
-  CheckCircle,
   Shield,
-  Utensils
+  Utensils,
+  Edit,
+  Apple,
+  ChefHat,
+  CheckCircle
 } from 'lucide-react';
-import { Button, Modal, Badge, Alert, Card, Row, Col } from 'react-bootstrap';
+import { Button, Modal, Row, Col, Tabs, Tab, Form, Badge, Alert } from 'react-bootstrap';
+import { foodService } from '../services/foodService';
+import { recipeService } from '../services/recipeService';
+import type { Recipe } from '../types/recipe';
+import { RecipeEditorModal } from './RecipeEditor/RecipeEditorModal';
+import { ShoppingListModal } from './ShoppingList/ShoppingListModal';
+import RecipeViewer from './RecipeBook/RecipeViewer';
+import TemplateApplicator from './Templates/TemplateApplicator';
 
+// Interfaces para compatibilidad con el diseño original
 interface Food {
   id: string;
   name: string;
-  calories_per_100g: number;
-  protein_per_100g: number;
-  carbs_per_100g: number;
-  fats_per_100g: number;
-  category: string;
-  glycemic_index?: number;
-  sodium_content?: number;
-  potassium_content?: number;
-  phosphorus_content?: number;
+  calories: number;
+  protein: number;
+  carbohydrates: number;
+  fats: number;
+  fiber: number;
+  unit: string;
+  serving_size: number;
+  category?: string;
 }
 
 interface MealFood {
@@ -35,12 +46,40 @@ interface MealFood {
   fats: number;
 }
 
+interface MealRecipe {
+  recipe_id: string;
+  recipe_name: string;
+  servings: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  // Campos adicionales para manejar recetas modificadas
+  original_recipe_id?: string;
+  is_modified?: boolean;
+  modification_timestamp?: string;
+  recipe_data?: {
+    title: string;
+    description?: string;
+    totalCalories?: number;
+    totalMacros?: {
+      protein: number;
+      carbohydrates: number;
+      fats: number;
+    };
+    servings: number;
+    ingredients?: any[];
+  };
+}
+
 interface Meal {
   id?: string;
   day: string;
   meal_type: 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'evening_snack';
   meal_time: string;
+  meal_description?: string; // Para comidas manuales
   foods: MealFood[];
+  recipes: MealRecipe[];
   notes?: string;
   total_calories: number;
   total_protein: number;
@@ -62,12 +101,9 @@ interface WeeklyPlan {
   notes?: string;
 }
 
-// Usar la interfaz DietPlan del tipo diet.ts
-import type { DietPlan } from '../types/diet';
-
 interface MealPlannerProps {
   weeklyPlans: WeeklyPlan[];
-  dietPlan: DietPlan;
+  dietPlan: any;
   onSave: (weeklyPlans: WeeklyPlan[]) => void;
   onClose: () => void;
   isOpen: boolean;
@@ -80,7 +116,38 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
   onClose,
   isOpen
 }) => {
-  const [plans, setPlans] = useState<WeeklyPlan[]>(weeklyPlans);
+  const [plans, setPlans] = useState<WeeklyPlan[]>(() => {
+    if (weeklyPlans && weeklyPlans.length > 0) {
+      console.log('🏗️ Inicializando con weeklyPlans existentes:', weeklyPlans);
+      return weeklyPlans;
+    } else {
+      // Crear planes por defecto para 4 semanas si no hay datos
+      const defaultPlans: WeeklyPlan[] = [];
+      for (let week = 1; week <= 4; week++) {
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() + (week - 1) * 7);
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 6);
+
+        const defaultPlan: WeeklyPlan = {
+          week_number: week,
+          start_date: startDate.toISOString().split('T')[0],
+          end_date: endDate.toISOString().split('T')[0],
+          daily_calories_target: dietPlan?.daily_calories_target || 2000,
+          daily_macros_target: {
+            protein: dietPlan?.daily_macros_target?.protein || 150,
+            carbohydrates: dietPlan?.daily_macros_target?.carbohydrates || 250,
+            fats: dietPlan?.daily_macros_target?.fats || 67
+          },
+          meals: [],
+          notes: ''
+        };
+        defaultPlans.push(defaultPlan);
+      }
+      console.log('🏗️ Creando planes por defecto:', defaultPlans);
+      return defaultPlans;
+    }
+  });
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
   const [selectedDay, setSelectedDay] = useState<string>('Lunes');
 
@@ -88,17 +155,18 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [foods, setFoods] = useState<Food[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+
+  // Estados para los nuevos modales
+  const [showRecipeEditor, setShowRecipeEditor] = useState(false);
+  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
+  const [showRecipeViewer, setShowRecipeViewer] = useState(false);
+  const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
+  const [showShoppingList, setShowShoppingList] = useState(false);
+  const [showTemplateApplicator, setShowTemplateApplicator] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'planner' | 'restrictions' | 'objectives' | 'shopping'>('planner');
-  const [showAddFoodModal, setShowAddFoodModal] = useState(false);
-  const [customFood, setCustomFood] = useState({
-    name: '',
-    category: '',
-    calories_per_100g: 0,
-    protein_per_100g: 0,
-    carbs_per_100g: 0,
-    fats_per_100g: 0
-  });
+  const [contentType, setContentType] = useState<'foods' | 'recipes' | 'manual'>('foods');
 
   // Días de la semana
   const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -113,211 +181,204 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
     { key: 'evening_snack', label: 'Merienda Noche', icon: '🥛' }
   ];
 
-  // Categorías de supermercado
-  const shoppingCategories = [
-    { name: 'Frutas y Verduras', icon: '🥬', color: 'success' },
-    { name: 'Proteínas', icon: '🥩', color: 'danger' },
-    { name: 'Lácteos', icon: '🥛', color: 'info' },
-    { name: 'Cereales y Granos', icon: '🌾', color: 'warning' },
-    { name: 'Grasas Saludables', icon: '🥑', color: 'primary' },
-    { name: 'Condimentos', icon: '🧂', color: 'secondary' },
-    { name: 'Otros', icon: '📦', color: 'dark' }
-  ];
-
   // Extraer restricciones del plan nutricional
-  const restrictions = dietPlan.pathological_restrictions || {};
-  const mealFrequency = dietPlan.meal_frequency || {};
-  const mealTiming = dietPlan.meal_timing || {};
-  const flexibilitySettings = dietPlan.flexibility_settings || {};
+  // const restrictions = dietPlan?.pathological_restrictions || {};
+  const mealFrequency = dietPlan?.meal_frequency || {};
+  const mealTiming = dietPlan?.meal_timing || {};
 
-  // Función para determinar qué tipos de comidas están habilitados basándose en la configuración
-  const getEnabledMealTypes = () => {
-    // Si no hay configuración específica, mostrar todas las comidas
+  // Memoizar los tipos de comidas habilitados
+  const enabledMealTypes = useMemo(() => {
     if (!mealFrequency || Object.keys(mealFrequency).length === 0) {
       return mealTypes;
     }
-
-    // Filtrar solo los tipos de comidas que están habilitados
     return mealTypes.filter(type => mealFrequency[type.key as keyof typeof mealFrequency]);
-  };
+  }, [mealFrequency]);
 
-  // Obtener los tipos de comidas habilitados
-  const enabledMealTypes = getEnabledMealTypes();
-
-  useEffect(() => {
-    loadFoods();
-  }, []);
-
-  useEffect(() => {
-    filterFoodsByRestrictions();
-  }, [foods, restrictions]);
-
-  const loadFoods = async () => {
+  // Memoizar funciones para evitar re-renders
+  const loadFoods = useCallback(async () => {
     try {
-      // Alimentos base con información nutricional detallada
-      const mockFoods: Food[] = [
-        {
-          id: '1',
-          name: 'Pollo (pechuga)',
-          calories_per_100g: 165,
-          protein_per_100g: 31,
-          carbs_per_100g: 0,
-          fats_per_100g: 3.6,
-          category: 'Proteínas',
-          glycemic_index: 0,
-          sodium_content: 74
-        },
-        {
-          id: '2',
-          name: 'Arroz integral',
-          calories_per_100g: 111,
-          protein_per_100g: 2.6,
-          carbs_per_100g: 23,
-          fats_per_100g: 0.9,
-          category: 'Carbohidratos',
-          glycemic_index: 55,
-          sodium_content: 5
-        },
-        {
-          id: '3',
-          name: 'Brócoli',
-          calories_per_100g: 34,
-          protein_per_100g: 2.8,
-          carbs_per_100g: 7,
-          fats_per_100g: 0.4,
-          category: 'Verduras',
-          glycemic_index: 15,
-          sodium_content: 33,
-          potassium_content: 316
-        },
-        {
-          id: '4',
-          name: 'Aguacate',
-          calories_per_100g: 160,
-          protein_per_100g: 2,
-          carbs_per_100g: 9,
-          fats_per_100g: 15,
-          category: 'Grasas saludables',
-          glycemic_index: 15,
-          sodium_content: 7,
-          potassium_content: 485
-        },
-        {
-          id: '5',
-          name: 'Huevo',
-          calories_per_100g: 155,
-          protein_per_100g: 13,
-          carbs_per_100g: 1.1,
-          fats_per_100g: 11,
-          category: 'Proteínas',
-          glycemic_index: 0,
-          sodium_content: 124
-        },
-        {
-          id: '6',
-          name: 'Avena',
-          calories_per_100g: 389,
-          protein_per_100g: 17,
-          carbs_per_100g: 66,
-          fats_per_100g: 7,
-          category: 'Carbohidratos',
-          glycemic_index: 55,
-          sodium_content: 2
-        },
-        {
-          id: '7',
-          name: 'Leche descremada',
-          calories_per_100g: 42,
-          protein_per_100g: 3.4,
-          carbs_per_100g: 5,
-          fats_per_100g: 0.1,
-          category: 'Lácteos',
-          glycemic_index: 30,
-          sodium_content: 44,
-          potassium_content: 150
-        },
-        {
-          id: '8',
-          name: 'Plátano',
-          calories_per_100g: 89,
-          protein_per_100g: 1.1,
-          carbs_per_100g: 23,
-          fats_per_100g: 0.3,
-          category: 'Frutas',
-          glycemic_index: 51,
-          sodium_content: 1,
-          potassium_content: 358
-        },
-        {
-          id: '9',
-          name: 'Salmón',
-          calories_per_100g: 208,
-          protein_per_100g: 25,
-          carbs_per_100g: 0,
-          fats_per_100g: 12,
-          category: 'Proteínas',
-          glycemic_index: 0,
-          sodium_content: 59,
-          potassium_content: 363
-        },
-        {
-          id: '10',
-          name: 'Quinoa',
-          calories_per_100g: 120,
-          protein_per_100g: 4.4,
-          carbs_per_100g: 22,
-          fats_per_100g: 1.9,
-          category: 'Carbohidratos',
-          glycemic_index: 53,
-          sodium_content: 7,
-          potassium_content: 172
-        }
-      ];
-      setFoods(mockFoods);
+      const foodList = await foodService.getAllFoods();
+      setFoods(foodList);
     } catch (error) {
       console.error('Error loading foods:', error);
     }
-  };
+  }, []);
 
-  const filterFoodsByRestrictions = () => {
-    // Por ahora, mostrar todos los alimentos disponibles
-    // En el futuro, se puede implementar filtrado basado en restricciones
-    // Foods are now filtered dynamically
-  };
+  const loadRecipes = useCallback(async () => {
+    try {
+      const recipeResponse = await recipeService.getAllRecipes();
+      setRecipes((recipeResponse.recipes || []) as unknown as Recipe[]);
+    } catch (error) {
+      console.error('Error loading recipes:', error);
+    }
+  }, []);
 
-  const getCurrentPlan = () => {
+  useEffect(() => {
+    if (isOpen && foods.length === 0) {
+      loadFoods();
+    }
+  }, [isOpen, foods.length, loadFoods]);
+
+  useEffect(() => {
+    if (isOpen && recipes.length === 0) {
+      loadRecipes();
+    }
+  }, [isOpen, recipes.length, loadRecipes]);
+
+  // Actualizar plans cuando weeklyPlans prop cambie
+  useEffect(() => {
+    if (weeklyPlans && weeklyPlans.length > 0) {
+      console.log('📋 weeklyPlans recibidos:', weeklyPlans);
+      if (JSON.stringify(weeklyPlans) !== JSON.stringify(plans)) {
+        setPlans(weeklyPlans);
+        console.log('🔄 Plans actualizados desde props');
+      }
+    }
+  }, [weeklyPlans]);
+
+  // Debug del estado actual
+  useEffect(() => {
+    console.log('📊 Estado actual de plans:', plans);
+    console.log('📊 Semana seleccionada:', selectedWeek);
+    console.log('📊 Plan actual:', getCurrentPlan());
+  }, [plans, selectedWeek]);
+
+  const getCurrentPlan = useCallback(() => {
     return plans.find(plan => plan.week_number === selectedWeek) || plans[0];
-  };
+  }, [plans, selectedWeek]);
 
-  const getMealForDayAndType = (day: string, mealType: string): Meal | null => {
+  const getMealForDayAndType = useCallback((day: string, mealType: string): Meal | null => {
     const currentPlan = getCurrentPlan();
-    if (!currentPlan) return null;
+    if (!currentPlan) {
+      console.log('❌ getMealForDayAndType: No hay plan actual');
+      return null;
+    }
     
-    return currentPlan.meals.find(meal => 
+    const meal = currentPlan.meals.find(meal => 
       meal.day === day && meal.meal_type === mealType
     ) || null;
-  };
+    
+    console.log(`🔍 Buscando comida para ${day} - ${mealType}:`, meal);
+    console.log('🔍 Comidas disponibles en el plan:', currentPlan.meals.map(m => `${m.day}-${m.meal_type}`));
+    
+    return meal;
+  }, [getCurrentPlan]);
 
-  const createEmptyMeal = (day: string, mealType: string): Meal => {
+  const createEmptyMeal = useCallback((day: string, mealType: string): Meal => {
     const defaultTime = (mealTiming as any)[mealType] || '08:00';
     
-    return {
+    const newMeal: Meal = {
+      id: `${day}-${mealType}-${Date.now()}`,
       day,
       meal_type: mealType as 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'evening_snack',
       meal_time: defaultTime,
       foods: [],
+      recipes: [],
       total_calories: 0,
       total_protein: 0,
       total_carbs: 0,
       total_fats: 0
     };
-  };
+    
+    console.log('🆕 Creando comida vacía:', newMeal);
+    return newMeal;
+  }, [mealTiming]);
 
-  const addFoodToMeal = (food: Food, quantity: number) => {
-    const calories = (food.calories_per_100g * quantity) / 100;
-    const protein = (food.protein_per_100g * quantity) / 100;
-    const carbs = (food.carbs_per_100g * quantity) / 100;
-    const fats = (food.fats_per_100g * quantity) / 100;
+  const updateMealInPlan = useCallback((updatedMeal: Meal) => {
+    console.log('🔄 Actualizando comida en plan:', updatedMeal);
+    const currentPlan = getCurrentPlan();
+    if (!currentPlan) {
+      console.error('❌ No se encontró el plan actual');
+      return;
+    }
+
+    console.log('📋 Plan actual:', currentPlan);
+    console.log('📋 Número de comidas en plan actual:', currentPlan.meals.length);
+
+    // Asegurar que la comida tenga un ID
+    if (!updatedMeal.id) {
+      updatedMeal.id = `${updatedMeal.day}-${updatedMeal.meal_type}-${Date.now()}`;
+      console.log('🆔 Asignando ID a la comida:', updatedMeal.id);
+    }
+
+    const updatedPlans = plans.map(plan => {
+      if (plan.week_number === selectedWeek) {
+        const existingMealIndex = plan.meals.findIndex(meal => 
+          meal.day === updatedMeal.day && meal.meal_type === updatedMeal.meal_type
+        );
+
+        console.log('🔍 Índice de comida existente:', existingMealIndex);
+        console.log('🔍 Comidas actuales en plan:', plan.meals.map(m => `${m.day}-${m.meal_type} (${m.total_calories} kcal)`));
+
+        if (existingMealIndex >= 0) {
+          const updatedMeals = [...plan.meals];
+          updatedMeals[existingMealIndex] = { ...updatedMeal };
+          console.log('✏️ Actualizando comida existente en índice:', existingMealIndex);
+          console.log('✏️ Comida actualizada:', updatedMeal);
+          return { ...plan, meals: updatedMeals };
+        } else {
+          console.log('➕ Agregando nueva comida');
+          console.log('➕ Nueva comida:', updatedMeal);
+          return { ...plan, meals: [...plan.meals, { ...updatedMeal }] };
+        }
+      }
+      return plan;
+    });
+
+    console.log('🎯 Planes antes de actualizar:', plans);
+    console.log('🎯 Planes después de actualizar:', updatedPlans);
+    
+    setPlans(updatedPlans);
+    setEditingMeal(updatedMeal);
+    
+    // Verificar que se actualizó correctamente
+    setTimeout(() => {
+      const verifyPlan = updatedPlans.find(p => p.week_number === selectedWeek);
+      const verifyMeal = verifyPlan?.meals.find(m => 
+        m.day === updatedMeal.day && m.meal_type === updatedMeal.meal_type
+      );
+      console.log('✅ Verificación - Comida guardada:', verifyMeal);
+      
+      // Verificación específica para recetas modificadas
+      if (verifyMeal && verifyMeal.recipes.length > 0) {
+        const modifiedRecipes = verifyMeal.recipes.filter(r => r.is_modified);
+        if (modifiedRecipes.length > 0) {
+          console.log('🔍 VERIFICACIÓN RECETAS MODIFICADAS:');
+          modifiedRecipes.forEach((recipe, index) => {
+            console.log(`  Receta ${index + 1}:`, {
+              id: recipe.recipe_id,
+              name: recipe.recipe_name,
+              calories: recipe.calories,
+              isModified: recipe.is_modified,
+              originalId: recipe.original_recipe_id,
+              timestamp: recipe.modification_timestamp,
+              hasCompleteData: !!(recipe.recipe_data?.title && recipe.recipe_data?.totalCalories),
+              recipeDataPreview: recipe.recipe_data ? {
+                title: recipe.recipe_data.title,
+                calories: recipe.recipe_data.totalCalories,
+                servings: recipe.recipe_data.servings
+              } : 'NO_DATA'
+            });
+          });
+        }
+      }
+    }, 100);
+  }, [getCurrentPlan, plans, selectedWeek]);
+
+  const addFoodToMeal = useCallback((food: Food, quantity: number) => {
+    console.log('🍎 Agregando alimento:', food.name, 'cantidad:', quantity);
+    console.log('🍽️ Estado editingMeal:', editingMeal);
+
+    if (!editingMeal) {
+      console.error('❌ No hay comida en edición. editingMeal es null/undefined');
+      alert('Error: No hay una comida seleccionada para editar. Por favor, selecciona una comida primero.');
+      return;
+    }
+
+    const calories = (food.calories * quantity) / 100;
+    const protein = (food.protein * quantity) / 100;
+    const carbs = (food.carbohydrates * quantity) / 100;
+    const fats = (food.fats * quantity) / 100;
 
     const mealFood: MealFood = {
       food_id: food.id,
@@ -329,20 +390,80 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
       fats
     };
 
-    if (editingMeal) {
-      const updatedMeal = {
-        ...editingMeal,
-        foods: [...editingMeal.foods, mealFood],
-        total_calories: editingMeal.total_calories + calories,
-        total_protein: editingMeal.total_protein + protein,
-        total_carbs: editingMeal.total_carbs + carbs,
-        total_fats: editingMeal.total_fats + fats
-      };
-      updateMealInPlan(updatedMeal);
-    }
-  };
+    console.log('🥗 Alimento creado:', mealFood);
 
-  const removeFoodFromMeal = (foodIndex: number) => {
+    const updatedMeal = {
+      ...editingMeal,
+      foods: [...editingMeal.foods, mealFood],
+      total_calories: editingMeal.total_calories + calories,
+      total_protein: editingMeal.total_protein + protein,
+      total_carbs: editingMeal.total_carbs + carbs,
+      total_fats: editingMeal.total_fats + fats
+    };
+
+    console.log('🍽️ Comida actualizada:', updatedMeal);
+    updateMealInPlan(updatedMeal);
+  }, [editingMeal, updateMealInPlan]);
+
+  const addRecipeToMeal = useCallback((recipe: Recipe, servings: number, isModified: boolean = false) => {
+    console.log('🍳 Agregando receta al meal:', recipe.title, 'servings:', servings, 'modificada:', isModified);
+    
+    if (!editingMeal) {
+      console.error('❌ No hay comida en edición para agregar receta');
+      alert('Error: No hay una comida seleccionada para editar. Por favor, selecciona una comida primero.');
+      return;
+    }
+
+    const factor = servings / (recipe.servings || 1);
+    const calories = (recipe.totalCalories || 0) * factor;
+    const protein = (recipe.totalMacros?.protein || 0) * factor;
+    const carbs = (recipe.totalMacros?.carbohydrates || 0) * factor;
+    const fats = (recipe.totalMacros?.fats || 0) * factor;
+
+    // Crear una copia única de la receta para este meal
+    const uniqueRecipeId = isModified 
+      ? `${recipe.id}-modified-${Date.now()}` 
+      : `${recipe.id}-instance-${Date.now()}`;
+
+    const mealRecipe: MealRecipe = {
+      recipe_id: uniqueRecipeId, // ID único para esta instancia
+      recipe_name: isModified ? `${recipe.title} (Modificada)` : recipe.title,
+      servings,
+      calories,
+      protein,
+      carbs,
+      fats,
+      // Datos adicionales para la instancia modificada
+      original_recipe_id: recipe.id,
+      is_modified: isModified,
+      modification_timestamp: new Date().toISOString(),
+      // Guardar datos completos de la receta modificada
+      recipe_data: isModified ? {
+        title: recipe.title,
+        description: recipe.description,
+        totalCalories: recipe.totalCalories,
+        totalMacros: recipe.totalMacros,
+        servings: recipe.servings,
+        ingredients: recipe.ingredients || []
+      } : undefined
+    };
+
+    console.log('🥗 Instancia de receta creada:', mealRecipe);
+
+    const updatedMeal = {
+      ...editingMeal,
+      recipes: [...editingMeal.recipes, mealRecipe],
+      total_calories: editingMeal.total_calories + calories,
+      total_protein: editingMeal.total_protein + protein,
+      total_carbs: editingMeal.total_carbs + carbs,
+      total_fats: editingMeal.total_fats + fats
+    };
+
+    console.log('🍽️ Comida actualizada con receta:', updatedMeal);
+    updateMealInPlan(updatedMeal);
+  }, [editingMeal, updateMealInPlan]);
+
+  const removeFoodFromMeal = useCallback((foodIndex: number) => {
     if (editingMeal) {
       const foodToRemove = editingMeal.foods[foodIndex];
       const updatedMeal = {
@@ -355,153 +476,145 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
       };
       updateMealInPlan(updatedMeal);
     }
-  };
+  }, [editingMeal, updateMealInPlan]);
 
-  const updateMealInPlan = (updatedMeal: Meal) => {
-    const currentPlan = getCurrentPlan();
-    if (!currentPlan) return;
+  const removeRecipeFromMeal = useCallback((recipeIndex: number) => {
+    console.log('🗑️ Removiendo receta del meal, índice:', recipeIndex);
+    if (editingMeal) {
+      const recipeToRemove = editingMeal.recipes[recipeIndex];
+      console.log('🗑️ Receta a remover:', recipeToRemove);
+      
+      const updatedMeal = {
+        ...editingMeal,
+        recipes: editingMeal.recipes.filter((_, index) => index !== recipeIndex),
+        total_calories: editingMeal.total_calories - recipeToRemove.calories,
+        total_protein: editingMeal.total_protein - recipeToRemove.protein,
+        total_carbs: editingMeal.total_carbs - recipeToRemove.carbs,
+        total_fats: editingMeal.total_fats - recipeToRemove.fats
+      };
+      
+      console.log('🗑️ Meal actualizado tras remover receta:', updatedMeal);
+      updateMealInPlan(updatedMeal);
+    }
+  }, [editingMeal, updateMealInPlan]);
 
-    const updatedPlans = plans.map(plan => {
-      if (plan.week_number === selectedWeek) {
-        const existingMealIndex = plan.meals.findIndex(meal => 
-          meal.day === updatedMeal.day && meal.meal_type === updatedMeal.meal_type
-        );
-
-        if (existingMealIndex >= 0) {
-          // Actualizar comida existente
-          const updatedMeals = [...plan.meals];
-          updatedMeals[existingMealIndex] = updatedMeal;
-          return { ...plan, meals: updatedMeals };
-        } else {
-          // Agregar nueva comida
-          return { ...plan, meals: [...plan.meals, updatedMeal] };
-        }
-      }
-      return plan;
-    });
-
-    setPlans(updatedPlans);
-    setEditingMeal(updatedMeal);
-  };
-
-  const getDailyTotals = (day: string) => {
+  const getDailyTotals = useCallback((day: string) => {
     const currentPlan = getCurrentPlan();
     if (!currentPlan) return { calories: 0, protein: 0, carbs: 0, fats: 0 };
 
     const dayMeals = currentPlan.meals.filter(meal => meal.day === day);
-    return dayMeals.reduce((totals, meal) => ({
+    const totals = dayMeals.reduce((totals, meal) => ({
       calories: totals.calories + meal.total_calories,
       protein: totals.protein + meal.total_protein,
       carbs: totals.carbs + meal.total_carbs,
       fats: totals.fats + meal.total_fats
     }), { calories: 0, protein: 0, carbs: 0, fats: 0 });
-  };
+    
+    console.log(`📊 Totales para ${day}:`, {
+      meals: dayMeals.length,
+      breakdown: dayMeals.map(m => ({
+        type: m.meal_type,
+        calories: m.total_calories,
+        foods: m.foods.length,
+        recipes: m.recipes.length,
+        isModified: m.recipes.some(r => r.is_modified)
+      })),
+      totals
+    });
+    
+    return totals;
+  }, [getCurrentPlan]);
 
-  const getWeeklyTotals = () => {
-    const currentPlan = getCurrentPlan();
-    if (!currentPlan) return { calories: 0, protein: 0, carbs: 0, fats: 0 };
-
-    return currentPlan.meals.reduce((totals, meal) => ({
-      calories: totals.calories + meal.total_calories,
-      protein: totals.protein + meal.total_protein,
-      carbs: totals.carbs + meal.total_carbs,
-      fats: totals.fats + meal.total_fats
-    }), { calories: 0, protein: 0, carbs: 0, fats: 0 });
-  };
-
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     onSave(plans);
+  }, [onSave, plans]);
+
+  // Funciones para el modal de edición de recetas
+  const handleEditRecipe = (recipe: Recipe) => {
+    console.log('🍳 Abriendo editor de receta:', recipe.title);
+    setEditingRecipe(recipe);
+    setShowRecipeEditor(true);
   };
 
-  // Función para generar la lista de supermercado
-  const generateShoppingList = () => {
-    const shoppingList: { [category: string]: { [foodName: string]: number } } = {};
+  const handleSaveRecipeChanges = (modifiedRecipe: Recipe, isModified: boolean) => {
+    console.log('💾 Guardando cambios de receta:', { 
+      title: modifiedRecipe.title, 
+      isModified,
+      calories: modifiedRecipe.totalCalories 
+    });
     
-    // Recorrer todos los planes (semanas)
-    plans.forEach(plan => {
-      // Recorrer todas las comidas de la semana
-      plan.meals.forEach(meal => {
-        // Recorrer todos los alimentos de cada comida
-        meal.foods.forEach(food => {
-          // Buscar la categoría del alimento en la lista de alimentos disponibles
-          const foodInfo = foods.find(f => f.id === food.food_id);
-          const category = foodInfo?.category || 'Otros';
-          const foodName = food.food_name;
-          const quantity = food.quantity_grams;
-          
-          if (!shoppingList[category]) {
-            shoppingList[category] = {};
-          }
-          
-          if (!shoppingList[category][foodName]) {
-            shoppingList[category][foodName] = 0;
-          }
-          
-          shoppingList[category][foodName] += quantity;
-        });
+    if (editingMeal && isModified) {
+      // Crear nuevo MealRecipe a partir de la Recipe modificada
+      const updatedMealRecipe = {
+        recipe_id: modifiedRecipe.id,
+        recipe_name: modifiedRecipe.title,
+        servings: 1,
+        calories: modifiedRecipe.totalCalories || 0,
+        protein: modifiedRecipe.totalMacros?.protein || 0,
+        carbs: modifiedRecipe.totalMacros?.carbohydrates || 0,
+        fats: modifiedRecipe.totalMacros?.fats || 0
+      };
+      
+      // Actualizar la receta en la comida editada
+      const updatedRecipes = editingMeal.recipes.map(recipe => 
+        recipe.recipe_id === modifiedRecipe.id ? updatedMealRecipe : recipe
+      );
+      
+      setEditingMeal({
+        ...editingMeal,
+        recipes: updatedRecipes
       });
-    });
+      
+      console.log('✅ Receta actualizada exitosamente en la comida');
+    }
     
-    return shoppingList;
+    setShowRecipeEditor(false);
+    setEditingRecipe(null);
+    
+    // Mostrar automáticamente el visor de recetas después de guardar
+    if (isModified) {
+      setTimeout(() => {
+        setViewingRecipe(modifiedRecipe);
+        setShowRecipeViewer(true);
+      }, 500);
+    }
   };
 
-  // Función para obtener el total de semanas
-  const getTotalWeeks = () => {
-    return plans.length;
-  };
-
-  // Función para formatear cantidades
-  const formatQuantity = (grams: number) => {
-    if (grams >= 1000) {
-      return `${(grams / 1000).toFixed(1)} kg`;
+  // Función para mostrar la lista de compras
+  const handleShowShoppingList = () => {
+    const currentPlan = getCurrentPlan();
+    if (currentPlan) {
+      setShowShoppingList(true);
     } else {
-      return `${grams}g`;
+      alert('No hay un plan semanal para generar la lista de compras');
     }
   };
 
-  const addCustomFood = () => {
-    if (!customFood.name || !customFood.category) {
-      alert('Por favor completa el nombre y categoría del alimento');
-      return;
-    }
-
-    const newCustomFood: Food = {
-      id: `custom_${Date.now()}`,
-      name: customFood.name,
-      category: customFood.category,
-      calories_per_100g: customFood.calories_per_100g,
-      protein_per_100g: customFood.protein_per_100g,
-      carbs_per_100g: customFood.carbs_per_100g,
-      fats_per_100g: customFood.fats_per_100g
-    };
-
-    setFoods(prev => [...prev, newCustomFood]);
-    setCustomFood({
-      name: '',
-      category: '',
-      calories_per_100g: 0,
-      protein_per_100g: 0,
-      carbs_per_100g: 0,
-      fats_per_100g: 0
-    });
-    setShowAddFoodModal(false);
+  // Función para aplicar plantilla
+  const handleShowTemplateApplicator = () => {
+    setShowTemplateApplicator(true);
   };
 
-  const resetCustomFood = () => {
-    setCustomFood({
-      name: '',
-      category: '',
-      calories_per_100g: 0,
-      protein_per_100g: 0,
-      carbs_per_100g: 0,
-      fats_per_100g: 0
-    });
+  // Función para manejar plantilla aplicada
+  const handleTemplateApplied = (appliedMeals: any[]) => {
+    console.log('✅ Plantilla aplicada, comidas creadas:', appliedMeals);
+    // Recargar o actualizar el estado del plan
+    // Aquí podrías llamar a una función para refrescar los datos
+    alert(`¡Plantilla aplicada exitosamente! Se crearon ${appliedMeals.length} comidas.`);
   };
 
-  const filteredFoods = foods.filter(food => 
-    food.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    food.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filtrar alimentos y recetas según búsqueda
+  const filteredFoods = useMemo(() => 
+    foods.filter(food => 
+      food.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (food.category && food.category.toLowerCase().includes(searchTerm.toLowerCase()))
+    ), [foods, searchTerm]);
+
+  const filteredRecipes = useMemo(() => 
+    recipes.filter(recipe => 
+      recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (recipe.description && recipe.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    ), [recipes, searchTerm]);
 
   return (
     <Modal show={isOpen} onHide={onClose} size="xl" centered>
@@ -545,104 +658,452 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
                 Objetivos
               </button>
             </li>
-            <li className="nav-item">
-              <button
-                className={`nav-link ${activeTab === 'shopping' ? 'active' : ''}`}
-                onClick={() => setActiveTab('shopping')}
-              >
-                <Utensils className="me-1" size={16} />
-                Lista de Super
-              </button>
-            </li>
           </ul>
         </div>
 
         {activeTab === 'planner' && (
           <div className="row">
-            {/* Panel izquierdo - Planificador */}
-            <div className="col-md-8">
+            {/* Panel principal - Tabla de planificación */}
+            <div className="col-md-12">
               <div className="mb-3">
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <h6>Semana {selectedWeek}</h6>
-                  <div className="btn-group btn-group-sm">
-                    {plans.map((plan) => (
-                      <button
-                        key={plan.week_number}
-                        className={`btn ${selectedWeek === plan.week_number ? 'btn-primary' : 'btn-outline-primary'}`}
-                        onClick={() => setSelectedWeek(plan.week_number)}
-                      >
-                        Semana {plan.week_number}
-                      </button>
-                    ))}
+                  <div className="d-flex align-items-center">
+                    <button
+                      className="btn btn-sm btn-success me-2"
+                      onClick={() => {
+                        console.log('🧪 PRUEBA COMPLETA: Agregando recetas variadas para verificar contadores');
+                        
+                        // Receta 1: Original en Lunes/Desayuno
+                        const recipe1: MealRecipe = {
+                          recipe_id: 'test-original-' + Date.now(),
+                          recipe_name: 'Avena con Frutas',
+                          servings: 1,
+                          calories: 350,
+                          protein: 15,
+                          carbs: 45,
+                          fats: 12,
+                          is_modified: false
+                        };
+
+                        const meal1: Meal = {
+                          id: 'meal1-' + Date.now(),
+                          day: 'Lunes',
+                          meal_type: 'breakfast',
+                          meal_time: '08:00',
+                          foods: [],
+                          recipes: [recipe1],
+                          total_calories: 350,
+                          total_protein: 15,
+                          total_carbs: 45,
+                          total_fats: 12
+                        };
+
+                        // Receta 2: Modificada en Martes/Almuerzo
+                        const recipe2: MealRecipe = {
+                          recipe_id: 'test-modified-' + Date.now(),
+                          recipe_name: 'Pollo al Horno (Modificada)',
+                          servings: 1.5,
+                          calories: 600,
+                          protein: 45,
+                          carbs: 30,
+                          fats: 25,
+                          original_recipe_id: 'original-chicken-recipe',
+                          is_modified: true,
+                          modification_timestamp: new Date().toISOString(),
+                          recipe_data: {
+                            title: 'Pollo al Horno',
+                            description: 'Pollo con más proteína',
+                            totalCalories: 500,
+                            totalMacros: { protein: 35, carbohydrates: 25, fats: 20 },
+                            servings: 1,
+                            ingredients: []
+                          }
+                        };
+
+                        const meal2: Meal = {
+                          id: 'meal2-' + Date.now(),
+                          day: 'Martes',
+                          meal_type: 'lunch',
+                          meal_time: '13:00',
+                          foods: [],
+                          recipes: [recipe2],
+                          total_calories: 600,
+                          total_protein: 45,
+                          total_carbs: 30,
+                          total_fats: 25
+                        };
+
+                        // Agregar ambas comidas
+                        updateMealInPlan(meal1);
+                        setTimeout(() => updateMealInPlan(meal2), 100);
+                        
+                        console.log('🧪 Comidas agregadas - verificar contadores en tabla');
+                      }}
+                    >
+                      🧪 Verificar Contadores
+                    </button>
+                    <button
+                      className="btn btn-sm btn-danger me-2"
+                      onClick={() => {
+                        console.log('🧹 LIMPIAR: Removiendo todas las comidas de prueba');
+                        const clearedPlans = plans.map(plan => ({
+                          ...plan,
+                          meals: []
+                        }));
+                        setPlans(clearedPlans);
+                        console.log('🧹 Planes limpiados');
+                      }}
+                    >
+                      🧹 Limpiar
+                    </button>
+                    <button
+                      className="btn btn-sm btn-info me-2"
+                      onClick={() => {
+                        console.log('📋 REPORTE DE ESTADO COMPLETO:');
+                        console.log('=====================================');
+                        
+                        const currentPlan = getCurrentPlan();
+                        if (!currentPlan) {
+                          console.log('❌ No hay plan actual');
+                          return;
+                        }
+
+                        console.log('📊 Plan actual:', {
+                          semana: currentPlan.week_number,
+                          totalComidas: currentPlan.meals.length,
+                          objetivoKcal: currentPlan.daily_calories_target
+                        });
+
+                        // Resumen por día
+                        daysOfWeek.forEach(day => {
+                          const dayMeals = currentPlan.meals.filter(m => m.day === day);
+                          const dayTotals = dayMeals.reduce((acc, meal) => ({
+                            calories: acc.calories + meal.total_calories,
+                            protein: acc.protein + meal.total_protein,
+                            foods: acc.foods + meal.foods.length,
+                            recipes: acc.recipes + meal.recipes.length,
+                            modifiedRecipes: acc.modifiedRecipes + meal.recipes.filter(r => r.is_modified).length
+                          }), { calories: 0, protein: 0, foods: 0, recipes: 0, modifiedRecipes: 0 });
+
+                          if (dayTotals.calories > 0) {
+                            console.log(`📅 ${day}:`, {
+                              comidas: dayMeals.length,
+                              totalKcal: Math.round(dayTotals.calories),
+                              alimentos: dayTotals.foods,
+                              recetas: dayTotals.recipes,
+                              recetasModificadas: dayTotals.modifiedRecipes,
+                              detalleComidas: dayMeals.map(m => ({
+                                tipo: m.meal_type,
+                                kcal: m.total_calories,
+                                elementos: `${m.foods.length}A + ${m.recipes.length}R`
+                              }))
+                            });
+                          }
+                        });
+
+                        // Verificar persistencia de datos de recetas modificadas
+                        const allModifiedRecipes = currentPlan.meals.flatMap(m => m.recipes.filter(r => r.is_modified));
+                        if (allModifiedRecipes.length > 0) {
+                          console.log('🔍 RECETAS MODIFICADAS GUARDADAS:');
+                          allModifiedRecipes.forEach((recipe, index) => {
+                            console.log(`  ${index + 1}. ${recipe.recipe_name}:`, {
+                              persistenciaCompleta: !!(recipe.recipe_data && recipe.original_recipe_id),
+                              datosOriginales: recipe.recipe_data ? 'SÍ' : 'NO',
+                              timestamp: recipe.modification_timestamp,
+                              calorías: recipe.calories
+                            });
+                          });
+                        }
+
+                        console.log('=====================================');
+                      }}
+                    >
+                      📋 Estado
+                    </button>
+                    <button
+                      className="btn btn-sm btn-warning me-2"
+                      onClick={handleShowShoppingList}
+                      title="Generar lista de compras semanal"
+                    >
+                      🛒 Lista de Compras
+                    </button>
+                    <button
+                      className="btn btn-sm btn-success me-2"
+                      onClick={handleShowTemplateApplicator}
+                      title="Aplicar plantilla de plan semanal"
+                    >
+                      📚 Usar Plantilla
+                    </button>
+                    <button
+                      className="btn btn-sm btn-primary me-2"
+                      onClick={() => {
+                        const currentPlan = getCurrentPlan();
+                        if (!currentPlan || currentPlan.meals.length === 0) {
+                          alert('❌ No hay comidas en el plan actual para guardar como plantilla.\n\nPrimero agrega comidas al planificador.');
+                          return;
+                        }
+                        const templateName = prompt('💾 Nombre de la plantilla:', `Plan Semanal - ${new Date().toLocaleDateString()}`);
+                        if (templateName) {
+                          alert('✅ Funcionalidad de guardar plantilla será implementada próximamente.\n\n' + 
+                                `Plantilla: "${templateName}"\n` +
+                                `Comidas: ${currentPlan.meals.length}\n` +
+                                `Semana: ${selectedWeek}`);
+                        }
+                      }}
+                      title="Guardar plan actual como plantilla reutilizable"
+                    >
+                      💾 Guardar como Plantilla
+                    </button>
+                    <button
+                      className="btn btn-sm btn-info me-2"
+                      onClick={() => {
+                        console.log('🔍 DIAGNÓSTICO DE LISTA DE COMPRAS:');
+                        console.log('=====================================');
+                        
+                        const currentPlan = getCurrentPlan();
+                        if (!currentPlan) {
+                          console.log('❌ No hay plan actual');
+                          alert('❌ No hay plan semanal para diagnosticar');
+                          return;
+                        }
+
+                        console.log('📊 Plan actual:', {
+                          semana: currentPlan.week_number,
+                          totalComidas: currentPlan.meals.length
+                        });
+
+                        let totalAlimentos = 0;
+                        let totalRecetas = 0;
+                        const alimentosDetallados: any[] = [];
+                        const recetasDetalladas: any[] = [];
+
+                        currentPlan.meals.forEach(meal => {
+                          console.log(`\n🍽️ COMIDA: ${meal.day} - ${meal.meal_type}`);
+                          
+                          if (meal.foods && meal.foods.length > 0) {
+                            console.log(`  🍎 Alimentos (${meal.foods.length}):`);
+                            meal.foods.forEach((food: any, index: number) => {
+                              const foodInfo = {
+                                nombre: food.food_name,
+                                cantidad: food.quantity_grams,
+                                unidad: 'g',
+                                comida: `${meal.day} ${meal.meal_type}`
+                              };
+                              alimentosDetallados.push(foodInfo);
+                              console.log(`    ${index + 1}. ${food.food_name} - ${food.quantity_grams}g`);
+                              totalAlimentos++;
+                            });
+                          } else {
+                            console.log(`  🍎 No hay alimentos en esta comida`);
+                          }
+
+                          if (meal.recipes && meal.recipes.length > 0) {
+                            console.log(`  🍳 Recetas (${meal.recipes.length}):`);
+                            meal.recipes.forEach((recipe: any, index: number) => {
+                              const recipeInfo = {
+                                nombre: recipe.recipe_name,
+                                porciones: recipe.servings,
+                                modificada: recipe.is_modified,
+                                tieneIngredientes: !!(recipe.recipe_data && recipe.recipe_data.ingredients),
+                                comida: `${meal.day} ${meal.meal_type}`
+                              };
+                              recetasDetalladas.push(recipeInfo);
+                              console.log(`    ${index + 1}. ${recipe.recipe_name} - ${recipe.servings} porciones ${recipe.is_modified ? '(MODIFICADA)' : ''}`);
+                              
+                              if (recipe.recipe_data && recipe.recipe_data.ingredients) {
+                                console.log(`      ↳ Ingredientes definidos: ${recipe.recipe_data.ingredients.length}`);
+                                recipe.recipe_data.ingredients.forEach((ing: any, i: number) => {
+                                  console.log(`        ${i + 1}. ${ing.food_name || ing.ingredient_name} - ${ing.shopping_quantity || ing.quantity}${ing.shopping_unit?.abbreviation || ing.unit || 'g'}`);
+                                });
+                              } else {
+                                console.log(`      ⚠️ Sin ingredientes definidos`);
+                              }
+                              totalRecetas++;
+                            });
+                          } else {
+                            console.log(`  🍳 No hay recetas en esta comida`);
+                          }
+                        });
+
+                        console.log('\n📋 RESUMEN PARA LISTA DE COMPRAS:');
+                        console.log(`  Total alimentos individuales: ${totalAlimentos}`);
+                        console.log(`  Total recetas: ${totalRecetas}`);
+                        
+                        if (totalAlimentos === 0 && totalRecetas === 0) {
+                          console.log('❌ NO HAY DATOS PARA LISTA DE COMPRAS');
+                          alert('❌ No hay alimentos ni recetas en el plan semanal.\n\nPara generar lista de compras:\n1. Agrega alimentos al planificador\n2. Agrega recetas con ingredientes definidos\n3. Haz clic en "Guardar Comida"');
+                        } else {
+                          console.log('✅ Datos disponibles para lista de compras');
+                          
+                          let mensaje = `📊 DIAGNÓSTICO DE LISTA DE COMPRAS:\n\n`;
+                          mensaje += `📈 Total items encontrados:\n`;
+                          mensaje += `• ${totalAlimentos} alimentos individuales\n`;
+                          mensaje += `• ${totalRecetas} recetas\n\n`;
+                          
+                          if (alimentosDetallados.length > 0) {
+                            mensaje += `🍎 ALIMENTOS ENCONTRADOS:\n`;
+                            alimentosDetallados.forEach((item, i) => {
+                              mensaje += `${i + 1}. ${item.nombre} - ${item.cantidad}${item.unidad}\n   (${item.comida})\n`;
+                            });
+                            mensaje += `\n`;
+                          }
+                          
+                          if (recetasDetalladas.length > 0) {
+                            mensaje += `🍳 RECETAS ENCONTRADAS:\n`;
+                            recetasDetalladas.forEach((item, i) => {
+                              mensaje += `${i + 1}. ${item.nombre} - ${item.porciones} porciones\n   (${item.comida})${item.modificada ? ' [MODIFICADA]' : ''}\n`;
+                              if (!item.tieneIngredientes) {
+                                mensaje += `   ⚠️ Sin ingredientes definidos\n`;
+                              }
+                            });
+                          }
+                          
+                          mensaje += `\n💡 Si no ves items en la lista de compras:\n`;
+                          mensaje += `• Verifica que guardaste las comidas\n`;
+                          mensaje += `• Asegúrate que las recetas tengan ingredientes\n`;
+                          mensaje += `• Revisa la consola para más detalles`;
+                          
+                          alert(mensaje);
+                        }
+
+                        console.log('=====================================');
+                      }}
+                    >
+                      🔍 Diagnosticar
+                    </button>
+                    <div className="btn-group btn-group-sm">
+                      {plans.map((plan) => (
+                        <button
+                          key={plan.week_number}
+                          className={`btn ${selectedWeek === plan.week_number ? 'btn-primary' : 'btn-outline-primary'}`}
+                          onClick={() => setSelectedWeek(plan.week_number)}
+                        >
+                          Semana {plan.week_number}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* Alerta informativa sobre el número de comidas */}
-                {enabledMealTypes.length !== mealTypes.length && (
-                  <Alert variant="info" className="mb-3">
-                    <Target className="me-2" />
-                    <strong>Configuración de comidas:</strong> Solo {enabledMealTypes.length} tipos de comidas están habilitados según el plan nutricional.
-                    <br />
-                    <small className="text-muted">
-                      Comidas disponibles: {enabledMealTypes.map(type => type.label).join(', ')}
-                    </small>
-                  </Alert>
-                )}
-
+                {/* Tabla de planificación semanal */}
                 <div className="table-responsive">
-                  <table className="table table-sm">
-                    <thead>
+                  <table className="table table-sm table-bordered">
+                    <thead className="table-light">
                       <tr>
-                        <th>Día</th>
-                        {enabledMealTypes.map(type => (
-                          <th key={type.key} className="text-center">
-                            <div className="d-flex flex-column align-items-center">
-                              <span>{type.icon}</span>
-                              <small>{type.label}</small>
-                            </div>
+                        <th style={{width: '150px'}}>Comida</th>
+                        {daysOfWeek.map(day => (
+                          <th key={day} className="text-center" style={{width: '120px'}}>
+                            {day}
                           </th>
                         ))}
-                        <th className="text-center">Total</th>
+                        <th className="text-center" style={{width: '100px'}}>Total Semana</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {daysOfWeek.map(day => {
-                        const dayTotals = getDailyTotals(day);
+                      {enabledMealTypes.map(type => {
+                        // Calcular totales semanales para este tipo de comida
+                        const weeklyTotals = daysOfWeek.reduce((totals, day) => {
+                          const meal = getMealForDayAndType(day, type.key);
+                          if (meal) {
+                            totals.calories += meal.total_calories;
+                            totals.count += 1;
+                            // Debug específico para recetas
+                            if (meal.recipes.length > 0) {
+                              console.log(`🔍 ${type.key} ${day} tiene ${meal.recipes.length} recetas:`, 
+                                meal.recipes.map(r => `${r.recipe_name}: ${r.calories} kcal${r.is_modified ? ' (MOD)' : ''}`));
+                            }
+                          }
+                          return totals;
+                        }, { calories: 0, count: 0 });
+                        
+                        // Debug de totales semanales
+                        if (weeklyTotals.calories > 0) {
+                          console.log(`📊 Totales semanales ${type.key}:`, weeklyTotals);
+                        }
+
                         return (
-                          <tr key={day}>
-                            <td className="fw-medium">{day}</td>
-                            {enabledMealTypes.map(type => {
+                          <tr key={type.key}>
+                            <td className="fw-medium">
+                              <div className="d-flex align-items-center">
+                                <span className="me-2">{type.icon}</span>
+                                <small>{type.label}</small>
+                              </div>
+                            </td>
+                            {daysOfWeek.map(day => {
                               const meal = getMealForDayAndType(day, type.key);
+                              console.log(`🎯 Renderizando celda ${day} - ${type.key}, meal encontrada:`, meal);
                               return (
-                                <td key={type.key} className="text-center">
+                                <td key={day} className="text-center p-1">
                                   {meal ? (
-                                    <div className="d-flex flex-column align-items-center">
-                                      <small className="text-success fw-medium">
-                                        {Math.round(meal.total_calories)} cal
-                                      </small>
-                                      <small className="text-muted">
-                                        {meal.foods.length} alimentos
-                                      </small>
-                                      <button
-                                        className="btn btn-sm btn-outline-primary mt-1"
-                                        onClick={() => {
-                                          setEditingMeal(meal);
-                                          setSelectedDay(day);
-                                          setShowFoodModal(true);
-                                        }}
-                                      >
-                                        <Plus size={12} />
-                                      </button>
+                                    <div className="meal-cell">
+                                      <div className="text-success fw-bold small">
+                                        {Math.round(meal.total_calories)} kcal
+                                      </div>
+                                      {meal.meal_description && (
+                                        <div className="text-muted small text-truncate" title={meal.meal_description}>
+                                          {meal.meal_description.substring(0, 30)}...
+                                        </div>
+                                      )}
+                                      {meal.foods.length > 0 && (
+                                        <div className="text-info small">
+                                          {meal.foods.length} alimento{meal.foods.length > 1 ? 's' : ''}
+                                        </div>
+                                      )}
+                                      {meal.recipes.length > 0 && (
+                                        <div className="text-warning small">
+                                          {meal.recipes.length} receta{meal.recipes.length > 1 ? 's' : ''}
+                                          {meal.recipes.some(r => r.is_modified) && (
+                                            <span className="badge bg-warning ms-1" style={{fontSize: '0.6em'}}>
+                                              Modificada{meal.recipes.filter(r => r.is_modified).length > 1 ? 's' : ''}
+                                            </span>
+                                          )}
+                                        </div>
+                                      )}
+                                      <div className="mt-1">
+                                        <button
+                                          className="btn btn-sm btn-outline-primary me-1"
+                                          onClick={() => {
+                                            setEditingMeal(meal);
+                                            setSelectedDay(day);
+                                            setShowFoodModal(true);
+                                          }}
+                                          title="Editar comida"
+                                        >
+                                          <Edit size={10} />
+                                        </button>
+                                        <button
+                                          className="btn btn-sm btn-outline-danger"
+                                          onClick={() => {
+                                            const updatedPlans = plans.map(plan => {
+                                              if (plan.week_number === selectedWeek) {
+                                                return {
+                                                  ...plan,
+                                                  meals: plan.meals.filter(m => 
+                                                    !(m.day === day && m.meal_type === type.key)
+                                                  )
+                                                };
+                                              }
+                                              return plan;
+                                            });
+                                            setPlans(updatedPlans);
+                                          }}
+                                          title="Eliminar comida"
+                                        >
+                                          <Trash2 size={10} />
+                                        </button>
+                                      </div>
                                     </div>
                                   ) : (
                                     <button
-                                      className="btn btn-sm btn-outline-secondary"
+                                      className="btn btn-sm btn-outline-secondary w-100"
                                       onClick={() => {
                                         const newMeal = createEmptyMeal(day, type.key);
                                         setEditingMeal(newMeal);
                                         setSelectedDay(day);
                                         setShowFoodModal(true);
                                       }}
+                                      title="Agregar comida"
                                     >
                                       <Plus size={12} />
                                     </button>
@@ -651,107 +1112,44 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
                               );
                             })}
                             <td className="text-center">
-                              <div className="d-flex flex-column align-items-center">
-                                <small className="fw-medium">
-                                  {Math.round(dayTotals.calories)} cal
-                                </small>
-                                <small className="text-muted">
-                                  P: {Math.round(dayTotals.protein)}g
-                                </small>
+                              <div className="fw-bold text-primary">
+                                {Math.round(weeklyTotals.calories)} kcal
                               </div>
+                              <small className="text-muted">
+                                ({weeklyTotals.count} comidas)
+                              </small>
                             </td>
                           </tr>
                         );
                       })}
                     </tbody>
+                    <tfoot className="table-secondary">
+                      <tr>
+                        <td className="fw-bold">Total Diario</td>
+                        {daysOfWeek.map(day => {
+                          const dayTotals = getDailyTotals(day);
+                          return (
+                            <td key={day} className="text-center">
+                              <div className="fw-bold">
+                                {Math.round(dayTotals.calories)} kcal
+                              </div>
+                              <small className="text-muted">
+                                P: {Math.round(dayTotals.protein)}g
+                              </small>
+                            </td>
+                          );
+                        })}
+                        <td className="text-center">
+                          <div className="fw-bold text-success">
+                            {Math.round(plans.find(p => p.week_number === selectedWeek)?.daily_calories_target || 0)} kcal
+                          </div>
+                          <small className="text-muted">Objetivo</small>
+                        </td>
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
               </div>
-            </div>
-
-            {/* Panel derecho - Resumen y controles */}
-            <div className="col-md-4">
-              <Card className="mb-3">
-                <Card.Header>
-                  <h6 className="mb-0">Resumen Semanal</h6>
-                </Card.Header>
-                <Card.Body>
-                  {(() => {
-                    const weeklyTotals = getWeeklyTotals();
-                    const targetCalories = getCurrentPlan()?.daily_calories_target || 2000;
-                    const targetProtein = getCurrentPlan()?.daily_macros_target?.protein || 150;
-                    
-                    return (
-                      <div>
-                        <div className="mb-2">
-                          <small className="text-muted">Calorías promedio por día</small>
-                          <div className="d-flex justify-content-between">
-                            <span>{Math.round(weeklyTotals.calories / 7)} cal</span>
-                            <span className="text-muted">/ {targetCalories} cal</span>
-                          </div>
-                          <div className="progress" style={{height: '4px'}}>
-                            <div 
-                              className="progress-bar" 
-                              style={{width: `${Math.min(100, (weeklyTotals.calories / 7 / targetCalories) * 100)}%`}}
-                            ></div>
-                          </div>
-                        </div>
-                        
-                        <div className="mb-2">
-                          <small className="text-muted">Proteína promedio por día</small>
-                          <div className="d-flex justify-content-between">
-                            <span>{Math.round(weeklyTotals.protein / 7)}g</span>
-                            <span className="text-muted">/ {targetProtein}g</span>
-                          </div>
-                          <div className="progress" style={{height: '4px'}}>
-                            <div 
-                              className="progress-bar bg-success" 
-                              style={{width: `${Math.min(100, (weeklyTotals.protein / 7 / targetProtein) * 100)}%`}}
-                            ></div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </Card.Body>
-              </Card>
-
-              <Card>
-                <Card.Header>
-                  <h6 className="mb-0">Configuración del Plan</h6>
-                </Card.Header>
-                <Card.Body>
-                  <div className="mb-2">
-                    <small className="text-muted">Frecuencia de comidas</small>
-                    <div className="mt-1">
-                      {mealTypes.map(type => (
-                        <Badge 
-                          key={type.key}
-                          bg={mealFrequency[type.key as keyof typeof mealFrequency] ? 'success' : 'secondary'}
-                          className="me-1 mb-1"
-                        >
-                          {type.icon} {type.label}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="mb-2">
-                    <small className="text-muted">Flexibilidad</small>
-                    <div className="mt-1">
-                      {flexibilitySettings.allow_meal_swapping && (
-                        <Badge bg="info" className="me-1">Intercambio de comidas</Badge>
-                      )}
-                      {flexibilitySettings.allow_portion_adjustment && (
-                        <Badge bg="info" className="me-1">Ajuste de porciones</Badge>
-                      )}
-                      {flexibilitySettings.allow_food_substitution && (
-                        <Badge bg="info" className="me-1">Sustitución de alimentos</Badge>
-                      )}
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
             </div>
           </div>
         )}
@@ -760,54 +1158,8 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
           <div>
             <Alert variant="info" className="mb-3">
               <Shield className="me-2" />
-              <strong>Restricciones aplicadas al planificador:</strong> Solo se muestran alimentos compatibles con las restricciones del paciente.
+              <strong>Restricciones aplicadas:</strong> Solo se muestran alimentos y recetas compatibles.
             </Alert>
-
-            <Row>
-              <Col md={12} className="mb-3">
-                <Card border="info">
-                  <Card.Header className="bg-info text-white">
-                    <Shield className="me-2" />
-                    Información del Plan Nutricional
-                  </Card.Header>
-                  <Card.Body>
-                    <p className="text-muted">
-                      El planificador respeta las restricciones y objetivos configurados en el plan nutricional.
-                      Los alimentos mostrados son compatibles con las necesidades del paciente.
-                    </p>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-
-            <Card className="mt-3">
-              <Card.Header>
-                <h6 className="mb-0">Alimentos Disponibles ({filteredFoods.length})</h6>
-              </Card.Header>
-              <Card.Body>
-                <div className="row">
-                  {filteredFoods.map(food => (
-                    <div key={food.id} className="col-md-6 col-lg-4 mb-2">
-                      <div className="border rounded p-2">
-                        <div className="d-flex justify-content-between align-items-start">
-                          <div>
-                            <strong>{food.name}</strong>
-                            <br />
-                            <small className="text-muted">{food.category}</small>
-                          </div>
-                          <Badge bg="success">{Math.round(food.calories_per_100g)} cal/100g</Badge>
-                        </div>
-                        <div className="mt-1">
-                          <small className="text-muted">
-                            P: {food.protein_per_100g}g | C: {food.carbs_per_100g}g | G: {food.fats_per_100g}g
-                          </small>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card.Body>
-            </Card>
           </div>
         )}
 
@@ -815,169 +1167,8 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
           <div>
             <Alert variant="success" className="mb-3">
               <Target className="me-2" />
-              <strong>Objetivos nutricionales del plan:</strong> El planificador respeta estos objetivos al sugerir comidas.
+              <strong>Objetivos nutricionales del plan:</strong> El planificador respeta estos objetivos.
             </Alert>
-
-            <Row>
-              <Col md={6} className="mb-3">
-                <Card border="primary">
-                  <Card.Header className="bg-primary text-white">
-                    <Target className="me-2" />
-                    Objetivos Diarios
-                  </Card.Header>
-                  <Card.Body>
-                                         <div className="mb-2">
-                       <strong>Calorías:</strong> {dietPlan.target_calories || 2000} cal
-                     </div>
-                     <div className="mb-2">
-                       <strong>Proteínas:</strong> {dietPlan.target_protein || 150}g
-                     </div>
-                     <div className="mb-2">
-                       <strong>Carbohidratos:</strong> {dietPlan.target_carbs || 225}g
-                     </div>
-                     <div className="mb-2">
-                       <strong>Grasas:</strong> {dietPlan.target_fats || 56}g
-                     </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-
-              <Col md={6} className="mb-3">
-                <Card border="success">
-                  <Card.Header className="bg-success text-white">
-                    <CheckCircle className="me-2" />
-                    Distribución de Comidas
-                  </Card.Header>
-                  <Card.Body>
-                    {mealTypes.map(type => (
-                      <div key={type.key} className="mb-2">
-                        <div className="d-flex justify-content-between align-items-center">
-                          <span>{type.icon} {type.label}</span>
-                          <Badge bg={mealFrequency[type.key as keyof typeof mealFrequency] ? 'success' : 'secondary'}>
-                            {mealFrequency[type.key as keyof typeof mealFrequency] ? 'Activo' : 'Inactivo'}
-                          </Badge>
-                        </div>
-                        {mealTiming[type.key as keyof typeof mealTiming] && (
-                          <small className="text-muted">
-                            Horario: {mealTiming[type.key as keyof typeof mealTiming]}
-                          </small>
-                        )}
-                      </div>
-                    ))}
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          </div>
-        )}
-
-        {activeTab === 'shopping' && (
-          <div>
-            <Alert variant="info" className="mb-3">
-              <Utensils className="me-2" />
-              <strong>Lista de Supermercado:</strong> Generada automáticamente para {getTotalWeeks()} semana(s) del plan nutricional.
-            </Alert>
-
-            <div className="mb-3">
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <h6>Lista de Compras por Categorías</h6>
-                <Button 
-                  variant="outline-primary" 
-                  size="sm"
-                  onClick={() => {
-                    const shoppingList = generateShoppingList();
-                    const text = Object.entries(shoppingList)
-                      .map(([category, foods]) => {
-                        const categoryInfo = shoppingCategories.find(c => c.name === category);
-                        return `${categoryInfo?.icon || '📦'} ${category}:\n${Object.entries(foods)
-                          .map(([food, quantity]) => `  • ${food}: ${formatQuantity(quantity)}`)
-                          .join('\n')}`;
-                      })
-                      .join('\n\n');
-                    
-                    navigator.clipboard.writeText(text);
-                    alert('Lista copiada al portapapeles');
-                  }}
-                >
-                  📋 Copiar Lista
-                </Button>
-              </div>
-            </div>
-
-            <div className="row">
-              {(() => {
-                const shoppingList = generateShoppingList();
-                const categories = Object.keys(shoppingList);
-                
-                if (categories.length === 0) {
-                  return (
-                    <div className="col-12">
-                      <div className="text-center py-4">
-                        <p className="text-muted mb-2">No hay alimentos planificados aún</p>
-                        <small className="text-muted">Agrega comidas al planificador para generar la lista de supermercado</small>
-                      </div>
-                    </div>
-                  );
-                }
-
-                return categories.map(category => {
-                  const categoryInfo = shoppingCategories.find(c => c.name === category);
-                  const foods = shoppingList[category];
-                  const totalItems = Object.keys(foods).length;
-                  const totalQuantity = Object.values(foods).reduce((sum, qty) => sum + qty, 0);
-
-                  return (
-                    <div key={category} className="col-md-6 mb-3">
-                      <Card border={categoryInfo?.color || 'secondary'}>
-                        <Card.Header className={`bg-${categoryInfo?.color || 'secondary'} text-white`}>
-                          <span className="me-2">{categoryInfo?.icon || '📦'}</span>
-                          {category}
-                          <Badge bg="light" text="dark" className="ms-2">
-                            {totalItems} items
-                          </Badge>
-                        </Card.Header>
-                        <Card.Body>
-                          <div className="mb-2">
-                            <small className="text-muted">
-                              Total: {formatQuantity(totalQuantity)}
-                            </small>
-                          </div>
-                          <div className="shopping-list">
-                            {Object.entries(foods).map(([foodName, quantity]) => (
-                              <div key={foodName} className="d-flex justify-content-between align-items-center mb-1">
-                                <span className="food-name">{foodName}</span>
-                                <Badge bg="outline-secondary" className="quantity-badge">
-                                  {formatQuantity(quantity)}
-                                </Badge>
-                              </div>
-                            ))}
-                          </div>
-                        </Card.Body>
-                      </Card>
-                    </div>
-                  );
-                });
-              })()}
-            </div>
-
-            <div className="mt-3">
-              <Card border="warning">
-                <Card.Header className="bg-warning text-dark">
-                  <span className="me-2">💡</span>
-                  Consejos para el Supermercado
-                </Card.Header>
-                <Card.Body>
-                  <ul className="list-unstyled mb-0">
-                    <li className="mb-2">• Compra alimentos frescos y de temporada</li>
-                    <li className="mb-2">• Revisa las fechas de vencimiento</li>
-                    <li className="mb-2">• Prefiere alimentos orgánicos cuando sea posible</li>
-                    <li className="mb-2">• Lleva bolsas reutilizables</li>
-                    <li className="mb-2">• Compara precios entre marcas</li>
-                    <li className="mb-2">• Planifica las comidas de la semana</li>
-                  </ul>
-                </Card.Body>
-              </Card>
-            </div>
           </div>
         )}
       </Modal.Body>
@@ -993,7 +1184,7 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
       </Modal.Footer>
 
       {/* Modal para agregar/editar comidas */}
-      <Modal show={showFoodModal} onHide={() => setShowFoodModal(false)} size="lg">
+      <Modal show={showFoodModal} onHide={() => setShowFoodModal(false)} size="xl">
         <Modal.Header closeButton>
           <Modal.Title>
             {editingMeal ? `Editar ${mealTypes.find(t => t.key === editingMeal.meal_type)?.label} - ${selectedDay}` : 'Agregar Comida'}
@@ -1002,230 +1193,417 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
         <Modal.Body>
           {editingMeal && (
             <div>
-              <div className="mb-3">
-                <label className="form-label">Buscar alimentos</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Buscar por nombre o categoría..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-
-              <div className="mb-3">
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h6>Alimentos disponibles:</h6>
-                  <Button 
-                    variant="outline-primary" 
-                    size="sm"
-                    onClick={() => setShowAddFoodModal(true)}
+              {/* Tabs para tipo de contenido */}
+              <Tabs activeKey={contentType} onSelect={(k) => setContentType(k as any)} className="mb-3">
+                <Tab eventKey="foods" title={
+                  <span><Apple className="me-1" size={16} />Alimentos</span>
+                }>
+                  <div className="mb-3">
+                    <Form.Control
+                      type="text"
+                      placeholder="Buscar alimentos..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                                    <div 
+                    className="border rounded p-2" 
+                    style={{
+                      height: '400px',
+                      overflowY: 'auto',
+                      backgroundColor: '#f8f9fa'
+                    }}
                   >
-                    <Plus size={16} className="me-1" />
-                    Agregar Alimento Personalizado
-                  </Button>
-                </div>
-                <div className="row">
-                  {filteredFoods.length === 0 ? (
-                    <div className="col-12">
-                      <div className="text-center py-3">
-                        <p className="text-muted mb-2">No se encontraron alimentos con "{searchTerm}"</p>
-                        <Button 
-                          variant="outline-success" 
-                          size="sm"
-                          onClick={() => setShowAddFoodModal(true)}
-                        >
-                          <Plus size={16} className="me-1" />
-                          Agregar "{searchTerm}" como alimento personalizado
-                        </Button>
-                      </div>
+                    <div className="row">
+                      {filteredFoods.map(food => (
+                        <FoodItem key={food.id} food={food} onAdd={addFoodToMeal} />
+                      ))}
                     </div>
-                  ) : (
-                    filteredFoods.map(food => (
-                      <FoodItem key={food.id} food={food} onAdd={addFoodToMeal} />
-                    ))
-                  )}
-                </div>
-              </div>
+                  </div>
+                </Tab>
+                
+                <Tab eventKey="recipes" title={
+                  <span><ChefHat className="me-1" size={16} />Recetas</span>
+                }>
+                  <div className="mb-3">
+                    <Form.Control
+                      type="text"
+                      placeholder="Buscar recetas..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <div 
+                    className="border rounded p-2" 
+                    style={{
+                      height: '400px',
+                      overflowY: 'auto',
+                      backgroundColor: '#f8f9fa'
+                    }}
+                  >
+                    <div className="row">
+                      {filteredRecipes.map(recipe => (
+                        <RecipeItem key={recipe.id} recipe={recipe} onAdd={addRecipeToMeal} onEdit={handleEditRecipe} />
+                      ))}
+                    </div>
+                  </div>
+                </Tab>
 
-              <div className="mb-3">
-                <h6>Alimentos en la comida:</h6>
-                {editingMeal.foods.length === 0 ? (
-                  <p className="text-muted">No hay alimentos agregados</p>
-                ) : (
-                  <div className="table-responsive">
-                    <table className="table table-sm">
-                      <thead>
-                        <tr>
-                          <th>Alimento</th>
-                          <th>Cantidad (g)</th>
-                          <th>Calorías</th>
-                          <th>Proteínas</th>
-                          <th>Carbohidratos</th>
-                          <th>Grasas</th>
-                          <th></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {editingMeal.foods.map((food, index) => (
-                          <tr key={index}>
-                            <td>{food.food_name}</td>
-                            <td>{food.quantity_grams}</td>
-                            <td>{Math.round(food.calories)}</td>
-                            <td>{Math.round(food.protein)}g</td>
-                            <td>{Math.round(food.carbs)}g</td>
-                            <td>{Math.round(food.fats)}g</td>
-                            <td>
-                              <button
-                                className="btn btn-sm btn-outline-danger"
-                                onClick={() => removeFoodFromMeal(index)}
-                              >
-                                <Trash2 size={12} />
-                              </button>
-                            </td>
+                <Tab eventKey="manual" title={
+                  <span><Edit className="me-1" size={16} />Manual</span>
+                }>
+                  <div className="mb-3">
+                    <Form.Group className="mb-2">
+                      <Form.Label>Descripción de la comida</Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={3}
+                        value={editingMeal.meal_description || ''}
+                        onChange={(e) => setEditingMeal({
+                          ...editingMeal,
+                          meal_description: e.target.value
+                        })}
+                        placeholder="Ej: Ensalada de pollo con aguacate y aceite de oliva"
+                      />
+                    </Form.Group>
+                    
+                    <Row>
+                      <Col md={3}>
+                        <Form.Group>
+                          <Form.Label>Calorías</Form.Label>
+                          <Form.Control
+                            type="number"
+                            value={editingMeal.total_calories}
+                            onChange={(e) => setEditingMeal({
+                              ...editingMeal,
+                              total_calories: Number(e.target.value)
+                            })}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={3}>
+                        <Form.Group>
+                          <Form.Label>Proteína (g)</Form.Label>
+                          <Form.Control
+                            type="number"
+                            value={editingMeal.total_protein}
+                            onChange={(e) => setEditingMeal({
+                              ...editingMeal,
+                              total_protein: Number(e.target.value)
+                            })}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={3}>
+                        <Form.Group>
+                          <Form.Label>Carbohidratos (g)</Form.Label>
+                          <Form.Control
+                            type="number"
+                            value={editingMeal.total_carbs}
+                            onChange={(e) => setEditingMeal({
+                              ...editingMeal,
+                              total_carbs: Number(e.target.value)
+                            })}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={3}>
+                        <Form.Group>
+                          <Form.Label>Grasas (g)</Form.Label>
+                          <Form.Control
+                            type="number"
+                            value={editingMeal.total_fats}
+                            onChange={(e) => setEditingMeal({
+                              ...editingMeal,
+                              total_fats: Number(e.target.value)
+                            })}
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
+                    <Button 
+                      variant="success" 
+                      className="mt-3"
+                      onClick={() => {
+                        updateMealInPlan(editingMeal);
+                        alert('Comida manual guardada. Haz clic en "Guardar Comida" para finalizar.');
+                      }}
+                    >
+                      <Save className="me-1" size={16} />
+                      Aplicar Valores Manuales
+                    </Button>
+                  </div>
+                </Tab>
+              </Tabs>
+
+              {/* Resumen de la comida actual */}
+              <div className="mt-4">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h6>Contenido de la comida:</h6>
+                  <div>
+                    {(editingMeal.foods.length > 0 || editingMeal.recipes.length > 0) ? (
+                      <Badge bg="success" className="me-2">
+                        {editingMeal.foods.length} alimentos + {editingMeal.recipes.length} recetas
+                      </Badge>
+                    ) : (
+                      <Badge bg="secondary">
+                        Comida vacía
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Alimentos agregados */}
+                {editingMeal.foods.length > 0 ? (
+                  <div className="mb-3">
+                    <h6 className="text-success">Alimentos:</h6>
+                    <div className="table-responsive">
+                      <table className="table table-sm">
+                        <thead>
+                          <tr>
+                            <th>Alimento</th>
+                            <th>Cantidad (g)</th>
+                            <th>Calorías</th>
+                            <th>Proteínas</th>
+                            <th>Carbohidratos</th>
+                            <th>Grasas</th>
+                            <th></th>
                           </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr className="table-active">
-                          <td><strong>Total</strong></td>
-                          <td>{editingMeal.foods.reduce((sum, f) => sum + f.quantity_grams, 0)}g</td>
-                          <td><strong>{Math.round(editingMeal.total_calories)}</strong></td>
-                          <td><strong>{Math.round(editingMeal.total_protein)}g</strong></td>
-                          <td><strong>{Math.round(editingMeal.total_carbs)}g</strong></td>
-                          <td><strong>{Math.round(editingMeal.total_fats)}g</strong></td>
-                          <td></td>
-                        </tr>
-                      </tfoot>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {editingMeal.foods.map((food, index) => (
+                            <tr key={index}>
+                              <td>{food.food_name}</td>
+                              <td>{food.quantity_grams}g</td>
+                              <td>{Math.round(food.calories)} kcal</td>
+                              <td>{Math.round(food.protein)}g</td>
+                              <td>{Math.round(food.carbs)}g</td>
+                              <td>{Math.round(food.fats)}g</td>
+                              <td>
+                                <button
+                                  className="btn btn-sm btn-outline-danger"
+                                  onClick={() => removeFoodFromMeal(index)}
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : (
+                  <Alert variant="light" className="small text-center mb-3">
+                    <em>No hay alimentos agregados. Usa el tab "Alimentos" arriba para seleccionar.</em>
+                  </Alert>
+                )}
+
+                {/* Recetas agregadas */}
+                {editingMeal.recipes.length > 0 && (
+                  <div className="mb-3">
+                    <h6 className="text-warning">Recetas:</h6>
+                    <div className="table-responsive">
+                      <table className="table table-sm">
+                        <thead>
+                          <tr>
+                            <th>Receta</th>
+                            <th>Porciones</th>
+                            <th>Calorías</th>
+                            <th>Proteínas</th>
+                            <th>Carbohidratos</th>
+                            <th>Grasas</th>
+                            <th></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {editingMeal.recipes.map((recipe, index) => (
+                            <tr key={index} className={recipe.is_modified ? 'table-warning' : ''}>
+                              <td>
+                                <div>
+                                  {recipe.recipe_name}
+                                  {recipe.is_modified && (
+                                    <div>
+                                      <Badge bg="warning" className="ms-1">Modificada</Badge>
+                                      <small className="text-muted d-block">
+                                        Creada: {new Date(recipe.modification_timestamp!).toLocaleTimeString()}
+                                      </small>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                              <td>{recipe.servings}</td>
+                              <td>{Math.round(recipe.calories)} kcal</td>
+                              <td>{Math.round(recipe.protein)}g</td>
+                              <td>{Math.round(recipe.carbs)}g</td>
+                              <td>{Math.round(recipe.fats)}g</td>
+                              <td>
+                                <div className="btn-group btn-group-sm">
+                                  {recipe.is_modified && recipe.recipe_data && (
+                                    <button
+                                      className="btn btn-outline-info"
+                                      onClick={() => {
+                                        alert(`Receta Modificada:\n\nTítulo: ${recipe.recipe_data!.title}\nDescripción: ${recipe.recipe_data!.description}\nCalorías Totales: ${recipe.recipe_data!.totalCalories}\nPorciones Originales: ${recipe.recipe_data!.servings}`);
+                                      }}
+                                      title="Ver detalles de modificación"
+                                    >
+                                      <Edit size={10} />
+                                    </button>
+                                  )}
+                                  <button
+                                    className="btn btn-outline-danger"
+                                    onClick={() => removeRecipeFromMeal(index)}
+                                    title="Eliminar receta"
+                                  >
+                                    <Trash2 size={10} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
+
+                {/* Total de la comida */}
+                <div className="alert alert-info">
+                  <strong>Total de la comida:</strong>
+                  <div className="row mt-2">
+                    <div className="col-md-3">
+                      <strong>Calorías:</strong> {Math.round(editingMeal.total_calories)} kcal
+                    </div>
+                    <div className="col-md-3">
+                      <strong>Proteínas:</strong> {Math.round(editingMeal.total_protein)}g
+                    </div>
+                    <div className="col-md-3">
+                      <strong>Carbohidratos:</strong> {Math.round(editingMeal.total_carbs)}g
+                    </div>
+                    <div className="col-md-3">
+                      <strong>Grasas:</strong> {Math.round(editingMeal.total_fats)}g
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowFoodModal(false)}>
-            Cerrar
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Modal para agregar alimento personalizado */}
-      <Modal show={showAddFoodModal} onHide={() => setShowAddFoodModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <Plus className="me-2" />
-            Agregar Alimento Personalizado
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="row">
-            <div className="col-md-6 mb-3">
-              <label className="form-label">Nombre del alimento *</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Ej: Ensalada de quinoa"
-                value={customFood.name}
-                onChange={(e) => setCustomFood(prev => ({ ...prev, name: e.target.value }))}
-              />
+          <div className="d-flex justify-content-between align-items-center w-100">
+            <div>
+              {editingMeal && (
+                <small className="text-muted">
+                  Total: <strong>{Math.round(editingMeal.total_calories)} kcal</strong> | 
+                  P: {Math.round(editingMeal.total_protein)}g | 
+                  C: {Math.round(editingMeal.total_carbs)}g | 
+                  G: {Math.round(editingMeal.total_fats)}g
+                </small>
+              )}
             </div>
-            <div className="col-md-6 mb-3">
-              <label className="form-label">Categoría *</label>
-              <select
-                className="form-select"
-                value={customFood.category}
-                onChange={(e) => setCustomFood(prev => ({ ...prev, category: e.target.value }))}
+            <div>
+              <Button 
+                variant="secondary" 
+                onClick={() => setShowFoodModal(false)}
+                className="me-2"
               >
-                <option value="">Seleccionar categoría</option>
-                <option value="Cereales y granos">Cereales y granos</option>
-                <option value="Frutas">Frutas</option>
-                <option value="Verduras">Verduras</option>
-                <option value="Proteínas">Proteínas</option>
-                <option value="Lácteos">Lácteos</option>
-                <option value="Grasas">Grasas</option>
-                <option value="Bebidas">Bebidas</option>
-                <option value="Postres">Postres</option>
-                <option value="Otros">Otros</option>
-              </select>
+                Cancelar
+              </Button>
+              <Button 
+                variant="success" 
+                size="lg"
+                className="px-4"
+                onClick={() => {
+                  console.log('💾 Botón Guardar Comida clickeado');
+                  console.log('💾 Estado de editingMeal:', editingMeal);
+                  if (editingMeal) {
+                    console.log('💾 Guardando comida con datos:', {
+                      day: editingMeal.day,
+                      meal_type: editingMeal.meal_type,
+                      foods: editingMeal.foods.length,
+                      recipes: editingMeal.recipes.length,
+                      calories: editingMeal.total_calories,
+                      recipesDetail: editingMeal.recipes.map(r => ({
+                        name: r.recipe_name,
+                        calories: r.calories,
+                        isModified: r.is_modified,
+                        hasRecipeData: !!r.recipe_data
+                      }))
+                    });
+                    updateMealInPlan(editingMeal);
+                    setShowFoodModal(false);
+                    console.log('💾 Modal cerrado, comida debería estar guardada');
+                    
+                    // Feedback visual para el usuario
+                    alert(`✅ Comida guardada exitosamente!\n\n${editingMeal.foods.length} alimentos + ${editingMeal.recipes.length} recetas\nTotal: ${Math.round(editingMeal.total_calories)} kcal`);
+                  } else {
+                    console.error('💾 ❌ No hay editingMeal para guardar');
+                  }
+                }}
+                disabled={!editingMeal || (editingMeal.foods.length === 0 && editingMeal.recipes.length === 0 && !editingMeal.meal_description)}
+              >
+                <Save className="me-2" size={20} />
+                {editingMeal && (editingMeal.foods.length > 0 || editingMeal.recipes.length > 0) 
+                  ? `Guardar Comida (${editingMeal.foods.length + editingMeal.recipes.length} items)` 
+                  : 'Guardar Comida'}
+              </Button>
             </div>
           </div>
-
-          <div className="row">
-            <div className="col-md-6 mb-3">
-              <label className="form-label">Calorías por 100g</label>
-              <input
-                type="number"
-                className="form-control"
-                placeholder="0"
-                value={customFood.calories_per_100g}
-                onChange={(e) => setCustomFood(prev => ({ ...prev, calories_per_100g: Number(e.target.value) }))}
-              />
-            </div>
-            <div className="col-md-6 mb-3">
-              <label className="form-label">Proteínas por 100g (g)</label>
-              <input
-                type="number"
-                className="form-control"
-                placeholder="0"
-                step="0.1"
-                value={customFood.protein_per_100g}
-                onChange={(e) => setCustomFood(prev => ({ ...prev, protein_per_100g: Number(e.target.value) }))}
-              />
-            </div>
-          </div>
-
-          <div className="row">
-            <div className="col-md-6 mb-3">
-              <label className="form-label">Carbohidratos por 100g (g)</label>
-              <input
-                type="number"
-                className="form-control"
-                placeholder="0"
-                step="0.1"
-                value={customFood.carbs_per_100g}
-                onChange={(e) => setCustomFood(prev => ({ ...prev, carbs_per_100g: Number(e.target.value) }))}
-              />
-            </div>
-            <div className="col-md-6 mb-3">
-              <label className="form-label">Grasas por 100g (g)</label>
-              <input
-                type="number"
-                className="form-control"
-                placeholder="0"
-                step="0.1"
-                value={customFood.fats_per_100g}
-                onChange={(e) => setCustomFood(prev => ({ ...prev, fats_per_100g: Number(e.target.value) }))}
-              />
-            </div>
-          </div>
-
-          <div className="alert alert-info">
-            <small>
-              <strong>Nota:</strong> Los valores nutricionales son por 100 gramos del alimento. 
-              Si no conoces los valores exactos, puedes usar valores aproximados o consultar 
-              tablas nutricionales de referencia.
-            </small>
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => {
-            setShowAddFoodModal(false);
-            resetCustomFood();
-          }}>
-            Cancelar
-          </Button>
-          <Button variant="primary" onClick={addCustomFood}>
-            <Plus className="me-2" />
-            Agregar Alimento
-          </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Modal de edición avanzada de recetas */}
+      <RecipeEditorModal
+        show={showRecipeEditor}
+        onHide={() => {
+          setShowRecipeEditor(false);
+          setEditingRecipe(null);
+        }}
+        recipe={editingRecipe}
+        onSave={handleSaveRecipeChanges}
+        availableFoods={foods}
+      />
+
+      {/* Modal de lista de compras */}
+      <ShoppingListModal
+        show={showShoppingList}
+        onHide={() => setShowShoppingList(false)}
+        weeklyPlan={getCurrentPlan() as any}
+        patientName={dietPlan?.patient_name || 'Paciente'}
+      />
+
+      {/* Modal de visualización de recetas */}
+      {showRecipeViewer && viewingRecipe && (
+        <RecipeViewer
+          recipe={viewingRecipe}
+          isOpen={showRecipeViewer}
+          onClose={() => {
+            setShowRecipeViewer(false);
+            setViewingRecipe(null);
+          }}
+          onEdit={() => {
+            setShowRecipeViewer(false);
+            setEditingRecipe(viewingRecipe);
+            setShowRecipeEditor(true);
+          }}
+        />
+      )}
+
+      {/* Modal de aplicador de plantillas */}
+      <TemplateApplicator
+        isOpen={showTemplateApplicator}
+        onClose={() => setShowTemplateApplicator(false)}
+        dietPlanId={dietPlan.id}
+        patientId={dietPlan.patient_id}
+        weekNumber={selectedWeek}
+        onTemplateApplied={handleTemplateApplied}
+      />
     </Modal>
   );
 };
 
+// Componente para mostrar alimentos
 interface FoodItemProps {
   food: Food;
   onAdd: (food: Food, quantity: number) => void;
@@ -1233,41 +1611,339 @@ interface FoodItemProps {
 
 const FoodItem: React.FC<FoodItemProps> = ({ food, onAdd }) => {
   const [quantity, setQuantity] = useState(100);
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAdd = async () => {
+    setIsAdding(true);
+    try {
+      await onAdd(food, quantity);
+      // Pequeño feedback visual
+      setTimeout(() => {
+        setIsAdding(false);
+      }, 500);
+    } catch (error) {
+      setIsAdding(false);
+    }
+  };
+
+  return (
+    <div className="col-md-6 col-lg-4 mb-2">
+      <div className={`border rounded p-2 ${isAdding ? 'bg-light border-success' : ''}`}>
+        <div className="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <strong>{food.name}</strong>
+            <br />
+            <small className="text-muted">{food.category || 'Alimento'}</small>
+          </div>
+          <Badge bg="success">{Math.round(food.calories)} kcal/100g</Badge>
+        </div>
+        
+        <div className="mb-2">
+          <small className="text-muted">
+            P: {food.protein}g | C: {food.carbohydrates}g | G: {food.fats}g
+          </small>
+        </div>
+        
+        <div className="d-flex align-items-center justify-content-between">
+          <div className="d-flex align-items-center">
+            <input
+              type="number"
+              className="form-control form-control-sm me-2"
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+              min="1"
+              style={{width: '70px'}}
+            />
+            <span className="text-muted small">g</span>
+          </div>
+          <button
+            className={`btn btn-sm ${isAdding ? 'btn-success' : 'btn-primary'}`}
+            onClick={handleAdd}
+            disabled={isAdding}
+          >
+            {isAdding ? <CheckCircle size={12} /> : <Plus size={12} />}
+          </button>
+        </div>
+        
+        {isAdding && (
+          <div className="text-center mt-2">
+            <small className="text-success">
+              ✅ Agregado: {quantity}g
+            </small>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Componente para mostrar recetas
+interface RecipeItemProps {
+  recipe: Recipe;
+  onAdd: (recipe: Recipe, servings: number, isModified?: boolean) => void;
+  onModify?: (recipe: Recipe) => void;
+  onEdit?: (recipe: Recipe) => void;
+}
+
+const RecipeItem: React.FC<RecipeItemProps> = ({ recipe, onAdd, onEdit }) => {
+  const [servings, setServings] = useState(1);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedRecipe, setEditedRecipe] = useState<Recipe>(recipe);
+
+  const handleSaveChanges = () => {
+    // Aquí podrías llamar a un servicio para guardar cambios permanentes si es necesario
+    setIsEditing(false);
+    console.log('💾 Cambios guardados para la receta:', editedRecipe.title);
+    console.log('💾 Datos de la receta modificada:', editedRecipe);
+    
+    // Mostrar mensaje de confirmación
+    const changes = [];
+    if (editedRecipe.title !== recipe.title) changes.push(`Título: "${editedRecipe.title}"`);
+    if (editedRecipe.totalCalories !== recipe.totalCalories) changes.push(`Calorías: ${editedRecipe.totalCalories}`);
+    if (editedRecipe.servings !== recipe.servings) changes.push(`Porciones: ${editedRecipe.servings}`);
+    
+    if (changes.length > 0) {
+      alert(`✅ Receta modificada con éxito!\n\nCambios realizados:\n${changes.join('\n')}\n\nAhora puedes seleccionar esta versión modificada.`);
+    }
+  };
+
+  const handleSelectRecipe = () => {
+    console.log('🎯 Seleccionando receta modificada:', editedRecipe);
+    onAdd(editedRecipe, servings, true); // true = es una receta modificada
+  };
+
+  const resetChanges = () => {
+    setEditedRecipe(recipe);
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <div className="col-md-12 mb-3">
+        <div className="border rounded p-3 bg-light">
+          <h6 className="text-primary mb-3">
+            <Edit size={16} className="me-1" />
+            Modificando: {recipe.title}
+          </h6>
+          
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-2">
+                <Form.Label className="small">Título:</Form.Label>
+                <Form.Control
+                  size="sm"
+                  value={editedRecipe.title}
+                  onChange={(e) => setEditedRecipe({
+                    ...editedRecipe,
+                    title: e.target.value
+                  })}
+                />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group className="mb-2">
+                <Form.Label className="small">Porciones originales:</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="number"
+                  value={editedRecipe.servings}
+                  onChange={(e) => setEditedRecipe({
+                    ...editedRecipe,
+                    servings: Number(e.target.value)
+                  })}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Form.Group className="mb-2">
+            <Form.Label className="small">Descripción:</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={2}
+              size="sm"
+              value={editedRecipe.description || ''}
+              onChange={(e) => setEditedRecipe({
+                ...editedRecipe,
+                description: e.target.value
+              })}
+            />
+          </Form.Group>
+
+          <Row className="mb-3">
+            <Col md={3}>
+              <Form.Group>
+                <Form.Label className="small">Calorías totales:</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="number"
+                  value={editedRecipe.totalCalories || 0}
+                  onChange={(e) => setEditedRecipe({
+                    ...editedRecipe,
+                    totalCalories: Number(e.target.value)
+                  })}
+                />
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group>
+                <Form.Label className="small">Proteínas (g):</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="number"
+                  value={editedRecipe.totalMacros?.protein || 0}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditedRecipe({
+                    ...editedRecipe,
+                    totalMacros: {
+                      ...editedRecipe.totalMacros!,
+                      protein: Number(e.target.value)
+                    }
+                  })}
+                />
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group>
+                <Form.Label className="small">Carbohidratos (g):</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="number"
+                  value={editedRecipe.totalMacros?.carbohydrates || 0}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditedRecipe({
+                    ...editedRecipe,
+                    totalMacros: {
+                      ...editedRecipe.totalMacros!,
+                      carbohydrates: Number(e.target.value)
+                    }
+                  })}
+                />
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group>
+                <Form.Label className="small">Grasas (g):</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="number"
+                  value={editedRecipe.totalMacros?.fats || 0}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditedRecipe({
+                    ...editedRecipe,
+                    totalMacros: {
+                      ...editedRecipe.totalMacros!,
+                      fats: Number(e.target.value)
+                    }
+                  })}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <div className="d-flex justify-content-between align-items-center">
+            <div className="d-flex align-items-center">
+              <input
+                type="number"
+                className="form-control form-control-sm me-2"
+                value={servings}
+                onChange={(e) => setServings(Number(e.target.value))}
+                min="0.1"
+                step="0.1"
+                style={{width: '80px'}}
+              />
+              <span className="text-muted me-2">porciones para el plan</span>
+            </div>
+            
+            <div className="btn-group btn-group-sm">
+              <button
+                className="btn btn-outline-secondary"
+                onClick={resetChanges}
+                title="Cancelar cambios"
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn btn-success"
+                onClick={handleSaveChanges}
+                title="Guardar cambios"
+              >
+                <Save size={12} className="me-1" />
+                Guardar
+              </button>
+                             <button
+                 className="btn btn-primary"
+                 onClick={handleSelectRecipe}
+                 title="Agregar esta versión modificada al plan de comidas"
+               >
+                 <CheckCircle size={12} className="me-1" />
+                 Agregar Modificada
+               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="col-md-6 col-lg-4 mb-2">
       <div className="border rounded p-2">
         <div className="d-flex justify-content-between align-items-start mb-2">
           <div>
-            <strong>{food.name}</strong>
+            <strong>{recipe.title}</strong>
             <br />
-            <small className="text-muted">{food.category}</small>
+            <small className="text-muted">
+              {recipe.servings} porciones | {recipe.prepTimeMinutes}min
+            </small>
           </div>
-          <Badge bg="success">{Math.round(food.calories_per_100g)} cal/100g</Badge>
+          <Badge bg="warning">{Math.round(recipe.totalCalories || 0)} kcal</Badge>
         </div>
         
         <div className="mb-2">
           <small className="text-muted">
-            P: {food.protein_per_100g}g | C: {food.carbs_per_100g}g | G: {food.fats_per_100g}g
+            {recipe.description?.substring(0, 50)}...
+          </small>
+        </div>
+
+        <div className="mb-2">
+          <small className="text-success">
+            P: {Math.round(recipe.totalMacros?.protein || 0)}g | 
+            C: {Math.round(recipe.totalMacros?.carbohydrates || 0)}g | 
+            G: {Math.round(recipe.totalMacros?.fats || 0)}g
           </small>
         </div>
         
-        <div className="d-flex align-items-center">
-          <input
-            type="number"
-            className="form-control form-control-sm me-2"
-            value={quantity}
-            onChange={(e) => setQuantity(Number(e.target.value))}
-            min="1"
-            style={{width: '80px'}}
-          />
-          <span className="text-muted me-2">g</span>
-          <button
-            className="btn btn-sm btn-primary"
-            onClick={() => onAdd(food, quantity)}
-          >
-            <Plus size={12} />
-          </button>
+        <div className="d-flex align-items-center justify-content-between">
+          <div className="d-flex align-items-center">
+            <input
+              type="number"
+              className="form-control form-control-sm me-2"
+              value={servings}
+              onChange={(e) => setServings(Number(e.target.value))}
+              min="0.1"
+              step="0.1"
+              style={{width: '70px'}}
+            />
+            <span className="text-muted small">porciones</span>
+          </div>
+          
+          <div className="btn-group btn-group-sm">
+            <button
+              className="btn btn-outline-info"
+              onClick={() => onEdit && onEdit(recipe)}
+              title="Modificar receta en editor avanzado"
+            >
+              <Edit size={10} />
+            </button>
+            <button
+              className="btn btn-warning"
+              onClick={() => {
+                console.log('🍳 Agregando receta original (sin modificar):', recipe.title);
+                onAdd(recipe, servings, false); // false = receta original
+              }}
+              title="Agregar receta tal como está"
+            >
+              <Plus size={10} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

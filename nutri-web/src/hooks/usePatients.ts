@@ -64,30 +64,33 @@ export const usePatients = (): UsePatientsReturn => {
 
   // Refs para control de montaje y timeouts
   const isMountedRef = useRef(true);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchTimeoutRef = useRef<number | null>(null);
   const lastFetchTimeRef = useRef(0);
 
-  // Log de depuración para cambios de estado
+  // Log de depuración para cambios de estado - REDUCIDO
   useEffect(() => {
-    console.log('🔍 [usePatients] Estado actualizado:', {
-      patientsCount: state.patients.length,
-      loading: state.loading,
-      error: state.error,
-      stats: state.stats,
-      timestamp: new Date().toISOString()
-    });
+    // Solo loggear cuando hay errores o cambios importantes
+    if (state.error || state.loading) {
+      console.log('🔍 [usePatients] Estado actualizado:', {
+        patientsCount: state.patients.length,
+        loading: state.loading,
+        error: state.error,
+        stats: state.stats,
+        timestamp: new Date().toISOString()
+      });
+    }
   }, [state]);
 
-  // Log de depuración para montaje/desmontaje
+  // Log de depuración para montaje/desmontaje - REDUCIDO
   useEffect(() => {
-    console.log('🔍 [usePatients] Componente montado');
+    // console.log('🔍 [usePatients] Componente montado');
     isMountedRef.current = true;
     
     return () => {
-      console.log('🔍 [usePatients] Componente desmontado');
+      // console.log('🔍 [usePatients] Componente desmontado');
       isMountedRef.current = false;
       if (searchTimeoutRef.current) {
-        console.log('🔍 [usePatients] Limpiando timeout de búsqueda');
+        // console.log('🔍 [usePatients] Limpiando timeout de búsqueda');
         clearTimeout(searchTimeoutRef.current);
       }
     };
@@ -114,17 +117,17 @@ export const usePatients = (): UsePatientsReturn => {
 
   // Cargar pacientes con optimizaciones
   const refreshPatients = useCallback(async () => {
-    console.log('🔍 [usePatients] Iniciando refreshPatients...');
+    // console.log('🔍 [usePatients] Iniciando refreshPatients...');
     
     if (!isMountedRef.current) {
-      console.log('🔍 [usePatients] Componente desmontado, cancelando refresh');
+      // console.log('🔍 [usePatients] Componente desmontado, cancelando refresh');
       return;
     }
 
     // Evitar múltiples llamadas simultáneas
     const now = Date.now();
     if (now - lastFetchTimeRef.current < 1000) {
-      console.log('⏭️ Skipping fetch - too soon since last call');
+      // console.log('⏭️ Skipping fetch - too soon since last call');
       return;
     }
     lastFetchTimeRef.current = now;
@@ -177,11 +180,20 @@ export const usePatients = (): UsePatientsReturn => {
     } catch (err: any) {
       if (isMountedRef.current) {
         // Si es un error de autenticación o acceso, limpiar datos
+        // Manejo específico de errores
         if (err.message.includes('autenticado') || err.message.includes('Sesión expirada')) {
           console.warn('🔐 Problema de autenticación detectado. Limpiando sesión...');
           authService.logout();
           localStorage.clear();
           window.location.href = '/login';
+          return;
+        }
+        
+        // Manejo específico de errores 500 (problemas del servidor)
+        if (err.response?.status === 500) {
+          const errorMessage = 'Error del servidor. Por favor, inténtalo más tarde.';
+          updateState({ error: errorMessage, loading: false });
+          console.warn('🚨 Server error (500) loading patients:', err.message);
           return;
         }
         
@@ -316,7 +328,7 @@ export const usePatients = (): UsePatientsReturn => {
       }
       
     return new Promise((resolve) => {
-      searchTimeoutRef.current = setTimeout(async () => {
+      searchTimeoutRef.current = window.setTimeout(async () => {
         try {
           console.log('🔍 [usePatients] Ejecutando búsqueda...');
       const results = await patientsService.searchPatients(searchTerm);
@@ -398,7 +410,7 @@ export const usePatientAppointments = (patientId: string | null) => {
   const [appointments, setAppointments] = useState<PatientAppointment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  
   const loadAppointments = useCallback(async () => {
     if (!patientId) return;
 
@@ -426,7 +438,7 @@ export const usePatientProgress = (patientId: string | null) => {
   const [progress, setProgress] = useState<PatientProgress[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  
   const loadProgress = useCallback(async () => {
     if (!patientId) return;
 

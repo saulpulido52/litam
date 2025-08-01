@@ -598,6 +598,153 @@ class ClinicalRecordController {
             next(new AppError('Error al obtener las interacciones fármaco-nutriente.', 500, 'GET_INTERACTIONS_ERROR'));
         }
     }
+
+    // ============== NUEVOS MÉTODOS PARA SISTEMA EVOLUTIVO DE EXPEDIENTES ==============
+
+    /**
+     * 🤖 DETECTAR TIPO DE EXPEDIENTE AUTOMÁTICAMENTE
+     */
+    public async detectarTipoExpediente(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user || (req.user.role.name !== RoleName.NUTRITIONIST && req.user.role.name !== RoleName.ADMIN)) {
+                return next(new AppError('Acceso denegado. Solo nutriólogos o administradores pueden detectar tipos de expediente.', 403, 'FORBIDDEN'));
+            }
+
+            const deteccion = await clinicalRecordService.detectarTipoExpediente(req.body);
+            
+            res.status(200).json({
+                status: 'success',
+                message: 'Tipo de expediente detectado exitosamente.',
+                data: deteccion,
+                timestamp: new Date().toISOString(),
+                requestedBy: req.user.id
+            });
+        } catch (error: any) {
+            console.error('Error en ClinicalRecordController.detectarTipoExpediente:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al detectar el tipo de expediente.', 500, 'DETECT_TYPE_ERROR'));
+        }
+    }
+
+    /**
+     * 📊 OBTENER DATOS PREVIOS DEL PACIENTE
+     */
+    public async obtenerDatosPreviosPaciente(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user) {
+                return next(new AppError('Usuario no autenticado.', 401, 'UNAUTHORIZED'));
+            }
+
+            const patientId = req.params.patientId;
+            const datos = await clinicalRecordService.obtenerDatosPreviosPaciente(
+                patientId, 
+                req.user.id, 
+                req.user.role.name
+            );
+            
+            res.status(200).json({
+                status: 'success',
+                message: 'Datos previos obtenidos exitosamente.',
+                data: datos,
+                timestamp: new Date().toISOString(),
+                requestedBy: req.user.id
+            });
+        } catch (error: any) {
+            console.error('Error en ClinicalRecordController.obtenerDatosPreviosPaciente:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener datos previos del paciente.', 500, 'GET_PREVIOUS_DATA_ERROR'));
+        }
+    }
+
+    /**
+     * 📈 GENERAR COMPARATIVO AUTOMÁTICO
+     */
+    public async generarComparativo(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user || (req.user.role.name !== RoleName.NUTRITIONIST && req.user.role.name !== RoleName.ADMIN)) {
+                return next(new AppError('Acceso denegado. Solo nutriólogos o administradores pueden generar comparativos.', 403, 'FORBIDDEN'));
+            }
+
+            const { expedienteActualId, expedienteBaseId } = req.params;
+            const comparativo = await clinicalRecordService.generarComparativo(expedienteActualId, expedienteBaseId);
+            
+            res.status(200).json({
+                status: 'success',
+                message: 'Comparativo generado exitosamente.',
+                data: comparativo,
+                timestamp: new Date().toISOString(),
+                requestedBy: req.user.id
+            });
+        } catch (error: any) {
+            console.error('Error en ClinicalRecordController.generarComparativo:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al generar el comparativo.', 500, 'GENERATE_COMPARISON_ERROR'));
+        }
+    }
+
+    /**
+     * 📋 CREAR EXPEDIENTE CON DETECCIÓN AUTOMÁTICA
+     */
+    public async createClinicalRecordEvolutivo(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user || (req.user.role.name !== RoleName.NUTRITIONIST && req.user.role.name !== RoleName.ADMIN)) {
+                return next(new AppError('Acceso denegado. Solo nutriólogos o administradores pueden crear registros clínicos.', 403, 'FORBIDDEN'));
+            }
+
+            const record = await clinicalRecordService.createClinicalRecordEvolutivo(
+                req.body as CreateUpdateClinicalRecordDto, 
+                req.user.id
+            );
+            
+            res.status(201).json({
+                status: 'success',
+                message: 'Registro clínico evolutivo creado exitosamente.',
+                data: { record },
+                timestamp: new Date().toISOString(),
+                createdBy: req.user.id,
+                recordId: record.id
+            });
+        } catch (error: any) {
+            console.error('Error en ClinicalRecordController.createClinicalRecordEvolutivo:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al crear el registro clínico evolutivo.', 500, 'CREATE_EVOLUTIVE_RECORD_ERROR'));
+        }
+    }
+
+    /**
+     * 📊 OBTENER ESTADÍSTICAS DE SEGUIMIENTO
+     */
+    public async getEstadisticasSeguimiento(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user || (req.user.role.name !== RoleName.NUTRITIONIST && req.user.role.name !== RoleName.ADMIN)) {
+                return next(new AppError('Acceso denegado. Solo nutriólogos o administradores pueden ver estadísticas de seguimiento.', 403, 'FORBIDDEN'));
+            }
+
+            const estadisticas = await clinicalRecordService.getEstadisticasSeguimiento(req.user.id);
+            
+            res.status(200).json({
+                status: 'success',
+                message: 'Estadísticas de seguimiento obtenidas exitosamente.',
+                data: estadisticas,
+                timestamp: new Date().toISOString(),
+                requestedBy: req.user.id
+            });
+        } catch (error: any) {
+            console.error('Error en ClinicalRecordController.getEstadisticasSeguimiento:', error);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener estadísticas de seguimiento.', 500, 'GET_FOLLOWUP_STATS_ERROR'));
+        }
+    }
 }
 
 export default new ClinicalRecordController();

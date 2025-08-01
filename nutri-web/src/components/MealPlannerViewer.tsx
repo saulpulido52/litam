@@ -77,8 +77,7 @@ const MealPlannerViewer: React.FC<MealPlannerViewerProps> = ({ dietPlanId, onClo
     // Adaptar meals si es necesario
     const meals: Meal[] = (week.meals as any[]).map((m) => ({
       ...m,
-      meal_time: m.meal_time ?? '',
-    }));
+      meal_time: m.meal_time ?? ''}));
     return { ...week, meals };
   };
 

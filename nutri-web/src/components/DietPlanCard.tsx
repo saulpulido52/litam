@@ -1,16 +1,16 @@
 import React from 'react';
 import { 
   Calendar, 
-  Clock, 
-  Users,
-  CheckCircle2,
+  Clock,
   Edit,
-  Eye,
   Copy,
   Download,
   PlayCircle,
+  Trash2,
+  CheckCircle2,
   Archive,
-  Trash2
+  Users,
+  Eye
 } from 'lucide-react';
 import type { DietPlan } from '../types/diet';
 
@@ -77,9 +77,7 @@ const DietPlanCard: React.FC<DietPlanCardProps> = ({
         text: 'Cancelado',
         bgColor: 'bg-danger-subtle',
         borderColor: 'border-danger'
-      },
-      
-    };
+      }};
     return configs[status as keyof typeof configs] || configs.draft;
   };
 

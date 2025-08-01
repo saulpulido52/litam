@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, Plus, Settings, AlertTriangle, Shield, Database } from 'lucide-react';
+import { Calendar, Clock, Plus, Settings, Shield, Database, Users, AlertTriangle } from 'lucide-react';
 import type { 
   CreateDietPlanDto, 
   GenerateAIDietDto,

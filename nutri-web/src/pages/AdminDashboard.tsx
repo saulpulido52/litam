@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Alert, Badge, Spinner, Nav, Tab } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Nav, Tab, Badge, Spinner, Alert } from 'react-bootstrap';
 import { useAdmin } from '../hooks/useAdmin';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -7,72 +7,23 @@ import { useNavigate } from 'react-router-dom';
 // React Icons
 import { 
   MdAdminPanelSettings,
-  MdPeople,
   MdSubscriptions,
+  MdError,
+  MdDashboard,
+  MdEvent,
+  MdRestaurant,
+  MdRefresh,
+  MdWarning,
   MdHealthAndSafety,
   MdBuild,
   MdSettings,
-  MdRefresh,
-  MdAdd,
-  MdEdit,
-  MdDelete,
-  MdVisibility,
-  MdWarning,
-  MdCheckCircle,
-  MdError,
-  MdInfo,
-  MdDashboard,
-  MdSecurity,
-  MdStorage,
-  MdSpeed,
-  MdMemory,
-  MdComputer,
-  MdNetworkCheck,
-  MdDataUsage,
-  MdAnalytics,
-  MdReport,
-  MdBugReport,
-  MdAutoFixHigh,
-  MdBackup,
-  MdRestore,
-  MdTune,
-  MdNotifications,
-  MdEmail,
-  MdSms,
-  MdPushPin
+  MdAnalytics
 } from 'react-icons/md';
 import { 
   FaUsers, 
-  FaUserShield, 
-  FaUserCheck, 
-  FaUserTimes,
-  FaChartLine,
-  FaExclamationTriangle,
-  FaExclamationCircle,
-  FaInfoCircle,
-  FaCheckCircle,
-  FaDatabase,
-  FaServer,
-  FaNetworkWired,
-  FaHdd,
-  FaMemory,
-  FaMicrochip,
-  FaShieldAlt,
-  FaCogs,
-  FaBell,
-  FaEnvelope,
-  FaSms
+  FaUserCheck
 } from 'react-icons/fa';
-import { 
-  BsGearFill, 
-  BsExclamationTriangleFill,
-  BsCheckCircleFill,
-  BsInfoCircleFill,
-  BsXCircleFill,
-  BsArrowUp,
-  BsArrowDown,
-  BsDash
-} from 'react-icons/bs';
+// Imports optimizados - solo iconos utilizados
 
 // Componentes de Admin
 import AdminUsersTab from '../components/Admin/AdminUsersTab';
@@ -80,6 +31,9 @@ import AdminSubscriptionsTab from '../components/Admin/AdminSubscriptionsTab';
 import AdminSystemHealthTab from '../components/Admin/AdminSystemHealthTab';
 import AdminDataIntegrityTab from '../components/Admin/AdminDataIntegrityTab';
 import AdminSettingsTab from '../components/Admin/AdminSettingsTab';
+import AdminAppointmentsTab from '../components/Admin/AdminAppointmentsTab';
+import AdminFoodsTab from '../components/Admin/AdminFoodsTab';
+import AdminAdvancedMetricsTab from '../components/Admin/AdminAdvancedMetricsTab';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -113,7 +67,7 @@ const AdminDashboard: React.FC = () => {
   }, [user, loadAllData]);
 
   // Si no es admin, mostrar loading
-  if (!user || user.role?.name !== 'ADMIN') {
+  if (!user || user.role?.name !== 'admin') {
     return (
       <Container className="py-5">
         <div className="text-center">
@@ -124,25 +78,7 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'success';
-      case 'inactive': return 'danger';
-      case 'pending': return 'warning';
-      case 'expired': return 'secondary';
-      default: return 'info';
-    }
-  };
-
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical': return 'danger';
-      case 'high': return 'warning';
-      case 'medium': return 'info';
-      case 'low': return 'secondary';
-      default: return 'info';
-    }
-  };
+  // Funciones de utilidad removidas - no se utilizan en este componente
 
   return (
     <Container fluid className="py-4">
@@ -156,7 +92,7 @@ const AdminDashboard: React.FC = () => {
                 Panel de Administración
               </h1>
               <p className="text-muted mb-0">
-                Gestión completa del sistema NutriWeb
+                                  Gestión completa del sistema Litam
               </p>
             </div>
             <div className="d-flex gap-2">
@@ -300,7 +236,7 @@ const AdminDashboard: React.FC = () => {
                   <Nav.Link eventKey="integrity" className="d-flex align-items-center">
                     <MdBuild className="me-2" />
                     Integridad de Datos
-                    {dataIntegrity?.summary.total_issues > 0 && (
+                    {dataIntegrity?.summary?.total_issues && dataIntegrity.summary.total_issues > 0 && (
                       <Badge bg="danger" className="ms-2">{dataIntegrity.summary.total_issues}</Badge>
                     )}
                   </Nav.Link>
@@ -309,6 +245,24 @@ const AdminDashboard: React.FC = () => {
                   <Nav.Link eventKey="settings" className="d-flex align-items-center">
                     <MdSettings className="me-2" />
                     Configuraciones
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="appointments" className="d-flex align-items-center">
+                    <MdEvent className="me-2" />
+                    Citas
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="foods" className="d-flex align-items-center">
+                    <MdRestaurant className="me-2" />
+                    Alimentos
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="metrics" className="d-flex align-items-center">
+                    <MdAnalytics className="me-2" />
+                    Métricas Avanzadas
                   </Nav.Link>
                 </Nav.Item>
               </Nav>
@@ -493,6 +447,21 @@ const AdminDashboard: React.FC = () => {
                   {/* Tab: Configuraciones */}
                   <Tab.Pane eventKey="settings" active={activeTab === 'settings'}>
                     <AdminSettingsTab />
+                  </Tab.Pane>
+
+                  {/* Tab: Citas */}
+                  <Tab.Pane eventKey="appointments" active={activeTab === 'appointments'}>
+                    <AdminAppointmentsTab />
+                  </Tab.Pane>
+
+                  {/* Tab: Alimentos */}
+                  <Tab.Pane eventKey="foods" active={activeTab === 'foods'}>
+                    <AdminFoodsTab />
+                  </Tab.Pane>
+
+                  {/* Tab: Métricas Avanzadas */}
+                  <Tab.Pane eventKey="metrics" active={activeTab === 'metrics'}>
+                    <AdminAdvancedMetricsTab />
                   </Tab.Pane>
                 </Tab.Content>
               )}

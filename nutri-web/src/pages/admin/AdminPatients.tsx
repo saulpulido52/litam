@@ -3,46 +3,30 @@ import {
   Card, 
   Table, 
   Button, 
-  Badge, 
-  Form, 
   InputGroup, 
   Modal, 
-  Alert, 
-  Spinner, 
   Row, 
   Col,
   Dropdown,
-  ProgressBar
-} from 'react-bootstrap';
+  Badge,
+  Form,
+  Spinner} from 'react-bootstrap';
 import { 
   MdPeople, 
   MdSearch, 
   MdAdd, 
-  MdEdit, 
+  MdEdit,
+  MdTrendingUp,
+  MdTrendingDown,
+  MdAssignment,
+  MdWarning, 
   MdDelete, 
   MdVisibility, 
   MdMoreVert,
   MdBlock,
   MdCheckCircle,
-  MdRefresh,
   MdFilterList,
-  MdAssignment,
-  MdWarning,
-  MdInfo,
-  MdPerson,
-  MdTrendingUp,
-  MdTrendingDown,
-  MdHealthAndSafety,
-  MdEmail,
-  MdPhone,
-  MdLocationOn,
-  MdWork,
-  MdSchool,
-  MdCalendarToday,
-  MdScale,
-  MdHeight,
-  MdFitnessCenter
-} from 'react-icons/md';
+  MdPerson} from 'react-icons/md';
 
 interface Patient {
   id: string;
@@ -90,8 +74,8 @@ interface Patient {
 const AdminPatients: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  // Variable/función removida - no utilizada
+const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [nutritionistFilter, setNutritionistFilter] = useState('all');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -330,13 +314,8 @@ const AdminPatients: React.FC = () => {
     return { category: 'Obesidad', color: 'danger' };
   };
 
-  const getProgressColor = (percentage: number) => {
-    if (percentage >= 75) return 'success';
-    if (percentage >= 50) return 'warning';
-    return 'danger';
-  };
-
-  const getProgressIcon = (percentage: number) => {
+  // Variable/función removida - no utilizada
+const getProgressIcon = (percentage: number) => {
     if (percentage >= 75) return <MdTrendingUp className="text-success" />;
     if (percentage >= 50) return <MdTrendingDown className="text-warning" />;
     return <MdTrendingDown className="text-danger" />;
@@ -415,14 +394,14 @@ const AdminPatients: React.FC = () => {
                 <Form.Control
                   placeholder="Buscar pacientes..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                 />
               </InputGroup>
             </Col>
             <Col md={3}>
               <Form.Select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatusFilter(e.target.value)}
               >
                 <option value="all">Todos los estados</option>
                 <option value="active">Activos</option>
@@ -432,7 +411,7 @@ const AdminPatients: React.FC = () => {
             <Col md={3}>
               <Form.Select
                 value={nutritionistFilter}
-                onChange={(e) => setNutritionistFilter(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNutritionistFilter(e.target.value)}
               >
                 <option value="all">Todos los nutriólogos</option>
                 <option value="assigned">Con nutriólogo</option>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Alert, Badge, Spinner} from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
 
@@ -23,12 +23,11 @@ const HomePage: React.FC = () => {
 
     try {
       // Intentar hacer una llamada simple al backend
-      const response = await fetch('http://localhost:4000/api/health', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+      const response = await fetch(`${apiUrl}/health`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+          'Content-Type': 'application/json'}});
 
       if (response.ok) {
         setServerStatus({
@@ -187,7 +186,10 @@ const HomePage: React.FC = () => {
                     variant="outline-secondary" 
                     size="lg" 
                     className="nutri-btn"
-                    onClick={() => window.open('http://localhost:4000/api', '_blank')}
+                    onClick={() => {
+                      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+                      window.open(apiUrl, '_blank');
+                    }}
                   >
                     🔧 Ver API
                   </Button>
@@ -205,11 +207,11 @@ const HomePage: React.FC = () => {
                   <Col md={6}>
                     <p className="mb-1">
                       <Badge bg="success" className="me-2">Frontend</Badge>
-                      http://localhost:5000
+                      {window.location.origin}
                     </p>
                     <p className="mb-1">
                       <Badge bg="info" className="me-2">Backend</Badge>
-                      http://localhost:4000/api
+                      {import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}
                     </p>
                   </Col>
                   <Col md={6}>
@@ -219,7 +221,7 @@ const HomePage: React.FC = () => {
                     </p>
                     <p className="mb-1">
                       <Badge bg="warning" className="me-2">WebSocket</Badge>
-                      ws://localhost:4000
+                      {import.meta.env.VITE_WS_URL || 'ws://localhost:4000'}
                     </p>
                   </Col>
                 </Row>

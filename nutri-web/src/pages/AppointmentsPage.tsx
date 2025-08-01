@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Plus, Search, Phone, Edit, Trash2, CheckCircle, AlertCircle, Eye, Settings } from 'lucide-react';
+import { Calendar, Clock, Plus, Search, Phone, Edit, Trash2, Settings, CalendarDays, AlertCircle, CheckCircle, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { StatusModal } from '../components/StatusModal';
 import { useAppointments } from '../hooks/useAppointments';
 import type { CreateAppointmentForPatientDto, AppointmentType } from '../services/appointmentsService';
 import patientsService from '../services/patientsService';
@@ -20,7 +22,8 @@ interface FormattedAppointment {
 }
 
 const AppointmentsPage: React.FC = () => {
-  const { appointments: backendAppointments, loading, error, loadAppointments, createAppointmentForPatient, updateAppointmentStatus, clearError } = useAppointments();
+  const navigate = useNavigate();
+  const { appointments: backendAppointments, loading, error, loadAppointments, createAppointmentForPatient, updateAppointmentStatus, updateAppointment, deleteAppointment, clearError } = useAppointments();
   const [patients, setPatients] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -95,10 +98,22 @@ const AppointmentsPage: React.FC = () => {
   }, []);
 
   const handleStatusChange = async (appointmentId: string, newStatus: 'scheduled' | 'completed' | 'cancelled_by_patient' | 'cancelled_by_nutritionist' | 'rescheduled' | 'no_show') => {
+    const statusMessages = {
+      'completed': '¿Marcar esta cita como completada?',
+      'cancelled_by_nutritionist': '¿Cancelar esta cita?',
+      'no_show': '¿Marcar que el paciente no asistió?',
+      'scheduled': '¿Marcar como programada?',
+      'cancelled_by_patient': '¿Marcar como cancelada por el paciente?',
+      'rescheduled': '¿Marcar como reagendada?'
+    };
+
+    const message = statusMessages[newStatus] || '¿Cambiar el estado de esta cita?';
+    if (!window.confirm(message)) return;
+
     try {
       await updateAppointmentStatus(appointmentId, {
         status: newStatus,
-        notes: `Estado actualizado a ${newStatus}`
+        notes: `Estado cambiado a ${newStatus} por el nutriólogo`
       });
     } catch (error: any) {
       console.error('Error updating appointment status:', error);
@@ -199,14 +214,81 @@ const AppointmentsPage: React.FC = () => {
     }
   };
 
-  // Eliminar cita
+  // Eliminar cita completamente
   const handleDeleteAppointment = async (appointmentId: string) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar esta cita? Esta acción no se puede deshacer.')) return;
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta cita permanentemente? Esta acción no se puede deshacer.')) return;
     try {
-      await updateAppointmentStatus(appointmentId, { status: 'cancelled_by_nutritionist', notes: 'Cita eliminada por el nutriólogo' });
-      // Opcional: podrías tener un endpoint específico para eliminar, pero aquí solo cambiamos el estado a cancelada
+      await deleteAppointment(appointmentId);
+      // La recarga de datos se maneja automáticamente en el hook
     } catch (error: any) {
       console.error('Error deleting appointment:', error);
+      // El error se maneja automáticamente en el hook
+    }
+  };
+
+  // Estados para reagendación
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedStatusAppointment, setSelectedStatusAppointment] = useState<FormattedAppointment | null>(null);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [rescheduleAppointment, setRescheduleAppointment] = useState<FormattedAppointment | null>(null);
+  const [rescheduleData, setRescheduleData] = useState({
+    date: '',
+    time: '',
+    notes: ''
+  });
+
+  // Abrir modal de estado
+  const handleOpenStatusModal = (appointment: FormattedAppointment) => {
+    setSelectedStatusAppointment(appointment);
+    setShowStatusModal(true);
+  };
+
+  // Cerrar modal de estado
+  const handleCloseStatusModal = () => {
+    setShowStatusModal(false);
+    setSelectedStatusAppointment(null);
+  };
+
+  // Manejar reagendación desde modal
+  const handleRescheduleFromModal = (appointmentId: string) => {
+    const appointment = filteredAppointments.find(apt => apt.id === appointmentId);
+    if (appointment) {
+      setRescheduleAppointment(appointment);
+      setRescheduleData({
+        date: appointment.date,
+        time: appointment.time,
+        notes: appointment.notes || ''
+      });
+      setShowRescheduleModal(true);
+    }
+  };
+
+  // Manejar reagendación
+  // const handleReschedule = (appointment: FormattedAppointment) => {
+  //   // Función comentada temporalmente
+  // };
+
+  // Confirmar reagendación
+  const handleConfirmReschedule = async () => {
+    if (!rescheduleAppointment) return;
+    
+    try {
+      const newDateTime = new Date(`${rescheduleData.date}T${rescheduleData.time}`);
+      const endDateTime = new Date(newDateTime.getTime() + (30 * 60000)); // 30 min default
+
+      // Actualizar la cita con nueva fecha, hora y estado
+      await updateAppointment(rescheduleAppointment.id, {
+        start_time: newDateTime.toISOString(),
+        end_time: endDateTime.toISOString(),
+        status: 'rescheduled',
+        notes: `Reagendada desde ${rescheduleAppointment.date} ${rescheduleAppointment.time} para ${rescheduleData.date} a las ${rescheduleData.time}. ${rescheduleData.notes}`
+      });
+
+      setShowRescheduleModal(false);
+      setRescheduleAppointment(null);
+      setRescheduleData({ date: '', time: '', notes: '' });
+    } catch (error: any) {
+      console.error('Error rescheduling appointment:', error);
     }
   };
 
@@ -233,8 +315,8 @@ const AppointmentsPage: React.FC = () => {
     if (!selectedAppointment) return;
     try {
       // Crear el objeto de fecha y hora
-      const appointmentDateTime = new Date(`${formData.date}T${formData.time}`);
-      const endDateTime = new Date(appointmentDateTime.getTime() + (formData.duration * 60000));
+      // const appointmentDateTime = new Date(`${formData.date}T${formData.time}`);
+      // const endDateTime = new Date(appointmentDateTime.getTime() + (formData.duration * 60000));
       // Aquí deberías tener un servicio para actualizar la cita, por ahora solo cambiamos notas y horario
       await updateAppointmentStatus(selectedAppointment.id, {
         status: selectedAppointment.status,
@@ -291,6 +373,14 @@ const AppointmentsPage: React.FC = () => {
           <p className="text-muted">Organiza y gestiona todas tus citas con pacientes</p>
         </div>
         <div className="col-md-4 text-end">
+          <button 
+            className="btn btn-outline-primary me-2"
+            onClick={() => navigate('/calendar')}
+            title="Ver calendario visual"
+          >
+            <CalendarDays size={18} className="me-2" />
+            Vista Calendario
+          </button>
           <button 
             className="btn btn-outline-info me-2"
             onClick={() => setShowAvailability(true)}
@@ -463,82 +553,110 @@ const AppointmentsPage: React.FC = () => {
           ) : (
             <>
               {/* Desktop Table */}
-              <div className="d-none d-lg-block">
-                <div className="table-responsive">
-                  <table className="table table-hover mb-0">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Paciente</th>
-                        <th>Fecha y Hora</th>
-                        <th>Tipo</th>
-                        <th>Estado</th>
-                        <th>Modalidad</th>
-                        <th>Contacto</th>
-                        <th>Acciones</th>
-                      </tr>
-                    </thead>
+                          <div className="d-none d-md-block">
+              <div className="table-responsive" style={{ overflow: 'visible' }}>
+                <table className="table table-hover mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th style={{ minWidth: '200px' }}>Paciente</th>
+                      <th style={{ minWidth: '120px' }}>Fecha y Hora</th>
+                      <th className="d-lg-table-cell d-none">Tipo</th>
+                      <th style={{ minWidth: '100px' }}>Estado</th>
+                      <th className="d-xl-table-cell d-none">Modalidad</th>
+                      <th className="d-xl-table-cell d-none" style={{ minWidth: '80px' }}>Contacto</th>
+                      <th style={{ minWidth: '180px' }}>Acciones</th>
+                    </tr>
+                  </thead>
                     <tbody>
                       {filteredAppointments.map((appointment) => (
                         <tr key={appointment.id}>
-                          <td>
+                          <td style={{ minWidth: '200px' }}>
                             <div>
-                              <strong>{appointment.patient_name}</strong>
+                              <strong className="d-block text-truncate" style={{ maxWidth: '180px' }}>{appointment.patient_name}</strong>
                               {appointment.patient_email && (
-                                <div className="text-muted small">{appointment.patient_email}</div>
+                                <div className="text-muted small text-truncate d-none d-lg-block" style={{ maxWidth: '180px' }}>{appointment.patient_email}</div>
                               )}
                             </div>
                           </td>
-                          <td>
+                          <td style={{ minWidth: '120px' }}>
                             <div>
-                              <div className="fw-medium">{new Date(appointment.date).toLocaleDateString('es-ES')}</div>
+                              <div className="fw-medium small">{new Date(appointment.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}</div>
                               <small className="text-muted">{appointment.time}</small>
                             </div>
                           </td>
-                          <td>
-                            <span className="badge bg-primary">{appointment.type}</span>
+                          <td className="d-lg-table-cell d-none">
+                            <span className="badge bg-primary small">{appointment.type}</span>
                           </td>
-                          <td>{getStatusBadge(appointment.status)}</td>
-                          <td>
-                            <span className={`badge ${appointment.location === 'presencial' ? 'bg-success' : 'bg-info'}`}>
-                              {appointment.location === 'presencial' ? '🏢 Presencial' : '💻 Virtual'}
+                          <td style={{ minWidth: '100px' }}>{getStatusBadge(appointment.status)}</td>
+                          <td className="d-xl-table-cell d-none">
+                            <span className={`badge small ${appointment.location === 'presencial' ? 'bg-success' : 'bg-info'}`}>
+                              {appointment.location === 'presencial' ? '🏢' : '💻'}
+                              <span className="d-none d-xxl-inline ms-1">
+                                {appointment.location === 'presencial' ? 'Presencial' : 'Virtual'}
+                              </span>
                             </span>
                           </td>
-                          <td>
+                          <td className="d-xl-table-cell d-none" style={{ minWidth: '80px' }}>
                             <div className="d-flex align-items-center">
-                              <Phone size={14} className="me-1 text-muted" />
-                              <small>{appointment.patient_phone || 'N/A'}</small>
+                              <Phone size={12} className="me-1 text-muted" />
+                              {appointment.patient_phone ? (
+                                <a 
+                                  href={`tel:${appointment.patient_phone}`}
+                                  className="text-decoration-none text-primary small"
+                                  title="Llamar al paciente"
+                                >
+                                  <span className="d-none d-xxl-inline">{appointment.patient_phone}</span>
+                                  <span className="d-xxl-none">📞</span>
+                                </a>
+                              ) : (
+                                <small className="text-muted">N/A</small>
+                              )}
                             </div>
                           </td>
-                          <td>
-                            <div className="btn-group btn-group-sm">
+                          <td style={{ minWidth: '180px' }}>
+                            <div className="d-flex gap-1 flex-nowrap">
                               <button 
-                                className="btn btn-outline-primary"
+                                className="btn btn-outline-primary btn-sm"
                                 onClick={() => handleViewDetails(appointment)}
                                 title="Ver detalles"
+                                style={{ minWidth: '32px' }}
                               >
-                                <Eye size={14} />
+                                <Eye size={12} />
                               </button>
                               <button 
-                                className="btn btn-outline-secondary"
+                                className="btn btn-outline-secondary btn-sm d-none d-lg-inline-block"
                                 title="Editar cita"
+                                style={{ minWidth: '32px' }}
                               >
-                                <Edit size={14} />
+                                <Edit size={12} />
                               </button>
                               {appointment.status === 'scheduled' && (
                                 <button 
-                                  className="btn btn-outline-success"
+                                  className="btn btn-outline-success btn-sm d-none d-xl-inline-block"
                                   onClick={() => handleStatusChange(appointment.id, 'completed')}
                                   title="Completar cita"
+                                  style={{ minWidth: '32px' }}
                                 >
-                                  <CheckCircle size={14} />
+                                  <CheckCircle size={12} />
                                 </button>
                               )}
+                              {/* Botón para abrir modal de estado */}
+                              <button
+                                className="btn btn-outline-secondary btn-sm"
+                                onClick={() => handleOpenStatusModal(appointment)}
+                                title="Cambiar estado"
+                                style={{ minWidth: '32px' }}
+                              >
+                                <Settings size={12} />
+                                <span className="d-none d-lg-inline ms-1 small">Estado</span>
+                              </button>
                               <button 
-                                className="btn btn-outline-danger"
+                                className="btn btn-outline-danger btn-sm"
                                 onClick={() => handleDeleteAppointment(appointment.id)}
                                 title="Eliminar cita"
+                                style={{ minWidth: '32px' }}
                               >
-                                <Trash2 size={14} />
+                                <Trash2 size={12} />
                               </button>
                             </div>
                           </td>
@@ -550,7 +668,7 @@ const AppointmentsPage: React.FC = () => {
               </div>
 
               {/* Mobile Cards */}
-              <div className="d-lg-none">
+              <div className="d-md-none">
                 {filteredAppointments.map((appointment) => (
                   <div key={appointment.id} className="card border-0 border-bottom rounded-0">
                     <div className="card-body">
@@ -580,14 +698,24 @@ const AppointmentsPage: React.FC = () => {
                         </div>
                         <div className="col-6">
                           <small className="text-muted d-block">Contacto</small>
-                          <span className="fw-medium">{appointment.patient_phone || 'N/A'}</span>
+                                                        {appointment.patient_phone ? (
+                                <a 
+                                  href={`tel:${appointment.patient_phone}`}
+                                  className="text-decoration-none text-primary fw-medium"
+                                  title="Llamar al paciente"
+                                >
+                                  {appointment.patient_phone}
+                                </a>
+                              ) : (
+                                <span className="fw-medium text-muted">N/A</span>
+                              )}
                         </div>
                         <div className="col-6">
                           <small className="text-muted d-block">Notas</small>
                           <span className="fw-medium">{appointment.notes || 'Sin notas'}</span>
                         </div>
                       </div>
-                      <div className="d-flex gap-1">
+                      <div className="d-flex gap-1 flex-wrap">
                         <button 
                           className="btn btn-sm btn-outline-primary flex-fill"
                           onClick={() => handleViewDetails(appointment)}
@@ -601,6 +729,15 @@ const AppointmentsPage: React.FC = () => {
                         >
                           <Edit size={14} className="me-1" />
                           Editar
+                        </button>
+                        {/* Botón de estado en móvil */}
+                        <button
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => handleOpenStatusModal(appointment)}
+                          title="Cambiar estado"
+                          style={{ minWidth: '32px' }}
+                        >
+                          <Settings size={14} />
                         </button>
                         {appointment.status === 'scheduled' && (
                           <button 
@@ -831,7 +968,17 @@ const AppointmentsPage: React.FC = () => {
                     <div className="mb-3">
                       <strong>Nombre:</strong> {selectedAppointment.patient_name}<br />
                       <strong>Email:</strong> {selectedAppointment.patient_email}<br />
-                      <strong>Teléfono:</strong> {selectedAppointment.patient_phone}
+                      <strong>Teléfono:</strong> {selectedAppointment.patient_phone ? (
+                  <a 
+                    href={`tel:${selectedAppointment.patient_phone}`}
+                    className="text-decoration-none text-primary ms-1"
+                    title="Llamar al paciente"
+                  >
+                    {selectedAppointment.patient_phone}
+                  </a>
+                ) : (
+                  <span className="text-muted ms-1">N/A</span>
+                )}
                     </div>
                   </div>
                   <div className="col-md-6">
@@ -932,6 +1079,103 @@ const AppointmentsPage: React.FC = () => {
                   onClick={() => setShowAvailability(false)}
                 >
                   Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Estado */}
+      <StatusModal
+        isOpen={showStatusModal}
+        onClose={handleCloseStatusModal}
+        appointmentId={selectedStatusAppointment?.id || ''}
+        patientName={selectedStatusAppointment?.patient_name || ''}
+        onStatusChange={handleStatusChange}
+        onReschedule={handleRescheduleFromModal}
+      />
+
+      {/* Modal de Reagendación */}
+      {showRescheduleModal && rescheduleAppointment && (
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <CalendarDays size={20} className="me-2" />
+                  Reagendar Cita
+                </h5>
+                <button 
+                  type="button" 
+                  className="btn-close"
+                  onClick={() => {
+                    setShowRescheduleModal(false);
+                    setRescheduleAppointment(null);
+                  }}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="mb-3">
+                  <strong>Paciente:</strong> {rescheduleAppointment.patient_name}<br />
+                  <strong>Cita actual:</strong> {rescheduleAppointment.date} a las {rescheduleAppointment.time}
+                </div>
+                
+                <form>
+                  <div className="row">
+                    <div className="col-md-6">
+                      <label htmlFor="reschedule-date" className="form-label">Nueva Fecha</label>
+                      <input
+                        type="date"
+                        id="reschedule-date"
+                        className="form-control"
+                        value={rescheduleData.date}
+                        onChange={(e) => setRescheduleData(prev => ({ ...prev, date: e.target.value }))}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label htmlFor="reschedule-time" className="form-label">Nueva Hora</label>
+                      <input
+                        type="time"
+                        id="reschedule-time"
+                        className="form-control"
+                        value={rescheduleData.time}
+                        onChange={(e) => setRescheduleData(prev => ({ ...prev, time: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <label htmlFor="reschedule-notes" className="form-label">Notas adicionales</label>
+                    <textarea
+                      id="reschedule-notes"
+                      className="form-control"
+                      rows={3}
+                      value={rescheduleData.notes}
+                      onChange={(e) => setRescheduleData(prev => ({ ...prev, notes: e.target.value }))}
+                      placeholder="Razón de la reagendación..."
+                    />
+                  </div>
+                </form>
+              </div>
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowRescheduleModal(false);
+                    setRescheduleAppointment(null);
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-primary"
+                  onClick={handleConfirmReschedule}
+                  disabled={!rescheduleData.date || !rescheduleData.time}
+                >
+                  <CalendarDays size={16} className="me-2" />
+                  Confirmar Reagendación
                 </button>
               </div>
             </div>

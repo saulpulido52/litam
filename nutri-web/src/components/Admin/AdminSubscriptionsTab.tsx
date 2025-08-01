@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Button, Table, Badge, Modal, Form, Alert, Spinner, InputGroup } from 'react-bootstrap';
+import { Row, Col, Card, Button, Table, Modal, InputGroup, Badge, Form, Alert, Spinner } from 'react-bootstrap';
 import { useAdmin } from '../../hooks/useAdmin';
 import type { AdminUserSubscription, AdminUpdateUserSubscriptionDto } from '../../services/adminService';
 
@@ -8,46 +8,26 @@ import {
   MdSubscriptions,
   MdEdit,
   MdDelete,
-  MdVisibility,
-  MdSearch,
-  MdFilterList,
-  MdRefresh,
   MdCheckCircle,
   MdCancel,
-  MdWarning,
   MdPerson,
-  MdEmail,
-  MdCalendarToday,
   MdAttachMoney,
   MdSave,
   MdClose,
-  MdDateRange,
-  MdAccessTime,
+  MdWarning,
   MdTrendingUp,
-  MdTrendingDown
-} from 'react-icons/md';
-import { 
-  FaUsers, 
-  FaUserCheck, 
-  FaUserTimes,
-  FaTrash,
-  FaEye,
-  FaSearch,
-  FaFilter,
-  FaCreditCard,
-  FaCalendarAlt,
-  FaClock
-} from 'react-icons/fa';
+  MdRefresh,
+  MdEmail,
+  MdCalendarToday,
+  MdTrendingDown} from 'react-icons/md';
 
 const AdminSubscriptionsTab: React.FC = () => {
   const {
     subscriptions,
     loading,
-    error,
     loadSubscriptions,
     updateSubscription,
-    deleteSubscription,
-    clearError
+    deleteSubscription
   } = useAdmin();
 
   const [showEditModal, setShowEditModal] = useState(false);
@@ -203,7 +183,7 @@ const AdminSubscriptionsTab: React.FC = () => {
         <Col md={6}>
           <InputGroup>
             <InputGroup.Text>
-              <FaSearch />
+              <MdRefresh />
             </InputGroup.Text>
             <Form.Control
               type="text"
@@ -234,7 +214,7 @@ const AdminSubscriptionsTab: React.FC = () => {
               setStatusFilter('');
             }}
           >
-            <MdFilterList className="me-1" />
+            <MdRefresh className="me-1" />
             Limpiar
           </Button>
         </Col>
@@ -416,7 +396,7 @@ const AdminSubscriptionsTab: React.FC = () => {
                   <Form.Control
                     type="date"
                     value={editingSubscription.startDate?.split('T')[0] || ''}
-                    onChange={(e) => setEditingSubscription({...editingSubscription, startDate: e.target.value})}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingSubscription({...editingSubscription, startDate: e.target.value})}
                   />
                 </Form.Group>
               </Col>
@@ -426,7 +406,7 @@ const AdminSubscriptionsTab: React.FC = () => {
                   <Form.Control
                     type="date"
                     value={editingSubscription.endDate?.split('T')[0] || ''}
-                    onChange={(e) => setEditingSubscription({...editingSubscription, endDate: e.target.value})}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingSubscription({...editingSubscription, endDate: e.target.value})}
                   />
                 </Form.Group>
               </Col>
@@ -435,7 +415,7 @@ const AdminSubscriptionsTab: React.FC = () => {
               <Form.Label>Estado</Form.Label>
               <Form.Select
                 value={editingSubscription.status || ''}
-                onChange={(e) => setEditingSubscription({...editingSubscription, status: e.target.value})}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditingSubscription({...editingSubscription, status: e.target.value})}
               >
                 <option value="active">Activa</option>
                 <option value="expired">Expirada</option>

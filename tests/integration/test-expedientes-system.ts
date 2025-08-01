@@ -21,7 +21,7 @@ async function testExpedientesSystem() {
         const userRepository = AppDataSource.getRepository(User);
         const clinicalRecordRepository = AppDataSource.getRepository(ClinicalRecord);
         const relationRepository = AppDataSource.getRepository(PatientNutritionistRelation);
-        const patientService = new PatientService(AppDataSource);
+        const patientService = new PatientService();
 
         // 1. Buscar usuarios de prueba
         console.log('📋 1. Buscando usuarios de prueba...');

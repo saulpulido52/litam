@@ -3,13 +3,13 @@ import {
     Table, 
     Card, 
     Button, 
-    Form, 
     Row, 
     Col, 
-    Badge, 
     Modal,
-    Alert,
+    Badge,
     Spinner,
+    Form,
+    Alert,
     Pagination
 } from 'react-bootstrap';
 import { useEliminaciones } from '../../hooks/useAdmin';
@@ -166,7 +166,7 @@ const AdminAuditoriaEliminaciones: React.FC = () => {
                                             <Form.Control
                                                 type="date"
                                                 value={filters.fechaDesde}
-                                                onChange={(e) => handleFilterChange('fechaDesde', e.target.value)}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('fechaDesde', e.target.value)}
                                             />
                                         </Form.Group>
                                     </Col>
@@ -176,7 +176,7 @@ const AdminAuditoriaEliminaciones: React.FC = () => {
                                             <Form.Control
                                                 type="date"
                                                 value={filters.fechaHasta}
-                                                onChange={(e) => handleFilterChange('fechaHasta', e.target.value)}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('fechaHasta', e.target.value)}
                                             />
                                         </Form.Group>
                                     </Col>
@@ -187,7 +187,7 @@ const AdminAuditoriaEliminaciones: React.FC = () => {
                                                 type="text"
                                                 placeholder="ID del nutriólogo"
                                                 value={filters.nutriologoId}
-                                                onChange={(e) => handleFilterChange('nutriologoId', e.target.value)}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('nutriologoId', e.target.value)}
                                             />
                                         </Form.Group>
                                     </Col>
@@ -198,7 +198,7 @@ const AdminAuditoriaEliminaciones: React.FC = () => {
                                                 type="text"
                                                 placeholder="ID del paciente"
                                                 value={filters.pacienteId}
-                                                onChange={(e) => handleFilterChange('pacienteId', e.target.value)}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('pacienteId', e.target.value)}
                                             />
                                         </Form.Group>
                                     </Col>

@@ -1,58 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Button, Badge, Alert, Spinner, ProgressBar } from 'react-bootstrap';
+import { Row, Col, Card, Button, ProgressBar, Badge, Alert, Spinner } from 'react-bootstrap';
 import { useAdmin } from '../../hooks/useAdmin';
-import type { SystemHealth } from '../../services/adminService';
+// import type { SystemHealth } from '../../services/adminService';
 
 // React Icons
 import { 
   MdHealthAndSafety,
-  MdRefresh,
   MdCheckCircle,
   MdError,
   MdWarning,
   MdInfo,
-  MdSpeed,
-  MdMemory,
-  MdStorage,
-  MdComputer,
-  MdNetworkCheck,
-  MdDataUsage,
-  MdAnalytics,
-  MdTrendingUp,
-  MdTrendingDown,
+  // MdTrendingUp,
+  // MdTrendingDown,
   MdAccessTime,
-  MdHd,
-  MdWifi,
-  MdWifiOff,
-  MdSignalCellular4Bar,
-  MdSignalCellular0Bar,
-  MdSubscriptions
+  MdRefresh,
+  MdAnalytics
 } from 'react-icons/md';
 import { 
   FaDatabase,
   FaServer,
-  FaNetworkWired,
-  FaHdd,
+  FaUsers,
   FaMemory,
   FaMicrochip,
-  FaShieldAlt,
-  FaExclamationTriangle,
-  FaExclamationCircle,
-  FaInfoCircle,
-  FaCheckCircle,
-  FaClock,
-  FaTachometerAlt,
-  FaThermometerHalf,
-  FaUsers
+  FaHdd
 } from 'react-icons/fa';
 
 const AdminSystemHealthTab: React.FC = () => {
   const {
     systemHealth,
     loading,
-    error,
-    loadSystemHealth,
-    clearError
+    loadSystemHealth
   } = useAdmin();
 
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -125,11 +102,11 @@ const AdminSystemHealthTab: React.FC = () => {
     return 'danger';
   };
 
-  const getUsageIcon = (percentage: number) => {
-    if (percentage < 50) return <MdTrendingUp className="text-success" />;
-    if (percentage < 80) return <MdWarning className="text-warning" />;
-    return <MdTrendingDown className="text-danger" />;
-  };
+  // const getUsageIcon = (percentage: number) => {
+  //   if (percentage < 50) return <MdTrendingUp className="text-success" />;
+  //   if (percentage < 80) return <MdWarning className="text-warning" />;
+  //   return <MdTrendingDown className="text-danger" />;
+  // };
 
   if (loading) {
     return (
@@ -140,14 +117,14 @@ const AdminSystemHealthTab: React.FC = () => {
     );
   }
 
-  if (error) {
-    return (
-      <Alert variant="danger" dismissible onClose={clearError}>
-        <MdError className="me-2" />
-        <strong>Error:</strong> {error}
-      </Alert>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <Alert variant="danger" dismissible onClose={clearError}>
+  //       <MdError className="me-2" />
+  //       <strong>Error:</strong> {error}
+  //     </Alert>
+  //   );
+  // }
 
   if (!systemHealth) {
     return (
@@ -255,7 +232,7 @@ const AdminSystemHealthTab: React.FC = () => {
                 <Col md={3} className="mb-3">
                   <div className="text-center">
                     <div className="mb-2">
-                      <MdSubscriptions size={32} className="text-warning" />
+                      <FaUsers size={32} className="text-warning" />
                     </div>
                     <h6>Suscripciones</h6>
                     <div className="h4 mb-0 text-warning">{systemHealth.subscriptions.total}</div>
@@ -276,7 +253,7 @@ const AdminSystemHealthTab: React.FC = () => {
           <Card className="border-0 shadow-sm h-100">
             <Card.Header>
               <h6 className="mb-0">
-                <MdMemory className="me-2 text-info" />
+                <FaMemory className="me-2 text-info" />
                 Uso de Recursos
               </h6>
             </Card.Header>

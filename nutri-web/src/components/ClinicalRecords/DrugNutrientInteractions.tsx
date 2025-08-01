@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import { 
   Card, 
-  Form, 
   Button, 
-  Modal, 
-  Badge,
+  Modal,
   Container, 
   Row, 
   Col,
   Alert,
-  ListGroup
-} from 'react-bootstrap';
-import { Plus, Edit2, Trash2, AlertTriangle, Pill, Clock } from 'lucide-react';
+  Badge,
+  Form,
+  ListGroup} from 'react-bootstrap';
+import { Plus, Edit2, Trash2, Pill, Clock, AlertTriangle } from 'lucide-react';
 import { clinicalRecordsService } from '../../services/clinicalRecordsService';
 
 // Interfaces para medicamentos
@@ -57,9 +56,8 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingInteraction, setEditingInteraction] = useState<DrugNutrientInteraction | null>(null);
-  const [loading, setLoading] = useState(false);
-  
-  // Estados del formulario
+  // Variable/función removida - no utilizada
+// Estados del formulario
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
   const [nutrientsAffected, setNutrientsAffected] = useState<string[]>([]);
   const [interactionType, setInteractionType] = useState<string>('');
@@ -70,6 +68,7 @@ const DrugNutrientInteractions: React.FC<DrugNutrientInteractionsProps> = ({
   const [foodsToAvoidText, setFoodsToAvoidText] = useState<string>('');
   const [foodsToIncreaseText, setFoodsToIncreaseText] = useState<string>('');
   const [monitoringRequired, setMonitoringRequired] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Opciones para los campos select
   const interactionTypes = [

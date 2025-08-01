@@ -1,40 +1,107 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Alert, Badge, Form, Modal, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Alert, Badge, Form, Modal} from 'react-bootstrap';
 import { usePatients } from '../hooks/usePatients';
 import { useAuth } from '../hooks/useAuth';
-import type { Patient, CreatePatientRequest, UpdatePatientRequest } from '../services/patientsService';
+import type { Patient } from '../services/patientsService';
 import patientsService from '../services/patientsService';
 
 // React Icons
 import { 
-  MdEmail, 
   MdAdd,
-  MdArrowBack,
-  MdHome,
-  MdSearch,
   MdEdit,
   MdDelete,
   MdSave,
   MdClose,
-  MdWarning,
   MdCheckCircle,
   MdContentCopy,
   MdLock,
-  MdPerson,
-  MdPhone,
-  MdCalendarToday,
-  MdVisibility,
-  MdDescription
+  MdWarning
 } from 'react-icons/md';
-import { FaUsers, FaUserCircle, FaChartLine, FaUserPlus, FaUserMd } from 'react-icons/fa';
-import { BsGenderMale, BsGenderFemale, BsGenderAmbiguous } from 'react-icons/bs';
+import { FaUsers, FaUserCircle, FaChartLine, FaUserPlus} from 'react-icons/fa';
 import { HiOutlineDocumentText } from 'react-icons/hi';
+import '../styles/patients-cards.css';
+
+// Funciones auxiliares para información pediátrica
+const getPediatricInfo = (patient: any) => {
+  // Validar que el paciente existe
+  if (!patient) {
+    return {
+      isPediatric: false,
+      category: 'adult',
+      growthChartsAvailable: { WHO: false, CDC: false }
+    };
+  }
+
+  // Validar que el paciente tiene las propiedades necesarias
+  if (typeof patient !== 'object') {
+    return {
+      isPediatric: false,
+      category: 'adult',
+      growthChartsAvailable: { WHO: false, CDC: false }
+    };
+  }
+
+  // Usar el campo is_pediatric_patient del backend si está disponible
+  const isPediatric = patient.is_pediatric_patient || false;
+  
+  if (isPediatric) {
+    return {
+      isPediatric: true,
+      category: 'pediatric',
+      growthChartsAvailable: { WHO: true, CDC: true }
+    };
+  }
+  
+  // Fallback: calcular basado en fecha de nacimiento si no hay campo del backend
+  const birthDate = patient.birth_date;
+  if (birthDate) {
+    try {
+      const birthDateObj = new Date(birthDate);
+      if (isNaN(birthDateObj.getTime())) {
+        // Fecha inválida
+        return {
+          isPediatric: false,
+          category: 'adult',
+          growthChartsAvailable: { WHO: false, CDC: false }
+        };
+      }
+      
+      const age = new Date().getFullYear() - birthDateObj.getFullYear();
+      const isPediatricByAge = age <= 18;
+      
+      return {
+        isPediatric: isPediatricByAge,
+        category: isPediatricByAge ? 'pediatric' : 'adult',
+        growthChartsAvailable: { 
+          WHO: isPediatricByAge && age <= 5, 
+          CDC: isPediatricByAge && age <= 18 
+        }
+      };
+    } catch (error) {
+      console.error('Error calculando edad pediátrica:', error);
+      return {
+        isPediatric: false,
+        category: 'adult',
+        growthChartsAvailable: { WHO: false, CDC: false }
+      };
+    }
+  }
+  
+  return {
+    isPediatric: false,
+    category: 'adult',
+    growthChartsAvailable: { WHO: false, CDC: false }
+  };
+};
+
+const getCategoryName = (category: string) => category;
 
 const PatientsPage: React.FC = () => {
   console.log('🔍 [PatientsPage] Componente renderizado');
 
   const navigate = useNavigate();
+
   const { user } = useAuth();
   const { 
     patients, 
@@ -42,12 +109,10 @@ const PatientsPage: React.FC = () => {
     loading, 
     error, 
     stats,
-    refreshPatients, 
     createPatient, 
     updatePatient, 
     deletePatient, 
     selectPatient,
-    searchPatients,
     clearError 
   } = usePatients();
   
@@ -67,8 +132,7 @@ const PatientsPage: React.FC = () => {
     phone: '',
     age: '',
     birth_date: '',
-    gender: 'male' as 'male' | 'female' | 'other',
-  });
+    gender: 'male' as 'male' | 'female' | 'other'});
 
   const [formLoading, setFormLoading] = useState(false);
 
@@ -153,17 +217,34 @@ const PatientsPage: React.FC = () => {
   const filteredPatients = useMemo(() => {
     // Log de depuración para ver el array original
     console.log('🔎 Pacientes originales recibidos:', patients);
-    // Si no hay término de búsqueda ni exclusión, mostrar todos
-    if (!searchTerm && (!problematicIds || problematicIds.length === 0)) {
-      return patients;
+    
+    // Validar que patients sea un array válido
+    if (!Array.isArray(patients)) {
+      console.warn('⚠️ patients no es un array válido:', patients);
+      return [];
     }
+    
+    // Filtrar pacientes nulos o inválidos
+    const validPatients = patients.filter(p => {
+      if (!p || typeof p !== 'object') {
+        console.warn('⚠️ Paciente inválido encontrado:', p);
+        return false;
+      }
+      return true;
+    });
+    
+    // Si no hay término de búsqueda ni exclusión, mostrar todos los válidos
+    if (!searchTerm && (!problematicIds || problematicIds.length === 0)) {
+      return validPatients;
+    }
+    
     // Filtro original (ajustar según lógica real)
-    return patients.filter(p => {
+    return validPatients.filter(p => {
       // Si hay problematicIds, excluirlos
       if (problematicIds && problematicIds.includes(p.id)) return false;
       // Si hay término de búsqueda, filtrar por nombre o email
       if (searchTerm) {
-        const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
+        const fullName = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase();
         return fullName.includes(searchTerm.toLowerCase()) || (p.email && p.email.toLowerCase().includes(searchTerm.toLowerCase()));
       }
       return true;
@@ -179,8 +260,7 @@ const PatientsPage: React.FC = () => {
       phone: '',
       age: '',
       birth_date: '',
-      gender: 'male',
-    });
+      gender: 'male'});
     setViewMode('create');
     clearError();
   };
@@ -191,8 +271,9 @@ const PatientsPage: React.FC = () => {
     let patientAge = '';
     if (patient.age) {
       patientAge = String(patient.age);
-    } else if (patient.birth_date) {
-      patientAge = String(new Date().getFullYear() - new Date(patient.birth_date).getFullYear());
+            } else if (patient.birth_date) {
+          const birthDate = patient.birth_date;
+          patientAge = String(new Date().getFullYear() - new Date(birthDate).getFullYear());
     }
     
     console.log('📝 Cargando paciente para editar:', {
@@ -209,8 +290,7 @@ const PatientsPage: React.FC = () => {
       phone: patient.phone || '',
       age: patientAge,
       birth_date: patient.birth_date || '',
-      gender: patient.gender || 'male',
-    });
+      gender: patient.gender || 'male'});
     setViewMode('edit');
     clearError();
   };
@@ -259,8 +339,7 @@ const PatientsPage: React.FC = () => {
       first_name: data.first_name,
       last_name: data.last_name,
       phone: data.phone || undefined,
-      gender: data.gender,
-    };
+      gender: data.gender};
 
     // Solo incluir birth_date si está presente
     if (data.birth_date) {
@@ -401,13 +480,82 @@ const PatientsPage: React.FC = () => {
                 </Button>
               )}
               <Link to="/dashboard" className="btn btn-outline-secondary">
-                <MdHome className="me-2" />
+                {/* <MdHome className="me-2" /> */}
                 Dashboard
               </Link>
             </div>
           </div>
         </Col>
       </Row>
+
+      {/* Pediatric Summary Cards - Only show in list view */}
+      {viewMode === 'list' && (
+        <Row className="mb-4">
+          <Col lg={3} md={6} className="mb-3">
+            <Card className="border-primary">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 className="text-muted mb-2">Total Pacientes</h6>
+                    <h3 className="mb-0">{filteredPatients.length}</h3>
+                  </div>
+                  <FaUsers className="text-primary" size={32} />
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col lg={3} md={6} className="mb-3">
+            <Card className="border-info">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 className="text-muted mb-2">Pacientes Pediátricos</h6>
+                    <h3 className="mb-0 text-info">
+                      {filteredPatients.filter(p => getPediatricInfo(p).isPediatric).length}
+                    </h3>
+                    <small className="text-muted">
+                      {Math.round((filteredPatients.filter(p => getPediatricInfo(p).isPediatric).length / (filteredPatients.length || 1)) * 100)}% del total
+                    </small>
+                  </div>
+                  {/* <FaChild className="text-info" size={32} /> */}
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col lg={3} md={6} className="mb-3">
+            <Card className="border-success">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 className="text-muted mb-2">Con Gráficos OMS</h6>
+                    <h3 className="mb-0 text-success">
+                      {filteredPatients.filter(p => getPediatricInfo(p).growthChartsAvailable.WHO).length}
+                    </h3>
+                    <small className="text-muted">0-5 años</small>
+                  </div>
+                  <FaChartLine className="text-success" size={32} />
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col lg={3} md={6} className="mb-3">
+            <Card className="border-warning">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 className="text-muted mb-2">Con Gráficos CDC</h6>
+                    <h3 className="mb-0 text-warning">
+                      {filteredPatients.filter(p => getPediatricInfo(p).growthChartsAvailable.CDC).length}
+                    </h3>
+                    <small className="text-muted">2-20 años</small>
+                  </div>
+                  <FaChartLine className="text-warning" size={32} />
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       {/* Error Alert */}
       {error && (
@@ -429,14 +577,14 @@ const PatientsPage: React.FC = () => {
                 <div className="col-md-6">
                   <div className="mb-3 position-relative">
                     <label className="form-label visually-hidden" htmlFor="search-patients">Buscar pacientes</label>
-                    <MdSearch className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" style={{ pointerEvents: 'none', zIndex: 2 }} />
+                    {/* <MdSearch className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" style={{ pointerEvents: 'none', zIndex: 2 }} /> */}
                     <Form.Control
                       id="search-patients"
                       name="search-patients"
                       type="text"
                       placeholder="Buscar pacientes..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                       className="ps-5"
                       aria-label="Buscar pacientes"
                       autoComplete="off"
@@ -479,128 +627,97 @@ const PatientsPage: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <Row>
-                  {filteredPatients.map((patient) => (
-                    <Col key={patient.id} lg={4} md={6} className="mb-3">
-                      <Card className="h-100 patient-card">
+                <div className="patients-grid-new">
+                  {filteredPatients.map((patient) => {
+                    const pediatricInfo = getPediatricInfo(patient);
+                    return (
+                      <Card key={patient.id} className="patient-card-new">
                         <Card.Body>
-                          <div className="d-flex justify-content-between align-items-start mb-3">
-                            <div className="d-flex align-items-center">
-                              <div className={`patient-avatar me-3 ${patient.gender || 'other'}`}>
-                                <FaUserCircle size={32} />
-                              </div>
-                              <div>
-                                <h6 className="mb-0 fw-bold">{getFullName(patient)}</h6>
-                                <small className="text-muted d-flex align-items-center">
-                                  <MdEmail size={14} className="me-1" />
-                                  {patient.email}
-                                </small>
-                              </div>
+                          <div className="patient-header-new">
+                            <div className={`patient-avatar-new ${patient.gender || 'other'}`}>
+                              {pediatricInfo.isPediatric ? <FaUserCircle size={24} /> : <FaUserCircle size={24} />}
                             </div>
-                            <Badge 
-                              bg={patient.is_active ? 'success' : 'secondary'}
-                              className="patient-status-badge"
-                            >
+                            <div className="patient-title-new">
+                              <h5 className="patient-name-new">{getFullName(patient)}</h5>
+                              <p className="patient-email-new">{patient.email}</p>
+                            </div>
+                            <Badge bg={patient.is_active ? 'success-light' : 'secondary-light'} className="status-badge-new">
                               {patient.is_active ? 'Activo' : 'Inactivo'}
                             </Badge>
                           </div>
-                          
-                          <div className="patient-info mb-3">
-                            <div className="patient-info-item">
-                              <div className="info-icon-wrapper">
-                                {patient.gender === 'male' ? (
-                                  <BsGenderMale className="info-icon male" />
-                                ) : patient.gender === 'female' ? (
-                                  <BsGenderFemale className="info-icon female" />
-                                ) : (
-                                  <BsGenderAmbiguous className="info-icon other" />
-                                )}
-                              </div>
-                              <small className="info-text">
-                                {patient.gender === 'male' ? 'Masculino' : 
-                                 patient.gender === 'female' ? 'Femenino' : 
-                                 patient.gender === 'other' ? 'Otro' : 'No especificado'}
-                              </small>
+
+                          <div className="patient-info-grid-new">
+                            <div className="info-item-new">
+                              <span className="info-label-new">Edad</span>
+                              <span className="info-value-new">{getAge(patient) || 'N/A'} años</span>
                             </div>
-                            
-                            {getAge(patient) && (
-                              <div className="patient-info-item">
-                                <div className="info-icon-wrapper">
-                                  <MdPerson className="info-icon age" />
-                                </div>
-                                <small className="info-text">{getAge(patient)} años</small>
-                              </div>
-                            )}
-                            
-                            {patient.phone && (
-                              <div className="patient-info-item">
-                                <div className="info-icon-wrapper">
-                                  <MdPhone className="info-icon phone" />
-                                </div>
-                                <small className="info-text">{patient.phone}</small>
-                              </div>
-                            )}
-                            
-                            {patient.birth_date && (
-                              <div className="patient-info-item">
-                                <div className="info-icon-wrapper">
-                                  <MdCalendarToday className="info-icon calendar" />
-                                </div>
-                                <small className="info-text">{formatDate(patient.birth_date)}</small>
-                              </div>
-                            )}
+                            <div className="info-item-new">
+                              <span className="info-label-new">Género</span>
+                              <span className="info-value-new">{patient.gender === 'male' ? 'Masculino' : patient.gender === 'female' ? 'Femenino' : 'Otro'}</span>
+                            </div>
+                            <div className="info-item-new">
+                              <span className="info-label-new">Teléfono</span>
+                              <span className="info-value-new">{patient.phone || 'N/A'}</span>
+                            </div>
+                            <div className="info-item-new">
+                              <span className="info-label-new">F. de Nacimiento</span>
+                              <span className="info-value-new">{patient.birth_date ? formatDate(patient.birth_date) : 'N/A'}</span>
+                            </div>
                           </div>
-                          
-                          <div className="patient-actions">
-                            <div className="action-buttons">
-                              <Button 
-                                variant="primary" 
-                                size="sm"
-                                className="action-btn primary-btn"
-                                onClick={() => handleViewClinicalRecords(patient)}
-                              >
-                                <HiOutlineDocumentText className="btn-icon" />
-                                <span>Expedientes</span>
-                              </Button>
-                              
-                              <div className="secondary-actions">
-                                <Button 
-                                  variant="outline-info" 
-                                  size="sm"
-                                  className="action-btn secondary-btn"
-                                  onClick={() => navigate(`/progress?patient=${patient.id}`)}
-                                >
-                                  <FaChartLine className="btn-icon" />
-                                  <span>Progreso</span>
-                                </Button>
-                                
-                                <Button 
-                                  variant="outline-primary" 
-                                  size="sm"
-                                  className="action-btn secondary-btn"
-                                  onClick={() => handleEditPatient(patient)}
-                                >
-                                  <MdEdit className="btn-icon" />
-                                  <span>Editar</span>
-                                </Button>
+
+                          {pediatricInfo.isPediatric && (
+                            <div className="pediatric-info-new">
+                              <div className="pediatric-title-new">
+                                <FaUserCircle />
+                                <span>Información Pediátrica</span>
                               </div>
-                              
-                              <Button 
-                                variant="outline-danger" 
-                                size="sm"
-                                className="action-btn danger-btn"
-                                onClick={() => handleDeletePatient(patient)}
-                              >
-                                <MdDelete className="btn-icon" />
-                                <span>Remover</span>
-                              </Button>
+                              <div className="info-item-new">
+                                <span className="info-label-new">Categoría</span>
+                                <span className="info-value-new">{getCategoryName(pediatricInfo.category)}</span>
+                              </div>
+                              <div className="info-item-new">
+                                <span className="info-label-new">Gráficos</span>
+                                <span className="info-value-new">
+                                  {[
+                                    pediatricInfo.growthChartsAvailable.WHO && 'OMS',
+                                    pediatricInfo.growthChartsAvailable.CDC && 'CDC'
+                                  ].filter(Boolean).join(', ')}
+                                </span>
+                              </div>
                             </div>
+                          )}
+
+                          <div className="patient-actions-new">
+                            <Button variant="primary" className="action-btn-new" onClick={() => handleViewClinicalRecords(patient)}>
+                              <HiOutlineDocumentText />
+                              Ver Expedientes
+                            </Button>
+                            <Button variant="outline-secondary" className="action-btn-new" onClick={() => navigate(`/progress?patient=${patient.id}`)}>
+                              <FaChartLine />
+                              Progreso
+                            </Button>
+                            <Button variant="outline-secondary" className="action-btn-new" onClick={() => handleEditPatient(patient)}>
+                              <MdEdit />
+                              Editar
+                            </Button>
+                            <Button 
+                              variant="outline-success" 
+                              className="action-btn-new" 
+                              onClick={() => navigate(`/growth-charts?patientId=${patient.id}`)}
+                              disabled={!pediatricInfo.growthChartsAvailable.WHO && !pediatricInfo.growthChartsAvailable.CDC}
+                            >
+                              <FaUserCircle />
+                              Crecimiento
+                            </Button>
+                            <Button variant="outline-danger" className="action-btn-new" onClick={() => handleDeletePatient(patient)}>
+                              <MdDelete />
+                            </Button>
                           </div>
                         </Card.Body>
                       </Card>
-                    </Col>
-                  ))}
-                </Row>
+                    );
+                  })}
+                </div>
               )}
             </Card.Body>
           </Card>
@@ -631,7 +748,7 @@ const PatientsPage: React.FC = () => {
                           name="first_name"
                           type="text"
                           value={formData.first_name}
-                          onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, first_name: e.target.value})}
                           required
                           autoComplete="given-name"
                           aria-label="Nombres del paciente"
@@ -646,7 +763,7 @@ const PatientsPage: React.FC = () => {
                           name="last_name"
                           type="text"
                           value={formData.last_name}
-                          onChange={(e) => setFormData({...formData, last_name: e.target.value})}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, last_name: e.target.value})}
                           required
                           autoComplete="family-name"
                           aria-label="Apellidos del paciente"
@@ -662,7 +779,7 @@ const PatientsPage: React.FC = () => {
                       name="email"
                       type="email"
                       value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, email: e.target.value})}
                       isInvalid={emailExists}
                       isValid={!!(formData.email && !emailExists && !emailCheckLoading && viewMode === 'create')}
                       required
@@ -702,7 +819,7 @@ const PatientsPage: React.FC = () => {
                           name="phone"
                           type="tel"
                           value={formData.phone}
-                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, phone: e.target.value})}
                           autoComplete="tel"
                           aria-label="Teléfono del paciente"
                         />
@@ -716,7 +833,7 @@ const PatientsPage: React.FC = () => {
                           name="birth_date"
                           type="date"
                           value={formData.birth_date}
-                          onChange={(e) => handleBirthDateChange(e.target.value)}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleBirthDateChange(e.target.value)}
                           max={new Date().toISOString().split('T')[0]}
                           autoComplete="bday"
                           aria-label="Fecha de nacimiento del paciente"
@@ -750,7 +867,7 @@ const PatientsPage: React.FC = () => {
                       id="gender"
                       name="gender"
                       value={formData.gender}
-                      onChange={(e) => setFormData({...formData, gender: e.target.value as 'male' | 'female' | 'other'})}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({...formData, gender: e.target.value as 'male' | 'female' | 'other'})}
                       autoComplete="sex"
                       aria-label="Género del paciente"
                     >

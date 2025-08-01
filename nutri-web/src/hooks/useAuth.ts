@@ -44,8 +44,8 @@ export const useAuth = (): UseAuthReturn => {
             } catch (error) {
               console.error('🔐 useAuth: Failed to fetch current user:', error);
               if (isMounted) {
-                authService.logout();
-                setUser(null);
+                // Don't logout immediately on API failure, keep stored user
+                console.log('🔐 useAuth: API failed but keeping stored user');
               }
             }
           }
@@ -125,8 +125,7 @@ export const useAuth = (): UseAuthReturn => {
     isLoading,
     login,
     logout,
-    refreshUser,
-  };
+    refreshUser};
 };
 
 export default useAuth; 

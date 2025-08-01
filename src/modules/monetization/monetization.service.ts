@@ -215,27 +215,27 @@ export class MonetizationService {
         // Crear tiers de nutriólogos por defecto
         const nutritionistTiers = [
             {
-                name: 'Nutriólogo Básico',
-                description: 'Acceso a un paciente activo con comisión del 20% por consulta',
+                name: 'Modelo de Comisión por Consulta',
+                description: 'El nutriólogo establece su tarifa base y paga 15% de comisión por cada consulta realizada. Ideal para nutriólogos que están comenzando o prefieren pago por uso.',
                 tier_type: NutritionistTierType.BASIC,
                 payment_model: PaymentModel.COMMISSION,
-                commission_rate: 20.00,
+                commission_rate: 15.00, // ✅ 15% según especificación
                 subscription_price: null,
                 annual_price: null,
-                max_active_patients: 1,
-                includes_ai_meal_planning: false,
-                includes_advanced_management: false,
+                max_active_patients: -1, // Sin límite en modelo comisión
+                includes_ai_meal_planning: true,
+                includes_advanced_management: true,
                 includes_priority_support: false,
                 is_active: true
             },
             {
-                name: 'Nutriólogo Premium',
-                description: 'Acceso ilimitado a pacientes con herramientas avanzadas de IA',
+                name: 'Modelo de Suscripción Mensual (Premium)',
+                description: 'Tarifa fija de $600 MXN por mes. El nutriólogo retiene el 100% de sus ingresos por consulta. Ideal para nutriólogos con volumen moderado a alto de consultas.',
                 tier_type: NutritionistTierType.PREMIUM,
                 payment_model: PaymentModel.SUBSCRIPTION,
                 commission_rate: null,
-                subscription_price: 299.99,
-                annual_price: 2999.99,
+                subscription_price: 600.00, // ✅ $600 MXN según especificación
+                annual_price: 6600.00, // 10% descuento anual (11 meses)
                 max_active_patients: -1,
                 includes_ai_meal_planning: true,
                 includes_advanced_management: true,

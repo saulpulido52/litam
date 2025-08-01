@@ -88,11 +88,20 @@ export interface PatientAppointment {
 export interface PatientProgress {
   id: string;
   date: string;
-  weight: number;
-  body_fat_percentage?: number;
-  muscle_mass?: number;
-  waist_circumference?: number;
-  notes?: string;
+  weight: number | null;
+  body_fat_percentage?: number | null;
+  muscle_mass_percentage?: number | null;
+  measurements?: {
+    waist?: number;
+    hip?: number;
+    arm?: number;
+    chest?: number;
+    thigh?: number;
+  } | null;
+  notes?: string | null;
+  photos?: { date?: Date; url: string; description?: string }[] | null;
+  adherence_to_plan?: number | null;
+  feeling_level?: number | null;
 }
 
 class PatientsService {
@@ -476,7 +485,8 @@ class PatientsService {
         console.log('🔍 Token full value:', token); // TEMPORARY: Log full token for debugging
       }
       
-      const response = await fetch(`http://localhost:4000/api/patients/${patientId}/relationship`, {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+    const response = await fetch(`${apiUrl}/patients/${patientId}/relationship`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -529,10 +539,37 @@ class PatientsService {
   // Obtener progreso de un paciente
   async getPatientProgress(patientId: string): Promise<PatientProgress[]> {
     try {
-      const response = await apiService.get<{ progress: PatientProgress[] }>(`/patients/${patientId}/progress`);
-      return response.data?.progress || [];
+      console.log('📊 Solicitando progreso para paciente:', patientId);
+      const response = await apiService.get<{ data: { logs: PatientProgress[] } }>(`/progress-tracking/patient/${patientId}`);
+      
+      console.log('📦 Respuesta de progreso recibida:', response);
+      console.log('📄 Status:', response.status);
+      console.log('📊 Data:', response.data);
+      
+      // MANEJO ROBUSTO: Verificar estructuras posibles
+      let logs: PatientProgress[] = [];
+      
+      // Opción 1: response.data.data.logs (estructura anidada esperada)
+      if (response.data?.data?.logs) {
+        logs = response.data.data.logs;
+        console.log('✅ Usando estructura anidada: response.data.data.logs');
+      }
+      // Opción 2: response.data.logs directamente
+      else if ((response.data as any)?.logs) {
+        logs = (response.data as any).logs;
+        console.log('✅ Usando estructura directa: response.data.logs');
+      }
+      // Opción 3: Sin logs encontrados
+      else {
+        console.warn('⚠️ No se encontraron logs en la respuesta');
+        console.log('🔍 Claves disponibles:', Object.keys(response.data || {}));
+      }
+      
+      console.log('✅ Logs extraídos:', logs.length, 'registros');
+      
+      return logs;
     } catch (error) {
-      console.error('Error fetching patient progress:', error);
+      console.error('❌ Error fetching patient progress:', error);
       throw new Error('Error al obtener el progreso del paciente');
     }
   }
@@ -540,15 +577,97 @@ class PatientsService {
   // Agregar progreso a un paciente
   async addPatientProgress(patientId: string, progressData: Omit<PatientProgress, 'id'>): Promise<PatientProgress> {
     try {
-      const response = await apiService.post<{ progress: PatientProgress }>(`/patients/${patientId}/progress`, progressData);
-      if (!response.data?.progress) {
-        throw new Error('Error al registrar el progreso');
-      }
-      return response.data.progress;
-    } catch (error: any) {
+      const response = await apiService.post<{ progress: PatientProgress }>(`/progress-tracking/patient/${patientId}/progress`, progressData);
+      return response.data?.progress || {} as PatientProgress;
+    } catch (error) {
       console.error('Error adding patient progress:', error);
-      const message = error.response?.data?.message || 'Error al registrar el progreso';
-      throw new Error(message);
+      throw new Error('Error al agregar el progreso del paciente');
+    }
+  }
+
+  // --- NUEVOS MÉTODOS PARA ANÁLISIS AUTOMÁTICO ---
+
+  // Generar análisis automático de progreso basado en expedientes y planes de dieta
+  async generateAutomaticProgress(patientId: string): Promise<{
+    analysis: any;
+    logs: PatientProgress[];
+    generatedAt: string;
+    basedOn: {
+      clinicalRecords: number;
+      activePlan: string | null;
+    };
+  }> {
+    try {
+      console.log('🤖 Solicitando análisis automático para paciente:', patientId);
+      const response = await apiService.post<{
+        status: string;
+        message: string;
+        data: {
+          analysis: any;
+          logs: PatientProgress[];
+          generatedAt: string;
+          basedOn: {
+            clinicalRecords: number;
+            activePlan: string | null;
+          };
+        };
+      }>(`/progress-tracking/patient/${patientId}/generate-automatic`);
+      
+      console.log('📦 Respuesta completa recibida:', response);
+      console.log('📄 Status de respuesta:', response.status);
+      console.log('📊 Datos de respuesta (response.data):', response.data);
+      
+      // MANEJO ROBUSTO: Verificar ambas estructuras posibles
+      let data: any;
+      
+      // Opción 1: response.data.data (estructura anidada esperada)
+      if (response.data?.data) {
+        data = response.data.data;
+        console.log('✅ Usando estructura anidada: response.data.data');
+      }
+      // Opción 2: response.data directamente (por si axios intercepta)
+      else if ((response.data as any)?.analysis) {
+        data = response.data;
+        console.log('✅ Usando estructura directa: response.data');
+      }
+      // Opción 3: Sin datos válidos
+      else {
+        console.warn('⚠️ Estructura de respuesta no reconocida');
+        console.log('🔍 Claves disponibles en response.data:', Object.keys(response.data || {}));
+        data = {};
+      }
+      
+      console.log('🔍 Data final extraída:', data);
+      
+      if (data?.analysis) {
+        console.log('✅ Análisis encontrado correctamente');
+        console.log('📈 Análisis recibido:', data.analysis);
+        console.log('📋 Logs recibidos:', data.logs?.length || 0, 'registros');
+        console.log('📅 Generado en:', data.generatedAt);
+        console.log('📊 Basado en:', data.basedOn);
+      } else {
+        console.warn('❌ No se encontró análisis en los datos');
+      }
+      
+      return data || {} as any;
+    } catch (error) {
+      console.error('❌ Error generating automatic progress:', error);
+      throw new Error('Error al generar el análisis automático de progreso');
+    }
+  }
+
+  // Obtener análisis de progreso sin generar logs
+  async getProgressAnalysis(patientId: string): Promise<any> {
+    try {
+      console.log('📊 Obteniendo análisis de progreso para paciente:', patientId);
+      const response = await apiService.get<{ data: { analysis: any } }>(`/progress-tracking/patient/${patientId}/analysis`);
+      
+      console.log('📦 Respuesta de análisis:', response.data);
+      
+      return response.data?.data?.analysis || {};
+    } catch (error) {
+      console.error('❌ Error fetching progress analysis:', error);
+      throw new Error('Error al obtener el análisis de progreso');
     }
   }
 
@@ -642,8 +761,7 @@ class PatientsService {
         transfer_result?: any;
       }>('/patients/change-nutritionist', {
         newNutritionistId,
-        reason,
-      });
+        reason});
       
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error al solicitar cambio de nutriólogo');
@@ -681,8 +799,7 @@ class PatientsService {
           user_account: boolean;
         };
       }>(`/patients/${patientId}/account`, {
-        confirmPassword,
-      });
+        confirmPassword});
       
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error al eliminar la cuenta');
@@ -759,8 +876,7 @@ class PatientsService {
   async validatePassword(password: string): Promise<boolean> {
     try {
       const response = await apiService.post<{ valid: boolean }>('/auth/validate-password', {
-        password,
-      });
+        password});
       
       return response.data?.valid || false;
     } catch (error: any) {

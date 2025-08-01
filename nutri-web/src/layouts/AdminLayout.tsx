@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Nav, Button } from 'react-bootstrap';
-import { MdAdminPanelSettings, MdPeople, MdHealthAndSafety, MdBuild, MdSettings, MdSubscriptions, MdListAlt, MdDashboard, MdLogout, MdAssignmentInd, MdPerson, MdStorage, MdBugReport, MdMonetizationOn, MdDeleteForever } from 'react-icons/md';
+import { Container, Nav, Button } from 'react-bootstrap';
+import { MdAdminPanelSettings, MdSubscriptions, MdListAlt, MdDashboard, MdLogout, MdBugReport, MdMonetizationOn, MdDeleteForever, MdVerifiedUser, MdAssignmentInd, MdPeople, MdHealthAndSafety, MdBuild, MdSettings } from 'react-icons/md';
 
 const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ const AdminLayout: React.FC = () => {
       <aside className="bg-light border-end p-3 d-flex flex-column" style={{ minWidth: 240 }}>
         <div className="mb-4 text-center">
           <MdAdminPanelSettings size={48} className="text-primary mb-2" />
-          <h5 className="mb-0">Admin NutriWeb</h5>
+                          <h5 className="mb-0">Admin Litam</h5>
         </div>
         
         <Nav className="flex-column gap-2 flex-grow-1">
@@ -31,7 +31,7 @@ const AdminLayout: React.FC = () => {
             <MdAssignmentInd className="me-2" /> Usuarios
           </NavLink>
           <NavLink to="/admin/nutritionists" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-            <MdPerson className="me-2" /> Nutriólogos
+            <MdVerifiedUser className="me-2" /> Gestión de Nutriólogos
           </NavLink>
           <NavLink to="/admin/patients" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
             <MdPeople className="me-2" /> Pacientes
@@ -57,6 +57,7 @@ const AdminLayout: React.FC = () => {
           <NavLink to="/admin/auditoria-eliminaciones" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
             <MdDeleteForever className="me-2" /> Auditoría Eliminaciones
           </NavLink>
+          
           <NavLink to="/admin/settings" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
             <MdSettings className="me-2" /> Configuración
           </NavLink>

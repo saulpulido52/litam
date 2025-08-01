@@ -34,6 +34,12 @@ router.route('/availability')
 // La ruta espera un ID de nutriólogo en los parámetros, no solo en la query string
 router.get('/availability/:nutritionistId', appointmentController.searchNutritionistAvailability);
 
+// NUEVAS RUTAS: Gestión avanzada de disponibilidad
+// Obtener citas existentes de un nutriólogo por rango de fechas
+router.get('/nutritionist/:nutritionistId/appointments', appointmentController.getNutritionistAppointmentsByDateRange);
+
+// Obtener slots disponibles para una fecha específica
+router.get('/nutritionist/:nutritionistId/available-slots', appointmentController.getAvailableSlots);
 
 // --- Rutas de Gestión de Citas ---
 
@@ -61,6 +67,20 @@ router.patch(
     '/:id/status',
     validateMiddleware(UpdateAppointmentStatusDto),
     appointmentController.updateAppointmentStatus
+);
+
+// Actualizar una cita completa (fecha, hora, notas) - Solo Nutriólogos
+router.patch(
+    '/:id',
+    authorize(RoleName.NUTRITIONIST),
+    appointmentController.updateAppointment
+);
+
+// Eliminar una cita completamente (Solo Nutriólogos)
+router.delete(
+    '/:id',
+    authorize(RoleName.NUTRITIONIST),
+    appointmentController.deleteAppointment
 );
 
 export default router;

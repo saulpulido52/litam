@@ -40,9 +40,22 @@ export interface DrugNutrientInteraction {
   updated_date: Date;
 }
 
+// Tipos de expediente
+export type TipoExpediente = 
+  | 'inicial' 
+  | 'seguimiento' 
+  | 'urgencia' 
+  | 'control' 
+  | 'pre_operatorio' 
+  | 'post_operatorio' 
+  | 'consulta_especialidad' 
+  | 'anual' 
+  | 'telehealth';
+
 export interface ClinicalRecord {
   id: string;
   record_date: string;
+  tipo_expediente?: TipoExpediente;
   patient: {
     id: string;
     email: string;

@@ -79,7 +79,7 @@ export const OptimizedButton = React.memo(({
   className?: string;
   type?: 'button' | 'submit' | 'reset';
 }) => {
-  const handleClick = useCallback((e: React.MouseEvent) => {
+  const handleClick = useCallback(() => {
     if (!disabled && !loading && onClick) {
       onClick();
     }

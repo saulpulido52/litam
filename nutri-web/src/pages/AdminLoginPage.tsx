@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge} from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
@@ -10,38 +10,21 @@ import {
   MdLock,
   MdVisibility,
   MdVisibilityOff,
-  MdWarning,
   MdCheckCircle,
   MdError,
-  MdInfo,
-  MdRefresh,
   MdSpeed,
+  MdHealthAndSafety,
+  MdRefresh,
+  MdInfo,
   MdShield,
   MdVerified,
-  MdAccessTime,
-  MdDashboard,
-  MdSettings,
-  MdPeople,
-  MdAnalytics,
-  MdBuild,
-  MdHealthAndSafety
-} from 'react-icons/md';
+  MdDashboard} from 'react-icons/md';
 import { 
   FaUsers, 
-  FaShieldAlt, 
-  FaUserShield, 
-  FaExclamationTriangle,
-  FaCheckCircle,
-  FaInfoCircle,
-  FaClock,
-  FaTachometerAlt,
+  FaShieldAlt,
   FaDatabase,
   FaServer,
-  FaNetworkWired,
-  FaHdd,
-  FaMemory,
-  FaMicrochip
-} from 'react-icons/fa';
+  FaNetworkWired} from 'react-icons/fa';
 
 interface AdminLoginState {
   email: string;
@@ -91,10 +74,10 @@ const AdminLoginPage: React.FC = () => {
 
     try {
       // Verificar backend (público)
-      const backendResponse = await fetch('http://localhost:4000/api/health', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+      const backendResponse = await fetch(`${apiUrl}/health`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
+        headers: { 'Content-Type': 'application/json' }});
 
       const systemStatus = {
         backend: backendResponse.ok,

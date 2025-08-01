@@ -2,9 +2,14 @@
 import { Repository, Between } from 'typeorm';
 import { AppDataSource } from '../../database/data-source';
 import { User } from '../../database/entities/user.entity';
-import { ClinicalRecord } from '../../database/entities/clinical_record.entity';
+import { ClinicalRecord, TipoExpediente } from '../../database/entities/clinical_record.entity';
 import { PatientNutritionistRelation, RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
-import { CreateUpdateClinicalRecordDto } from '../../modules/clinical_records/clinical_record.dto';
+import { 
+    CreateUpdateClinicalRecordDto,
+    DeteccionExpedienteDto,
+    RespuestaDeteccionExpedienteDto,
+    DatosPreviosPacienteDto
+} from '../../modules/clinical_records/clinical_record.dto';
 import { AppError } from '../../utils/app.error';
 import { RoleName } from '../../database/entities/role.entity';
 import { promises as fs } from 'fs';
@@ -308,6 +313,42 @@ class ClinicalRecordService {
             menu_details: recordDto.menuDetails,
             evolution_and_follow_up_notes: recordDto.evolutionAndFollowUpNotes,
             graph_url: recordDto.graphUrl,
+
+            // NUEVOS CAMPOS PARA SISTEMA EVOLUTIVO DE EXPEDIENTES
+            tipo_expediente: recordDto.tipoExpediente || TipoExpediente.INICIAL,
+            expediente_base_id: recordDto.expedienteBaseId,
+            seguimiento_metadata: recordDto.seguimientoMetadata === undefined ? undefined : (recordDto.seguimientoMetadata === null ? null : {
+                adherencia_plan: recordDto.seguimientoMetadata.adherencia_plan,
+                dificultades: recordDto.seguimientoMetadata.dificultades,
+                satisfaccion: recordDto.seguimientoMetadata.satisfaccion,
+                cambios_medicamentos: recordDto.seguimientoMetadata.cambios_medicamentos,
+                nuevos_sintomas: recordDto.seguimientoMetadata.nuevos_sintomas,
+                mejoras_notadas: recordDto.seguimientoMetadata.mejoras_notadas,
+                proximos_objetivos: recordDto.seguimientoMetadata.proximos_objetivos,
+            }),
+            analisis_riesgo_beneficio: recordDto.analisisRiesgoBeneficio === undefined ? undefined : (recordDto.analisisRiesgoBeneficio === null ? null : {
+                decision: recordDto.analisisRiesgoBeneficio.decision,
+                riesgos: recordDto.analisisRiesgoBeneficio.riesgos,
+                beneficios: recordDto.analisisRiesgoBeneficio.beneficios,
+                alternativas: recordDto.analisisRiesgoBeneficio.alternativas,
+                razonamiento: recordDto.analisisRiesgoBeneficio.razonamiento,
+            }),
+            juicio_clinico: recordDto.juicioClinico === undefined ? undefined : (recordDto.juicioClinico === null ? null : {
+                evaluacion_situacion: recordDto.juicioClinico.evaluacion_situacion,
+                respuesta_congruente: recordDto.juicioClinico.respuesta_congruente,
+                factores_objetivos: recordDto.juicioClinico.factores_objetivos,
+                factores_subjetivos: recordDto.juicioClinico.factores_subjetivos,
+                justificacion: recordDto.juicioClinico.justificacion,
+            }),
+            capacidad_paciente: recordDto.capacidadPaciente === undefined ? undefined : (recordDto.capacidadPaciente === null ? null : {
+                comprende_medicamentos: recordDto.capacidadPaciente.comprende_medicamentos,
+                conoce_sintomas_alarma: recordDto.capacidadPaciente.conoce_sintomas_alarma,
+                sabe_contacto_emergencia: recordDto.capacidadPaciente.sabe_contacto_emergencia,
+                puede_auto_monitoreo: recordDto.capacidadPaciente.puede_auto_monitoreo,
+                requiere_apoyo_familiar: recordDto.capacidadPaciente.requiere_apoyo_familiar,
+                nivel_independencia: recordDto.capacidadPaciente.nivel_independencia,
+                observaciones: recordDto.capacidadPaciente.observaciones,
+            }),
         });
 
         await this.clinicalRecordRepository.save(newRecord);
@@ -1934,6 +1975,324 @@ class ClinicalRecordService {
             interactions: record.drug_nutrient_interactions || [],
             total: record.drug_nutrient_interactions?.length || 0
         };
+    }
+
+    // ============== NUEVOS MÉTODOS PARA SISTEMA EVOLUTIVO DE EXPEDIENTES ==============
+
+    /**
+     * 🤖 DETECCIÓN AUTOMÁTICA DE TIPO DE EXPEDIENTE
+     * Determina automáticamente si debe ser un expediente inicial o de seguimiento
+     */
+    public async detectarTipoExpediente(deteccionDto: DeteccionExpedienteDto): Promise<RespuestaDeteccionExpedienteDto> {
+        const { patientId, motivoConsulta, esProgramada, tipoConsultaSolicitada } = deteccionDto;
+
+        // Obtener expedientes previos del paciente
+        const expedientesPrevios = await this.clinicalRecordRepository.find({
+            where: { patient: { id: patientId } },
+            order: { record_date: 'DESC' },
+            take: 5
+        });
+
+        const tieneExpedientesPrevios = expedientesPrevios.length > 0;
+        const ultimoExpediente = expedientesPrevios[0];
+        
+        // Análisis de motivo de consulta para detectar urgencias
+        const palabrasUrgencia = ['dolor', 'sangrado', 'fiebre', 'vómito', 'diarrea', 'emergencia', 'urgente', 'agudo'];
+        const esUrgencia = motivoConsulta && palabrasUrgencia.some(palabra => 
+            motivoConsulta.toLowerCase().includes(palabra)
+        );
+
+        // Análisis de tiempo desde último expediente
+        let diasDesdeUltimo = 0;
+        if (ultimoExpediente) {
+            const fechaUltimo = new Date(ultimoExpediente.record_date);
+            const fechaActual = new Date();
+            diasDesdeUltimo = Math.floor((fechaActual.getTime() - fechaUltimo.getTime()) / (1000 * 60 * 60 * 24));
+        }
+
+        // Lógica de detección
+        let tipoSugerido: TipoExpediente;
+        let razon: string;
+        let requiereConfirmacion = false;
+        const alertas: string[] = [];
+
+        // Determinar tipo basado en múltiples factores
+        if (!tieneExpedientesPrevios) {
+            tipoSugerido = TipoExpediente.INICIAL;
+            razon = 'Primer expediente del paciente - se requiere evaluación completa';
+        } else if (esUrgencia || !esProgramada) {
+            tipoSugerido = TipoExpediente.URGENCIA;
+            razon = 'Consulta de urgencia detectada por motivo de consulta o cita no programada';
+        } else if (tipoConsultaSolicitada?.toLowerCase().includes('seguimiento')) {
+            tipoSugerido = TipoExpediente.SEGUIMIENTO;
+            razon = 'Seguimiento solicitado explícitamente';
+        } else if (tipoConsultaSolicitada?.toLowerCase().includes('control')) {
+            tipoSugerido = TipoExpediente.CONTROL;
+            razon = 'Control de condición crónica o tratamiento en curso';
+        } else if (tipoConsultaSolicitada?.toLowerCase().includes('anual') || tipoConsultaSolicitada?.toLowerCase().includes('preventivo')) {
+            tipoSugerido = TipoExpediente.ANUAL;
+            razon = 'Revisión preventiva o anual detectada';
+        } else if (diasDesdeUltimo <= 30) {
+            tipoSugerido = TipoExpediente.SEGUIMIENTO;
+            razon = `Consulta dentro de 30 días del último expediente (${diasDesdeUltimo} días)`;
+        } else if (diasDesdeUltimo <= 90) {
+            tipoSugerido = TipoExpediente.CONTROL;
+            razon = `Control programado - última consulta hace ${diasDesdeUltimo} días`;
+        } else if (diasDesdeUltimo > 365) {
+            tipoSugerido = TipoExpediente.INICIAL;
+            razon = `Más de un año desde la última consulta (${Math.floor(diasDesdeUltimo / 365)} años) - se sugiere evaluación completa`;
+            requiereConfirmacion = true;
+            alertas.push(`Paciente no consultó por ${Math.floor(diasDesdeUltimo / 365)} años`);
+        } else {
+            tipoSugerido = TipoExpediente.SEGUIMIENTO;
+            razon = `Seguimiento estándar - última consulta hace ${diasDesdeUltimo} días`;
+        }
+
+        // Alertas adicionales
+        if (diasDesdeUltimo > 180) {
+            alertas.push('Considerar revisar información completa del paciente');
+        }
+
+        return {
+            tipoSugerido,
+            razon,
+            expedienteBaseId: ultimoExpediente?.id,
+            requiereConfirmacion,
+            alertas: alertas.length > 0 ? alertas : undefined
+        };
+    }
+
+    /**
+     * 📊 OBTENER DATOS PREVIOS DEL PACIENTE
+     * Obtiene información del último expediente para heredar datos estáticos
+     */
+    public async obtenerDatosPreviosPaciente(patientId: string, callerId: string, callerRole: RoleName): Promise<DatosPreviosPacienteDto> {
+        // Verificar acceso al paciente
+        if (callerRole === RoleName.PATIENT && callerId !== patientId) {
+            throw new AppError('No tienes permisos para acceder a estos datos.', 403);
+        }
+
+        if (callerRole === RoleName.NUTRITIONIST) {
+            const activeRelation = await this.relationRepository.findOne({
+                where: {
+                    patient: { id: patientId },
+                    nutritionist: { id: callerId },
+                    status: RelationshipStatus.ACTIVE,
+                },
+            });
+            if (!activeRelation) {
+                throw new AppError('No estás autorizado para acceder a este paciente.', 403);
+            }
+        }
+
+        // Obtener último expediente
+        const ultimoExpediente = await this.clinicalRecordRepository.findOne({
+            where: { patient: { id: patientId } },
+            order: { record_date: 'DESC' },
+            relations: ['patient', 'nutritionist']
+        });
+
+        if (!ultimoExpediente) {
+            return {}; // Paciente sin expedientes previos
+        }
+
+        // Extraer datos estáticos (que no cambian frecuentemente)
+        const datosEstaticos = {
+            antecedentes_familiares: ultimoExpediente.family_medical_history,
+            alergias: ultimoExpediente.diagnosed_diseases,
+            enfermedades_cronicas: ultimoExpediente.current_problems,
+            cirugias_previas: ultimoExpediente.diagnosed_diseases
+        };
+
+        // Extraer últimas mediciones
+        let imcCalculado = ultimoExpediente.anthropometric_evaluations?.imc_kg_t2;
+        
+        // Si no hay IMC en evaluations pero sí hay peso y altura, calcularlo automáticamente
+        if (!imcCalculado && 
+            ultimoExpediente.anthropometric_measurements?.current_weight_kg && 
+            ultimoExpediente.anthropometric_measurements?.height_m) {
+            const peso = ultimoExpediente.anthropometric_measurements.current_weight_kg;
+            const altura = ultimoExpediente.anthropometric_measurements.height_m;
+            imcCalculado = peso / (altura * altura);
+        }
+
+        const ultimasMediciones = {
+            peso: ultimoExpediente.anthropometric_measurements?.current_weight_kg,
+            altura: ultimoExpediente.anthropometric_measurements?.height_m,
+            imc: imcCalculado,
+            presion_sistolica: ultimoExpediente.blood_pressure?.systolic,
+            presion_diastolica: ultimoExpediente.blood_pressure?.diastolic,
+            fecha: ultimoExpediente.record_date instanceof Date ? ultimoExpediente.record_date.toISOString() : ultimoExpediente.record_date
+        };
+
+        // Calcular tendencias básicas (requiere al menos 2 expedientes)
+        const expedientesPrevios = await this.clinicalRecordRepository.find({
+            where: { patient: { id: patientId } },
+            order: { record_date: 'DESC' },
+            take: 3
+        });
+
+        let tendencias = {};
+        if (expedientesPrevios.length >= 2) {
+            const penultimoExpediente = expedientesPrevios[1];
+            
+            // Tendencia de peso
+            const pesoActual = ultimoExpediente.anthropometric_measurements?.current_weight_kg;
+            const pesoAnterior = penultimoExpediente.anthropometric_measurements?.current_weight_kg;
+            
+            if (pesoActual && pesoAnterior) {
+                const diferenciaPeso = pesoActual - pesoAnterior;
+                tendencias = {
+                    ...tendencias,
+                    peso: diferenciaPeso > 1 ? 'subiendo' : diferenciaPeso < -1 ? 'bajando' : 'estable'
+                };
+            }
+
+            // Tendencia de presión
+            const presionActual = ultimoExpediente.blood_pressure?.systolic;
+            const presionAnterior = penultimoExpediente.blood_pressure?.systolic;
+            
+            if (presionActual && presionAnterior) {
+                const diferenciaPa = presionActual - presionAnterior;
+                tendencias = {
+                    ...tendencias,
+                    presion: diferenciaPa < -5 ? 'mejorando' : diferenciaPa > 5 ? 'empeorando' : 'estable'
+                };
+            }
+        }
+
+        return {
+            ultimoExpediente,
+            datosEstaticos,
+            ultimasMediciones,
+            tendencias
+        };
+    }
+
+    /**
+     * 📈 GENERAR COMPARATIVO AUTOMÁTICO
+     * Compara mediciones actuales con las previas
+     */
+    public async generarComparativo(expedienteActualId: string, expedienteBaseId: string) {
+        const [expedienteActual, expedienteBase] = await Promise.all([
+            this.clinicalRecordRepository.findOne({ where: { id: expedienteActualId } }),
+            this.clinicalRecordRepository.findOne({ where: { id: expedienteBaseId } })
+        ]);
+
+        if (!expedienteActual || !expedienteBase) {
+            throw new AppError('No se pueden encontrar los expedientes para comparar.', 404);
+        }
+
+        const comparativo = {
+            fecha_anterior: expedienteBase.record_date,
+            fecha_actual: expedienteActual.record_date,
+            cambios: {
+                peso: this.compararMedicion(
+                    expedienteBase.anthropometric_measurements?.current_weight_kg,
+                    expedienteActual.anthropometric_measurements?.current_weight_kg,
+                    'kg'
+                ),
+                imc: this.compararMedicion(
+                    expedienteBase.anthropometric_evaluations?.imc_kg_t2,
+                    expedienteActual.anthropometric_evaluations?.imc_kg_t2,
+                    ''
+                ),
+                cintura: this.compararMedicion(
+                    expedienteBase.anthropometric_measurements?.waist_circ_cm,
+                    expedienteActual.anthropometric_measurements?.waist_circ_cm,
+                    'cm'
+                ),
+                presion_sistolica: this.compararMedicion(
+                    expedienteBase.blood_pressure?.systolic,
+                    expedienteActual.blood_pressure?.systolic,
+                    'mmHg'
+                ),
+                presion_diastolica: this.compararMedicion(
+                    expedienteBase.blood_pressure?.diastolic,
+                    expedienteActual.blood_pressure?.diastolic,
+                    'mmHg'
+                )
+            }
+        };
+
+        return comparativo;
+    }
+
+    /**
+     * 🔢 COMPARAR MEDICIÓN INDIVIDUAL
+     * Helper para comparar dos valores numéricos
+     */
+    private compararMedicion(valorAnterior?: number, valorActual?: number, unidad?: string) {
+        if (!valorAnterior || !valorActual) {
+            return null;
+        }
+
+        const diferencia = valorActual - valorAnterior;
+        const porcentajeCambio = (diferencia / valorAnterior) * 100;
+
+        return {
+            anterior: valorAnterior,
+            actual: valorActual,
+            diferencia: parseFloat(diferencia.toFixed(2)),
+            porcentaje_cambio: parseFloat(porcentajeCambio.toFixed(1)),
+            tendencia: diferencia > 0 ? 'aumento' : diferencia < 0 ? 'disminución' : 'sin_cambio',
+            unidad: unidad || ''
+        };
+    }
+
+    /**
+     * 📋 CREAR EXPEDIENTE CON DETECCIÓN AUTOMÁTICA
+     * Versión mejorada que incluye detección automática de tipo
+     */
+    public async createClinicalRecordEvolutivo(recordDto: CreateUpdateClinicalRecordDto, creatorId: string) {
+        // Si no se especifica tipo, detectar automáticamente
+        if (!recordDto.tipoExpediente) {
+            const deteccion = await this.detectarTipoExpediente({
+                patientId: recordDto.patientId,
+                motivoConsulta: recordDto.consultationReason,
+                esProgramada: true, // Por defecto asumimos que es programada
+                tipoConsultaSolicitada: undefined
+            });
+
+            recordDto.tipoExpediente = deteccion.tipoSugerido;
+            recordDto.expedienteBaseId = deteccion.expedienteBaseId;
+        }
+
+        // Crear expediente usando el método existente pero con campos adicionales
+        return this.createClinicalRecord(recordDto, creatorId);
+    }
+
+    /**
+     * 📊 OBTENER ESTADÍSTICAS DE SEGUIMIENTO
+     * Para dashboard de nutriólogo
+     */
+    public async getEstadisticasSeguimiento(nutritionistId: string) {
+        try {
+            // Usar consultas SQL directas para evitar problemas con TypeORM
+            const expedientesPorTipo = await this.clinicalRecordRepository.query(`
+                SELECT record.tipo_expediente as tipo, COUNT(*) as total
+                FROM clinical_records record
+                WHERE record.nutritionist_user_id = $1
+                GROUP BY record.tipo_expediente
+            `, [nutritionistId]);
+
+            const fecha = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+            const expedientesUltimos30Dias = await this.clinicalRecordRepository.query(`
+                SELECT COUNT(*) as total
+                FROM clinical_records record
+                WHERE record.nutritionist_user_id = $1
+                AND record.record_date >= $2
+            `, [nutritionistId, fecha]);
+
+            return {
+                por_tipo: expedientesPorTipo,
+                ultimos_30_dias: parseInt(expedientesUltimos30Dias[0]?.total || '0'),
+                fecha_consulta: new Date().toISOString()
+            };
+        } catch (error) {
+            console.error('Error en getEstadisticasSeguimiento:', error);
+            throw new Error('Error al obtener estadísticas de seguimiento');
+        }
     }
 }
 

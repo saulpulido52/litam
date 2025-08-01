@@ -18,12 +18,10 @@ const examplePatient: Patient = {
     gender: 'female',
     role: {
       id: 'role-patient',
-      name: 'patient',
-    },
+      name: 'patient'},
     is_active: true,
     created_at: '2024-01-15T10:30:00Z',
-    updated_at: '2024-01-15T10:30:00Z',
-  },
+    updated_at: '2024-01-15T10:30:00Z'},
   profile: {
     user_id: 'user-123',
     birth_date: '1985-03-15',
@@ -36,8 +34,7 @@ const examplePatient: Patient = {
     dietary_restrictions: ['Bajo en sodio'],
     allergies: [],
     medical_conditions: ['Prediabetes', 'Hipertensión leve'],
-    medications: ['Metformina 500mg', 'Losartán 50mg'],
-  }
+    medications: ['Metformina 500mg', 'Losartán 50mg']}
 };
 
 // Ejemplo de historia clínica con datos realistas
@@ -50,14 +47,12 @@ const exampleClinicalRecord: ClinicalRecord = {
     first_name: 'Lucía',
     last_name: 'Hernández',
     age: 39,
-    gender: 'female',
-  },
+    gender: 'female'},
   nutritionist: {
     id: 'nutritionist-789',
     email: 'dra.martinez@example.com',
     first_name: 'Ana',
-    last_name: 'Martínez',
-  },
+    last_name: 'Martínez'},
   expedient_number: 'EXP-2024-001',
   consultation_reason: 'Control de peso y mejora de hábitos alimentarios',
   current_problems: {
@@ -131,8 +126,7 @@ const exampleClinicalRecord: ClinicalRecord = {
   },
   water_consumption_liters: 2.0,
   created_at: '2024-01-20T09:15:00Z',
-  updated_at: '2024-01-20T09:15:00Z',
-};
+  updated_at: '2024-01-20T09:15:00Z'};
 
 // Ejemplo de plan de dieta
 const exampleDietPlan: DietPlan = {
@@ -173,13 +167,11 @@ const exampleDietPlan: DietPlan = {
             protein_per_100g: 8,
             carbs_per_100g: 45,
             fats_per_100g: 5,
-            is_active: true,
-          }
+            is_active: true}
         }
       ]
     }
-  ],
-};
+  ]};
 
 const NutritionalCardExample: React.FC = () => {
   const [showCard, setShowCard] = useState(false);
@@ -223,7 +215,7 @@ const NutritionalCardExample: React.FC = () => {
                     <path d="M4 17v2"></path>
                     <path d="M5 18H3"></path>
                   </svg>
-                  Tarjetas Nutricionales Avanzadas - Sistema NutriWeb
+                  Tarjetas Nutricionales Avanzadas - Sistema Litam
                 </h4>
                 <p className="mb-0 mt-2">
                   Sistema completo de creación y gestión de planes nutricionales con 5 pestañas especializadas

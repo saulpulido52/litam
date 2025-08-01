@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Badge, Button, Alert, Table } from 'react-bootstrap';
+import { Card, Row, Col, Button, Table, Badge, Alert } from 'react-bootstrap';
 import { 
   CreditCard, 
-  Users, 
-  TrendingUp, 
   Calendar,
-  CheckCircle,
-  AlertTriangle,
   DollarSign,
-  Package
+  Package,
+  Users,
+  TrendingUp,
+  AlertTriangle,
+  CheckCircle
 } from 'lucide-react';
 
 interface Subscription {

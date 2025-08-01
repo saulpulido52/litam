@@ -4,50 +4,34 @@ import {
   Menu, 
   X, 
   Bell, 
-  User, 
   Settings, 
   LogOut, 
   ChevronDown,
   Sun,
   Moon,
-  Home,
-  Calendar,
-  Users,
-  FileText,
-  MessageSquare,
-  TrendingUp,
-  MessageCircle,
   BarChart3,
-  Shield,
-  HelpCircle,
-  Search,
-  Filter,
-  MoreVertical,
-  Plus,
   Clock,
-  FileText as FileTextIcon,
-  Users as UsersIcon,
   Calendar as CalendarIcon,
+  Brain,
+  Home,
+  Users as UsersIcon,
+  FileText as FileTextIcon,
   TrendingUp as TrendingUpIcon,
-  MessageCircle as MessageCircleIcon
+  MessageSquare,
+  User
 } from 'lucide-react';
-import { Image } from 'react-bootstrap';
+import { Image, Button } from 'react-bootstrap';
 import { useAuth } from '../hooks/useAuth';
 import '../styles/author-sidebar.css';
 import '../styles/dashboard-modern.css';
 import '../styles/profile.css';
-import { MdEvent, MdNotifications, MdSystemUpdate, MdCheckCircle, MdWarning } from 'react-icons/md';
+import { MdEvent, MdNotifications, MdSystemUpdate, MdCheckCircle, MdWarning} from 'react-icons/md';
 import { FaUserPlus } from 'react-icons/fa';
 import { 
   Dropdown, 
   DropdownToggle, 
   DropdownMenu, 
-  DropdownItem,
-  Badge,
-  Button,
-  Offcanvas,
-  ListGroup,
-  ListGroupItem
+  DropdownItem
 } from 'react-bootstrap';
 
 // Tipos para las notificaciones
@@ -205,17 +189,17 @@ const MainLayout: React.FC = () => {
   }, []);
 
   // Función para reproducir sonido de notificación
-  const playNotificationSound = () => {
-    try {
-      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
-      audio.volume = 0.3;
-      audio.play().catch(() => {
-        // Ignorar errores de reproducción
-      });
-    } catch (error) {
-      // Ignorar errores de audio
-    }
-  };
+  // const playNotificationSound = () => {
+  //   try {
+  //     const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
+  //     audio.volume = 0.3;
+  //     audio.play().catch(() => {
+  //       // Ignorar errores de reproducción
+  //     });
+  //   } catch (error) {
+  //     // Ignorar errores de audio
+  //   }
+  // };
 
   // Detectar cambios de tamaño de pantalla
   useEffect(() => {
@@ -286,8 +270,7 @@ const MainLayout: React.FC = () => {
       const rect = notificationBtnRef.current.getBoundingClientRect();
       notificationMenuPos.current = {
         top: rect.bottom + 8,
-        left: rect.right - 320,
-      };
+        left: rect.right - 320};
     }
   }, [notificationsOpen]);
 
@@ -316,13 +299,8 @@ const MainLayout: React.FC = () => {
     );
   };
 
-  const deleteNotification = (notificationId: string) => {
-    setNotifications(prev => 
-      prev.filter(notification => notification.id !== notificationId)
-    );
-  };
-
-  const handleNotificationClick = (notification: Notification) => {
+  // Variable/función removida - no utilizada
+const handleNotificationClick = (notification: Notification) => {
     markNotificationAsRead(notification.id);
     setNotificationsOpen(false);
     
@@ -335,18 +313,18 @@ const MainLayout: React.FC = () => {
     setNotificationsOpen(!notificationsOpen);
   };
 
-  const handleNotificationsClose = () => {
-    setNotificationsOpen(false);
-  };
-
-  // Navigation array
+  // Variable/función removida - no utilizada
+// Navigation array
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'Pacientes', href: '/patients', icon: UsersIcon },
+    { name: 'Expedientes Inteligentes', href: '/expedientes-inteligentes', icon: Brain },
     { name: 'Planes de Dieta', href: '/diet-plans', icon: FileTextIcon },
-    { name: 'Citas', href: '/appointments', icon: CalendarIcon },
+    { name: 'Citas', href: '/appointments', icon: Clock },
+    { name: 'Calendario', href: '/calendar', icon: CalendarIcon },
     { name: 'Mensajes', href: '/messages', icon: MessageSquare },
     { name: 'Progreso', href: '/progress', icon: TrendingUpIcon },
+    { name: 'Evaluación Pediátrica', href: '/growth-charts', icon: TrendingUpIcon },
     { name: 'Reportes', href: '/reports', icon: BarChart3 },
     { name: 'Notificaciones', href: '/notifications', icon: Bell },
     { name: 'Perfil', href: '/profile', icon: User },

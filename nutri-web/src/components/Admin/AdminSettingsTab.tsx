@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Button, Form, Alert, Spinner, Badge } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Row, Col, Card, Button, Form, Badge, Alert, Spinner } from 'react-bootstrap';
 import { useAdmin } from '../../hooks/useAdmin';
 import type { AdminUpdateSettingsDto } from '../../services/adminService';
 
@@ -7,45 +7,22 @@ import type { AdminUpdateSettingsDto } from '../../services/adminService';
 import { 
   MdSettings,
   MdSave,
-  MdRefresh,
-  MdCheckCircle,
-  MdError,
-  MdWarning,
+  MdBuild,
+  MdAnalytics,
+  MdAccessTime,
   MdInfo,
+  MdEmail,
+  MdError,
   MdSecurity,
   MdNotifications,
-  MdEmail,
   MdSms,
   MdPushPin,
   MdTune,
-  MdBuild,
   MdStorage,
-  MdMemory,
-  MdSpeed,
-  MdDataUsage,
-  MdAnalytics,
-  MdAccessTime,
-  MdClose
+  MdDataUsage
 } from 'react-icons/md';
 import { 
-  FaCogs,
-  FaShieldAlt,
-  FaBell,
-  FaEnvelope,
-  FaSms,
-  FaDatabase,
-  FaServer,
-  FaMicrochip,
-  FaMemory,
-  FaHdd,
-  FaNetworkWired,
-  FaExclamationTriangle,
-  FaExclamationCircle,
-  FaInfoCircle,
-  FaCheckCircle,
-  FaClock,
-  FaTachometerAlt,
-  FaThermometerHalf
+  FaBell
 } from 'react-icons/fa';
 
 const AdminSettingsTab: React.FC = () => {
@@ -200,12 +177,12 @@ const AdminSettingsTab: React.FC = () => {
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>
-                        <MdSpeed className="me-2" />
+                        <MdAnalytics className="me-2" />
                         Modelo de IA
                       </Form.Label>
                       <Form.Select
                         value={settings.aiSettings?.model || 'gpt-4'}
-                        onChange={(e) => handleSettingChange('aiSettings', 'model', e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleSettingChange('aiSettings', 'model', e.target.value)}
                       >
                         <option value="gpt-4">GPT-4 (Más avanzado)</option>
                         <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Más rápido)</option>
@@ -219,7 +196,7 @@ const AdminSettingsTab: React.FC = () => {
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>
-                        <MdThermometerHalf className="me-2" />
+                        <MdAnalytics className="me-2" />
                         Temperatura (Creatividad)
                       </Form.Label>
                       <Form.Range
@@ -227,7 +204,7 @@ const AdminSettingsTab: React.FC = () => {
                         max="1"
                         step="0.1"
                         value={settings.aiSettings?.temperature || 0.7}
-                        onChange={(e) => handleSettingChange('aiSettings', 'temperature', parseFloat(e.target.value))}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSettingChange('aiSettings', 'temperature', parseFloat(e.target.value))}
                       />
                       <div className="d-flex justify-content-between">
                         <small className="text-muted">Más preciso</small>
@@ -251,7 +228,7 @@ const AdminSettingsTab: React.FC = () => {
                         min="500"
                         max="4000"
                         value={settings.aiSettings?.maxTokens || 2000}
-                        onChange={(e) => handleSettingChange('aiSettings', 'maxTokens', parseInt(e.target.value))}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSettingChange('aiSettings', 'maxTokens', parseInt(e.target.value))}
                       />
                       <Form.Text className="text-muted">
                         Número máximo de tokens por respuesta
@@ -306,7 +283,7 @@ const AdminSettingsTab: React.FC = () => {
                         min="1"
                         max="100"
                         value={settings.systemSettings?.maxFileSize || 10}
-                        onChange={(e) => handleSettingChange('systemSettings', 'maxFileSize', parseInt(e.target.value))}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSettingChange('systemSettings', 'maxFileSize', parseInt(e.target.value))}
                       />
                       <Form.Text className="text-muted">
                         Tamaño máximo permitido para subida de archivos
@@ -324,7 +301,7 @@ const AdminSettingsTab: React.FC = () => {
                         min="300"
                         max="7200"
                         value={settings.systemSettings?.sessionTimeout || 3600}
-                        onChange={(e) => handleSettingChange('systemSettings', 'sessionTimeout', parseInt(e.target.value))}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSettingChange('systemSettings', 'sessionTimeout', parseInt(e.target.value))}
                       />
                       <Form.Text className="text-muted">
                         Tiempo de inactividad antes de cerrar sesión
@@ -347,7 +324,7 @@ const AdminSettingsTab: React.FC = () => {
                             id={`file-type-${type}`}
                             label={type.toUpperCase()}
                             checked={settings.systemSettings?.allowedFileTypes?.includes(type) || false}
-                            onChange={(e) => {
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                               const currentTypes = settings.systemSettings?.allowedFileTypes || [];
                               const newTypes = e.target.checked
                                 ? [...currentTypes, type]
@@ -410,7 +387,7 @@ const AdminSettingsTab: React.FC = () => {
                           type="switch"
                           id="email-notifications"
                           checked={settings.notificationSettings?.emailNotifications || false}
-                          onChange={(e) => handleSettingChange('notificationSettings', 'emailNotifications', e.target.checked)}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSettingChange('notificationSettings', 'emailNotifications', e.target.checked)}
                         />
                         <small className="text-muted">
                           Recibir notificaciones por correo electrónico
@@ -427,7 +404,7 @@ const AdminSettingsTab: React.FC = () => {
                           type="switch"
                           id="push-notifications"
                           checked={settings.notificationSettings?.pushNotifications || false}
-                          onChange={(e) => handleSettingChange('notificationSettings', 'pushNotifications', e.target.checked)}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSettingChange('notificationSettings', 'pushNotifications', e.target.checked)}
                         />
                         <small className="text-muted">
                           Notificaciones push en tiempo real
@@ -444,7 +421,7 @@ const AdminSettingsTab: React.FC = () => {
                           type="switch"
                           id="sms-notifications"
                           checked={settings.notificationSettings?.smsNotifications || false}
-                          onChange={(e) => handleSettingChange('notificationSettings', 'smsNotifications', e.target.checked)}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSettingChange('notificationSettings', 'smsNotifications', e.target.checked)}
                         />
                         <small className="text-muted">
                           Enviar notificaciones por SMS

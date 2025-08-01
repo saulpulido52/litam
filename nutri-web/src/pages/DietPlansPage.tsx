@@ -2,24 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
   Search, 
-  Filter, 
   Calendar, 
   Target, 
-  Clock, 
-  Eye,
+  Clock,
   Edit,
   Trash2,
-  FileText,
   Download,
   Copy,
   RefreshCw,
-  Utensils
+  Utensils,
+  Filter,
+  FileText,
+  Eye
 } from 'lucide-react';
+import RecipeLibrary from '../components/RecipeBook/RecipeLibrary';
 import type { DietPlan, CreateDietPlanDto, PlanType } from '../types/diet';
 import { useDietPlans } from '../hooks/useDietPlans';
 import { usePatients } from '../hooks/usePatients';
 import { clinicalRecordsService } from '../services/clinicalRecordsService';
-import { Button, Modal, Alert } from 'react-bootstrap';
+import { Button, Modal, Alert} from 'react-bootstrap';
 import DietPlanViewer from '../components/DietPlanViewer';
 import NutritionalCardSimple from '../components/NutritionalCardSimple';
 import MealPlanner from '../components/MealPlanner';
@@ -72,9 +73,7 @@ const DietPlansPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showMealPlanner, setShowMealPlanner] = useState(false);
   const [selectedPlanForMeals, setSelectedPlanForMeals] = useState<DietPlan | null>(null);
-  const [showRecipeModal, setShowRecipeModal] = useState(false);
-  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
+  // Estados de recetas manejados por RecipeLibrary
   const [pdfLoading, setPdfLoading] = useState(false);
 
   // Load all diet plans and clinical records for the nutritionist on mount
@@ -175,14 +174,14 @@ const DietPlansPage: React.FC = () => {
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  const filteredRecipes = recipes.filter(recipe => {
-    const searchTermLower = searchTerm.toLowerCase();
-    const recipeName = (recipe.name ?? '').toLowerCase();
-    const recipeCategory = (recipe.category ?? '').toLowerCase();
+  // const filteredRecipes = recipes.filter(recipe => {
+  //   const searchTermLower = searchTerm.toLowerCase();
+  //   const recipeName = (recipe.name ?? '').toLowerCase();
+  //   const recipeCategory = (recipe.category ?? '').toLowerCase();
     
-    return recipeName.includes(searchTermLower) ||
-           recipeCategory.includes(searchTermLower);
-  });
+  //   return recipeName.includes(searchTermLower) ||
+  //          recipeCategory.includes(searchTermLower);
+  // });
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -296,9 +295,19 @@ const DietPlansPage: React.FC = () => {
     }
   };
 
-  const handleDeletePlan = async (planId: string) => {
+  const handleDeletePlan = async (planId: string, event?: React.MouseEvent) => {
+    // Registrar llamada para debugging
+    console.log('🗑️ handleDeletePlan llamado con planId:', planId);
+    console.trace('Origen de la llamada de eliminación');
+    
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
     if (window.confirm('¿Estás seguro de que quieres eliminar este plan?')) {
       try {
+        console.log('🔄 Eliminando plan:', planId);
         await deleteDietPlan(planId);
         
         // Recargar todos los datos relacionados
@@ -307,6 +316,8 @@ const DietPlansPage: React.FC = () => {
           refreshStats(),
           patients.length > 0 ? loadAllClinicalRecords() : Promise.resolve()
         ]);
+        
+        console.log('✅ Plan eliminado exitosamente:', planId);
         
         // Limpiar cualquier plan seleccionado si era el eliminado
         if (selectedPlan?.id === planId) {
@@ -417,35 +428,7 @@ const DietPlansPage: React.FC = () => {
     }
   };
 
-  const handleExportData = () => {
-    try {
-      const exportData = {
-        plans: filteredPlans,
-        recipes: filteredRecipes,
-        stats: stats,
-        exportDate: new Date().toISOString(),
-        totalPlans: filteredPlans.length,
-        totalRecipes: filteredRecipes.length
-      };
 
-      const dataStr = JSON.stringify(exportData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `diet-plans-export-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      console.log('✅ Datos exportados exitosamente');
-    } catch (error) {
-      console.error('❌ Error exportando datos:', error);
-      setError('Error al exportar los datos');
-    }
-  };
 
   const handleRefreshData = async () => {
     try {
@@ -460,22 +443,7 @@ const DietPlansPage: React.FC = () => {
     }
   };
 
-  // Funciones para manejar recetas
-  const handleViewRecipe = (recipe: Recipe) => {
-    setSelectedRecipe(recipe);
-    setShowRecipeModal(true);
-  };
-
-  const handleEditRecipe = (recipe: Recipe) => {
-    setEditingRecipe(recipe);
-    setShowRecipeModal(true);
-  };
-
-  const handleUseRecipe = (recipe: Recipe) => {
-    // Implementar lógica para usar receta en un plan
-    console.log('Usando receta:', recipe);
-    alert(`Receta "${recipe.name}" agregada al plan actual`);
-  };
+  // Funciones de recetas ahora manejadas por RecipeLibrary
 
   // const handleSaveRecipe = (recipeData: Recipe) => {
   //   if (editingRecipe) {
@@ -538,8 +506,8 @@ const DietPlansPage: React.FC = () => {
               <i className="fas fa-info-circle me-2 mt-1"></i>
               <div>
                 <strong>¡Nuevas funcionalidades implementadas!</strong> 
-                <span className="d-none d-md-inline"> Gestión completa de recetas, plantillas predefinidas, exportación de datos y actualización en tiempo real.</span>
-                <span className="d-md-none"> Recetas, plantillas y exportación disponibles.</span>
+                <span className="d-none d-md-inline"> Gestión completa de recetas, plantillas predefinidas y actualización en tiempo real.</span>
+                <span className="d-md-none"> Recetas y plantillas disponibles.</span>
                 <span className="d-none d-lg-inline"> La generación automática con IA estará disponible próximamente.</span>
               </div>
             </div>
@@ -718,14 +686,6 @@ const DietPlansPage: React.FC = () => {
               </h5>
               <div className="d-flex gap-2">
                 <button 
-                  className="btn btn-sm btn-outline-secondary"
-                  onClick={handleExportData}
-                  disabled={loading}
-                >
-                  <Download size={16} className="me-1" />
-                  <span className="d-none d-sm-inline">Exportar</span>
-                </button>
-                <button 
                   className="btn btn-sm btn-outline-primary"
                   onClick={handleRefreshData}
                   disabled={loading}
@@ -829,8 +789,9 @@ const DietPlansPage: React.FC = () => {
                             </button>
                             <button 
                               className="btn btn-outline-danger"
-                              onClick={() => handleDeletePlan(plan.id)}
+                              onClick={(e) => handleDeletePlan(plan.id, e)}
                               title="Eliminar plan"
+                              type="button"
                             >
                               <Trash2 size={14} />
                             </button>
@@ -919,7 +880,9 @@ const DietPlansPage: React.FC = () => {
                           </button>
                           <button
                             className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleDeletePlan(plan.id)}
+                            onClick={(e) => handleDeletePlan(plan.id, e)}
+                            type="button"
+                            title="Eliminar plan"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -935,83 +898,13 @@ const DietPlansPage: React.FC = () => {
       )}
 
       {activeTab === 'recipes' && (
-        <div className="card border-0 shadow-sm">
-          <div className="card-header bg-white">
-            <div className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">
-                <Utensils size={18} className="me-2" />
-                Recetas Nutricionales
-              </h5>
-              <button 
-                className="btn btn-primary btn-sm"
-                onClick={() => {
-                  setEditingRecipe(null);
-                  setShowRecipeModal(true);
-                }}
-              >
-                <Plus size={16} className="me-1" />
-                Nueva Receta
-              </button>
-            </div>
-          </div>
-          <div className="card-body">
-        <div className="row">
-          {filteredRecipes.map((recipe) => (
-            <div key={recipe.id} className="col-md-4 mb-4">
-              <div className="card border-0 shadow-sm">
-                <div className="card-body">
-                  <h5 className="card-title">{recipe.name}</h5>
-                  <p className="card-text text-muted">{recipe.category}</p>
-                  <div className="row text-center mb-3">
-                    <div className="col-4">
-                      <small className="text-muted">Prep</small>
-                      <div className="fw-medium">{recipe.prep_time}min</div>
-                    </div>
-                    <div className="col-4">
-                      <small className="text-muted">Cocción</small>
-                      <div className="fw-medium">{recipe.cook_time}min</div>
-                    </div>
-                    <div className="col-4">
-                      <small className="text-muted">Calorías</small>
-                      <div className="fw-medium">{recipe.calories_per_serving}</div>
-                    </div>
-                  </div>
-                  <div className="mb-3">
-                    {recipe.tags.map((tag, index) => (
-                      <span key={`${recipe.id}-tag-${index}`} className="badge bg-light text-dark me-1">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="btn-group w-100">
-                    <button 
-                      className="btn btn-outline-primary btn-sm"
-                      onClick={() => handleViewRecipe(recipe)}
-                    >
-                      <Eye size={14} className="me-1" />
-                      Ver
-                    </button>
-                    <button 
-                      className="btn btn-outline-success btn-sm"
-                      onClick={() => handleUseRecipe(recipe)}
-                    >
-                      <Copy size={14} className="me-1" />
-                      Usar
-                    </button>
-                    <button 
-                      className="btn btn-outline-secondary btn-sm"
-                      onClick={() => handleEditRecipe(recipe)}
-                    >
-                      <Edit size={14} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-            </div>
-          </div>
-        </div>
+        <RecipeLibrary
+          showPatientTools={false}
+          onRecipeSelect={(recipe) => {
+            console.log('Receta seleccionada para plan de dieta:', recipe);
+            // Aquí se puede integrar con el MealPlanner o crear plan automáticamente
+          }}
+        />
       )}
 
       {activeTab === 'templates' && (
@@ -1236,176 +1129,7 @@ const DietPlansPage: React.FC = () => {
         />
       )}
 
-      {/* Modal para recetas */}
-      <Modal
-        show={showRecipeModal}
-        onHide={() => {
-          setShowRecipeModal(false);
-          setSelectedRecipe(null);
-          setEditingRecipe(null);
-        }}
-        size="lg"
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {editingRecipe ? 'Editar Receta' : selectedRecipe ? 'Ver Receta' : 'Nueva Receta'}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {selectedRecipe && !editingRecipe ? (
-            // Vista de receta
-            <div>
-              <h5>{selectedRecipe.name}</h5>
-              <p className="text-muted">{selectedRecipe.category}</p>
-              
-              <div className="row mb-3">
-                <div className="col-4 text-center">
-                  <small className="text-muted">Tiempo Prep</small>
-                  <div className="fw-medium">{selectedRecipe.prep_time} min</div>
-                </div>
-                <div className="col-4 text-center">
-                  <small className="text-muted">Tiempo Cocción</small>
-                  <div className="fw-medium">{selectedRecipe.cook_time} min</div>
-                </div>
-                <div className="col-4 text-center">
-                  <small className="text-muted">Porciones</small>
-                  <div className="fw-medium">{selectedRecipe.servings}</div>
-                </div>
-              </div>
-
-              <h6>Ingredientes:</h6>
-              <ul>
-                {selectedRecipe.ingredients.map((ingredient, index) => (
-                  <li key={index}>{ingredient}</li>
-                ))}
-              </ul>
-
-              <h6>Instrucciones:</h6>
-              <ol>
-                {selectedRecipe.instructions.map((instruction, index) => (
-                  <li key={index}>{instruction}</li>
-                ))}
-              </ol>
-
-              <div className="mb-3">
-                {selectedRecipe.tags.map((tag, index) => (
-                  <span key={index} className="badge bg-light text-dark me-1">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : (
-            // Formulario de receta
-            <div>
-              <div className="mb-3">
-                <label className="form-label">Nombre de la receta *</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Ej: Ensalada de Quinoa"
-                  defaultValue={editingRecipe?.name || ''}
-                />
-              </div>
-              
-              <div className="mb-3">
-                <label className="form-label">Categoría</label>
-                <select className="form-select" defaultValue={editingRecipe?.category || ''}>
-                  <option value="">Seleccionar categoría...</option>
-                  <option value="Desayuno">Desayuno</option>
-                  <option value="Almuerzo">Almuerzo</option>
-                  <option value="Cena">Cena</option>
-                  <option value="Snack">Snack</option>
-                  <option value="Ensalada">Ensalada</option>
-                  <option value="Sopa">Sopa</option>
-                  <option value="Postre">Postre</option>
-                </select>
-              </div>
-
-              <div className="row mb-3">
-                <div className="col-4">
-                  <label className="form-label">Tiempo Prep (min)</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    defaultValue={editingRecipe?.prep_time || 15}
-                  />
-                </div>
-                <div className="col-4">
-                  <label className="form-label">Tiempo Cocción (min)</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    defaultValue={editingRecipe?.cook_time || 30}
-                  />
-                </div>
-                <div className="col-4">
-                  <label className="form-label">Porciones</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    defaultValue={editingRecipe?.servings || 4}
-                  />
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label">Calorías por porción</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  defaultValue={editingRecipe?.calories_per_serving || 300}
-                />
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label">Ingredientes (uno por línea)</label>
-                <textarea
-                  className="form-control"
-                  rows={4}
-                  placeholder="Ej:&#10;2 tazas de quinoa&#10;1 aguacate&#10;1 tomate"
-                  defaultValue={editingRecipe?.ingredients.join('\n') || ''}
-                />
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label">Instrucciones (una por línea)</label>
-                <textarea
-                  className="form-control"
-                  rows={4}
-                  placeholder="Ej:&#10;Cocinar quinoa según instrucciones del paquete&#10;Cortar vegetales en cubos&#10;Mezclar todos los ingredientes"
-                  defaultValue={editingRecipe?.instructions.join('\n') || ''}
-                />
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label">Etiquetas (separadas por comas)</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Ej: vegetariano, sin gluten, alto en proteína"
-                  defaultValue={editingRecipe?.tags.join(', ') || ''}
-                />
-              </div>
-            </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowRecipeModal(false)}>
-            Cerrar
-          </Button>
-          {!selectedRecipe && (
-            <Button variant="primary" onClick={() => {
-              // Implementar guardado de receta
-              console.log('Guardando receta...');
-              setShowRecipeModal(false);
-            }}>
-              {editingRecipe ? 'Actualizar' : 'Guardar'}
-            </Button>
-          )}
-        </Modal.Footer>
-      </Modal>
+      {/* Modal de recetas ahora manejado por RecipeLibrary */}
     </div>
   );
 };
