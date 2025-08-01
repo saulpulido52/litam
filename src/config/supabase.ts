@@ -40,12 +40,11 @@ export const supabaseAdmin = createClient(
 
 // Configuración de TypeORM para Supabase
 export const getSupabaseDataSource = () => {
-  return new AppDataSource({
+  return AppDataSource.setOptions({
     type: 'postgres',
     url: process.env.DATABASE_URL || process.env.SUPABASE_DB_URL,
     ssl: {
-      rejectUnauthorized: false,
-      require: true
+      rejectUnauthorized: false
     },
     extra: {
       max: 25,
