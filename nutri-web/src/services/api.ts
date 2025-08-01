@@ -14,13 +14,16 @@ class ApiService {
       headers: {
         'Content-Type': 'application/json'}});
 
+    // Initialize token from localStorage
+    this.initializeToken();
+
     // Request interceptor to add auth token
     this.api.interceptors.request.use(
       (config) => {
         // **SIEMPRE INTENTAR CARGAR TOKEN ANTES DE ENVIAR REQUEST**
         if (!this.token) {
           try {
-            this.loadToken();
+            this.initializeToken();
           } catch (error) {
             console.error('🔑 Error loading token in request interceptor:', error);
           }
@@ -132,22 +135,22 @@ class ApiService {
     }
   }
 
-  private loadToken(): void {
+  private initializeToken(): void {
     try {
       const storedToken = localStorage.getItem('access_token');
       if (storedToken && storedToken !== this.token) {
         this.token = storedToken;
-        console.log('🔑 ApiService loadToken: Token refreshed from localStorage:', this.token.substring(0, 20) + '...');
+        console.log('🔑 ApiService initializeToken: Token loaded from localStorage:', this.token.substring(0, 20) + '...');
       } else if (!storedToken && this.token) {
         this.token = null;
-        console.log('🔑 ApiService loadToken: Token cleared (not in localStorage)');
+        console.log('🔑 ApiService initializeToken: Token cleared (not in localStorage)');
       } else if (!storedToken) {
-        console.log('🔑 ApiService loadToken: No token found in localStorage');
+        console.log('🔑 ApiService initializeToken: No token found in localStorage');
       } else if (storedToken && this.token && storedToken === this.token) {
-        console.log('🔑 ApiService loadToken: Token already loaded and matches localStorage');
+        console.log('🔑 ApiService initializeToken: Token already loaded and matches localStorage');
       }
     } catch (error) {
-      console.error('🔑 Error loading token:', error);
+      console.error('🔑 Error initializing token:', error);
       this.token = null;
     }
   }
@@ -170,7 +173,7 @@ class ApiService {
   public forceTokenReload(): void {
     console.log('🔄 Force reloading token from localStorage...');
     try {
-      this.loadToken();
+      this.initializeToken();
     } catch (error) {
       console.error('🔑 Error force reloading token:', error);
     }
