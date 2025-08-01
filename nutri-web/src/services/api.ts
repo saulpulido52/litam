@@ -19,7 +19,11 @@ class ApiService {
       (config) => {
         // **SIEMPRE INTENTAR CARGAR TOKEN ANTES DE ENVIAR REQUEST**
         if (!this.token) {
-          this.loadToken();
+          try {
+            this.loadToken();
+          } catch (error) {
+            console.error('🔑 Error loading token in request interceptor:', error);
+          }
         }
         
         // **FORZAR RECARGA SI AÚN NO HAY TOKEN PERO EXISTE EN LOCALSTORAGE**
@@ -121,21 +125,30 @@ class ApiService {
     );
 
     // Load token from localStorage
-    this.loadToken();
+    try {
+      this.loadToken();
+    } catch (error) {
+      console.error('🔑 Error initializing token:', error);
+    }
   }
 
-  private loadToken() {
-    const storedToken = localStorage.getItem('access_token');
-    if (storedToken && storedToken !== this.token) {
-      this.token = storedToken;
-      console.log('🔑 ApiService loadToken: Token refreshed from localStorage:', this.token.substring(0, 20) + '...');
-    } else if (!storedToken && this.token) {
+  private loadToken(): void {
+    try {
+      const storedToken = localStorage.getItem('access_token');
+      if (storedToken && storedToken !== this.token) {
+        this.token = storedToken;
+        console.log('🔑 ApiService loadToken: Token refreshed from localStorage:', this.token.substring(0, 20) + '...');
+      } else if (!storedToken && this.token) {
+        this.token = null;
+        console.log('🔑 ApiService loadToken: Token cleared (not in localStorage)');
+      } else if (!storedToken) {
+        console.log('🔑 ApiService loadToken: No token found in localStorage');
+      } else if (storedToken && this.token && storedToken === this.token) {
+        console.log('🔑 ApiService loadToken: Token already loaded and matches localStorage');
+      }
+    } catch (error) {
+      console.error('🔑 Error loading token:', error);
       this.token = null;
-      console.log('🔑 ApiService loadToken: Token cleared (not in localStorage)');
-    } else if (!storedToken) {
-      console.log('🔑 ApiService loadToken: No token found in localStorage');
-    } else if (storedToken && this.token && storedToken === this.token) {
-      console.log('🔑 ApiService loadToken: Token already loaded and matches localStorage');
     }
   }
 
@@ -156,7 +169,11 @@ class ApiService {
 
   public forceTokenReload(): void {
     console.log('🔄 Force reloading token from localStorage...');
-    this.loadToken();
+    try {
+      this.loadToken();
+    } catch (error) {
+      console.error('🔑 Error force reloading token:', error);
+    }
   }
 
   public debugAuthState(): void {
