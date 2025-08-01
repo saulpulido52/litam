@@ -8,11 +8,18 @@ class ApiService {
   private requestQueue: Map<string, Promise<any>> = new Map();
 
   constructor() {
+    // Configurar la URL base para Supabase
+    const baseURL = import.meta.env.VITE_API_URL || 'https://zmetgcekjpxcboyrnhat.supabase.co/rest/v1';
+    
     this.api = axios.create({
-      baseURL: import.meta.env.VITE_API_URL || '/api',
+      baseURL,
       timeout: 10000,
       headers: {
-        'Content-Type': 'application/json'}});
+        'Content-Type': 'application/json',
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || ''}`
+      }
+    });
 
     // Initialize token from localStorage
     this.initializeToken();
@@ -20,7 +27,7 @@ class ApiService {
     // Request interceptor to add auth token
     this.api.interceptors.request.use(
       (config) => {
-        // **SIEMPRE INTENTAR CARGAR TOKEN ANTES DE ENVIAR REQUEST**
+        // Cargar token si no existe
         if (!this.token) {
           try {
             this.initializeToken();
@@ -29,32 +36,11 @@ class ApiService {
           }
         }
         
-        // **FORZAR RECARGA SI AÚN NO HAY TOKEN PERO EXISTE EN LOCALSTORAGE**
-        if (!this.token) {
-          const storageToken = localStorage.getItem('access_token');
-          if (storageToken) {
-            console.log('🔄 Token found in localStorage during request, force loading...');
-            this.token = storageToken;
-          }
-        }
-        
+        // Agregar token de autenticación si existe
         if (this.token) {
           config.headers.Authorization = `Bearer ${this.token}`;
-          // Log only critical requests for debugging (reduced logging)
-          if (config.url?.includes('/auth/') || config.url?.includes('/dashboard/stats')) {
-            console.log('🚀 Request with token:', config.method?.toUpperCase(), config.url, `Token: ${this.token.substring(0, 20)}...`);
-          }
-        } else {
-          // Log only requests to protected endpoints without token
-          if (config.url?.includes('/auth/') || config.url?.includes('/dashboard/') || config.url?.includes('/patients/') || config.url?.includes('/appointments/')) {
-            console.group('❌ Request without token:');
-            console.log('Method:', config.method?.toUpperCase());
-            console.log('URL:', config.url);
-            console.log('localStorage access_token:', localStorage.getItem('access_token') ? `EXISTS: ${localStorage.getItem('access_token')?.substring(0, 20)}...` : 'NOT FOUND');
-            console.log('ApiService token:', this.token || 'NULL');
-            console.groupEnd();
-          }
         }
+        
         return config;
       },
       (error) => {
@@ -66,73 +52,17 @@ class ApiService {
     this.api.interceptors.response.use(
       (response) => response,
       async (error) => {
-        const originalRequest = error.config;
+        console.error('🚨 API Error:', error.response?.status, error.config?.url);
         
-        // Solo loggear errores críticos o cuando sea necesario
-        if (error.response?.status === 401 || error.response?.status === 403) {
-          console.group('🚨 API Error Details');
-          console.log('Status:', error.response?.status);
-          console.log('URL:', error.config?.url);
-          console.log('Method:', error.config?.method?.toUpperCase());
-          console.log('Request Data:', error.config?.data);
-          console.log('Response Data:', error.response?.data);
-          console.log('Error Message:', error.message);
-          console.log('Authorization Header:', error.config?.headers?.Authorization ? 'PRESENT' : 'MISSING');
-          console.groupEnd();
-        } else if (error.response?.status === 500) {
-          console.log('🚨 Server error (500) on:', error.config?.url);
-        }
-        
-        // **RETRY AUTOMÁTICO PARA 401 CON TOKEN REFRESH**
-        if (error.response?.status === 401 && !originalRequest._retry) {
-          originalRequest._retry = true;
-          
-          console.log('🔄 401 detected, attempting token refresh...');
-          
-          try {
-            // Intentar refresh del token
-            const refreshResponse = await this.api.post('/auth/refresh-token');
-            
-            if (refreshResponse.data?.data?.token) {
-              const newToken = refreshResponse.data.data.token;
-              console.log('🔄 Token refreshed successfully');
-              this.setToken(newToken);
-              
-              // Retry con el nuevo token
-              originalRequest.headers.Authorization = `Bearer ${newToken}`;
-              return this.api(originalRequest);
-            }
-          } catch (refreshError) {
-            console.log('🚨 Token refresh failed:', refreshError);
-          }
-          
-          // Si llegamos aquí, el refresh falló
-          console.log('🚨 Token refresh failed, redirecting to login...');
+        // Manejar errores de autenticación
+        if (error.response?.status === 401) {
+          console.log('🔑 Unauthorized, clearing token...');
           this.clearToken();
-          if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
-          }
-        }
-        
-        // **MANEJO MEJORADO PARA ERRORES 500 Y OTROS**
-        if (error.response?.status === 500) {
-          console.log('🚨 Server error (500), checking token validity...');
-          // Verificar si el token existe pero el servidor está fallando
-          if (this.token) {
-            console.log('🔍 Token exists but server error, this might be a backend issue');
-          }
         }
         
         return Promise.reject(error);
       }
     );
-
-    // Load token from localStorage
-    try {
-      this.initializeToken();
-    } catch (error) {
-      console.error('🔑 Error initializing token:', error);
-    }
   }
 
   private initializeToken(): void {
@@ -140,14 +70,10 @@ class ApiService {
       const storedToken = localStorage.getItem('access_token');
       if (storedToken && storedToken !== this.token) {
         this.token = storedToken;
-        console.log('🔑 ApiService initializeToken: Token loaded from localStorage:', this.token.substring(0, 20) + '...');
+        console.log('🔑 Token loaded from localStorage');
       } else if (!storedToken && this.token) {
         this.token = null;
-        console.log('🔑 ApiService initializeToken: Token cleared (not in localStorage)');
-      } else if (!storedToken) {
-        console.log('🔑 ApiService initializeToken: No token found in localStorage');
-      } else if (storedToken && this.token && storedToken === this.token) {
-        console.log('🔑 ApiService initializeToken: Token already loaded and matches localStorage');
+        console.log('🔑 Token cleared (not in localStorage)');
       }
     } catch (error) {
       console.error('🔑 Error initializing token:', error);
@@ -158,12 +84,13 @@ class ApiService {
   public setToken(token: string) {
     this.token = token;
     localStorage.setItem('access_token', token);
-    console.log('🔑 ApiService setToken:', token ? `Token set: ${token.substring(0, 20)}...` : 'Token cleared');
+    console.log('🔑 Token set successfully');
   }
 
   public clearToken() {
     this.token = null;
     localStorage.removeItem('access_token');
+    console.log('🔑 Token cleared');
   }
 
   public getToken(): string | null {
@@ -171,7 +98,7 @@ class ApiService {
   }
 
   public forceTokenReload(): void {
-    console.log('🔄 Force reloading token from localStorage...');
+    console.log('🔄 Force reloading token...');
     try {
       this.initializeToken();
     } catch (error) {
@@ -180,10 +107,9 @@ class ApiService {
   }
 
   public debugAuthState(): void {
-    console.group('🔍 [API DEBUG] Authentication State:');
-    console.log('ApiService token:', this.token ? `${this.token.substring(0, 20)}...` : 'NO TOKEN');
-    console.log('localStorage access_token:', localStorage.getItem('access_token') ? `${localStorage.getItem('access_token')?.substring(0, 20)}...` : 'NO TOKEN');
-    console.log('localStorage user:', localStorage.getItem('user') ? 'EXISTS' : 'NO USER');
+    console.group('🔍 Authentication State:');
+    console.log('ApiService token:', this.token ? 'EXISTS' : 'NO TOKEN');
+    console.log('localStorage access_token:', localStorage.getItem('access_token') ? 'EXISTS' : 'NO TOKEN');
     console.groupEnd();
   }
 
@@ -191,13 +117,10 @@ class ApiService {
   async get<T>(url: string, params?: object): Promise<ApiResponse<T>> {
     const requestKey = `GET:${url}:${JSON.stringify(params || {})}`;
     
-    // Si ya hay una petición idéntica en progreso, esperarla
     if (this.requestQueue.has(requestKey)) {
-      console.log('🔄 Reusing existing request for:', requestKey);
       return this.requestQueue.get(requestKey)!;
     }
     
-    // Crear nueva petición
     const requestPromise = this.api.get(url, { params }).then(response => {
       this.requestQueue.delete(requestKey);
       return response.data;
@@ -237,7 +160,9 @@ class ApiService {
     
     const response: AxiosResponse<ApiResponse<T>> = await this.api.post(url, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'}});
+        'Content-Type': 'multipart/form-data'
+      }
+    });
     return response.data;
   }
 }
