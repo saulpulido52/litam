@@ -106,6 +106,12 @@ app.use(cors({
         console.log('CORS Debug - Origin:', origin);
         console.log('CORS Debug - Allowed:', allowedOrigins);
 
+        // Permitir cualquier despliegue de Vercel (Production & Previews)
+        if (origin && origin.endsWith('.vercel.app')) {
+            console.log('CORS Allowed (Vercel Domain)');
+            return callback(null, true);
+        }
+
         if (allowedOrigins.indexOf(origin) !== -1 || !process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
             callback(null, true);
         } else {
