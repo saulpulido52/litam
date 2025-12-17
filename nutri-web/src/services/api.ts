@@ -9,7 +9,7 @@ class ApiService {
 
   constructor() {
     this.api = axios.create({
-      baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000/api',
+      baseURL: import.meta.env.VITE_API_URL || 'https://litam.onrender.com/api',
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
@@ -80,13 +80,13 @@ class ApiService {
   // Generic API methods
   async get<T>(url: string, params?: object): Promise<ApiResponse<T>> {
     const requestKey = `GET:${url}:${JSON.stringify(params || {})}`;
-    
+
     // Si ya hay una petición idéntica en progreso, esperarla
     if (this.requestQueue.has(requestKey)) {
       console.log('🔄 Reusing existing request for:', requestKey);
       return this.requestQueue.get(requestKey)!;
     }
-    
+
     // Crear nueva petición
     const requestPromise = this.api.get(url, { params }).then(response => {
       this.requestQueue.delete(requestKey);
@@ -95,7 +95,7 @@ class ApiService {
       this.requestQueue.delete(requestKey);
       throw error;
     });
-    
+
     this.requestQueue.set(requestKey, requestPromise);
     return requestPromise;
   }
@@ -124,7 +124,7 @@ class ApiService {
   async uploadFile<T>(url: string, file: File, fieldName = 'file'): Promise<ApiResponse<T>> {
     const formData = new FormData();
     formData.append(fieldName, file);
-    
+
     const response: AxiosResponse<ApiResponse<T>> = await this.api.post(url, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
