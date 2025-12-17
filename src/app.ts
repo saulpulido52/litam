@@ -87,7 +87,7 @@ app.use(cors({
     origin: function (origin, callback) {
         // Permitir requests sin origin (mobile apps, postman, etc.)
         if (!origin) return callback(null, true);
-        
+
         // Lista de orígenes permitidos (expandir según necesidades)
         const allowedOrigins = [
             'http://localhost:5000',
@@ -96,9 +96,12 @@ app.use(cors({
             'http://127.0.0.1:5000',
             'http://127.0.0.1:5001', // Puerto alternativo para frontend
             'http://127.0.0.1:3000',
-            // Añadir dominios de producción aquí cuando sea necesario
+            // Añadir dominios de producción
+            process.env.CORS_ORIGIN,
+            'https://litam-saulpulido52s-projects.vercel.app', // Fallback posible
+            'https://litam.vercel.app'
         ];
-        
+
         if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
@@ -112,15 +115,15 @@ app.use(cors({
 }));
 
 // Middleware para parsing de JSON con límite de tamaño para múltiples usuarios
-app.use(express.json({ 
+app.use(express.json({
     limit: '10mb', // Límite de 10MB para archivos grandes (fotos de progreso, etc.)
     verify: (req: any, res, buf) => {
         // Verificación adicional si es necesario - almacenar raw body si es necesario
         req.rawBody = buf;
     }
 }));
-app.use(express.urlencoded({ 
-    extended: true, 
+app.use(express.urlencoded({
+    extended: true,
     limit: '10mb'
 }));
 
@@ -134,8 +137,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Endpoint de health check
 app.get('/api/health', (req: Request, res: Response) => {
-    res.status(200).json({ 
-        status: 'UP', 
+    res.status(200).json({
+        status: 'UP',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
         uptime: process.uptime()
@@ -186,7 +189,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     } else {
         // Log errores no controlados
         console.error('ERROR (No AppError):', err);
-        
+
         // En producción, no exponer detalles internos del error
         if (process.env.NODE_ENV === 'production') {
             message = 'Error interno del servidor';
