@@ -102,9 +102,13 @@ app.use(cors({
             'https://litam.vercel.app'
         ];
 
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        console.log('CORS Debug - Origin:', origin);
+        console.log('CORS Debug - Allowed:', allowedOrigins);
+
+        if (allowedOrigins.indexOf(origin) !== -1 || !process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
             callback(null, true);
         } else {
+            console.log('CORS Blocked!');
             callback(new Error('No permitido por CORS'));
         }
     },
