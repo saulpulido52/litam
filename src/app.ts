@@ -98,8 +98,9 @@ app.use(cors({
             'http://127.0.0.1:3000',
             // Añadir dominios de producción
             process.env.CORS_ORIGIN,
-            'https://litam-saulpulido52s-projects.vercel.app', // Fallback posible
-            'https://litam.vercel.app'
+            'https://litam-saulpulido52s-projects.vercel.app',
+            'https://litam.vercel.app',
+            'https://litam-git-main-saulpulido52s-projects.vercel.app'
         ];
 
         console.log('CORS Debug - Origin:', origin);
