@@ -21,7 +21,7 @@ const DashboardPage: React.FC = () => {
 
   const testBackendConnection = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/health');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/health`);
       if (response.ok) {
         alert('✅ Conexión con backend exitosa');
       } else {
@@ -124,8 +124,8 @@ const DashboardPage: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  <Button 
-                    variant="outline-primary" 
+                  <Button
+                    variant="outline-primary"
                     size="sm"
                     onClick={() => navigate('/profile')}
                   >
@@ -253,8 +253,8 @@ const DashboardPage: React.FC = () => {
                   <Card.Body>
                     <Row>
                       <Col md={3} className="mb-2">
-                        <Button 
-                          variant="primary" 
+                        <Button
+                          variant="primary"
                           className="w-100 nutri-btn"
                           onClick={() => navigate('/patients')}
                         >
@@ -262,8 +262,8 @@ const DashboardPage: React.FC = () => {
                         </Button>
                       </Col>
                       <Col md={3} className="mb-2">
-                        <Button 
-                          variant="info" 
+                        <Button
+                          variant="info"
                           className="w-100 nutri-btn"
                           onClick={() => navigate('/appointments')}
                         >
@@ -271,8 +271,8 @@ const DashboardPage: React.FC = () => {
                         </Button>
                       </Col>
                       <Col md={3} className="mb-2">
-                        <Button 
-                          variant="success" 
+                        <Button
+                          variant="success"
                           className="w-100 nutri-btn"
                           onClick={() => navigate('/diet-plans')}
                         >
@@ -280,8 +280,8 @@ const DashboardPage: React.FC = () => {
                         </Button>
                       </Col>
                       <Col md={3} className="mb-2">
-                        <Button 
-                          variant="warning" 
+                        <Button
+                          variant="warning"
                           className="w-100 nutri-btn"
                           onClick={() => navigate('/reports')}
                         >
@@ -291,8 +291,8 @@ const DashboardPage: React.FC = () => {
                     </Row>
                     <Row>
                       <Col md={4} className="mb-2">
-                        <Button 
-                          variant="outline-primary" 
+                        <Button
+                          variant="outline-primary"
                           className="w-100 nutri-btn"
                           onClick={() => navigate('/clinical-records')}
                         >
@@ -300,8 +300,8 @@ const DashboardPage: React.FC = () => {
                         </Button>
                       </Col>
                       <Col md={4} className="mb-2">
-                        <Button 
-                          variant="outline-success" 
+                        <Button
+                          variant="outline-success"
                           className="w-100 nutri-btn"
                           onClick={() => navigate('/progress')}
                         >
@@ -309,8 +309,8 @@ const DashboardPage: React.FC = () => {
                         </Button>
                       </Col>
                       <Col md={4} className="mb-2">
-                        <Button 
-                          variant="outline-info" 
+                        <Button
+                          variant="outline-info"
                           className="w-100 nutri-btn"
                           onClick={() => navigate('/messages')}
                         >

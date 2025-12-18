@@ -99,12 +99,12 @@ class PatientsService {
   // Transformar datos del backend al formato esperado por el frontend
   private transformBackendPatient(backendPatient: any): Patient {
     console.log('🔄 Transformando paciente del backend:', backendPatient);
-    
+
     // Si ya tiene la estructura correcta, devolverlo tal como está
     if (backendPatient.first_name && backendPatient.email && !backendPatient.user) {
       return backendPatient;
     }
-    
+
     // Si tiene la estructura con objeto "user", transformarlo
     if (backendPatient.user) {
       const transformed: Patient = {
@@ -134,11 +134,11 @@ class PatientsService {
           emergency_contact_phone: backendPatient.emergency_contact_phone
         }
       };
-      
+
       console.log('✅ Paciente transformado:', transformed);
       return transformed;
     }
-    
+
     // Fallback: devolver tal como está
     return backendPatient;
   }
@@ -148,12 +148,12 @@ class PatientsService {
     try {
       const response = await apiService.get<{ patients: any[] }>('/patients/my-patients');
       const rawPatients = response.data?.patients || [];
-      
+
       console.log('📥 Pacientes recibidos del backend:', rawPatients);
-      
+
       // Transformar cada paciente al formato correcto
       const transformedPatients = rawPatients.map(patient => this.transformBackendPatient(patient));
-      
+
       console.log('✅ Pacientes transformados:', transformedPatients);
       return transformedPatients;
     } catch (error) {
@@ -169,13 +169,13 @@ class PatientsService {
       if (!response.data?.patient) {
         throw new Error('Paciente no encontrado');
       }
-      
+
       // Transformar el paciente al formato correcto
       const transformedPatient = this.transformBackendPatient(response.data.patient);
       return transformedPatient;
     } catch (error: any) {
       console.error('Error fetching patient:', error);
-      
+
       // Preservar el código de estado del error para mejor manejo
       if (error.response?.status === 404) {
         const error404 = new Error('Paciente no encontrado - 404');
@@ -186,7 +186,7 @@ class PatientsService {
         (error403 as any).status = 403;
         throw error403;
       }
-      
+
       throw new Error('Error al obtener la información del paciente');
     }
   }
@@ -196,17 +196,17 @@ class PatientsService {
     try {
       console.log('🔍 SERVICIO - Verificando email:', email);
       const response = await apiService.get<any>(`/patients/check-email?email=${encodeURIComponent(email)}`);
-      
+
       console.log('📡 SERVICIO - Respuesta completa:', response);
       console.log('📊 SERVICIO - Response keys:', Object.keys(response));
       console.log('📊 SERVICIO - Status:', response.status);
       console.log('📊 SERVICIO - Data:', response.data);
       console.log('📊 SERVICIO - Data keys:', response.data ? Object.keys(response.data) : 'NO DATA');
       console.log('📊 SERVICIO - Data stringified:', JSON.stringify(response.data, null, 2));
-      
+
       // Intentar diferentes estructuras de respuesta posibles
       let exists = false;
-      
+
       if (response.data?.data?.exists !== undefined) {
         exists = response.data.data.exists;
         console.log('✅ SERVICIO - Usando response.data.data.exists:', exists);
@@ -226,7 +226,7 @@ class PatientsService {
             break;
           }
         }
-        
+
         if (!exists && !possibleFields.some(field => response.data[field] !== undefined)) {
           console.log('❌ SERVICIO - No se encontró campo exists en ninguna estructura');
           // Si hay datos en la respuesta, asumimos que el email existe
@@ -237,7 +237,7 @@ class PatientsService {
         console.log('❌ SERVICIO - Estructura de respuesta no reconocida');
         exists = false;
       }
-      
+
       console.log('🎯 SERVICIO - Resultado final:', exists, typeof exists);
       return Boolean(exists);
     } catch (error: any) {
@@ -245,13 +245,13 @@ class PatientsService {
       console.warn('❌ SERVICIO - Error response:', error.response);
       console.warn('❌ SERVICIO - Error response data:', error.response?.data);
       console.warn('❌ SERVICIO - Error status:', error.response?.status);
-      
+
       // Si hay error 409 o similar, puede indicar que el email ya existe
       if (error.response?.status === 409) {
         console.log('✅ SERVICIO - Error 409 indica email duplicado, devolviendo true');
         return true;
       }
-      
+
       return false;
     }
   }
@@ -261,13 +261,13 @@ class PatientsService {
     try {
       // Remover el password ya que el backend genera uno automáticamente
       const { password, ...dataToSend } = patientData;
-      
+
       console.log('🔄 Enviando datos al backend:', dataToSend);
-      
-      const response = await apiService.post<{ 
-        success: boolean; 
-        message: string; 
-        data?: { 
+
+      const response = await apiService.post<{
+        success: boolean;
+        message: string;
+        data?: {
           patient: Patient;
           temporary_credentials: {
             email: string;
@@ -285,14 +285,14 @@ class PatientsService {
           instructions: string;
         };
       }>('/patients/register-by-nutritionist', dataToSend);
-      
+
       console.log('✅ Respuesta del backend:', response);
       console.log('📄 Estructura de datos recibida:', response.data);
-      
+
       // Manejar ambas estructuras posibles
       let responsePatient: Patient;
       let credentialsData: any;
-      
+
       if (response.data?.data?.patient) {
         // Estructura: { data: { patient: {...}, temporary_credentials: {...} } }
         responsePatient = response.data.data.patient;
@@ -313,16 +313,16 @@ class PatientsService {
         });
         throw new Error(`Error en la respuesta del servidor. Estructura recibida: ${JSON.stringify(response.data)}`);
       }
-      
+
       // Transformar el paciente al formato correcto del frontend
       const transformedPatient = this.transformBackendPatient(responsePatient);
-      
+
       // Añadir las credenciales temporales al objeto patient para poder mostrarlas
       const patientWithCredentials = {
         ...transformedPatient,
         temporaryCredentials: credentialsData
       };
-      
+
       console.log('✅ Paciente creado y transformado exitosamente:', patientWithCredentials);
       return patientWithCredentials;
     } catch (error: any) {
@@ -330,12 +330,12 @@ class PatientsService {
       console.error('❌ Error response:', error.response);
       console.error('❌ Error response data:', error.response?.data);
       console.error('❌ Error status:', error.response?.status);
-      
+
       // Si es un error de Axios pero no hay response, puede ser un error de red
       if (error.code === 'NETWORK_ERROR' || !error.response) {
         throw new Error('Error de conexión. Verifique que el servidor esté funcionando.');
       }
-      
+
       // Manejo específico de errores comunes
       if (error.response?.status === 409) {
         throw new Error('Ya existe un paciente registrado con este email. Por favor, use un email diferente.');
@@ -353,12 +353,12 @@ class PatientsService {
       } else if (error.response?.status === 500) {
         throw new Error('Error interno del servidor. Intente nuevamente en unos momentos.');
       }
-      
+
       // Error detallado para debugging
       const statusCode = error.response?.status || 'Sin código';
       const serverMessage = error.response?.data?.message || error.message || 'Error desconocido';
       const errorDetails = error.response?.data || error;
-      
+
       throw new Error(
         `Error ${statusCode}: ${serverMessage}. ` +
         `Detalles: ${JSON.stringify(errorDetails, null, 2)}`
@@ -373,7 +373,7 @@ class PatientsService {
       console.log('🔄 FRONTEND - Patient ID:', patientId);
       console.log('🔄 FRONTEND - Datos de actualización:', JSON.stringify(patientData, null, 2));
       console.log('🔄 FRONTEND - Token disponible:', !!apiService.getToken());
-      
+
       // 🎯 NUEVO: Usar email como identificador si está disponible (más robusto)
       let response;
       if (patientData.email) {
@@ -383,7 +383,7 @@ class PatientsService {
         console.log('🆔 FRONTEND - Usando endpoint por ID (fallback):', patientId);
         response = await apiService.put<{ patient: Patient }>(`/patients/${patientId}`, patientData);
       }
-      
+
       console.log('✅ FRONTEND - Respuesta exitosa:', response);
       if (!response.data?.patient) {
         throw new Error('Error al actualizar el paciente');
@@ -395,7 +395,7 @@ class PatientsService {
       console.error('❌ FRONTEND - Error response data:', error.response?.data);
       console.error('❌ FRONTEND - Error status:', error.response?.status);
       console.error('❌ FRONTEND - Error message:', error.message);
-      
+
       // Si es error 403 o 404, puede ser que el paciente no existe o no tenemos acceso
       if (error.response?.status === 403 || error.response?.status === 404) {
         console.warn('⚠️ Paciente no encontrado o sin acceso. Limpiando datos desactualizados...');
@@ -407,7 +407,7 @@ class PatientsService {
         console.error('🚨 ERROR SIN RECARGA AUTOMÁTICA - Status:', error.response?.status, 'Data:', error.response?.data);
         throw new Error(`Error ${error.response?.status}: ${error.response?.data?.message || 'Datos desactualizados detectados'}`);
       }
-      
+
       const message = error.response?.data?.message || 'Error al actualizar el paciente';
       throw new Error(message);
     }
@@ -418,10 +418,10 @@ class PatientsService {
     try {
       console.log('🗑️ Removing patient from list:', patientId);
       console.log('🔍 patientId type:', typeof patientId, 'value:', patientId);
-      
+
       const token = localStorage.getItem('access_token'); // 🔧 FIX: Use correct token key
       console.log('🔍 Token for removal:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');
-      
+
       // 🔧 EXTENDED DEBUG: Log more token details
       if (token) {
         console.log('🔍 Full token length:', token.length);
@@ -431,8 +431,8 @@ class PatientsService {
         console.log('🔍 Token contains newlines:', token.includes('\n') ? 'YES' : 'NO');
         console.log('🔍 Token full value:', token); // TEMPORARY: Log full token for debugging
       }
-      
-      const response = await fetch(`http://localhost:4000/api/patients/${patientId}/relationship`, {
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/patients/${patientId}/relationship`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -443,7 +443,7 @@ class PatientsService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
-        
+
         // 🎯 Handle specific cases for better user experience
         if (response.status === 404) {
           if (errorData.message?.includes('relación activa') || errorData.message?.includes('Paciente no encontrado')) {
@@ -454,7 +454,7 @@ class PatientsService {
             throw new Error('Este paciente ya no está en tu lista. La página se actualizará automáticamente.');
           }
         }
-        
+
         throw new Error(errorData.message || 'Error al remover el paciente de tu lista');
       }
 
@@ -537,7 +537,7 @@ class PatientsService {
           thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
           return createdDate > thirtyDaysAgo;
         }).length,
-        withConditions: patients.filter(p => 
+        withConditions: patients.filter(p =>
           p.profile?.medical_conditions && p.profile.medical_conditions.length > 0
         ).length
       };
@@ -600,11 +600,11 @@ class PatientsService {
         newNutritionistId,
         reason,
       });
-      
+
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error al solicitar cambio de nutriólogo');
       }
-      
+
       return response.data;
     } catch (error: any) {
       console.error('Error requesting nutritionist change:', error);
@@ -639,11 +639,11 @@ class PatientsService {
       }>(`/patients/${patientId}/account`, {
         confirmPassword,
       });
-      
+
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error al eliminar la cuenta');
       }
-      
+
       return response.data;
     } catch (error: any) {
       console.error('Error deleting patient account:', error);
@@ -670,11 +670,11 @@ class PatientsService {
           email: string;
         };
       }>('/patients/my-profile');
-      
+
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error al obtener el perfil');
       }
-      
+
       return response.data;
     } catch (error: any) {
       console.error('Error fetching my profile:', error);
@@ -703,7 +703,7 @@ class PatientsService {
           rating?: number;
         }[];
       }>('/nutritionists');
-      
+
       return response.data?.nutritionists || [];
     } catch (error: any) {
       console.error('Error fetching available nutritionists:', error);
@@ -717,7 +717,7 @@ class PatientsService {
       const response = await apiService.post<{ valid: boolean }>('/auth/validate-password', {
         password,
       });
-      
+
       return response.data?.valid || false;
     } catch (error: any) {
       console.error('Error validating password:', error);
@@ -745,7 +745,7 @@ class PatientsService {
           reason?: string;
         }[];
       }>(`/patients/${patientId}/nutritionist-history`);
-      
+
       return response.data?.history || [];
     } catch (error: any) {
       console.error('Error fetching nutritionist history:', error);

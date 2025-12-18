@@ -23,7 +23,7 @@ const HomePage: React.FC = () => {
 
     try {
       // Intentar hacer una llamada simple al backend
-      const response = await fetch('http://localhost:4000/api/health', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/health`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -98,8 +98,8 @@ const HomePage: React.FC = () => {
                   )}
                 </div>
               </div>
-              <Button 
-                variant="outline-secondary" 
+              <Button
+                variant="outline-secondary"
                 size="sm"
                 onClick={checkServerConnection}
                 disabled={serverStatus.status === 'checking'}
@@ -126,7 +126,7 @@ const HomePage: React.FC = () => {
                   Panel Profesional Nutri
                 </h2>
                 <p className="text-muted fs-5 mb-4">
-                  Plataforma web profesional para nutriólogos y administradores. 
+                  Plataforma web profesional para nutriólogos y administradores.
                   Gestión avanzada de pacientes, citas, planes nutricionales y reportes del sistema.
                 </p>
 
@@ -148,7 +148,7 @@ const HomePage: React.FC = () => {
                     </div>
                   </Col>
                 </Row>
-                
+
                 <div className="alert alert-info border-info">
                   <h6 className="mb-2">📱 <strong>Aplicaciones Móviles Disponibles:</strong></h6>
                   <p className="mb-1">🩺 <strong>App Nutriólogos:</strong> iOS y Android para atención móvil</p>
@@ -157,37 +157,37 @@ const HomePage: React.FC = () => {
 
                 <div className="d-grid gap-2 d-md-flex justify-content-md-center">
                   <Link to="/login">
-                    <Button 
-                      variant="primary" 
-                      size="lg" 
+                    <Button
+                      variant="primary"
+                      size="lg"
                       className="nutri-btn me-md-2"
                     >
                       🔐 Iniciar Sesión
                     </Button>
                   </Link>
                   <Link to="/dashboard">
-                    <Button 
-                      variant="outline-success" 
-                      size="lg" 
+                    <Button
+                      variant="outline-success"
+                      size="lg"
                       className="nutri-btn me-md-2"
                     >
                       👨‍⚕️ Panel Nutriólogo
                     </Button>
                   </Link>
                   <Link to="/admin">
-                    <Button 
-                      variant="outline-warning" 
-                      size="lg" 
+                    <Button
+                      variant="outline-warning"
+                      size="lg"
                       className="nutri-btn me-md-2"
                     >
                       ⚙️ Panel Admin
                     </Button>
                   </Link>
-                  <Button 
-                    variant="outline-secondary" 
-                    size="lg" 
+                  <Button
+                    variant="outline-secondary"
+                    size="lg"
                     className="nutri-btn"
-                    onClick={() => window.open('http://localhost:4000/api', '_blank')}
+                    onClick={() => window.open(`${import.meta.env.VITE_API_URL}`, '_blank')}
                   >
                     🔧 Ver API
                   </Button>

@@ -36,7 +36,7 @@ const LoginPage: React.FC = () => {
 
     try {
       // Verificar que el backend esté funcionando
-      const healthResponse = await fetch('http://localhost:4000/api/health', {
+      const healthResponse = await fetch(`${import.meta.env.VITE_API_URL}/health`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -61,7 +61,7 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!loginState.email || !loginState.password) {
       setLoginState(prev => ({
         ...prev,
@@ -87,7 +87,7 @@ const LoginPage: React.FC = () => {
           ...prev,
           success: `✅ Login exitoso! Redirigiendo...`
         }));
-        
+
         // Redirigir al dashboard después del login exitoso
         setTimeout(() => {
           console.log('🔐 LoginPage: Redirecting to dashboard...');
