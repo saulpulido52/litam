@@ -22,7 +22,7 @@ export default defineConfig({
     },
   },
   define: {
-    'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || 'http://localhost:4000/api'),
+    // 'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || 'http://localhost:4000/api'),
     'import.meta.env.VITE_APP_NAME': JSON.stringify('NutriWeb - Dashboard Nutriólogo'),
     'import.meta.env.VITE_APP_VERSION': JSON.stringify('1.0.0'),
   },
