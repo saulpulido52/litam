@@ -124,17 +124,17 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
-    
+
     // Headers para compatibilidad con navegadores y CDN
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-User-ID, X-Platform, X-Device-ID');
-    
+
     // **CONFIGURACIÓN DE CACHE INTELIGENTE PARA MILES DE USUARIOS**
     const userAgent = req.get('User-Agent') || '';
     const path = req.path;
     const method = req.method;
-    
+
     // **CACHE AGRESIVO PARA RECURSOS ESTÁTICOS**
     if (path.includes('/assets/') || path.includes('/images/') || path.includes('/css/') || path.includes('/js/')) {
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1 año
@@ -164,12 +164,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     else {
         res.setHeader('Cache-Control', 'private, max-age=180'); // 3 minutos por defecto
     }
-    
+
     // **HEADERS ESPECÍFICOS PARA MÓVILES**
     if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iOS')) {
         res.setHeader('X-Mobile-Optimized', 'true');
         res.setHeader('X-Compression', 'gzip, br'); // Compresión preferida para móviles
-        
+
         // Cache más agresivo para móviles (redes lentas)
         if (method === 'GET' && !path.includes('/api/auth/')) {
             const currentCache = res.getHeader('Cache-Control') as string;
@@ -183,14 +183,14 @@ app.use((req: Request, res: Response, next: NextFunction) => {
             }
         }
     }
-    
+
     // **HEADERS PARA CDN (Cloudflare, etc.)**
     if (process.env.NODE_ENV === 'production') {
         res.setHeader('CF-Cache-Status', 'DYNAMIC'); // Cloudflare
         res.setHeader('X-Served-By', 'nutri-backend');
         res.setHeader('X-Cache-Tags', `path:${path.split('/')[2] || 'general'}`);
     }
-    
+
     next();
 });
 
@@ -278,7 +278,7 @@ function getRealIP(req: Request): string {
                   req.ip ||
                   req.connection.remoteAddress ||
                   'unknown';
-    
+
     return Array.isArray(realIp) ? realIp[0] : realIp.split(',')[0].trim();
 }
 
@@ -289,7 +289,7 @@ function skipHealthChecks(req: Request): boolean {
             return true;
         }
     }
-    
+
     // Rutas que no necesitan rate limiting
     const skipPaths = [
         '/api/health',
@@ -297,7 +297,7 @@ function skipHealthChecks(req: Request): boolean {
         '/api/status',
         '/metrics'
     ];
-    
+
     return skipPaths.includes(req.path);
 }
 
@@ -306,18 +306,18 @@ const intelligentRateLimit = (req: Request, res: Response, next: NextFunction) =
     const userAgent = req.get('User-Agent') || '';
     const userType = req.headers['x-user-type'] as string;
     const path = req.path;
-    
+
     // Determinar qué limiter usar
     if (userType === 'nutritionist' || path.includes('/admin/') || path.includes('/dashboard/')) {
         return nutritionistLimiter(req, res, next);
     }
-    
+
     // Detectar clientes móviles
-    if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iOS') || 
+    if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iOS') ||
         req.headers['x-platform'] === 'mobile') {
         return patientMobileLimiter(req, res, next);
     }
-    
+
     // Fallback a general limiter
     return generalLimiter(req, res, next);
 };
@@ -331,7 +331,7 @@ const authLimiter = rateLimit({
         code: 'AUTH_RATE_LIMIT_EXCEEDED'
     },
     skipSuccessfulRequests: true,
-    
+
     // **MISMA CONFIGURACIÓN DE IP QUE GENERAL LIMITER**
     keyGenerator: (req: Request) => {
         const realIp = req.headers['x-real-ip'] as string ||
@@ -341,7 +341,7 @@ const authLimiter = rateLimit({
                       'unknown';
         return Array.isArray(realIp) ? realIp[0] : realIp.split(',')[0].trim();
     },
-    
+
     skip: (req: Request) => {
         if (process.env.NODE_ENV !== 'production') {
             const ip = req.ip || req.connection.remoteAddress || '';
@@ -349,7 +349,7 @@ const authLimiter = rateLimit({
         }
         return false;
     },
-    
+
     handler: (req: Request, res: Response) => {
         const retryAfter = process.env.NODE_ENV === 'production' ? 15 * 60 : 5 * 60;
         res.status(429).json({
@@ -387,11 +387,9 @@ app.use(cors({
             'http://127.0.0.1:5000',
             'http://127.0.0.1:5001', // Puerto alternativo para frontend
             'http://127.0.0.1:3000',
-            // Añadir dominios de producción
-            process.env.CORS_ORIGIN,
-            'https://litam-saulpulido52s-projects.vercel.app',
-            'https://litam.vercel.app',
-            'https://litam-git-main-saulpulido52s-projects.vercel.app'
+            // Añadir dominios de producción desde .env
+            ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : []),
+            ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : []),
         ];
 
         console.log('CORS Debug - Origin:', origin);
@@ -419,7 +417,7 @@ app.use(cors({
 // Middleware para parsing de JSON con límite de tamaño para múltiples usuarios
 app.use(express.json({
 =======
-        
+
         // **CONFIGURACIÓN FLEXIBLE PARA DESARROLLO Y PRODUCCIÓN**
         const allowedOrigins = [
             // Desarrollo local
@@ -429,38 +427,38 @@ app.use(express.json({
             'http://127.0.0.1:5000',
             'http://127.0.0.1:5001',
             'http://127.0.0.1:3000',
-            
+
             // **DOMINIOS DE PRODUCCIÓN**
             // Agregar tu dominio de Vercel aquí
             ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : []),
-            
+
             // Dominios de Vercel (patrones automáticos)
             ...(process.env.VERCEL_URL ? [
                 `https://${process.env.VERCEL_URL}`,
                 `https://${process.env.VERCEL_URL.replace('https://', '')}`
             ] : [])
         ];
-        
+
         // **VERIFICACIÓN FLEXIBLE PARA VERCEL**
         const isAllowed = allowedOrigins.some(allowedOrigin => {
             // Exact match
             if (origin === allowedOrigin) return true;
-            
+
             // Vercel preview URLs (nutri-*.vercel.app)
-            if (process.env.NODE_ENV !== 'development' && 
+            if (process.env.NODE_ENV !== 'development' &&
                 origin.match(/https:\/\/nutri-[a-z0-9-]+\.vercel\.app$/)) {
                 return true;
             }
-            
+
             // Custom domain patterns
-            if (process.env.FRONTEND_DOMAIN && 
+            if (process.env.FRONTEND_DOMAIN &&
                 origin.includes(process.env.FRONTEND_DOMAIN)) {
                 return true;
             }
-            
+
             return false;
         });
-        
+
         if (isAllowed) {
             callback(null, true);
         } else {
@@ -473,14 +471,14 @@ app.use(express.json({
             }
         }
     },
-    
+
     // **CONFIGURACIONES OPTIMIZADAS PARA VERCEL**
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
     allowedHeaders: [
-        'Content-Type', 
-        'Authorization', 
-        'X-Requested-With', 
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
         'X-User-ID',
         'X-Vercel-Forwarded-For', // Headers específicos de Vercel
         'X-Real-IP',
@@ -495,7 +493,7 @@ app.use(express.json({
 }));
 
 // Middleware para parsing de JSON con límite de tamaño para múltiples usuarios
-app.use(express.json({ 
+app.use(express.json({
 >>>>>>> nutri/main
     limit: '10mb', // Límite de 10MB para archivos grandes (fotos de progreso, etc.)
     verify: (req: any, res, buf) => {
@@ -525,8 +523,8 @@ app.get('/api/health', (req: Request, res: Response) => {
         environment: process.env.NODE_ENV || 'development',
         uptime: process.uptime()
 =======
-app.use(express.urlencoded({ 
-    extended: true, 
+app.use(express.urlencoded({
+    extended: true,
     limit: '10mb'
 }));
 
@@ -535,14 +533,14 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     const timestamp = new Date().toISOString();
     const userAgent = req.get('User-Agent') || 'Unknown';
     const ip = req.ip || req.connection.remoteAddress || 'Unknown';
-    
+
     // Log básico al inicio - el userId se mostrará en logs específicos después de auth
     console.log(`[${timestamp}] ${req.method} ${req.path} - IP: ${ip} - UA: ${userAgent.substring(0, 100)}`);
-    
+
     // Agregar información de accesibilidad al request
     req.headers['x-request-timestamp'] = timestamp;
     req.headers['x-client-ip'] = ip;
-    
+
     next();
 });
 
@@ -565,8 +563,8 @@ app.use('/uploads', express.static('uploads', {
 
 // Endpoint de health check mejorado
 app.get('/api/health', (req: Request, res: Response) => {
-    res.status(200).json({ 
-        status: 'UP', 
+    res.status(200).json({
+        status: 'UP',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
         uptime: process.uptime(),
@@ -675,7 +673,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     const timestamp = new Date().toISOString();
     const userId = (req as any).user?.id || 'anonymous';
     const ip = req.ip || req.connection.remoteAddress || 'Unknown';
-    
+
     console.error(`[${timestamp}] ERROR - User: ${userId} - IP: ${ip} - ${err.message}`);
 >>>>>>> nutri/main
 
@@ -708,7 +706,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     } else {
         // Log errores no controlados
         console.error('ERROR (No AppError):', err);
-        
+
         // En producción, no exponer detalles internos del error
         if (process.env.NODE_ENV === 'production') {
             message = 'Error interno del servidor';
