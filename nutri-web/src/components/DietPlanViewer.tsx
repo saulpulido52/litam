@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
+<<<<<<< HEAD
 import { Calendar, Clock, Target, FileText, Download, Edit, X, Settings, RotateCcw, Shield, AlertTriangle, Heart } from 'lucide-react';
+=======
+import { Clock, Target, Download, Edit, X, Settings, RotateCcw, Shield, FileText, Heart, AlertTriangle} from 'lucide-react';
+>>>>>>> nutri/main
 import type { DietPlan } from '../types/diet';
 
 interface DietPlanViewerProps {
@@ -15,7 +19,11 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
   onDownload,
   onClose
 }) => {
+<<<<<<< HEAD
   const [activeTab, setActiveTab] = useState<'overview' | 'meals' | 'nutrition' | 'schedule' | 'restrictions'>('overview');
+=======
+  const [activeTab, setActiveTab] = useState<'overview' | 'nutrition' | 'schedule' | 'restrictions'>('overview');
+>>>>>>> nutri/main
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
@@ -70,6 +78,40 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
     }
   };
 
+<<<<<<< HEAD
+=======
+  // Calcular total de comidas planificadas
+  const getTotalMealsCount = () => {
+    if (!plan.weekly_plans) return 0;
+    return plan.weekly_plans.reduce((total, week) => {
+      return total + (week.meals?.length || 0);
+    }, 0);
+  };
+
+  // Calcular total de calorías planificadas
+  const getTotalCaloriesPlanned = () => {
+    if (!plan.weekly_plans) return 0;
+    return plan.weekly_plans.reduce((total, week) => {
+      const weekCalories = week.meals?.reduce((weekTotal, meal) => {
+        return weekTotal + (meal.total_calories || 0);
+      }, 0) || 0;
+      return total + weekCalories;
+    }, 0);
+  };
+
+  // Utilidad para obtener un campo desde el nivel superior o desde dietPlan
+  function getPlanField(plan: any, field: string) {
+    if (plan[field] !== undefined) return plan[field];
+    if (plan.dietPlan && plan.dietPlan[field] !== undefined) return plan.dietPlan[field];
+    return undefined;
+  }
+
+  // Utilidad para obtener los horarios de comidas
+  function getMealSchedules(plan: any) {
+    return getPlanField(plan, 'mealSchedules') || getPlanField(plan, 'meal_schedules') || getPlanField(plan, 'meal_timing') || null;
+  }
+
+>>>>>>> nutri/main
   const renderOverview = () => (
     <div className="row">
       <div className="col-md-6">
@@ -121,6 +163,30 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
           <strong>Grasas:</strong> {plan.target_fats ? `${plan.target_fats}g` : 'N/A'}
         </div>
         
+<<<<<<< HEAD
+=======
+        {/* Información de comidas planificadas */}
+        {plan.weekly_plans && plan.weekly_plans.length > 0 && (
+          <div className="mt-4">
+            <h6 className="mb-2">🍽️ Comidas Planificadas</h6>
+            <div className="row">
+              <div className="col-6">
+                <div className="text-center p-2 bg-light rounded">
+                  <div className="fw-bold text-primary">{getTotalMealsCount()}</div>
+                  <small className="text-muted">Comidas</small>
+                </div>
+              </div>
+              <div className="col-6">
+                <div className="text-center p-2 bg-light rounded">
+                  <div className="fw-bold text-success">{getTotalCaloriesPlanned()} kcal</div>
+                  <small className="text-muted">Total</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+>>>>>>> nutri/main
         {plan.notes && (
           <div className="mt-4">
             <h6 className="mb-2">Notas:</h6>
@@ -279,15 +345,32 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
     </div>
   );
 
+<<<<<<< HEAD
   const renderWeeklyMeals = () => {
     if (!plan.weekly_plans || plan.weekly_plans.length === 0) {
       return (
         <div className="text-center py-4">
           <p className="text-muted">No hay planes semanales configurados para este plan</p>
+=======
+  const renderDetailedSchedule = () => {
+    // Usar la utilidad para obtener los datos de horarios
+    const scheduleData = getMealSchedules(plan);
+    if (!scheduleData) {
+      return (
+        <div className="text-center py-4">
+          <div className="alert alert-info">
+            <h6>⏰ Horarios de Comidas</h6>
+            <p className="mb-3">No hay horarios configurados para este plan nutricional.</p>
+            <p className="text-muted small">
+              Los horarios se pueden configurar en la pestaña "Horarios" del editor del plan.
+            </p>
+          </div>
+>>>>>>> nutri/main
         </div>
       );
     }
 
+<<<<<<< HEAD
     return plan.weekly_plans.map((weekPlan, weekIndex) => (
       <div key={weekIndex} className="card mb-3">
         <div className="card-header">
@@ -465,6 +548,150 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
         </div>
       </div>
     ));
+=======
+    return (
+      <div className="row">
+        {/* Horarios básicos */}
+        <div className="col-md-6">
+          <div className="card mb-4">
+            <div className="card-header">
+              <h6 className="mb-0">
+                <Clock size={16} className="me-2" />
+                Rutina Diaria
+              </h6>
+            </div>
+            <div className="card-body">
+              <div className="row mb-3">
+                <div className="col-6">
+                  <label className="form-label small">Hora de Despertar</label>
+                  <div className="fw-bold text-primary">{scheduleData.wakeUpTime || 'N/A'}</div>
+                </div>
+                <div className="col-6">
+                  <label className="form-label small">Hora de Dormir</label>
+                  <div className="fw-bold text-primary">{scheduleData.bedTime || 'N/A'}</div>
+                </div>
+              </div>
+              
+              {scheduleData.exerciseTime && (
+                <div className="row mb-3">
+                  <div className="col-6">
+                    <label className="form-label small">Hora de Ejercicio</label>
+                    <div className="fw-bold text-success">{scheduleData.exerciseTime}</div>
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label small">Duración</label>
+                    <div className="fw-bold text-success">{scheduleData.exerciseDuration || 0} min</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Horarios de comidas detallados */}
+        <div className="col-md-6">
+          <div className="card mb-4">
+            <div className="card-header">
+              <h6 className="mb-0">
+                <Settings size={16} className="me-2" />
+                Horarios de Comidas
+              </h6>
+            </div>
+            <div className="card-body">
+              {scheduleData.mealsSchedule ? (
+                // Formato nuevo (mealSchedules)
+                <div className="d-flex flex-column gap-3">
+                  {scheduleData.mealsSchedule.map((meal: any, index: number) => (
+                    <div key={index} className="border rounded p-3">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <div className="d-flex align-items-center">
+                          <span className="me-2" style={{ fontSize: '20px' }}>{meal.icon}</span>
+                          <div>
+                            <div className="fw-bold">{meal.mealName}</div>
+                            <div className={`badge ${meal.isFlexible ? 'bg-warning' : 'bg-success'} small`}>
+                              {meal.isFlexible ? 'Flexible' : 'Fijo'}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-end">
+                          <div className="fw-bold">{meal.scheduledTime}</div>
+                          <small className="text-muted">{meal.duration} min</small>
+                        </div>
+                      </div>
+                      <div className="row">
+                        <div className="col-6">
+                          <small className="text-muted">Calorías:</small>
+                          <div className="fw-medium">{meal.calories} kcal</div>
+                        </div>
+                        <div className="col-6">
+                          <small className="text-muted">Notas:</small>
+                          <div className="fw-medium">{meal.notes || 'Sin notas'}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                // Formato antiguo (meal_timing)
+                <div className="d-flex flex-column gap-2">
+                  <div className="d-flex justify-content-between">
+                    <span>Desayuno</span>
+                    <span className="fw-medium">{scheduleData.breakfast || 'N/A'}</span>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span>Almuerzo</span>
+                    <span className="fw-medium">{scheduleData.lunch || 'N/A'}</span>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span>Cena</span>
+                    <span className="fw-medium">{scheduleData.dinner || 'N/A'}</span>
+                  </div>
+                  {scheduleData.morning_snack && (
+                    <div className="d-flex justify-content-between">
+                      <span>Merienda Mañana</span>
+                      <span className="fw-medium">{scheduleData.morning_snack}</span>
+                    </div>
+                  )}
+                  {scheduleData.afternoon_snack && (
+                    <div className="d-flex justify-content-between">
+                      <span>Merienda Tarde</span>
+                      <span className="fw-medium">{scheduleData.afternoon_snack}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Recordatorios de hidratación */}
+        {scheduleData.waterReminders && scheduleData.waterReminders.length > 0 && (
+          <div className="col-12">
+            <div className="card">
+              <div className="card-header">
+                <h6 className="mb-0">
+                  <Heart size={16} className="me-2" />
+                  Recordatorios de Hidratación
+                </h6>
+              </div>
+              <div className="card-body">
+                <div className="row">
+                  {scheduleData.waterReminders.map((time: string, index: number) => (
+                    <div key={index} className="col-md-3 mb-2">
+                      <div className="text-center p-2 bg-light rounded">
+                        <div className="fw-bold text-primary">💧</div>
+                        <small className="text-muted">{time}</small>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+>>>>>>> nutri/main
   };
 
   const renderPathologicalRestrictions = () => {
@@ -904,6 +1131,7 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
             </li>
             <li className="nav-item">
               <button 
+<<<<<<< HEAD
                 className={`nav-link ${activeTab === 'meals' ? 'active' : ''}`}
                 onClick={() => setActiveTab('meals')}
               >
@@ -913,6 +1141,8 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
             </li>
             <li className="nav-item">
               <button 
+=======
+>>>>>>> nutri/main
                 className={`nav-link ${activeTab === 'nutrition' ? 'active' : ''}`}
                 onClick={() => setActiveTab('nutrition')}
               >
@@ -942,17 +1172,21 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
 
           {/* Tab Content */}
           {activeTab === 'overview' && renderOverview()}
+<<<<<<< HEAD
           {activeTab === 'meals' && (
             <div>
               {plan.plan_type === 'flexible' || plan.plan_type === 'custom' ? renderPeriodMeals() : renderWeeklyMeals()}
             </div>
           )}
+=======
+>>>>>>> nutri/main
           {activeTab === 'nutrition' && (
             <div>
               {renderMealConfiguration()}
               {renderFlexibilitySettings()}
             </div>
           )}
+<<<<<<< HEAD
           {activeTab === 'schedule' && (
             <div>
               {renderMealConfiguration()}
@@ -961,6 +1195,13 @@ const DietPlanViewer: React.FC<DietPlanViewerProps> = ({
           {activeTab === 'restrictions' && renderPathologicalRestrictions()}
         </div>
       </div>
+=======
+          {activeTab === 'schedule' && renderDetailedSchedule()}
+          {activeTab === 'restrictions' && renderPathologicalRestrictions()}
+        </div>
+      </div>
+
+>>>>>>> nutri/main
     </div>
   );
 };

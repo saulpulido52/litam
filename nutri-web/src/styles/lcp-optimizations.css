@@ -1,0 +1,186 @@
+/**
+ * 🚀 Optimizaciones CSS específicas para mejorar LCP (Largest Contentful Paint)
+ * 
+ * Estas optimizaciones se centran en hacer que el elemento LCP (h1.h3.mb-1)
+ * se renderice lo más rápido posible.
+ */
+
+/* 🎯 Optimización específica para el elemento LCP */
+.h3.mb-1 {
+  /* Evitar reflow durante la carga */
+  will-change: auto;
+  contain: style layout;
+  
+  /* Asegurar que la fuente se cargue inmediatamente */
+  font-display: swap;
+  
+  /* Mejorar rendering performance */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  
+  /* Transición suave para cuando aparezca el contenido */
+  transition: opacity 0.15s ease-out;
+}
+
+/* 🎨 Placeholder animation optimizada */
+.placeholder-glow .placeholder {
+  animation: lcp-placeholder-glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes lcp-placeholder-glow {
+  from {
+    opacity: 0.3;
+  }
+  to {
+    opacity: 0.7;
+  }
+}
+
+/* 🔧 Optimizaciones para componentes lazy-loaded */
+.lazy-loading-container {
+  /* Contenedor optimizado para lazy loading */
+  contain: layout style paint;
+  will-change: transform;
+}
+
+/* 🎯 Critical CSS para Bootstrap placeholder */
+.placeholder {
+  display: inline-block;
+  min-height: 1em;
+  vertical-align: middle;
+  cursor: wait;
+  background-color: currentColor;
+  opacity: 0.3;
+}
+
+.placeholder.col-4 {
+  width: 33.333333%;
+}
+
+.placeholder-glow .placeholder {
+  animation: placeholder-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes placeholder-glow {
+  0% {
+    opacity: 0.2;
+  }
+  100% {
+    opacity: 0.4;
+  }
+}
+
+/* 🚀 Optimización del spinner de carga */
+.spinner-border {
+  /* Usar GPU para la animación */
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* 🎨 Optimizaciones para el contenedor principal */
+.container-fluid.py-4 {
+  /* Asegurar que no haya layout shifts */
+  min-height: 100vh;
+  contain: layout;
+}
+
+/* 🔧 Optimización específica para navigation tabs */
+.nav-tabs {
+  /* Evitar repaints innecesarios */
+  contain: style;
+}
+
+/* 🎯 Mejoras para cards y componentes complejos */
+.card {
+  /* Optimizar rendering de cards */
+  contain: layout style;
+  transform: translateZ(0);
+}
+
+/* 🚀 Preload hint para iconos críticos */
+.me-2, .ms-2 {
+  /* Asegurar que los iconos no causen layout shift */
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+/* 🎨 Animación de entrada suave para componentes lazy */
+.lazy-component-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.lazy-component-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
+/* 🔧 Optimización para text-muted elements */
+.text-muted {
+  /* Asegurar que el color se aplique inmediatamente */
+  color: #6c757d !important;
+}
+
+/* 🚀 Critical path para Bootstrap classes usadas en LCP */
+.mb-1 {
+  margin-bottom: 0.25rem !important;
+}
+
+.mb-0 {
+  margin-bottom: 0 !important;
+}
+
+.d-flex {
+  display: flex !important;
+}
+
+.justify-content-between {
+  justify-content: space-between !important;
+}
+
+.align-items-center {
+  align-items: center !important;
+}
+
+/* 🎯 Optimización para el layout responsive */
+@media (max-width: 768px) {
+  .h3.mb-1 {
+    /* Tamaño de fuente más pequeño en móviles para cargar más rápido */
+    font-size: 1.5rem;
+  }
+  
+  .container-fluid.py-4 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* 🚀 Optimización para high-DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
+  .h3.mb-1 {
+    /* Optimizar rendering en pantallas de alta densidad */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* 🔧 Prefetch de colores comunes para evitar repaints */
+:root {
+  --bs-primary: #0d6efd;
+  --bs-success: #198754;
+  --bs-info: #0dcaf0;
+  --bs-warning: #ffc107;
+  --bs-danger: #dc3545;
+  --bs-secondary: #6c757d;
+  --bs-light: #f8f9fa;
+  --bs-dark: #212529;
+}
+
+/* 🎨 Asegurar que los elementos críticos se rendericen inmediatamente */
+.btn, .card, .nav, .container-fluid {
+  /* Evitar flash of unstyled content */
+  visibility: visible;
+}

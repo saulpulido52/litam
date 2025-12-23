@@ -10,6 +10,22 @@ import {
 } from 'typeorm';
 import { User } from '../../database/entities/user.entity'; // Para referenciar al paciente y al nutriólogo
 
+<<<<<<< HEAD
+=======
+// Enum para tipos de expediente
+export enum TipoExpediente {
+    INICIAL = 'inicial',           // Expediente completo (primera vez)
+    SEGUIMIENTO = 'seguimiento',   // Solo cambios y evolución
+    URGENCIA = 'urgencia',         // Consulta específica por problema agudo
+    CONTROL = 'control',           // Control rutinario de condición crónica
+    PRE_OPERATORIO = 'pre_operatorio', // Evaluación pre-operatoria
+    POST_OPERATORIO = 'post_operatorio', // Seguimiento post-operatorio
+    CONSULTA_ESPECIALIDAD = 'consulta_especialidad', // Consulta con especialista
+    ANUAL = 'anual',              // Revisión anual/preventiva
+    TELEHEALTH = 'telehealth'     // Consulta remota/telemedicina
+}
+
+>>>>>>> nutri/main
 @Entity('clinical_records')
 export class ClinicalRecord {
     @PrimaryGeneratedColumn('uuid')
@@ -29,6 +45,66 @@ export class ClinicalRecord {
     @Column({ type: 'varchar', length: 50, nullable: true })
     expedient_number: string | null; // Número de expediente (si aplica)
 
+<<<<<<< HEAD
+=======
+    // NUEVO: Tipo de expediente para diferenciar inicial de seguimiento
+    @Column({ 
+        type: 'enum', 
+        enum: TipoExpediente, 
+        default: TipoExpediente.INICIAL,
+        nullable: false 
+    })
+    tipo_expediente!: TipoExpediente;
+
+    // NUEVO: ID del expediente base (para seguimientos, referencia al expediente inicial)
+    @Column({ type: 'uuid', nullable: true })
+    expediente_base_id: string | null;
+
+    // NUEVO: Metadatos del seguimiento
+    @Column({ type: 'jsonb', nullable: true })
+    seguimiento_metadata: {
+        adherencia_plan?: number; // Porcentaje de adherencia (0-100)
+        dificultades?: string;    // Dificultades reportadas
+        satisfaccion?: number;    // Nivel de satisfacción (1-5)
+        cambios_medicamentos?: boolean;
+        nuevos_sintomas?: string;
+        mejoras_notadas?: string;
+        proximos_objetivos?: string;
+    } | null;
+
+    // NUEVO: Análisis de riesgo-beneficio para decisiones importantes
+    @Column({ type: 'jsonb', nullable: true })
+    analisis_riesgo_beneficio: {
+        decision?: string;        // Descripción de la decisión
+        riesgos?: string[];      // Riesgos identificados
+        beneficios?: string[];   // Beneficios esperados
+        alternativas?: string[]; // Alternativas consideradas
+        razonamiento?: string;   // Razonamiento clínico
+    } | null;
+
+    // NUEVO: Juicio clínico en puntos críticos
+    @Column({ type: 'jsonb', nullable: true })
+    juicio_clinico: {
+        evaluacion_situacion?: string;  // Evaluación de la situación clínica
+        respuesta_congruente?: string;  // Respuesta congruente a la evaluación
+        factores_objetivos?: string[];  // Factores objetivos considerados
+        factores_subjetivos?: string[]; // Factores subjetivos del encuentro
+        justificacion?: string;         // Justificación de la decisión
+    } | null;
+
+    // NUEVO: Capacidad del paciente para participar en su cuidado
+    @Column({ type: 'jsonb', nullable: true })
+    capacidad_paciente: {
+        comprende_medicamentos?: boolean;      // Entiende propósito medicamentos
+        conoce_sintomas_alarma?: boolean;      // Conoce síntomas de alerta
+        sabe_contacto_emergencia?: boolean;    // Sabe a quién contactar
+        puede_auto_monitoreo?: boolean;        // Puede hacer auto-monitoreo
+        requiere_apoyo_familiar?: boolean;     // Necesita apoyo familiar
+        nivel_independencia?: 'alto' | 'medio' | 'bajo';
+        observaciones?: string;
+    } | null;
+
+>>>>>>> nutri/main
     // --- DATOS PERSONALES (algunos ya en User, pero aquí para el contexto del registro) ---
     // (Nombre, Edad, Sexo, FN, EC, Escolaridad, Ocupacion, Direccion, Telefono, Email: Se obtienen de la entidad User/PatientProfile)
     
@@ -254,6 +330,55 @@ export class ClinicalRecord {
     @Column({ type: 'varchar', length: 255, nullable: true })
     graph_url: string | null; // URL de la gráfica (si se genera una imagen)
 
+<<<<<<< HEAD
+=======
+    // 📄 NUEVOS CAMPOS PARA DOCUMENTOS
+    @Column({ type: 'jsonb', nullable: true })
+    laboratory_documents: {
+        id: string;
+        filename: string;
+        original_name: string;
+        file_path: string;
+        file_url: string;
+        file_size: number;
+        upload_date: Date;
+        uploaded_by: 'patient' | 'nutritionist';
+        description?: string;
+        lab_date?: Date;
+    }[] | null;
+
+    @Column({ type: 'jsonb', nullable: true })
+    document_metadata: {
+        last_pdf_generated?: Date;
+        pdf_version?: number;
+        total_attachments?: number;
+    } | null;
+
+    // 💊 INTERACCIONES FÁRMACO-NUTRIENTE
+    @Column({ type: 'jsonb', nullable: true })
+    drug_nutrient_interactions: {
+        id: string;
+        medication: {
+            id: string;
+            name: string;
+            generic_name?: string;
+            dosage?: string;
+            frequency?: string;
+        };
+        nutrients_affected: string[];
+        interaction_type: 'absorption' | 'metabolism' | 'excretion' | 'antagonism';
+        severity: 'low' | 'moderate' | 'high' | 'critical';
+        description: string;
+        recommendations: string[];
+        timing_considerations?: string;
+        foods_to_avoid?: string[];
+        foods_to_increase?: string[];
+        monitoring_required?: boolean;
+        created_date: Date;
+        updated_date: Date;
+    }[] | null;
+
+>>>>>>> nutri/main
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at!: Date;
 

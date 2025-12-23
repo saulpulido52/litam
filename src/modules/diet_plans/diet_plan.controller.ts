@@ -195,6 +195,7 @@ class DietPlanController {
 
     public async deleteDietPlan(req: Request, res: Response, next: NextFunction) {
         try {
+<<<<<<< HEAD
             if (!req.user || (req.user.role.name !== RoleName.NUTRITIONIST && req.user.role.name !== RoleName.ADMIN)) {
                 return next(new AppError('Acceso denegado. Solo nutriólogos o administradores pueden eliminar planes de dieta.', 403));
             }
@@ -211,6 +212,52 @@ class DietPlanController {
                 return next(error);
             }
             next(new AppError('Error al eliminar el plan de dieta.', 500));
+=======
+            const { id } = req.params;
+            const result = await dietPlanService.deleteDietPlan(id, req.user!.id, req.user!.role.name);
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * 📋 GENERAR PDF DEL PLANIFICADOR DE COMIDAS
+     */
+    public async generateMealPlannerPDF(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            console.log(`🔄 Solicitud de PDF para planificador de comidas: ${id} por usuario ${req.user!.id}`);
+
+            const result = await dietPlanService.generateMealPlannerPDF(
+                id,
+                req.user!.id,
+                req.user!.role.name
+            );
+
+            if (result.pdf_path && result.filename) {
+                const fs = require('fs').promises;
+                try {
+                    const pdfBuffer = await fs.readFile(result.pdf_path);
+                    console.log('✅ PDF leído correctamente:', result.pdf_path, 'Tamaño:', pdfBuffer.length);
+
+                    res.setHeader('Content-Type', 'application/pdf');
+                    res.setHeader('Content-Disposition', `inline; filename="${result.filename}"`);
+                    res.setHeader('Content-Length', pdfBuffer.length);
+
+                    return res.send(pdfBuffer);
+                } catch (fileError) {
+                    console.error('❌ Error leyendo el PDF:', fileError);
+                    return res.status(500).json({ message: 'No se pudo leer el archivo PDF generado', error: fileError });
+                }
+            }
+
+            console.error('❌ No se pudo generar el archivo PDF del planificador');
+            return res.status(500).json({ message: 'No se pudo generar el archivo PDF del planificador' });
+        } catch (error) {
+            console.error('❌ Error en generateMealPlannerPDF controller:', error);
+            return res.status(500).json({ message: 'Error interno al generar el PDF', error });
+>>>>>>> nutri/main
         }
     }
 }

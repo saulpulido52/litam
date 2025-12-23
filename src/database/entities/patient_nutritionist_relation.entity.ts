@@ -44,6 +44,12 @@ export class PatientNutritionistRelation {
     @Column({ type: 'text', nullable: true })
     notes!: string | null; // Fixed: Added definite assignment assertion
 
+<<<<<<< HEAD
+=======
+    @Column({ type: 'text', nullable: true })
+    elimination_reason!: string | null; // Motivo/justificación de la eliminación
+
+>>>>>>> nutri/main
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     requested_at!: Date;
 

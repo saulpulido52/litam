@@ -26,6 +26,12 @@ import { Recipe } from '../../database/entities/recipe.entity';
 import { Conversation } from '../../database/entities/conversation.entity';
 import { Message } from '../../database/entities/message.entity';
 import { ClinicalRecord } from '../../database/entities/clinical_record.entity'; // <--- NUEVO
+<<<<<<< HEAD
+=======
+import { NutritionistTier } from '../../database/entities/nutritionist_tier.entity';
+import { PatientTier } from '../../database/entities/patient_tier.entity';
+import { NutritionistReview } from '../../database/entities/nutritionist_review.entity';
+>>>>>>> nutri/main
 import bcrypt from 'bcrypt';
 
 export enum UserRegistrationType {
@@ -62,6 +68,12 @@ export class User {
     @Column({ type: 'varchar', length: 50, nullable: true })
     gender!: string | null;
 
+<<<<<<< HEAD
+=======
+    @Column({ type: 'varchar', length: 500, nullable: true })
+    profile_image!: string | null;
+
+>>>>>>> nutri/main
     @ManyToOne(() => Role, (role) => role.users, { eager: true, nullable: false })
     @JoinColumn({ name: 'role_id' })
     role!: Role;
@@ -70,9 +82,15 @@ export class User {
     is_active!: boolean;
 
     @Column({
+<<<<<<< HEAD
         type: 'enum',
         enum: UserRegistrationType,
         default: UserRegistrationType.ONLINE,
+=======
+        type: 'varchar',
+        length: 20,
+        default: 'online',
+>>>>>>> nutri/main
         nullable: false,
     })
     registration_type!: UserRegistrationType;
@@ -98,6 +116,37 @@ export class User {
     @Column({ type: 'timestamptz', nullable: true })
     passwordChangedAt!: Date | null;
 
+<<<<<<< HEAD
+=======
+    // --- CAMPOS PARA GOOGLE OAUTH ---
+    @Column({ type: 'varchar', length: 255, unique: true, nullable: true })
+    google_id!: string | null;
+
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    google_email!: string | null;
+
+    @Column({ type: 'text', nullable: true, select: false })
+    google_access_token!: string | null;
+
+    @Column({ type: 'text', nullable: true, select: false })
+    google_refresh_token!: string | null;
+
+    @Column({ type: 'timestamptz', nullable: true })
+    google_token_expires_at!: Date | null;
+
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    google_calendar_id!: string | null;
+
+    @Column({ type: 'boolean', default: false })
+    google_calendar_sync_enabled!: boolean;
+
+    @Column({ type: 'timestamptz', nullable: true })
+    google_calendar_last_sync!: Date | null;
+
+    @Column({ type: 'varchar', length: 50, default: 'local' })
+    auth_provider!: string;
+
+>>>>>>> nutri/main
     @OneToOne(() => PatientProfile, (profile) => profile.user, { cascade: true })
     patient_profile?: PatientProfile;
 
@@ -165,6 +214,25 @@ export class User {
     @OneToMany(() => ClinicalRecord, (record) => record.nutritionist)
     nutritionist_created_clinical_records!: ClinicalRecord[];
 
+<<<<<<< HEAD
+=======
+    // --- RELACIONES PARA TIERS DE MONETIZACIÓN ---
+    @ManyToOne(() => NutritionistTier, (tier) => tier.nutritionists, { nullable: true })
+    @JoinColumn({ name: 'nutritionist_tier_id' })
+    nutritionist_tier?: NutritionistTier;
+
+    @ManyToOne(() => PatientTier, (tier) => tier.patients, { nullable: true })
+    @JoinColumn({ name: 'patient_tier_id' })
+    patient_tier?: PatientTier;
+
+    // --- RELACIONES PARA REVIEWS ---
+    @OneToMany(() => NutritionistReview, (review) => review.nutritionist)
+    received_reviews!: NutritionistReview[]; // Reviews que recibe como nutriólogo
+
+    @OneToMany(() => NutritionistReview, (review) => review.patient)
+    given_reviews!: NutritionistReview[]; // Reviews que da como paciente
+
+>>>>>>> nutri/main
     isPasswordChangedRecently(decodedIat: number): boolean {
         return !!this.passwordChangedAt && this.passwordChangedAt.getTime() / 1000 > decodedIat;
     }

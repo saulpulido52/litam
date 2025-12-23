@@ -2,10 +2,21 @@
 import app from './app';
 import { AppDataSource } from './database/data-source';
 import { Role, RoleName } from './database/entities/role.entity';
+<<<<<<< HEAD
 import http from 'http'; // Importar módulo http de Node.js
 import { Server as SocketIOServer } from 'socket.io'; // Importar Server de socket.io
 
 const PORT = process.env.PORT || 4000;
+=======
+import { User } from './database/entities/user.entity';
+import { NutritionistProfile } from './database/entities/nutritionist_profile.entity';
+import monetizationService from './modules/monetization/monetization.service';
+import bcrypt from 'bcrypt';
+import http from 'http'; // Importar módulo http de Node.js
+import { Server as SocketIOServer } from 'socket.io'; // Importar Server de socket.io
+
+const PORT = Number(process.env.PORT) || 4000;
+>>>>>>> nutri/main
 
 // Crear el servidor HTTP para Express y Socket.IO
 const server = http.createServer(app);
@@ -264,6 +275,13 @@ async function initializeDatabase() {
         }
 
         const roleRepository = AppDataSource.getRepository(Role);
+<<<<<<< HEAD
+=======
+        const userRepository = AppDataSource.getRepository(User);
+        const nutritionistProfileRepository = AppDataSource.getRepository(NutritionistProfile);
+
+        // 1. Crear roles básicos
+>>>>>>> nutri/main
         const rolesToSeed: RoleName[] = [RoleName.PATIENT, RoleName.NUTRITIONIST, RoleName.ADMIN];
 
         for (const roleName of rolesToSeed) {
@@ -275,7 +293,67 @@ async function initializeDatabase() {
             }
         }
 
+<<<<<<< HEAD
         console.log('Base de datos inicializada y roles verificados');
+=======
+        // 2. Crear nutriólogo por defecto
+        const nutritionistRole = await roleRepository.findOneBy({ name: RoleName.NUTRITIONIST });
+        if (!nutritionistRole) {
+            throw new Error('No se pudo encontrar el rol de nutricionista');
+        }
+
+        const defaultNutritionistEmail = 'nutri.admin@sistema.com';
+        let defaultNutritionist = await userRepository.findOne({ 
+            where: { email: defaultNutritionistEmail },
+            relations: ['role']
+        });
+
+        if (!defaultNutritionist) {
+            // Crear nutriólogo por defecto
+            const hashedPassword = await bcrypt.hash('nutri123', 12);
+            
+            defaultNutritionist = userRepository.create({
+                email: defaultNutritionistEmail,
+                password_hash: hashedPassword,
+                first_name: 'Dr. Sistema',
+                last_name: 'Nutricional',
+                age: 35,
+                gender: 'other',
+                role: nutritionistRole,
+                is_active: true
+            });
+            await userRepository.save(defaultNutritionist);
+
+            // Crear perfil completo del nutriólogo
+            const nutritionistProfile = nutritionistProfileRepository.create({
+                user: defaultNutritionist,
+                license_number: 'SYS-00001',
+                specialties: ['Nutrición Clínica', 'Nutrición General', 'Control de Peso'],
+                years_of_experience: 10,
+                education: ['Sistema de Nutrición - Administrador por Defecto'],
+                certifications: ['Certificación Administrador Sistema'],
+                languages: ['Español'],
+                consultation_fee: 0,
+                bio: 'Nutriólogo administrador por defecto del sistema. Puedes cambiar estos datos desde tu perfil.',
+                is_verified: true
+            });
+            await nutritionistProfileRepository.save(nutritionistProfile);
+
+            console.log('🥗 Nutriólogo por defecto creado:');
+            console.log(`   📧 Email: ${defaultNutritionistEmail}`);
+            console.log(`   🔑 Contraseña: nutri123`);
+            console.log(`   👤 Nombre: Dr. Sistema Nutricional`);
+            console.log(`   ⚠️  ¡CAMBIA LA CONTRASEÑA DESPUÉS DEL PRIMER LOGIN!`);
+        } else {
+            console.log('ℹ️  Nutriólogo por defecto ya existe');
+        }
+
+        // 3. Inicializar tiers de monetización por defecto
+        await monetizationService.initializeDefaultTiers();
+        console.log('💰 Tiers de monetización inicializados');
+
+        console.log('Base de datos inicializada, roles verificados, nutriólogo por defecto y tiers de monetización listos');
+>>>>>>> nutri/main
     } catch (err) {
         console.error('Error during Data Source initialization or seeding:', err);
         process.exit(1);
@@ -286,10 +364,17 @@ async function initializeDatabase() {
 async function startServer() {
     await initializeDatabase();
 
+<<<<<<< HEAD
     server.listen(PORT, () => {
         console.log(`🚀 Server is running on port ${PORT}`);
         console.log(`📡 API available at http://localhost:${PORT}/api`);
         console.log(`🔌 Socket.IO available on ws://localhost:${PORT}`);
+=======
+    server.listen(PORT, '0.0.0.0', () => {
+        console.log(`🚀 Server is running on port ${PORT}`);
+        console.log(`📡 API available at http://0.0.0.0:${PORT}/api`);
+        console.log(`🔌 Socket.IO available on ws://0.0.0.0:${PORT}`);
+>>>>>>> nutri/main
         console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
         console.log(`💾 Database: ${process.env.DB_DATABASE || 'default'}`);
         console.log(`👥 Ready for multiple concurrent users`);

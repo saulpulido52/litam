@@ -69,6 +69,7 @@ export class WeeklyMealDto {
     notes?: string;
 }
 
+<<<<<<< HEAD
 // DTO para un plan semanal
 export class WeeklyPlanDto {
     @IsNumber({}, { message: 'El número de semana debe ser un número.' })
@@ -88,15 +89,76 @@ export class WeeklyPlanDto {
     @ValidateNested()
     @Type(() => Object)
     dailyMacrosTarget!: {
+=======
+// DTO para un plan semanal - ACEPTA AMBOS FORMATOS (camelCase y snake_case)
+export class WeeklyPlanDto {
+    @IsOptional()
+    @IsNumber({}, { message: 'El número de semana debe ser un número.' })
+    @Min(1, { message: 'El número de semana debe ser mayor que 0.' })
+    weekNumber?: number;
+
+    @IsOptional()
+    @IsNumber({}, { message: 'El número de semana debe ser un número.' })
+    @Min(1, { message: 'El número de semana debe ser mayor que 0.' })
+    week_number?: number;
+
+    @IsOptional()
+    @IsDateString({}, { message: 'La fecha de inicio debe ser una fecha válida (YYYY-MM-DD).' })
+    startDate?: string;
+
+    @IsOptional()
+    @IsDateString({}, { message: 'La fecha de inicio debe ser una fecha válida (YYYY-MM-DD).' })
+    start_date?: string;
+
+    @IsOptional()
+    @IsDateString({}, { message: 'La fecha de fin debe ser una fecha válida (YYYY-MM-DD).' })
+    endDate?: string;
+
+    @IsOptional()
+    @IsDateString({}, { message: 'La fecha de fin debe ser una fecha válida (YYYY-MM-DD).' })
+    end_date?: string;
+
+    @IsOptional()
+    @IsNumber({}, { message: 'El objetivo de calorías diario debe ser un número.' })
+    @Min(0, { message: 'El objetivo de calorías diario no puede ser negativo.' })
+    dailyCaloriesTarget?: number;
+
+    @IsOptional()
+    @IsNumber({}, { message: 'El objetivo de calorías diario debe ser un número.' })
+    @Min(0, { message: 'El objetivo de calorías diario no puede ser negativo.' })
+    daily_calories_target?: number;
+
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => Object)
+    dailyMacrosTarget?: {
+>>>>>>> nutri/main
         protein: number;
         carbohydrates: number;
         fats: number;
     };
 
+<<<<<<< HEAD
     @IsArray({ message: 'Las comidas deben ser un array.' })
     @ValidateNested({ each: true })
     @Type(() => WeeklyMealDto)
     meals!: WeeklyMealDto[];
+=======
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => Object)
+    daily_macros_target?: {
+        protein: number;
+        carbohydrates: number;
+        fats: number;
+    };
+
+    @IsOptional()
+    @IsArray({ message: 'Las comidas deben ser un array.' })
+    @ValidateNested({ each: true })
+    @Type(() => WeeklyMealDto)
+    meals?: WeeklyMealDto[];
+>>>>>>> nutri/main
 
     @IsOptional()
     @IsString({ message: 'Las notas deben ser una cadena de texto.' })
@@ -180,9 +242,13 @@ export class CreateDietPlanDto {
 
     @IsOptional()
     @IsArray({ message: 'Los planes semanales deben ser un array.' })
+<<<<<<< HEAD
     @ValidateNested({ each: true })
     @Type(() => WeeklyPlanDto)
     weeklyPlans?: WeeklyPlanDto[];
+=======
+    weeklyPlans?: any[]; // Deshabilitar validación estricta para permitir ambos formatos
+>>>>>>> nutri/main
 
     @IsOptional()
     @IsBoolean({ message: 'generatedByIA debe ser un booleano.' })
@@ -197,6 +263,74 @@ export class CreateDietPlanDto {
     @ValidateNested({ each: true })
     @Type(() => MealDto)
     meals?: MealDto[]; // Mantener para compatibilidad
+<<<<<<< HEAD
+=======
+
+    // Nuevos campos que el frontend está enviando
+    @IsOptional()
+    @IsString({ message: 'El tipo de plan debe ser una cadena de texto.' })
+    planType?: string;
+
+    @IsOptional()
+    @IsString({ message: 'El período del plan debe ser una cadena de texto.' })
+    planPeriod?: string;
+
+    @IsOptional()
+    @IsNumber({}, { message: 'El número total de períodos debe ser un número.' })
+    @Min(1, { message: 'El número total de períodos debe ser mayor que 0.' })
+    totalPeriods?: number;
+
+    @IsOptional()
+    pathologicalRestrictions?: {
+        // Acepta ambos formatos: camelCase y snake_case
+        medicalConditions?: any[];
+        medical_conditions?: any[];
+        allergies?: any[];
+        intolerances?: any[];
+        medications?: any[];
+        specialConsiderations?: any[];
+        special_considerations?: any[];
+        emergencyContacts?: any[];
+        emergency_contacts?: any[];
+    };
+
+    // === NUEVOS CAMPOS PARA COMPLETAR TABS ===
+    @IsOptional()
+    mealFrequency?: {
+        breakfast?: boolean;
+        morning_snack?: boolean;
+        lunch?: boolean;
+        afternoon_snack?: boolean;
+        dinner?: boolean;
+        evening_snack?: boolean;
+    };
+
+    @IsOptional()
+    mealTiming?: {
+        breakfast_time?: string;
+        lunch_time?: string;
+        dinner_time?: string;
+        snack_times?: string[];
+        bed_time?: string;
+    };
+
+    @IsOptional()
+    nutritionalGoals?: {
+        water_intake_liters?: number;
+        fiber_target_grams?: number;
+        calorie_distribution?: string;
+        meals_per_day?: number;
+    };
+
+    @IsOptional()
+    flexibilitySettings?: {
+        allow_meal_swapping?: boolean;
+        allow_portion_adjustment?: boolean;
+        allow_food_substitution?: boolean;
+        cheat_days_per_week?: number;
+        free_meals_per_week?: number;
+    };
+>>>>>>> nutri/main
 }
 
 // DTO para actualizar un Plan de Dieta
@@ -233,6 +367,13 @@ export class UpdateDietPlanDto {
     dailyMacrosTarget?: { protein?: number; carbohydrates?: number; fats?: number };
 
     @IsOptional()
+<<<<<<< HEAD
+=======
+    @IsBoolean({ message: 'isWeeklyPlan debe ser un booleano.' })
+    isWeeklyPlan?: boolean;
+
+    @IsOptional()
+>>>>>>> nutri/main
     @IsNumber({}, { message: 'El número total de semanas debe ser un número.' })
     @Min(1, { message: 'El número total de semanas debe ser mayor que 0.' })
     @Max(52, { message: 'El número total de semanas no puede exceder 52.' })
@@ -240,9 +381,13 @@ export class UpdateDietPlanDto {
 
     @IsOptional()
     @IsArray({ message: 'Los planes semanales deben ser un array.' })
+<<<<<<< HEAD
     @ValidateNested({ each: true })
     @Type(() => WeeklyPlanDto)
     weeklyPlans?: WeeklyPlanDto[];
+=======
+    weeklyPlans?: any[]; // Deshabilitar validación estricta para permitir ambos formatos
+>>>>>>> nutri/main
 
     @IsOptional()
     @IsEnum(DietPlanStatus, { message: 'El estado del plan de dieta no es válido.' })
@@ -253,6 +398,57 @@ export class UpdateDietPlanDto {
     @ValidateNested({ each: true })
     @Type(() => MealDto)
     meals?: MealDto[];
+<<<<<<< HEAD
+=======
+
+    // === NUEVOS CAMPOS PARA COMPLETAR TABS ===
+    @IsOptional()
+    mealSchedules?: any; // Horarios de comidas del NutritionalScheduleTab
+
+    @IsOptional()
+    mealTiming?: any; // Formato antiguo de horarios
+
+    @IsOptional()
+    mealFrequency?: {
+        breakfast?: boolean;
+        morning_snack?: boolean;
+        lunch?: boolean;
+        afternoon_snack?: boolean;
+        dinner?: boolean;
+        evening_snack?: boolean;
+    };
+
+    @IsOptional()
+    nutritionalGoals?: {
+        water_intake_liters?: number;
+        fiber_target_grams?: number;
+        calorie_distribution?: string;
+        meals_per_day?: number;
+    };
+
+    @IsOptional()
+    flexibilitySettings?: {
+        allow_meal_swapping?: boolean;
+        allow_portion_adjustment?: boolean;
+        allow_food_substitution?: boolean;
+        cheat_days_per_week?: number;
+        free_meals_per_week?: number;
+    };
+
+    @IsOptional()
+    pathologicalRestrictions?: {
+        // Acepta ambos formatos: camelCase y snake_case
+        medicalConditions?: any[];
+        medical_conditions?: any[];
+        allergies?: any[];
+        intolerances?: any[];
+        medications?: any[];
+        specialConsiderations?: any[];
+        special_considerations?: any[];
+        emergencyContacts?: any[];
+        emergency_contacts?: any[];
+    };
+>>>>>>> nutri/main
 }
 
 // DTO para solicitar generación de dieta por IA

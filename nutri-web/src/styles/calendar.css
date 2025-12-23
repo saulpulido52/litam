@@ -1,0 +1,363 @@
+/* ======================================
+   CALENDAR PAGE STYLES - Animated Stats Cards
+   ====================================== */
+
+/* Base styles for stat cards */
+.stat-card {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  border: none;
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+  height: 140px; /* Altura fija para consistencia */
+  display: flex;
+  align-items: center;
+}
+
+.stat-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), transparent);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.stat-card:hover::before {
+  opacity: 0.3;
+}
+
+/* Individual card color schemes */
+.stat-card-today {
+  --primary-color: #3b82f6;
+  --primary-dark: #1e40af;
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+}
+
+.stat-card-upcoming {
+  --primary-color: #10b981;
+  --primary-dark: #047857;
+  background: linear-gradient(135deg, #10b981, #047857);
+}
+
+.stat-card-week {
+  --primary-color: #8b5cf6;
+  --primary-dark: #6d28d9;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+}
+
+.stat-card-month {
+  --primary-color: #f59e0b;
+  --primary-dark: #d97706;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #1f2937 !important; /* Dark text for better contrast on yellow */
+}
+
+.stat-card-month .card-body,
+.stat-card-month .stat-label,
+.stat-card-month .stat-value,
+.stat-card-month .stat-description {
+  color: #1f2937 !important;
+}
+
+.stat-card-month .stat-icon,
+.stat-card-month .background-icon {
+  color: rgba(31, 41, 55, 0.3) !important;
+}
+
+/* Text styling */
+.stat-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: shimmer 2s ease-in-out infinite alternate;
+}
+
+.stat-description {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  font-weight: 400;
+}
+
+/* Icon animations */
+.stat-icon {
+  z-index: 2;
+  position: relative;
+}
+
+.icon-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.icon-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.icon-bounce {
+  animation: bounce 2s ease-in-out infinite;
+}
+
+/* Background decorative icon */
+.stat-background {
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  z-index: 0;
+  opacity: 0.1;
+  transform: rotate(15deg);
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-background {
+  opacity: 0.15;
+  transform: rotate(20deg) scale(1.1);
+}
+
+.background-icon {
+  filter: blur(1px);
+}
+
+/* Keyframe animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-8px);
+  }
+  60% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Row alignment and spacing */
+.row.mb-4 {
+  margin-bottom: 2rem !important;
+}
+
+.row.mb-4 .col-6.col-lg-3 {
+  display: flex;
+  margin-bottom: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .stat-card {
+    margin-bottom: 1rem;
+    height: 120px; /* Menor altura en móvil */
+  }
+  
+  .stat-value {
+    font-size: 2rem;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-4px) scale(1.01);
+  }
+  
+  .row.mb-4 .col-6.col-lg-3 {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Mejorar alignment del contenido principal */
+.container-fluid {
+  padding-left: 20px;
+  padding-right: 20px;
+  max-width: 1400px; /* Limitar ancho máximo */
+  margin: 0 auto; /* Centrar contenido */
+}
+
+/* Ajustar espaciado de las cards del calendario */
+.card.border-0.shadow-sm {
+  margin-bottom: 1.5rem;
+}
+
+/* Asegurar que las columnas estén bien proporcionadas */
+.col-lg-8, .col-lg-4 {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+@media (min-width: 992px) {
+  .col-lg-8 {
+    flex: 0 0 66.666667%;
+    max-width: 66.666667%;
+  }
+  
+  .col-lg-4 {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+  }
+}
+
+/* Ajustes para tablets */
+@media (min-width: 768px) and (max-width: 991px) {
+  .col-lg-8, .col-lg-4 {
+    flex: 0 0 100%;
+    max-width: 100%;
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* Calendar table improvements */
+.table-responsive .table {
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 0; /* Remove default margin */
+}
+
+.table-responsive .table td {
+  transition: all 0.2s ease;
+  vertical-align: top;
+  min-height: 120px; /* Altura mínima consistente */
+  padding: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.table-responsive .table th {
+  padding: 12px 8px;
+  font-weight: 600;
+  text-align: center;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+}
+
+.table-responsive .table td:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+  transform: scale(1.01);
+}
+
+/* Appointment event styling improvements */
+.table td .cursor-pointer {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 6px;
+  backdrop-filter: blur(5px);
+}
+
+.table td .cursor-pointer:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Loading animation improvements */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Enhanced button styles */
+.btn {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  border: none;
+}
+
+.btn-outline-secondary:hover {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  border-color: transparent;
+}
+
+/* Card hover effects for calendar grid */
+.card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced sidebar cards */
+.card.border-0.shadow-sm {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.card.border-0.shadow-sm .card-header {
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Today's events highlighting */
+.list-group-item {
+  transition: all 0.2s ease;
+  border-radius: 8px !important;
+  margin-bottom: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.list-group-item:hover {
+  transform: translateX(4px);
+  background-color: rgba(59, 130, 246, 0.05);
+  border-color: rgba(59, 130, 246, 0.2) !important;
+} 

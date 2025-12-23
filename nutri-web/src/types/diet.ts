@@ -376,10 +376,25 @@ export interface WeeklyPlan {
 }
 
 export interface WeeklyMeal {
+<<<<<<< HEAD
   day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
   meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   foods: WeeklyFood[];
   notes?: string;
+=======
+  day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'Lunes' | 'Martes' | 'Miércoles' | 'Jueves' | 'Viernes' | 'Sábado' | 'Domingo';
+  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'morning_snack' | 'afternoon_snack' | 'evening_snack';
+  foods: WeeklyFood[];
+  notes?: string;
+  // Campos adicionales para comidas manuales del MealPlanner
+  meal_time?: string;
+  meal_description?: string;
+  total_calories?: number;
+  total_protein?: number;
+  total_carbs?: number;
+  total_fats?: number;
+  id?: string;
+>>>>>>> nutri/main
 }
 
 export interface WeeklyFood {
@@ -475,6 +490,23 @@ export interface CreateDietPlanDto {
     cheatDaysPerWeek?: number;
     freeMealsPerWeek?: number;
   };
+<<<<<<< HEAD
+=======
+  
+  // Configuración de comidas
+  mealConfiguration?: {
+    mealsPerDay?: number;
+    planType?: string;
+    mealTiming?: string;
+    portionSize?: string;
+  };
+  
+  // Objetivos nutricionales
+  nutritionalGoals?: {
+    primaryGoal?: string;
+    secondaryGoals?: string[];
+  };
+>>>>>>> nutri/main
 }
 
 // Nuevas interfaces DTO para restricciones patológicas
@@ -680,10 +712,25 @@ export interface WeeklyPlanDto {
 }
 
 export interface WeeklyMealDto {
+<<<<<<< HEAD
   day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   foods: WeeklyFoodDto[];
   notes?: string;
+=======
+  day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'Lunes' | 'Martes' | 'Miércoles' | 'Jueves' | 'Viernes' | 'Sábado' | 'Domingo';
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'morning_snack' | 'afternoon_snack' | 'evening_snack';
+  foods: WeeklyFoodDto[];
+  notes?: string;
+  // Campos adicionales para comidas manuales del MealPlanner
+  mealTime?: string;
+  mealDescription?: string;
+  totalCalories?: number;
+  totalProtein?: number;
+  totalCarbs?: number;
+  totalFats?: number;
+  id?: string;
+>>>>>>> nutri/main
 }
 
 export interface WeeklyFoodDto {

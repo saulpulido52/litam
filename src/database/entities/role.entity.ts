@@ -13,9 +13,14 @@ export class Role {
     id!: number;
 
     @Column({
+<<<<<<< HEAD
         type: 'enum',
         enum: RoleName,
         enumName: 'roles_name_enum', // Especifica el nombre del enum en PostgreSQL
+=======
+        type: 'varchar',
+        length: 50,
+>>>>>>> nutri/main
         unique: true,
         nullable: false,
     })

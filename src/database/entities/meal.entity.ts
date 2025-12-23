@@ -20,6 +20,21 @@ export class Meal {
     @Column({ type: 'varchar', length: 100, nullable: false })
     name!: string; // Ej: 'Desayuno', 'Almuerzo', 'Cena', 'Colación AM'
 
+<<<<<<< HEAD
+=======
+    @Column({ type: 'varchar', length: 50, nullable: true })
+    day?: string; // Día de la semana (monday, tuesday, etc.)
+
+    @Column({ type: 'varchar', length: 50, nullable: true })
+    meal_type?: string; // Tipo de comida (breakfast, lunch, dinner, etc.)
+
+    @Column({ type: 'time', nullable: true })
+    meal_time?: string; // Hora de la comida (ej: '08:00')
+
+    @Column({ type: 'text', nullable: true })
+    notes?: string; // Notas adicionales
+
+>>>>>>> nutri/main
     @OneToMany(() => MealItem, (mealItem) => mealItem.meal, { cascade: true }) // cascade: true para guardar ítems con la comida
     meal_items!: MealItem[];
 

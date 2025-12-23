@@ -7,7 +7,12 @@ import {
     ScheduleAppointmentDto,
     UpdateAppointmentStatusDto,
     ManageAvailabilityDto,
+<<<<<<< HEAD
     SearchAvailabilityDto, // Asegúrate de importar esto también si lo usas en este archivo
+=======
+    SearchAvailabilityDto,
+    NutritionistScheduleAppointmentDto,
+>>>>>>> nutri/main
 } from '../../modules/appointments/appointment.dto';
 import { RoleName } from '../../database/entities/role.entity';
 import { AppointmentStatus } from '../../database/entities/appointment.entity'; // Asegúrate de importar esto
@@ -33,6 +38,15 @@ router.route('/availability')
 // La ruta espera un ID de nutriólogo en los parámetros, no solo en la query string
 router.get('/availability/:nutritionistId', appointmentController.searchNutritionistAvailability);
 
+<<<<<<< HEAD
+=======
+// NUEVAS RUTAS: Gestión avanzada de disponibilidad
+// Obtener citas existentes de un nutriólogo por rango de fechas
+router.get('/nutritionist/:nutritionistId/appointments', appointmentController.getNutritionistAppointmentsByDateRange);
+
+// Obtener slots disponibles para una fecha específica
+router.get('/nutritionist/:nutritionistId/available-slots', appointmentController.getAvailableSlots);
+>>>>>>> nutri/main
 
 // --- Rutas de Gestión de Citas ---
 
@@ -44,6 +58,17 @@ router.post(
     appointmentController.scheduleAppointment
 );
 
+<<<<<<< HEAD
+=======
+// Agendar una cita para un paciente (Solo Nutriólogos)
+router.post(
+    '/schedule-for-patient',
+    authorize(RoleName.NUTRITIONIST),
+    validateMiddleware(NutritionistScheduleAppointmentDto),
+    appointmentController.scheduleAppointmentForPatient
+);
+
+>>>>>>> nutri/main
 // Obtener mis citas (Pacientes y Nutriólogos)
 router.get('/my-appointments', appointmentController.getMyAppointments);
 
@@ -54,4 +79,21 @@ router.patch(
     appointmentController.updateAppointmentStatus
 );
 
+<<<<<<< HEAD
+=======
+// Actualizar una cita completa (fecha, hora, notas) - Solo Nutriólogos
+router.patch(
+    '/:id',
+    authorize(RoleName.NUTRITIONIST),
+    appointmentController.updateAppointment
+);
+
+// Eliminar una cita completamente (Solo Nutriólogos)
+router.delete(
+    '/:id',
+    authorize(RoleName.NUTRITIONIST),
+    appointmentController.deleteAppointment
+);
+
+>>>>>>> nutri/main
 export default router;

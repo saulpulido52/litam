@@ -8,12 +8,27 @@
     "start": "node dist/index.js",
     "dev": "nodemon --exec ts-node -r tsconfig-paths/register src/index.ts",
     "test": "jest",
+<<<<<<< HEAD
     "test:watch": "jest --watch"
+=======
+    "test:watch": "jest --watch",
+    "validate:growth-charts": "ts-node -r tsconfig-paths/register scripts/validate-growth-charts.ts",
+    "migration:run": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/database/data-source.ts",
+    "migration:revert": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d src/database/data-source.ts",
+    "seed:foods": "ts-node -r tsconfig-paths/register scripts/setup/create-sample-foods.ts",
+    "seed:recipes": "ts-node -r tsconfig-paths/register scripts/setup/create-sample-recipes.ts",
+    "deploy:vercel": "cd nutri-web && vercel --prod",
+    "deploy:supabase": "supabase db push",
+    "deploy:all": "npm run deploy:supabase && npm run deploy:vercel",
+    "setup:vercel": "cd nutri-web && npm install && npm run build",
+    "setup:supabase": "supabase start && supabase db reset"
+>>>>>>> nutri/main
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+<<<<<<< HEAD
     "@tailwindcss/postcss": "^4.1.10",
     "@types/bcrypt": "^6.0.0",
     "@types/bcryptjs": "^2.4.6",
@@ -25,6 +40,18 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.0.3",
     "@types/pg": "^8.16.0",
+=======
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@supabase/supabase-js": "^2.53.0",
+    "@tailwindcss/postcss": "^4.1.10",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.17",
+    "@types/multer": "^1.4.13",
+    "@types/nodemailer": "^6.4.17",
+    "@types/pdfkit": "^0.14.0",
+    "@types/react-native-vector-icons": "^6.4.18",
+>>>>>>> nutri/main
     "@types/react-router-dom": "^5.3.3",
     "axios": "^1.10.0",
     "bcrypt": "^5.1.1",
@@ -36,6 +63,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.18.2",
     "express-rate-limit": "^7.5.1",
+<<<<<<< HEAD
     "glob": "^11.0.3",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
@@ -51,11 +79,48 @@
   "devDependencies": {
     "@jest/globals": "^30.0.0-beta.3",
     "@types/jest": "^29.5.14",
+=======
+    "form-data": "^4.0.3",
+    "glob": "^11.0.3",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.1",
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^7.0.5",
+    "pdfkit": "^0.17.1",
+    "pg": "^8.11.3",
+    "puppeteer": "^24.12.0",
+    "react-native-vector-icons": "^10.2.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.6.2",
+    "reflect-metadata": "^0.2.1",
+    "socket.io": "^4.8.1",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "@jest/globals": "^30.0.0-beta.3",
+    "@types/bcrypt": "^5.0.2",
+    "@types/compression": "^1.8.1",
+    "@types/express-rate-limit": "^5.1.3",
+    "@types/helmet": "^0.0.48",
+    "@types/jest": "^29.5.14",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^20.11.20",
+    "@types/node-fetch": "^2.6.12",
+    "@types/pg": "^8.11.0",
+>>>>>>> nutri/main
     "@types/socket.io": "^3.0.1",
     "@types/supertest": "^6.0.3",
     "jest": "^29.7.0",
     "nodemon": "^3.1.0",
     "supertest": "^7.1.1",
+<<<<<<< HEAD
     "ts-jest": "^29.4.0"
+=======
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.3.3"
+>>>>>>> nutri/main
   }
 }

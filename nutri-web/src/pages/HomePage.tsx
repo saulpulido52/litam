@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
+<<<<<<< HEAD
 import { Container, Row, Col, Card, Button, Badge, Alert, Spinner } from 'react-bootstrap';
+=======
+import { Container, Row, Col, Card, Button, Alert, Badge, Spinner} from 'react-bootstrap';
+>>>>>>> nutri/main
 import { Link } from 'react-router-dom';
 
 
@@ -23,12 +27,20 @@ const HomePage: React.FC = () => {
 
     try {
       // Intentar hacer una llamada simple al backend
+<<<<<<< HEAD
       const response = await fetch(`${import.meta.env.VITE_API_URL}/health`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
+=======
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+      const response = await fetch(`${apiUrl}/health`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'}});
+>>>>>>> nutri/main
 
       if (response.ok) {
         setServerStatus({
@@ -98,8 +110,13 @@ const HomePage: React.FC = () => {
                   )}
                 </div>
               </div>
+<<<<<<< HEAD
               <Button
                 variant="outline-secondary"
+=======
+              <Button 
+                variant="outline-secondary" 
+>>>>>>> nutri/main
                 size="sm"
                 onClick={checkServerConnection}
                 disabled={serverStatus.status === 'checking'}
@@ -126,7 +143,11 @@ const HomePage: React.FC = () => {
                   Panel Profesional Nutri
                 </h2>
                 <p className="text-muted fs-5 mb-4">
+<<<<<<< HEAD
                   Plataforma web profesional para nutriólogos y administradores.
+=======
+                  Plataforma web profesional para nutriólogos y administradores. 
+>>>>>>> nutri/main
                   Gestión avanzada de pacientes, citas, planes nutricionales y reportes del sistema.
                 </p>
 
@@ -148,7 +169,11 @@ const HomePage: React.FC = () => {
                     </div>
                   </Col>
                 </Row>
+<<<<<<< HEAD
 
+=======
+                
+>>>>>>> nutri/main
                 <div className="alert alert-info border-info">
                   <h6 className="mb-2">📱 <strong>Aplicaciones Móviles Disponibles:</strong></h6>
                   <p className="mb-1">🩺 <strong>App Nutriólogos:</strong> iOS y Android para atención móvil</p>
@@ -157,37 +182,67 @@ const HomePage: React.FC = () => {
 
                 <div className="d-grid gap-2 d-md-flex justify-content-md-center">
                   <Link to="/login">
+<<<<<<< HEAD
                     <Button
                       variant="primary"
                       size="lg"
+=======
+                    <Button 
+                      variant="primary" 
+                      size="lg" 
+>>>>>>> nutri/main
                       className="nutri-btn me-md-2"
                     >
                       🔐 Iniciar Sesión
                     </Button>
                   </Link>
                   <Link to="/dashboard">
+<<<<<<< HEAD
                     <Button
                       variant="outline-success"
                       size="lg"
+=======
+                    <Button 
+                      variant="outline-success" 
+                      size="lg" 
+>>>>>>> nutri/main
                       className="nutri-btn me-md-2"
                     >
                       👨‍⚕️ Panel Nutriólogo
                     </Button>
                   </Link>
+<<<<<<< HEAD
                   <Link to="/admin">
                     <Button
                       variant="outline-warning"
                       size="lg"
+=======
+                  <Link to="/admin/login">
+                    <Button 
+                      variant="outline-warning" 
+                      size="lg" 
+>>>>>>> nutri/main
                       className="nutri-btn me-md-2"
                     >
                       ⚙️ Panel Admin
                     </Button>
                   </Link>
+<<<<<<< HEAD
                   <Button
                     variant="outline-secondary"
                     size="lg"
                     className="nutri-btn"
                     onClick={() => window.open(`${import.meta.env.VITE_API_URL}`, '_blank')}
+=======
+                  <Button 
+                    variant="outline-secondary" 
+                    size="lg" 
+                    className="nutri-btn"
+                    onClick={() => {
+                      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+                      window.open(apiUrl, '_blank');
+                    }}
+>>>>>>> nutri/main
                   >
                     🔧 Ver API
                   </Button>
@@ -205,11 +260,19 @@ const HomePage: React.FC = () => {
                   <Col md={6}>
                     <p className="mb-1">
                       <Badge bg="success" className="me-2">Frontend</Badge>
+<<<<<<< HEAD
                       http://localhost:5000
                     </p>
                     <p className="mb-1">
                       <Badge bg="info" className="me-2">Backend</Badge>
                       http://localhost:4000/api
+=======
+                      {window.location.origin}
+                    </p>
+                    <p className="mb-1">
+                      <Badge bg="info" className="me-2">Backend</Badge>
+                      {import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}
+>>>>>>> nutri/main
                     </p>
                   </Col>
                   <Col md={6}>
@@ -219,7 +282,11 @@ const HomePage: React.FC = () => {
                     </p>
                     <p className="mb-1">
                       <Badge bg="warning" className="me-2">WebSocket</Badge>
+<<<<<<< HEAD
                       ws://localhost:4000
+=======
+                      {import.meta.env.VITE_WS_URL || 'ws://localhost:4000'}
+>>>>>>> nutri/main
                     </p>
                   </Col>
                 </Row>

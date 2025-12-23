@@ -1,0 +1,203 @@
+/* =============================================
+   TABLA RESPONSIVA OPTIMIZADA
+   ============================================= */
+
+/* Optimizaciones generales para la tabla */
+.table-responsive {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  margin-bottom: 0 !important;
+  font-size: 0.9rem;
+}
+
+/* Encabezados de tabla más compactos */
+.table thead th {
+  padding: 0.5rem 0.3rem !important;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border-bottom: 2px solid #dee2e6;
+}
+
+/* Celdas más compactas */
+.table tbody td {
+  padding: 0.4rem 0.3rem !important;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+/* Botones más pequeños en la tabla */
+.table .btn-sm {
+  padding: 0.2rem 0.4rem !important;
+  font-size: 0.75rem !important;
+  border-radius: 0.25rem !important;
+}
+
+/* Badges más pequeños */
+.table .badge {
+  font-size: 0.7rem !important;
+  padding: 0.25rem 0.4rem !important;
+}
+
+/* Texto truncado mejorado */
+.text-truncate-table {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =============================================
+   BREAKPOINTS ESPECÍFICOS
+   ============================================= */
+
+/* Tablets pequeñas (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .table {
+    font-size: 0.8rem;
+  }
+  
+  .table thead th {
+    padding: 0.4rem 0.2rem !important;
+    font-size: 0.75rem;
+  }
+  
+  .table tbody td {
+    padding: 0.3rem 0.2rem !important;
+  }
+  
+  .btn-sm {
+    padding: 0.15rem 0.3rem !important;
+    font-size: 0.7rem !important;
+  }
+  
+  .badge {
+    font-size: 0.65rem !important;
+    padding: 0.2rem 0.3rem !important;
+  }
+}
+
+/* Tablets grandes (992px - 1199px) */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .table {
+    font-size: 0.85rem;
+  }
+  
+  .table thead th {
+    padding: 0.45rem 0.25rem !important;
+    font-size: 0.8rem;
+  }
+  
+  .table tbody td {
+    padding: 0.35rem 0.25rem !important;
+  }
+}
+
+/* Pantallas grandes (1200px+) */
+@media (min-width: 1200px) {
+  .table {
+    font-size: 0.9rem;
+  }
+  
+  .table thead th {
+    padding: 0.5rem 0.3rem !important;
+  }
+  
+  .table tbody td {
+    padding: 0.4rem 0.3rem !important;
+  }
+}
+
+/* =============================================
+   OPTIMIZACIONES ESPECÍFICAS
+   ============================================= */
+
+/* Columna de acciones siempre visible */
+.actions-column {
+  position: sticky;
+  right: 0;
+  background-color: white;
+  z-index: 1;
+  min-width: 180px !important;
+}
+
+/* Hover effects optimizados */
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.05) !important;
+}
+
+/* Scroll horizontal suave */
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* =============================================
+   ESTADOS RESPONSIVOS
+   ============================================= */
+
+/* Indicadores de estado más compactos */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+/* Acciones responsivas */
+.responsive-actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+}
+
+/* Información de contacto compacta */
+.contact-info {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+}
+
+/* =============================================
+   UTILIDADES RESPONSIVAS
+   ============================================= */
+
+/* Ocultar/mostrar elementos según breakpoint */
+.d-md-table-cell { display: none !important; }
+.d-lg-table-cell { display: none !important; }
+.d-xl-table-cell { display: none !important; }
+.d-xxl-table-cell { display: none !important; }
+
+@media (min-width: 768px) {
+  .d-md-table-cell { display: table-cell !important; }
+}
+
+@media (min-width: 992px) {
+  .d-lg-table-cell { display: table-cell !important; }
+}
+
+@media (min-width: 1200px) {
+  .d-xl-table-cell { display: table-cell !important; }
+}
+
+@media (min-width: 1400px) {
+  .d-xxl-table-cell { display: table-cell !important; }
+} 

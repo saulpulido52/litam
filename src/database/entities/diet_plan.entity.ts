@@ -27,6 +27,12 @@ export class DietPlan {
     @Column({ type: 'varchar', length: 255, nullable: false })
     name!: string; // Ej: 'Plan Semanal de Pérdida de Peso (Semana 1)'
 
+<<<<<<< HEAD
+=======
+    @Column({ type: 'text', nullable: true })
+    description: string | null; // Descripción detallada del plan nutricional
+
+>>>>>>> nutri/main
     @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE'  })
     @JoinColumn({ name: 'patient_user_id' })
     patient!: User;
@@ -77,6 +83,29 @@ export class DietPlan {
     @Column({ type: 'jsonb', nullable: true })
     weekly_plans: any[] | null; // Array de planes semanales con estructura detallada
 
+<<<<<<< HEAD
+=======
+    // Campo para restricciones patológicas
+    @Column({ type: 'jsonb', nullable: true })
+    pathological_restrictions: any | null; // Restricciones médicas, alergias, medicamentos, etc.
+
+    // === NUEVOS CAMPOS PARA COMPLETAR TABS ===
+    @Column({ type: 'jsonb', nullable: true })
+    meal_frequency: any | null; // Frecuencia de comidas (desayuno, almuerzo, etc.)
+
+    @Column({ type: 'jsonb', nullable: true })
+    meal_timing: any | null; // Horarios de comidas
+
+    @Column({ type: 'jsonb', nullable: true })
+    meal_schedules: any | null; // Horarios detallados de comidas del NutritionalScheduleTab
+
+    @Column({ type: 'jsonb', nullable: true })
+    nutritional_goals: any | null; // Objetivos nutricionales (agua, fibra, distribución calórica)
+
+    @Column({ type: 'jsonb', nullable: true })
+    flexibility_settings: any | null; // Configuración de flexibilidad del plan
+
+>>>>>>> nutri/main
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at!: Date;
 

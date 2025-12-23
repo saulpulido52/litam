@@ -7,6 +7,12 @@ import {
     ArrayMinSize,
     IsNumber,
     Min,
+<<<<<<< HEAD
+=======
+    IsBoolean,
+    IsLatitude,
+    IsLongitude,
+>>>>>>> nutri/main
 } from 'class-validator';
 
 export class CreateUpdateNutritionistProfileDto {
@@ -72,4 +78,80 @@ export class CreateUpdateNutritionistProfileDto {
 
     @IsOptional()
     officeHours?: any; // Mantener como 'any' para JSONB genérico
+<<<<<<< HEAD
+=======
+
+    // --- NUEVOS CAMPOS PARA APP MÓVIL ---
+
+    // Descripción profesional breve
+    @IsOptional()
+    @IsString({ message: 'El resumen profesional debe ser una cadena de texto.' })
+    @Length(0, 300, { message: 'El resumen profesional no puede exceder los 300 caracteres.' })
+    professionalSummary?: string;
+
+    // Modalidad de consulta
+    @IsOptional()
+    @IsBoolean({ message: 'El campo de consultas presenciales debe ser un valor booleano.' })
+    offersInPerson?: boolean;
+
+    @IsOptional()
+    @IsBoolean({ message: 'El campo de consultas online debe ser un valor booleano.' })
+    offersOnline?: boolean;
+
+    // Ubicación del consultorio
+    @IsOptional()
+    @IsString({ message: 'El nombre del consultorio debe ser una cadena de texto.' })
+    @Length(0, 255, { message: 'El nombre del consultorio no puede exceder los 255 caracteres.' })
+    clinicName?: string;
+
+    @IsOptional()
+    @IsString({ message: 'La dirección del consultorio debe ser una cadena de texto.' })
+    @Length(0, 500, { message: 'La dirección del consultorio no puede exceder los 500 caracteres.' })
+    clinicAddress?: string;
+
+    @IsOptional()
+    @IsString({ message: 'La ciudad debe ser una cadena de texto.' })
+    @Length(0, 100, { message: 'La ciudad no puede exceder los 100 caracteres.' })
+    clinicCity?: string;
+
+    @IsOptional()
+    @IsString({ message: 'El estado debe ser una cadena de texto.' })
+    @Length(0, 100, { message: 'El estado no puede exceder los 100 caracteres.' })
+    clinicState?: string;
+
+    @IsOptional()
+    @IsString({ message: 'El código postal debe ser una cadena de texto.' })
+    @Length(0, 10, { message: 'El código postal no puede exceder los 10 caracteres.' })
+    clinicZipCode?: string;
+
+    @IsOptional()
+    @IsString({ message: 'El país debe ser una cadena de texto.' })
+    @Length(0, 100, { message: 'El país no puede exceder los 100 caracteres.' })
+    clinicCountry?: string;
+
+    // Coordenadas para Google Maps
+    @IsOptional()
+    @IsLatitude({ message: 'La latitud debe ser un valor válido.' })
+    latitude?: number;
+
+    @IsOptional()
+    @IsLongitude({ message: 'La longitud debe ser un valor válido.' })
+    longitude?: number;
+
+    // Información adicional del consultorio
+    @IsOptional()
+    @IsString({ message: 'Las notas del consultorio deben ser una cadena de texto.' })
+    @Length(0, 500, { message: 'Las notas del consultorio no pueden exceder los 500 caracteres.' })
+    clinicNotes?: string;
+
+    @IsOptional()
+    @IsString({ message: 'El teléfono del consultorio debe ser una cadena de texto.' })
+    @Length(0, 20, { message: 'El teléfono del consultorio no puede exceder los 20 caracteres.' })
+    clinicPhone?: string;
+
+    // Estado de disponibilidad
+    @IsOptional()
+    @IsBoolean({ message: 'El campo de disponibilidad debe ser un valor booleano.' })
+    isAvailable?: boolean;
+>>>>>>> nutri/main
 }

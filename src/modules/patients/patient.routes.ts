@@ -19,15 +19,28 @@ router.get('/my-patients', protect, authorize(RoleName.NUTRITIONIST), patientCon
 // Crear un nuevo paciente
 router.post('/', protect, authorize(RoleName.NUTRITIONIST), validateMiddleware(CreatePatientDTO), patientController.createPatient);
 
+<<<<<<< HEAD
 // Obtener un paciente específico por ID
+=======
+// Obtener estadísticas de pacientes (PRIMERO - rutas específicas)
+router.get('/stats/summary', protect, authorize(RoleName.NUTRITIONIST), patientController.getPatientStats);
+
+// Obtener acciones rápidas para el dashboard (ANTES de /:patientId)
+router.get('/quick-actions', protect, authorize(RoleName.NUTRITIONIST), patientController.getQuickActions);
+
+// Obtener un paciente específico por ID (DESPUÉS - rutas con parámetros)
+>>>>>>> nutri/main
 router.get('/:patientId', protect, authorize(RoleName.NUTRITIONIST), patientController.getPatientById);
 
 // Actualizar un paciente
 router.put('/:patientId', protect, authorize(RoleName.NUTRITIONIST), validateMiddleware(UpdatePatientDTO), patientController.updatePatient);
 
+<<<<<<< HEAD
 // Obtener estadísticas de pacientes
 router.get('/stats/summary', protect, authorize(RoleName.NUTRITIONIST), patientController.getPatientStats);
 
+=======
+>>>>>>> nutri/main
 // 🎯 NUEVO: Actualizar paciente por EMAIL (más robusto que por ID)
 router.put('/by-email/:email', protect, authorize(RoleName.NUTRITIONIST), validateMiddleware(UpdatePatientDTO), patientController.updatePatientByEmail);
 

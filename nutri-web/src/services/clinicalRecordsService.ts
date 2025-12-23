@@ -4,8 +4,12 @@ import type {
   CreateClinicalRecordDto,
   UpdateClinicalRecordDto,
   ClinicalRecordStats,
+<<<<<<< HEAD
   TransferResult,
 } from '../types';
+=======
+  TransferResult} from '../types';
+>>>>>>> nutri/main
 
 class ClinicalRecordsService {
   private baseUrl = '/clinical-records';
@@ -129,8 +133,12 @@ class ClinicalRecordsService {
       {
         patientId,
         fromNutritionistId,
+<<<<<<< HEAD
         toNutritionistId,
       }
+=======
+        toNutritionistId}
+>>>>>>> nutri/main
     );
     
     if (response.status !== 'success' || !response.data) {
@@ -213,8 +221,12 @@ class ClinicalRecordsService {
 
     return {
       isValid: errors.length === 0,
+<<<<<<< HEAD
       errors,
     };
+=======
+      errors};
+>>>>>>> nutri/main
   }
 
   // Calcular IMC si tenemos peso y altura
@@ -241,8 +253,12 @@ class ClinicalRecordsService {
 
     return {
       bmi: Math.round(bmi * 10) / 10,
+<<<<<<< HEAD
       category,
     };
+=======
+      category};
+>>>>>>> nutri/main
   }
 
   // Formatear fecha para mostrar
@@ -250,8 +266,12 @@ class ClinicalRecordsService {
     return new Date(dateString).toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'long',
+<<<<<<< HEAD
       day: 'numeric',
     });
+=======
+      day: 'numeric'});
+>>>>>>> nutri/main
   }
 
   // Formatear fecha y hora
@@ -261,8 +281,196 @@ class ClinicalRecordsService {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
+<<<<<<< HEAD
       minute: '2-digit',
     });
+=======
+      minute: '2-digit'});
+  }
+
+  // === DOCUMENTOS DE LABORATORIO ===
+
+  // Generar PDF del expediente
+  public async generateExpedientePDF(recordId: string): Promise<Blob> {
+    try {
+      const response = await fetch(`/api/clinical-records/${recordId}/generate-pdf`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiService.getToken()}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Error al generar el PDF' }));
+        throw new Error(errorData.message || 'Error al generar el PDF');
+      }
+
+      return await response.blob();
+    } catch (error: any) {
+      console.error('Error in generateExpedientePDF:', error);
+      throw new Error(error.message || 'Error al generar el PDF del expediente');
+    }
+  }
+
+  // Upload documento de laboratorio
+  public async uploadLaboratoryDocument(
+    recordId: string, 
+    file: File, 
+    description?: string, 
+    labDate?: string
+  ): Promise<any> {
+    try {
+      const formData = new FormData();
+      formData.append('laboratory_pdf', file);
+      if (description) {
+        formData.append('description', description);
+      }
+      if (labDate) {
+        formData.append('labDate', new Date(labDate).toISOString());
+      }
+
+      const response = await fetch(`/api/clinical-records/${recordId}/laboratory-documents`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiService.getToken()}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al subir el documento');
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      console.error('Error in uploadLaboratoryDocument:', error);
+      throw new Error(error.message || 'Error al subir el documento de laboratorio');
+    }
+  }
+
+  // Eliminar documento de laboratorio
+  public async deleteLaboratoryDocument(recordId: string, documentId: string): Promise<any> {
+    try {
+      const response = await fetch(`/api/clinical-records/${recordId}/laboratory-documents/${documentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${apiService.getToken()}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al eliminar el documento');
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      console.error('Error in deleteLaboratoryDocument:', error);
+      throw new Error(error.message || 'Error al eliminar el documento de laboratorio');
+    }
+  }
+
+  // Obtener documentos de laboratorio
+  async getLaboratoryDocuments(recordId: string): Promise<any[]> {
+    const response = await apiService.get<{ documents: any[] }>(
+      `${this.baseUrl}/${recordId}/laboratory-documents`
+    );
+
+    if (response.status !== 'success' || !response.data?.documents) {
+      throw new Error(response.message || 'Error al obtener documentos de laboratorio');
+    }
+
+    return response.data.documents;
+  }
+
+  // === INTERACCIONES FÁRMACO-NUTRIENTE ===
+
+  // Agregar interacción fármaco-nutriente
+  async addDrugNutrientInteraction(
+    recordId: string,
+    interaction: {
+      medicationId: string;
+      nutrientsAffected: string[];
+      interactionType: 'absorption' | 'metabolism' | 'excretion' | 'antagonism';
+      severity: 'low' | 'moderate' | 'high' | 'critical';
+      description: string;
+      recommendations: string[];
+      timingConsiderations?: string;
+      foodsToAvoid?: string[];
+      foodsToIncrease?: string[];
+      monitoringRequired?: boolean;
+    }
+  ): Promise<{ message: string; interaction: any }> {
+    const response = await apiService.post<{ message: string; interaction: any }>(
+      `${this.baseUrl}/${recordId}/drug-nutrient-interactions`,
+      interaction
+    );
+
+    if (response.status !== 'success' || !response.data) {
+      throw new Error(response.message || 'Error al agregar la interacción fármaco-nutriente');
+    }
+
+    return response.data;
+  }
+
+  // Actualizar interacción fármaco-nutriente
+  async updateDrugNutrientInteraction(
+    recordId: string,
+    interactionId: string,
+    updates: {
+      nutrientsAffected?: string[];
+      interactionType?: 'absorption' | 'metabolism' | 'excretion' | 'antagonism';
+      severity?: 'low' | 'moderate' | 'high' | 'critical';
+      description?: string;
+      recommendations?: string[];
+      timingConsiderations?: string;
+      foodsToAvoid?: string[];
+      foodsToIncrease?: string[];
+      monitoringRequired?: boolean;
+    }
+  ): Promise<{ message: string; interaction: any }> {
+    const response = await apiService.patch<{ message: string; interaction: any }>(
+      `${this.baseUrl}/${recordId}/drug-nutrient-interactions/${interactionId}`,
+      updates
+    );
+
+    if (response.status !== 'success' || !response.data) {
+      throw new Error(response.message || 'Error al actualizar la interacción fármaco-nutriente');
+    }
+
+    return response.data;
+  }
+
+  // Eliminar interacción fármaco-nutriente
+  async deleteDrugNutrientInteraction(
+    recordId: string,
+    interactionId: string
+  ): Promise<{ message: string }> {
+    const response = await apiService.delete<{ message: string }>(
+      `${this.baseUrl}/${recordId}/drug-nutrient-interactions/${interactionId}`
+    );
+
+    if (response.status !== 'success' || !response.data) {
+      throw new Error(response.message || 'Error al eliminar la interacción fármaco-nutriente');
+    }
+
+    return response.data;
+  }
+
+  // Obtener interacciones fármaco-nutriente
+  async getDrugNutrientInteractions(recordId: string): Promise<any[]> {
+    const response = await apiService.get<{ interactions: any[] }>(
+      `${this.baseUrl}/${recordId}/drug-nutrient-interactions`
+    );
+
+    if (response.status !== 'success' || !response.data?.interactions) {
+      throw new Error(response.message || 'Error al obtener interacciones fármaco-nutriente');
+    }
+
+    return response.data.interactions;
+>>>>>>> nutri/main
   }
 
   // Obtener expedientes más recientes

@@ -18,7 +18,11 @@ export class DashboardController {
         throw new AppError('Usuario no autenticado', 401);
       }
 
+<<<<<<< HEAD
       const stats = await this.dashboardService.getDashboardStats(nutritionistId);
+=======
+      const stats = await this.dashboardService.getSimpleDashboardStats(nutritionistId);
+>>>>>>> nutri/main
       
       res.json({
         status: 'success',
@@ -32,6 +36,7 @@ export class DashboardController {
       });
     }
   };
+<<<<<<< HEAD
 
   // GET /api/dashboard/recent-activities
   getRecentActivities = async (req: Request, res: Response) => {
@@ -84,4 +89,6 @@ export class DashboardController {
       });
     }
   };
+=======
+>>>>>>> nutri/main
 } 

@@ -84,4 +84,143 @@ export class AdminUpdateSettingsDto {
     @IsString({ message: 'El valor de la configuración debe ser una cadena de texto.' })
     @Length(1, 255, { message: 'El valor no puede exceder 255 caracteres.' })
     settingValue?: string;
+<<<<<<< HEAD
+=======
+}
+
+// DTO para crear usuarios desde admin
+export class AdminCreateUserDto {
+    @IsString({ message: 'El nombre debe ser una cadena de texto.' })
+    @Length(2, 100, { message: 'El nombre debe tener entre 2 y 100 caracteres.' })
+    firstName!: string;
+
+    @IsString({ message: 'El apellido debe ser una cadena de texto.' })
+    @Length(2, 100, { message: 'El apellido debe tener entre 2 y 100 caracteres.' })
+    lastName!: string;
+
+    @IsEmail({}, { message: 'El email debe ser una dirección de correo válida.' })
+    email!: string;
+
+    @IsString({ message: 'La contraseña debe ser una cadena de texto.' })
+    @Length(8, 50, { message: 'La contraseña debe tener entre 8 y 50 caracteres.' })
+    password!: string;
+
+    @IsEnum(RoleName, { message: 'El rol de usuario no es válido.' })
+    roleName!: RoleName;
+
+    @IsOptional()
+    @IsBoolean({ message: 'is_active debe ser un booleano.' })
+    isActive?: boolean;
+
+    @IsOptional()
+    @IsString({ message: 'El teléfono debe ser una cadena de texto.' })
+    phone?: string;
+
+    @IsOptional()
+    @IsDateString({}, { message: 'La fecha de nacimiento debe ser una fecha válida.' })
+    birthDate?: string;
+}
+
+// DTO para crear citas desde admin
+export class AdminCreateAppointmentDto {
+    @IsUUID('4', { message: 'El ID del paciente debe ser un UUID válido.' })
+    patientId!: string;
+
+    @IsUUID('4', { message: 'El ID del nutriólogo debe ser un UUID válido.' })
+    nutritionistId!: string;
+
+    @IsDateString({}, { message: 'La fecha de la cita debe ser una fecha válida.' })
+    appointmentDate!: string;
+
+    @IsOptional()
+    @IsString({ message: 'El estado debe ser una cadena de texto.' })
+    status?: string;
+
+    @IsOptional()
+    @IsString({ message: 'Las notas deben ser una cadena de texto.' })
+    notes?: string;
+}
+
+// DTO para crear alimentos desde admin
+export class AdminCreateFoodDto {
+    @IsString({ message: 'El nombre debe ser una cadena de texto.' })
+    @Length(1, 255, { message: 'El nombre debe tener entre 1 y 255 caracteres.' })
+    name!: string;
+
+    @IsOptional()
+    @IsString({ message: 'La descripción debe ser una cadena de texto.' })
+    description?: string;
+
+    @IsOptional()
+    @IsString({ message: 'La categoría debe ser una cadena de texto.' })
+    category?: string;
+
+    @IsOptional()
+    caloriesPer100g?: number;
+
+    @IsOptional()
+    proteinPer100g?: number;
+
+    @IsOptional()
+    carbsPer100g?: number;
+
+    @IsOptional()
+    fatPer100g?: number;
+
+    @IsOptional()
+    fiberPer100g?: number;
+}
+
+// DTO para crear recetas desde admin
+export class AdminCreateRecipeDto {
+    @IsString({ message: 'El nombre debe ser una cadena de texto.' })
+    @Length(1, 255, { message: 'El nombre debe tener entre 1 y 255 caracteres.' })
+    name!: string;
+
+    @IsOptional()
+    @IsString({ message: 'La descripción debe ser una cadena de texto.' })
+    description?: string;
+
+    @IsOptional()
+    @IsString({ message: 'Las instrucciones deben ser una cadena de texto.' })
+    instructions?: string;
+
+    @IsOptional()
+    prepTimeMinutes?: number;
+
+    @IsOptional()
+    servings?: number;
+
+    @IsOptional()
+    @IsString({ message: 'El nivel de dificultad debe ser una cadena de texto.' })
+    difficultyLevel?: string;
+
+    @IsOptional()
+    @IsString({ message: 'La categoría debe ser una cadena de texto.' })
+    category?: string;
+}
+
+// DTO para crear contenido educativo desde admin
+export class AdminCreateEducationalContentDto {
+    @IsString({ message: 'El título debe ser una cadena de texto.' })
+    @Length(1, 255, { message: 'El título debe tener entre 1 y 255 caracteres.' })
+    title!: string;
+
+    @IsString({ message: 'El contenido debe ser una cadena de texto.' })
+    content!: string;
+
+    @IsString({ message: 'El tipo debe ser una cadena de texto.' })
+    type!: string;
+
+    @IsOptional()
+    @IsString({ message: 'La audiencia objetivo debe ser una cadena de texto.' })
+    targetAudience?: string;
+
+    @IsOptional()
+    tags?: string[];
+
+    @IsOptional()
+    @IsBoolean({ message: 'isPublished debe ser un booleano.' })
+    isPublished?: boolean;
+>>>>>>> nutri/main
 }

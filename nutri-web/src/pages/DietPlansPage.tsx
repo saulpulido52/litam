@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
+<<<<<<< HEAD
   Calendar, 
   Clock, 
   Target, 
@@ -27,6 +28,33 @@ import { useDietPlans } from '../hooks/useDietPlans';
 import { usePatients } from '../hooks/usePatients';
 import { Button, Modal, Alert } from 'react-bootstrap';
 import DietPlanViewer from '../components/DietPlanViewer';
+=======
+  Plus, 
+  Search, 
+  Calendar, 
+  Target, 
+  Clock,
+  Edit,
+  Trash2,
+  Download,
+  Copy,
+  RefreshCw,
+  Utensils,
+  Filter,
+  FileText,
+  Eye
+} from 'lucide-react';
+import RecipeLibrary from '../components/RecipeBook/RecipeLibrary';
+import type { DietPlan, CreateDietPlanDto, PlanType } from '../types/diet';
+import { useDietPlans } from '../hooks/useDietPlans';
+import { usePatients } from '../hooks/usePatients';
+import { clinicalRecordsService } from '../services/clinicalRecordsService';
+import { Button, Modal, Alert} from 'react-bootstrap';
+import DietPlanViewer from '../components/DietPlanViewer';
+import NutritionalCardSimple from '../components/NutritionalCardSimple';
+import MealPlanner from '../components/MealPlanner';
+import DietPlanService from '../services/dietPlanService';
+>>>>>>> nutri/main
 
 interface Recipe {
   id: number;
@@ -41,6 +69,7 @@ interface Recipe {
   tags: string[];
 }
 
+<<<<<<< HEAD
 const TempDietPlanCreator: React.FC<{
   patients: any[];
   onSubmit: (data: CreateDietPlanDto) => void;
@@ -849,6 +878,10 @@ const TempDietPlanCreator: React.FC<{
     </div>
   );
 };
+=======
+// Tarjetas Nutricionales implementadas y funcionales
+// Uso temporal de DietPlanQuickCreate como interfaz mientras se integran completamente
+>>>>>>> nutri/main
 
 const DietPlansPage: React.FC = () => {
   const {
@@ -858,14 +891,24 @@ const DietPlansPage: React.FC = () => {
     stats,
     fetchAllDietPlans,
     createDietPlan,
+<<<<<<< HEAD
     generateDietPlanWithAI,
     updateDietPlan,
     deleteDietPlan,
+=======
+    updateDietPlan,
+    deleteDietPlan,
+    refreshStats,
+>>>>>>> nutri/main
     clearError,
     setError
   } = useDietPlans();
   
   const { patients } = usePatients();
+<<<<<<< HEAD
+=======
+  const [allClinicalRecords, setAllClinicalRecords] = useState<any[]>([]);
+>>>>>>> nutri/main
   
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -878,11 +921,65 @@ const DietPlansPage: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<DietPlan | null>(null);
   const [editingPlan, setEditingPlan] = useState<DietPlan | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+<<<<<<< HEAD
 
   // Load all diet plans for the nutritionist on mount
   useEffect(() => {
     fetchAllDietPlans();
   }, [fetchAllDietPlans]);
+=======
+  const [showMealPlanner, setShowMealPlanner] = useState(false);
+  const [selectedPlanForMeals, setSelectedPlanForMeals] = useState<DietPlan | null>(null);
+  // Estados de recetas manejados por RecipeLibrary
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  // Load all diet plans and clinical records for the nutritionist on mount
+  useEffect(() => {
+    fetchAllDietPlans();
+    if (patients.length > 0) {
+      loadAllClinicalRecords();
+    }
+  }, [fetchAllDietPlans, patients.length]);
+
+  // Load clinical records for all patients
+  const loadAllClinicalRecords = async () => {
+    try {
+      console.log('🔄 Cargando expedientes clínicos para todos los pacientes...');
+      const allRecords: any[] = [];
+      
+      // Cargar expedientes para todos los pacientes secuencialmente
+      for (const patient of patients) {
+        try {
+          console.log(`📋 Cargando expedientes para paciente: ${patient.first_name} ${patient.last_name} (${patient.email})`);
+          const patientRecords = await clinicalRecordsService.getPatientRecords(patient.id);
+          console.log(`✅ Expedientes encontrados para ${patient.first_name}: ${patientRecords.length}`);
+          
+          // Agregar los expedientes a la lista acumulativa
+          allRecords.push(...patientRecords);
+        } catch (error) {
+          console.warn(`⚠️ Error cargando expedientes para paciente ${patient.first_name}:`, error);
+        }
+      }
+      
+      console.log(`📊 Total de expedientes clínicos cargados: ${allRecords.length}`);
+      setAllClinicalRecords(allRecords);
+      
+      // Debug: Mostrar información detallada de los expedientes cargados
+      allRecords.forEach((record, index) => {
+        console.log(`📋 Expediente ${index + 1}:`, {
+          patient: `${record.patient?.first_name} ${record.patient?.last_name}`,
+          email: record.patient?.email,
+          date: record.record_date,
+          diagnosis: record.nutritional_diagnosis,
+          allergies: record.pathological_antecedents?.allergies
+        });
+      });
+      
+    } catch (error) {
+      console.error('❌ Error loading clinical records:', error);
+    }
+  };
+>>>>>>> nutri/main
 
   // Mock recipes data
   useEffect(() => {
@@ -935,6 +1032,7 @@ const DietPlansPage: React.FC = () => {
     return matchesSearch && matchesStatus && matchesType;
   });
 
+<<<<<<< HEAD
   const filteredRecipes = recipes.filter(recipe => {
     const searchTermLower = searchTerm.toLowerCase();
     const recipeName = (recipe.name ?? '').toLowerCase();
@@ -943,6 +1041,16 @@ const DietPlansPage: React.FC = () => {
     return recipeName.includes(searchTermLower) ||
            recipeCategory.includes(searchTermLower);
   });
+=======
+  // const filteredRecipes = recipes.filter(recipe => {
+  //   const searchTermLower = searchTerm.toLowerCase();
+  //   const recipeName = (recipe.name ?? '').toLowerCase();
+  //   const recipeCategory = (recipe.category ?? '').toLowerCase();
+    
+  //   return recipeName.includes(searchTermLower) ||
+  //          recipeCategory.includes(searchTermLower);
+  // });
+>>>>>>> nutri/main
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -1012,6 +1120,7 @@ const DietPlansPage: React.FC = () => {
     return plan.patient?.first_name || 'Paciente';
   };
 
+<<<<<<< HEAD
   const transformDietPlanToFormData = (plan: DietPlan): CreateDietPlanDto => {
     return {
       patientId: plan.patient_id,
@@ -1136,6 +1245,8 @@ const DietPlansPage: React.FC = () => {
     };
   };
 
+=======
+>>>>>>> nutri/main
   const validateDietPlanData = (data: any): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
 
@@ -1161,35 +1272,92 @@ const DietPlansPage: React.FC = () => {
     }
   };
 
+<<<<<<< HEAD
   const handleUpdateDietPlan = async () => {
     if (!editingPlan) return;
     
     try {
       const validation = validateDietPlanData(editingPlan);
+=======
+  const handleUpdateDietPlan = async (formData: CreateDietPlanDto) => {
+    if (!editingPlan) return;
+    
+    try {
+      const validation = validateDietPlanData(formData);
+>>>>>>> nutri/main
       if (!validation.isValid) {
         setError('Errores de validación:\n' + validation.errors.join('\n'));
         return;
       }
 
+<<<<<<< HEAD
       await updateDietPlan(editingPlan.id, editingPlan);
       setEditingPlan(null);
+=======
+      await updateDietPlan(editingPlan.id, formData);
+      setEditingPlan(null);
+      setShowPlanModal(false);
+>>>>>>> nutri/main
       clearError();
     } catch (error: any) {
       setError(error.message || 'Error al actualizar el plan de dieta');
     }
   };
 
+<<<<<<< HEAD
   const handleDeletePlan = async (planId: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este plan?')) {
       try {
         await deleteDietPlan(planId);
         clearError();
       } catch (error: any) {
+=======
+  const handleDeletePlan = async (planId: string, event?: React.MouseEvent) => {
+    // Registrar llamada para debugging
+    console.log('🗑️ handleDeletePlan llamado con planId:', planId);
+    console.trace('Origen de la llamada de eliminación');
+    
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    if (window.confirm('¿Estás seguro de que quieres eliminar este plan?')) {
+      try {
+        console.log('🔄 Eliminando plan:', planId);
+        await deleteDietPlan(planId);
+        
+        // Recargar todos los datos relacionados
+        await Promise.all([
+          fetchAllDietPlans(),
+          refreshStats(),
+          patients.length > 0 ? loadAllClinicalRecords() : Promise.resolve()
+        ]);
+        
+        console.log('✅ Plan eliminado exitosamente:', planId);
+        
+        // Limpiar cualquier plan seleccionado si era el eliminado
+        if (selectedPlan?.id === planId) {
+          setSelectedPlan(null);
+        }
+        if (editingPlan?.id === planId) {
+          setEditingPlan(null);
+        }
+        if (selectedPlanForMeals?.id === planId) {
+          setSelectedPlanForMeals(null);
+        }
+        
+        clearError();
+        console.log('✅ Plan eliminado y datos recargados exitosamente');
+      } catch (error: any) {
+        console.error('❌ Error eliminando plan:', error);
+>>>>>>> nutri/main
         setError(error.message || 'Error al eliminar el plan');
       }
     }
   };
 
+<<<<<<< HEAD
   const handleGenerateAIPlan = async (aiData: GenerateAIDietDto) => {
     try {
       await generateDietPlanWithAI(aiData);
@@ -1204,6 +1372,46 @@ const DietPlansPage: React.FC = () => {
     // Implementar descarga de PDF
     console.log('Descargando PDF para plan:', plan.id);
     alert('Función de descarga de PDF en desarrollo');
+=======
+  const handleDownloadPDF = async (plan: DietPlan) => {
+    try {
+      setPdfLoading(true);
+      clearError();
+      
+      console.log('📄 Descargando PDF del planificador de comidas para plan:', plan.id);
+      
+      // Usar el servicio para descargar el PDF
+      const pdfBlob = await DietPlanService.downloadMealPlannerPDF(plan.id);
+      
+      // Crear URL temporal para el blob
+      const pdfUrl = window.URL.createObjectURL(pdfBlob);
+      
+      // Nombre del archivo
+      const filename = `planificador-comidas_${plan.name.replace(/\s+/g, '-')}_${new Date().toISOString().split('T')[0]}.pdf`;
+      
+      // Crear enlace de descarga
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Limpiar URL temporal después de un tiempo
+      setTimeout(() => {
+        window.URL.revokeObjectURL(pdfUrl);
+      }, 10000);
+      
+      console.log('✅ PDF del planificador de comidas descargado exitosamente');
+      
+    } catch (error: any) {
+      console.error('❌ Error descargando PDF:', error);
+      setError(error.message || 'Error al descargar el PDF del planificador de comidas');
+    } finally {
+      setPdfLoading(false);
+    }
+>>>>>>> nutri/main
   };
 
   const handleEditPlan = (plan: DietPlan) => {
@@ -1216,6 +1424,87 @@ const DietPlansPage: React.FC = () => {
     setShowPlanDetail(true);
   };
 
+<<<<<<< HEAD
+=======
+  const handleOpenMealPlanner = (plan: DietPlan) => {
+    setSelectedPlanForMeals(plan);
+    setShowMealPlanner(true);
+  };
+
+  const handleSaveMealPlan = async (weeklyPlans: any[]) => {
+    try {
+      console.log('🍽️ Guardando plan de comidas:', weeklyPlans);
+      
+      if (selectedPlanForMeals) {
+        // Actualizar el plan en el backend
+        const updatedPlan = await updateDietPlan(selectedPlanForMeals.id, {
+          weeklyPlans: weeklyPlans
+        });
+        
+        console.log('✅ Plan actualizado en backend:', updatedPlan);
+        
+        // Actualizar el estado local del plan seleccionado
+        if (selectedPlan) {
+          setSelectedPlan(updatedPlan);
+        }
+        
+        // Cerrar el modal y limpiar
+        setShowMealPlanner(false);
+        setSelectedPlanForMeals(null);
+        
+        // Mostrar mensaje de éxito
+        alert('✅ Plan de comidas guardado exitosamente. Los cambios se han aplicado al plan nutricional.');
+        
+        // Recargar los datos para asegurar sincronización
+        await fetchAllDietPlans();
+        
+      }
+    } catch (error: any) {
+      console.error('❌ Error guardando plan de comidas:', error);
+      setError(error.message || 'Error al guardar el plan de comidas');
+    }
+  };
+
+
+
+  const handleRefreshData = async () => {
+    try {
+      await fetchAllDietPlans();
+      if (patients.length > 0) {
+        await loadAllClinicalRecords();
+      }
+      console.log('✅ Datos actualizados exitosamente');
+    } catch (error) {
+      console.error('❌ Error actualizando datos:', error);
+      setError('Error al actualizar los datos');
+    }
+  };
+
+  // Funciones de recetas ahora manejadas por RecipeLibrary
+
+  // const handleSaveRecipe = (recipeData: Recipe) => {
+  //   if (editingRecipe) {
+  //     // Actualizar receta existente
+  //     setRecipes(recipes.map(r => r.id === editingRecipe.id ? recipeData : r));
+  //     setEditingRecipe(null);
+  //   } else {
+  //     // Crear nueva receta
+  //     const newRecipe = {
+  //       ...recipeData,
+  //       id: Date.now() // ID temporal
+  //     };
+  //     setRecipes([...recipes, newRecipe]);
+  //   }
+  //   setShowRecipeModal(false);
+  // };
+
+  // const handleDeleteRecipe = (recipeId: number) => {
+  //   if (window.confirm('¿Estás seguro de que quieres eliminar esta receta?')) {
+  //     setRecipes(recipes.filter(r => r.id !== recipeId));
+  //   }
+  // };
+
+>>>>>>> nutri/main
   return (
     <div className="container-fluid py-4">
       {/* Header */}
@@ -1254,10 +1543,17 @@ const DietPlansPage: React.FC = () => {
             <div className="d-flex align-items-start">
               <i className="fas fa-info-circle me-2 mt-1"></i>
               <div>
+<<<<<<< HEAD
                 <strong>Información:</strong> Puedes crear, editar, eliminar y descargar planes de dieta. 
                 <span className="d-none d-md-inline"> La generación automática con IA estará disponible próximamente.</span>
                 <span className="d-md-none"> IA próximamente.</span>
                 <span className="d-none d-lg-inline"> Gestión de recetas y plantillas: en desarrollo.</span>
+=======
+                <strong>¡Nuevas funcionalidades implementadas!</strong> 
+                <span className="d-none d-md-inline"> Gestión completa de recetas, plantillas predefinidas y actualización en tiempo real.</span>
+                <span className="d-md-none"> Recetas y plantillas disponibles.</span>
+                <span className="d-none d-lg-inline"> La generación automática con IA estará disponible próximamente.</span>
+>>>>>>> nutri/main
               </div>
             </div>
           </Alert>
@@ -1434,11 +1730,19 @@ const DietPlansPage: React.FC = () => {
                 Planes Nutricionales
               </h5>
               <div className="d-flex gap-2">
+<<<<<<< HEAD
                 <button className="btn btn-sm btn-outline-secondary">
                   <Download size={16} className="me-1" />
                   <span className="d-none d-sm-inline">Exportar</span>
                 </button>
                 <button className="btn btn-sm btn-outline-primary">
+=======
+                <button 
+                  className="btn btn-sm btn-outline-primary"
+                  onClick={handleRefreshData}
+                  disabled={loading}
+                >
+>>>>>>> nutri/main
                   <RefreshCw size={16} className="me-1" />
                   <span className="d-none d-sm-inline">Actualizar</span>
                 </button>
@@ -1516,6 +1820,7 @@ const DietPlansPage: React.FC = () => {
                               <Edit size={14} />
                             </button>
                             <button 
+<<<<<<< HEAD
                               className="btn btn-outline-success"
                               onClick={() => handleDownloadPDF(plan)}
                               title="Descargar PDF"
@@ -1526,6 +1831,33 @@ const DietPlansPage: React.FC = () => {
                               className="btn btn-outline-danger"
                               onClick={() => handleDeletePlan(plan.id)}
                               title="Eliminar plan"
+=======
+                              className="btn btn-outline-info"
+                              onClick={() => handleOpenMealPlanner(plan)}
+                              title="Planificar comidas"
+                            >
+                              <Utensils size={14} />
+                            </button>
+                            <button 
+                              className="btn btn-outline-success"
+                              onClick={() => handleDownloadPDF(plan)}
+                              title="Descargar PDF del Planificador de Comidas"
+                              disabled={pdfLoading}
+                            >
+                              {pdfLoading ? (
+                                <div className="spinner-border spinner-border-sm" role="status">
+                                  <span className="visually-hidden">Descargando...</span>
+                                </div>
+                              ) : (
+                                <Download size={14} />
+                              )}
+                            </button>
+                            <button 
+                              className="btn btn-outline-danger"
+                              onClick={(e) => handleDeletePlan(plan.id, e)}
+                              title="Eliminar plan"
+                              type="button"
+>>>>>>> nutri/main
                             >
                               <Trash2 size={14} />
                             </button>
@@ -1591,15 +1923,43 @@ const DietPlansPage: React.FC = () => {
                             Editar
                           </button>
                           <button
+<<<<<<< HEAD
                             className="btn btn-sm btn-outline-success flex-fill"
                             onClick={() => handleDownloadPDF(plan)}
                           >
                             <Download size={14} className="me-1" />
+=======
+                            className="btn btn-sm btn-outline-info flex-fill"
+                            onClick={() => handleOpenMealPlanner(plan)}
+                          >
+                            <Utensils size={14} className="me-1" />
+                            Planificar comidas
+                          </button>
+                          <button
+                            className="btn btn-sm btn-outline-success flex-fill"
+                            onClick={() => handleDownloadPDF(plan)}
+                            disabled={pdfLoading}
+                            title="Descargar PDF del Planificador de Comidas"
+                          >
+                            {pdfLoading ? (
+                              <div className="spinner-border spinner-border-sm me-1" role="status">
+                                <span className="visually-hidden">Descargando...</span>
+                              </div>
+                            ) : (
+                              <Download size={14} className="me-1" />
+                            )}
+>>>>>>> nutri/main
                             PDF
                           </button>
                           <button
                             className="btn btn-sm btn-outline-danger"
+<<<<<<< HEAD
                             onClick={() => handleDeletePlan(plan.id)}
+=======
+                            onClick={(e) => handleDeletePlan(plan.id, e)}
+                            type="button"
+                            title="Eliminar plan"
+>>>>>>> nutri/main
                           >
                             <Trash2 size={14} />
                           </button>
@@ -1615,6 +1975,7 @@ const DietPlansPage: React.FC = () => {
       )}
 
       {activeTab === 'recipes' && (
+<<<<<<< HEAD
         <div className="row">
           {filteredRecipes.map((recipe) => (
             <div key={recipe.id} className="col-md-4 mb-4">
@@ -1668,6 +2029,123 @@ const DietPlansPage: React.FC = () => {
           <Copy size={48} className="text-muted mb-3" />
           <h5 className="text-muted">Plantillas de Planes Semanales</h5>
           <p className="text-muted">Próximamente: plantillas predefinidas para diferentes objetivos</p>
+=======
+        <RecipeLibrary
+          showPatientTools={false}
+          onRecipeSelect={(recipe) => {
+            console.log('Receta seleccionada para plan de dieta:', recipe);
+            // Aquí se puede integrar con el MealPlanner o crear plan automáticamente
+          }}
+        />
+      )}
+
+      {activeTab === 'templates' && (
+        <div className="card border-0 shadow-sm">
+          <div className="card-header bg-white">
+            <div className="d-flex justify-content-between align-items-center">
+              <h5 className="mb-0">
+                <Copy size={18} className="me-2" />
+                Plantillas de Planes Nutricionales
+              </h5>
+              <button 
+                className="btn btn-primary btn-sm"
+                onClick={() => setShowPlanModal(true)}
+              >
+                <Plus size={16} className="me-1" />
+                Usar Plantilla
+              </button>
+            </div>
+          </div>
+          <div className="card-body">
+            <div className="row">
+              {[
+                {
+                  id: 1,
+                  name: 'Plan de Pérdida de Peso',
+                  description: 'Plan equilibrado para pérdida de peso saludable',
+                  category: 'Pérdida de peso',
+                  duration: '4 semanas',
+                  calories: '1500-1800',
+                  macros: { protein: 30, carbs: 40, fats: 30 },
+                  tags: ['pérdida de peso', 'equilibrado', 'sostenible']
+                },
+                {
+                  id: 2,
+                  name: 'Plan de Ganancia Muscular',
+                  description: 'Plan alto en proteínas para desarrollo muscular',
+                  category: 'Ganancia muscular',
+                  duration: '8 semanas',
+                  calories: '2500-3000',
+                  macros: { protein: 40, carbs: 35, fats: 25 },
+                  tags: ['ganancia muscular', 'alto en proteínas', 'fuerza']
+                },
+                {
+                  id: 3,
+                  name: 'Plan Vegetariano',
+                  description: 'Plan completo para dietas vegetarianas',
+                  category: 'Vegetariano',
+                  duration: '4 semanas',
+                  calories: '1800-2200',
+                  macros: { protein: 25, carbs: 45, fats: 30 },
+                  tags: ['vegetariano', 'sostenible', 'completo']
+                },
+                {
+                  id: 4,
+                  name: 'Plan de Mantenimiento',
+                  description: 'Plan para mantener peso y salud general',
+                  category: 'Mantenimiento',
+                  duration: '4 semanas',
+                  calories: '2000-2200',
+                  macros: { protein: 25, carbs: 50, fats: 25 },
+                  tags: ['mantenimiento', 'equilibrado', 'salud']
+                }
+              ].map((template) => (
+                <div key={template.id} className="col-md-6 col-lg-3 mb-4">
+                  <div className="card border-0 shadow-sm h-100">
+                    <div className="card-body">
+                      <h6 className="card-title">{template.name}</h6>
+                      <p className="card-text text-muted small">{template.description}</p>
+                      <div className="mb-3">
+                        <div className="row text-center">
+                          <div className="col-4">
+                            <small className="text-muted">Duración</small>
+                            <div className="fw-medium">{template.duration}</div>
+                          </div>
+                          <div className="col-4">
+                            <small className="text-muted">Calorías</small>
+                            <div className="fw-medium">{template.calories}</div>
+                          </div>
+                          <div className="col-4">
+                            <small className="text-muted">Categoría</small>
+                            <div className="fw-medium">{template.category}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mb-3">
+                        {template.tags.map((tag, index) => (
+                          <span key={index} className="badge bg-light text-dark me-1 mb-1">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      <button 
+                        className="btn btn-outline-primary btn-sm w-100"
+                        onClick={() => {
+                          // Implementar lógica para usar plantilla
+                          console.log('Usando plantilla:', template);
+                          alert(`Plantilla "${template.name}" seleccionada`);
+                        }}
+                      >
+                        <Copy size={14} className="me-1" />
+                        Usar Plantilla
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+>>>>>>> nutri/main
         </div>
       )}
 
@@ -1689,6 +2167,7 @@ const DietPlansPage: React.FC = () => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="pt-0">
+<<<<<<< HEAD
           <TempDietPlanCreator
             patients={patients}
             onSubmit={editingPlan ? handleUpdateDietPlan : handleCreateDietPlan}
@@ -1699,6 +2178,35 @@ const DietPlansPage: React.FC = () => {
             onGenerateAI={handleGenerateAIPlan}
             loading={loading}
             initialData={editingPlan ? transformDietPlanToFormData(editingPlan) : undefined}
+=======
+          {/* Alerta sobre las nuevas tarjetas nutricionales */}
+          <div className="alert alert-info border-0 rounded-0 mb-0">
+            <div className="d-flex align-items-center">
+              <i className="fas fa-star me-2"></i>
+              <div>
+                <strong>¡Nuevo!</strong> Sistema de Tarjetas Nutricionales con 5 pestañas especializadas implementado.
+                <span className="d-none d-md-inline"> Incluye: Resumen, Comidas, Nutrición, Horarios y Restricciones.</span>
+                <br />
+                <small className="text-muted">
+                  📋 Resumen inteligente | 🍽️ Planificación de comidas | 🎯 Objetivos nutricionales | ⏰ Horarios optimizados | 🛡️ Gestión de restricciones
+                </small>
+              </div>
+            </div>
+          </div>
+          
+          <NutritionalCardSimple
+            dietPlan={editingPlan || undefined}
+            patient={editingPlan ? patients.find(p => p.id === editingPlan.patient_id) || patients[0] : patients[0]}
+            patients={patients}
+            clinicalRecords={allClinicalRecords}
+            mode={editingPlan ? 'edit' : 'create'}
+            onSave={editingPlan ? handleUpdateDietPlan : handleCreateDietPlan}
+            onClose={() => {
+              setShowPlanModal(false);
+              setEditingPlan(null);
+            }}
+            isLoading={loading}
+>>>>>>> nutri/main
           />
         </Modal.Body>
       </Modal>
@@ -1752,6 +2260,25 @@ const DietPlansPage: React.FC = () => {
           </Modal.Footer>
         </Modal>
       )}
+<<<<<<< HEAD
+=======
+
+      {/* Modal del Planificador de Comidas */}
+      {selectedPlanForMeals && (
+        <MealPlanner
+          weeklyPlans={selectedPlanForMeals.weekly_plans || [] as any}
+          dietPlan={selectedPlanForMeals}
+          onSave={handleSaveMealPlan}
+          onClose={() => {
+            setShowMealPlanner(false);
+            setSelectedPlanForMeals(null);
+          }}
+          isOpen={showMealPlanner}
+        />
+      )}
+
+      {/* Modal de recetas ahora manejado por RecipeLibrary */}
+>>>>>>> nutri/main
     </div>
   );
 };

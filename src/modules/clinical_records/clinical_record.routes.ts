@@ -1,5 +1,12 @@
 // src/modules/clinical_records/clinical_record.routes.ts
+<<<<<<< HEAD
 import { Router } from 'express';
+=======
+import { Router, Request } from 'express';
+import multer, { FileFilterCallback } from 'multer';
+import path from 'path';
+import { promises as fs } from 'fs';
+>>>>>>> nutri/main
 import clinicalRecordController from '../../modules/clinical_records/clinical_record.controller';
 import { protect, authorize } from '../../middleware/auth.middleware';
 import { validateMiddleware } from '../../middleware/validation.middleware';
@@ -8,6 +15,26 @@ import { RoleName } from '../../database/entities/role.entity';
 
 const router = Router();
 
+<<<<<<< HEAD
+=======
+// Configuración de multer para upload de documentos PDF
+const storage = multer.memoryStorage(); // Guardamos en memoria para procesar
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB máximo
+    },
+    fileFilter: (req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
+        // Solo permitir PDFs
+        if (file.mimetype === 'application/pdf') {
+            cb(null, true);
+        } else {
+            cb(new Error('Solo se permiten archivos PDF'));
+        }
+    }
+});
+
+>>>>>>> nutri/main
 // Todas las rutas de registros clínicos requieren autenticación
 router.use(protect);
 
@@ -42,6 +69,38 @@ router.route('/:id') // Gestión de un registro específico por su ID
         clinicalRecordController.deleteClinicalRecord
     );
 
+<<<<<<< HEAD
+=======
+// --- NUEVAS RUTAS PARA DOCUMENTOS DE LABORATORIO ---
+
+// 📄 Upload de documento de laboratorio (PDF)
+router.post(
+    '/:recordId/laboratory-documents',
+    upload.single('laboratory_pdf'),
+    clinicalRecordController.uploadLaboratoryDocument
+);
+
+// 📁 Obtener documentos de laboratorio de un expediente
+router.get(
+    '/:recordId/laboratory-documents',
+    clinicalRecordController.getLaboratoryDocuments
+);
+
+// 🗑️ Eliminar documento de laboratorio específico
+router.delete(
+    '/:recordId/laboratory-documents/:documentId',
+    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN),
+    clinicalRecordController.deleteLaboratoryDocument
+);
+
+// 📋 Generar PDF del expediente completo
+router.get(
+    '/:recordId/generate-pdf',
+    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN), // Agregar autorización
+    clinicalRecordController.generateExpedientePDF
+);
+
+>>>>>>> nutri/main
 // --- Rutas especializadas para gestión de expedientes ---
 
 // Transferir expedientes entre nutriólogos (solo administradores)
@@ -69,4 +128,73 @@ router.get(
     clinicalRecordController.getPatientRecordsCount
 );
 
+<<<<<<< HEAD
+=======
+// === 💊 RUTAS PARA INTERACCIONES FÁRMACO-NUTRIENTE ===
+
+// 🔬 Agregar interacción fármaco-nutriente
+router.post(
+    '/:recordId/drug-nutrient-interactions',
+    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN),
+    clinicalRecordController.addDrugNutrientInteraction
+);
+
+// 📋 Obtener todas las interacciones fármaco-nutriente de un expediente
+router.get(
+    '/:recordId/drug-nutrient-interactions',
+    clinicalRecordController.getDrugNutrientInteractions
+);
+
+// ✏️ Actualizar interacción fármaco-nutriente específica
+router.patch(
+    '/:recordId/drug-nutrient-interactions/:interactionId',
+    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN),
+    clinicalRecordController.updateDrugNutrientInteraction
+);
+
+// 🗑️ Eliminar interacción fármaco-nutriente específica
+router.delete(
+    '/:recordId/drug-nutrient-interactions/:interactionId',
+    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN),
+    clinicalRecordController.deleteDrugNutrientInteraction
+);
+
+// ============== NUEVAS RUTAS PARA SISTEMA EVOLUTIVO DE EXPEDIENTES ==============
+
+// 🤖 Detectar tipo de expediente automáticamente
+router.post(
+    '/detect-type',
+    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN),
+    clinicalRecordController.detectarTipoExpediente
+);
+
+// 📊 Obtener datos previos del paciente para expediente de seguimiento
+router.get(
+    '/patient/:patientId/previous-data',
+    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN, RoleName.PATIENT),
+    clinicalRecordController.obtenerDatosPreviosPaciente
+);
+
+// 📈 Generar comparativo automático entre dos expedientes
+router.get(
+    '/compare/:expedienteActualId/:expedienteBaseId',
+    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN),
+    clinicalRecordController.generarComparativo
+);
+
+// 📋 Crear expediente con detección automática de tipo
+router.post(
+    '/evolutivo',
+    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN),
+    clinicalRecordController.createClinicalRecordEvolutivo
+);
+
+// 📊 Obtener estadísticas de seguimiento para nutriólogo
+router.get(
+    '/stats/seguimiento',
+    authorize(RoleName.NUTRITIONIST),
+    clinicalRecordController.getEstadisticasSeguimiento
+);
+
+>>>>>>> nutri/main
 export default router;
