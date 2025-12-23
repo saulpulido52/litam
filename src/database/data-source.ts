@@ -97,7 +97,6 @@ export const AppDataSource = new DataSource({
                 require: true,
                 mode: 'require',
                 // Optimizaciones SSL para conexiones rápidas
-                secureOptions: 'SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3',
             },
 
             // **CONFIGURACIONES ADICIONALES PARA ALTA CONCURRENCIA**
