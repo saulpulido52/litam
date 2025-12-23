@@ -8,7 +8,7 @@ import fs from 'fs';
 
 // Configuración de multer para subida de archivos
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
+    destination: (req: any, file: any, cb: any) => {
         const uploadDir = path.join(__dirname, '../../../uploads/profile-images');
         // Crear directorio si no existe
         if (!fs.existsSync(uploadDir)) {
@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
         }
         cb(null, uploadDir);
     },
-    filename: (req, file, cb) => {
+    filename: (req: any, file: any, cb: any) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, `profile-${req.user?.id}-${uniqueSuffix}${path.extname(file.originalname)}`);
     }
@@ -27,7 +27,7 @@ const upload = multer({
     limits: {
         fileSize: 5 * 1024 * 1024, // 5MB máximo
     },
-    fileFilter: (req, file, cb) => {
+    fileFilter: (req: any, file: any, cb: any) => {
         // Verificar tipo de archivo
         if (file.mimetype.startsWith('image/')) {
             cb(null, true);
@@ -91,13 +91,13 @@ class UserController {
                     return next(new AppError(err.message, 400));
                 }
 
-                if (!req.file) {
+                if (!(req as any).file) {
                     return next(new AppError('No se proporcionó ningún archivo.', 400));
                 }
 
                 try {
                     // Actualizar el perfil del usuario con la nueva imagen
-                    const imageUrl = `/uploads/profile-images/${req.file.filename}`;
+                    const imageUrl = `/uploads/profile-images/${(req as any).file.filename}`;
                     const updatedUser = await userService.updateProfileImage(req.user!.id, imageUrl);
 
                     res.status(200).json({
@@ -109,8 +109,8 @@ class UserController {
                     });
                 } catch (error: any) {
                     // Si hay error, eliminar el archivo subido
-                    if (req.file && fs.existsSync(req.file.path)) {
-                        fs.unlinkSync(req.file.path);
+                    if ((req as any).file && fs.existsSync((req as any).file.path)) {
+                        fs.unlinkSync((req as any).file.path);
                     }
                     throw error;
                 }
