@@ -2,6 +2,7 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import dotenv from 'dotenv';
+import path from 'path';
 import { User } from './entities/user.entity';
 import { Role } from './entities/role.entity';
 import { PatientProfile } from './entities/patient_profile.entity';
@@ -164,6 +165,6 @@ export const AppDataSource = new DataSource({
         TemplateFood,
         TemplateRecipe,
     ],
-    migrations: ['src/database/migrations/**/*.ts'],
+    migrations: [path.join(__dirname, 'migrations', '*{.ts,.js}')],
     subscribers: [],
 });
