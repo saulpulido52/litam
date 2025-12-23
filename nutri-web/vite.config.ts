@@ -157,11 +157,9 @@ export default defineConfig(({ mode }) => ({
     'import.meta.env.VITE_APP_VERSION': JSON.stringify('1.0.0'),
     'import.meta.env.VITE_NODE_ENV': JSON.stringify(mode),
     // Remover console.logs en producción
-    ...(mode === 'production' && {
-      'console.log': 'undefined',
-      'console.debug': 'undefined',
-      'console.info': 'undefined'
-    })
+    // Remover console.logs mediante define es PELIGROSO. Usar terser drop_console en su lugar si se desea.
+    // 'console.log': 'undefined', // CAUSA CRASH: undefined(...)
+
   },
 
   // **CONFIGURACIONES ESPECÍFICAS PARA VERCEL**
