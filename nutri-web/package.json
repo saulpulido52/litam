@@ -6,17 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-<<<<<<< HEAD
-    "lint": "eslint .",
-    "preview": "vite preview"
-=======
     "build:analyze": "tsc -b && vite build --mode analyze",
     "build:production": "NODE_ENV=production tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "bundle-analyzer": "npx vite-bundle-analyzer dist",
     "size-limit": "npx size-limit"
->>>>>>> nutri/main
   },
   "dependencies": {
     "@tanstack/react-query": "^5.81.2",
@@ -25,14 +20,10 @@
     "bootstrap": "^5.3.7",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-<<<<<<< HEAD
-    "lucide-react": "^0.522.0",
-=======
     "lightningcss": "^1.30.1",
     "lucide-react": "^0.522.0",
     "pg": "^8.16.3",
     "puppeteer": "^24.12.0",
->>>>>>> nutri/main
     "react": "^19.1.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.1.0",
@@ -40,11 +31,8 @@
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.6.2",
     "recharts": "^2.15.4",
-<<<<<<< HEAD
-=======
     "socket.io-client": "^4.8.1",
     "terser": "^5.43.1",
->>>>>>> nutri/main
     "zod": "^3.25.67"
   },
   "devDependencies": {
