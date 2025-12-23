@@ -81,7 +81,7 @@ class UserController {
             }
 
             // Usar multer como middleware
-            upload.single('profile_image')(req, res, async (err) => {
+            upload.single('profile_image')(req, res, async (err: any) => {
                 if (err) {
                     if (err instanceof multer.MulterError) {
                         if (err.code === 'LIMIT_FILE_SIZE') {
