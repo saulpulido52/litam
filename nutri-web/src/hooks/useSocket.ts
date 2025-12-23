@@ -1,5 +1,4 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
-// @ts-ignore
 import { io } from 'socket.io-client';
 import { useAuth } from './useAuth';
 
