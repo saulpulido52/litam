@@ -337,9 +337,14 @@ app.use(cors({
             'http://127.0.0.1:5000',
             'http://127.0.0.1:5001',
             'http://127.0.0.1:3000',
+            // Default Vite port
+            'http://localhost:5173',
+            'http://127.0.0.1:5173',
 
             // **DOMINIOS DE PRODUCCIÓN**
-            // Agregar tu dominio de Vercel aquí
+            'https://litam.vercel.app', // <-- DOMINIO PRINCIPAL
+
+            // Agregar otros dominios
             ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : []),
 
             // Dominios de Vercel (patrones automáticos)
