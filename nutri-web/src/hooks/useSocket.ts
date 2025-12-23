@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
-import io from 'socket.io-client';
+import { io } from 'socket.io-client';
 import { useAuth } from './useAuth';
 
 // Tipos para los eventos de Socket.IO
