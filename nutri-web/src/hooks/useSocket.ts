@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import io from 'socket.io-client';
 import { useAuth } from './useAuth';
 
 // Tipos para los eventos de Socket.IO
@@ -39,7 +39,7 @@ interface MessagesRead {
 }
 
 export interface UseSocketReturn {
-  socket: Socket | null;
+  socket: any | null;
   isConnected: boolean;
   isConnecting: boolean;
   error: string | null;
@@ -65,11 +65,11 @@ export interface UseSocketReturn {
 
 export const useSocket = (): UseSocketReturn => {
   const { user, isAuthenticated } = useAuth();
-  const socketRef = useRef<Socket | null>(null);
+  const socketRef = useRef<any | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const callbacksRef = useRef<{
     onReceiveMessage?: (message: SocketMessage) => void;
     onMessageDelivered?: (data: MessageDelivered) => void;
@@ -105,7 +105,8 @@ export const useSocket = (): UseSocketReturn => {
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
-      timeout: 20000});
+      timeout: 20000
+    });
 
     socketRef.current = socket;
 
@@ -127,7 +128,7 @@ export const useSocket = (): UseSocketReturn => {
       }
     });
 
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', (reason: string) => {
       console.log('🔌 [useSocket] Desconectado:', reason);
       setIsConnected(false);
       if (reason === 'io server disconnect') {
@@ -136,13 +137,13 @@ export const useSocket = (): UseSocketReturn => {
       }
     });
 
-    socket.on('connect_error', (error) => {
+    socket.on('connect_error', (error: Error) => {
       console.error('🔌 [useSocket] Error de conexión:', error);
       setError('Error de conexión con el servidor');
       setIsConnecting(false);
     });
 
-    socket.on('authenticated', (data) => {
+    socket.on('authenticated', (data: any) => {
       console.log('🔐 [useSocket] Autenticado exitosamente:', data);
     });
 
@@ -177,7 +178,7 @@ export const useSocket = (): UseSocketReturn => {
       callbacksRef.current.onUserLeft?.(data);
     });
 
-    socket.on('error', (error) => {
+    socket.on('error', (error: Error) => {
       console.error('❌ [useSocket] Error general:', error);
       setError(error.message || 'Error en Socket.IO');
     });
