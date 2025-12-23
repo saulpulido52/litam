@@ -8,10 +8,7 @@ import {
     ManageAvailabilityDto,
     SearchAvailabilityDto,
     AvailabilitySlotDto,
-<<<<<<< HEAD
-=======
     NutritionistScheduleAppointmentDto,
->>>>>>> nutri/main
 } from '../../modules/appointments/appointment.dto';
 import { RoleName } from '../../database/entities/role.entity';
 import { AppointmentStatus } from '../../database/entities/appointment.entity';
@@ -80,8 +77,6 @@ class AppointmentController {
         }
     }
 
-<<<<<<< HEAD
-=======
     // NUEVO: Obtener citas de un nutriólogo por rango de fechas
     public async getNutritionistAppointmentsByDateRange(req: Request, res: Response, next: NextFunction) {
         try {
@@ -150,7 +145,6 @@ class AppointmentController {
             next(new AppError('Error al obtener slots disponibles.', 500));
         }
     }
->>>>>>> nutri/main
 
     // --- Gestión de Citas (Pacientes y Nutriólogos) ---
     public async scheduleAppointment(req: Request, res: Response, next: NextFunction) {
@@ -215,8 +209,6 @@ class AppointmentController {
             next(new AppError('Error al actualizar el estado de la cita.', 500));
         }
     }
-<<<<<<< HEAD
-=======
 
     public async scheduleAppointmentForPatient(req: Request, res: Response, next: NextFunction) {
         try {
@@ -287,7 +279,6 @@ class AppointmentController {
             next(new AppError('Error al eliminar la cita.', 500));
         }
     }
->>>>>>> nutri/main
 }
 
 export default new AppointmentController();

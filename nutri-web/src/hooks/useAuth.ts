@@ -15,31 +15,16 @@ export const useAuth = (): UseAuthReturn => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-<<<<<<< HEAD
-  // Initialize auth state
-  useEffect(() => {
-=======
   // Initialize auth state - CORREGIDO PARA EVITAR BUCLES
   useEffect(() => {
     let isMounted = true;
     
->>>>>>> nutri/main
     const initializeAuth = async () => {
       console.log('🔐 useAuth: Initializing authentication...');
       try {
         const isAuth = authService.isAuthenticated();
         console.log('🔐 useAuth: isAuthenticated =', isAuth);
         
-<<<<<<< HEAD
-        if (isAuth) {
-          const storedUser = authService.getCurrentUserFromStorage();
-          console.log('🔐 useAuth: storedUser =', storedUser ? 'Found' : 'Not found');
-          
-          if (storedUser) {
-            setUser(storedUser);
-            console.log('🔐 useAuth: User set from storage');
-          } else {
-=======
         if (isAuth && isMounted) {
           const storedUser = authService.getCurrentUserFromStorage();
           console.log('🔐 useAuth: storedUser =', storedUser ? 'Found' : 'Not found');
@@ -48,28 +33,10 @@ export const useAuth = (): UseAuthReturn => {
             setUser(storedUser);
             console.log('🔐 useAuth: User set from storage');
           } else if (isMounted) {
->>>>>>> nutri/main
             // Try to fetch current user from API
             try {
               console.log('🔐 useAuth: Fetching current user from API...');
               const currentUser = await authService.getCurrentUser();
-<<<<<<< HEAD
-              setUser(currentUser);
-              console.log('🔐 useAuth: User fetched from API');
-            } catch (error) {
-              console.error('🔐 useAuth: Failed to fetch current user:', error);
-              authService.logout();
-            }
-          }
-        } else {
-          console.log('🔐 useAuth: Not authenticated, no user set');
-        }
-      } catch (error) {
-        console.error('🔐 useAuth: Auth initialization error:', error);
-      } finally {
-        setIsLoading(false);
-        console.log('🔐 useAuth: Initialization complete');
-=======
               if (isMounted) {
                 setUser(currentUser);
                 console.log('🔐 useAuth: User fetched from API');
@@ -96,20 +63,15 @@ export const useAuth = (): UseAuthReturn => {
           setIsLoading(false);
           console.log('🔐 useAuth: Initialization complete');
         }
->>>>>>> nutri/main
       }
     };
 
     initializeAuth();
-<<<<<<< HEAD
-  }, []);
-=======
 
     return () => {
       isMounted = false;
     };
   }, []); // Sin dependencias para evitar re-ejecución
->>>>>>> nutri/main
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     setIsLoading(true);
@@ -163,12 +125,7 @@ export const useAuth = (): UseAuthReturn => {
     isLoading,
     login,
     logout,
-<<<<<<< HEAD
-    refreshUser,
-  };
-=======
     refreshUser};
->>>>>>> nutri/main
 };
 
 export default useAuth; 

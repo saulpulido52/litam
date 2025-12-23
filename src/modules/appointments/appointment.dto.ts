@@ -54,37 +54,21 @@ export class UpdateAppointmentStatusDto {
 // DTO para una franja de disponibilidad de nutriólogo
 export class AvailabilitySlotDto {
     @IsEnum(DayOfWeek, { message: 'El día de la semana no es válido.' })
-<<<<<<< HEAD
-    dayOfWeek!: DayOfWeek;
-=======
     day_of_week!: DayOfWeek;
->>>>>>> nutri/main
 
     @IsNumber({}, { message: 'La hora de inicio en minutos debe ser un número entero.' })
     @Min(0, { message: 'La hora de inicio en minutos no puede ser negativa.' })
     @Max(1439, { message: 'La hora de inicio en minutos no puede exceder 1439 (23:59).' })
-<<<<<<< HEAD
-    startTimeMinutes!: number; // Ej: 540 (09:00)
-=======
     start_time_minutes!: number; // Ej: 540 (09:00)
->>>>>>> nutri/main
 
     @IsNumber({}, { message: 'La hora de fin en minutos debe ser un número entero.' })
     @Min(0, { message: 'La hora de fin en minutos no puede ser negativa.' })
     @Max(1440, { message: 'La hora de fin en minutos no puede exceder 1440 (24:00).' })
-<<<<<<< HEAD
-    endTimeMinutes!: number; // Ej: 1020 (17:00)
-
-    @IsOptional()
-    @IsBoolean({ message: 'El estado activo debe ser un booleano.' }) // <-- AÑADIDO
-    isActive?: boolean;
-=======
     end_time_minutes!: number; // Ej: 1020 (17:00)
 
     @IsOptional()
     @IsBoolean({ message: 'El estado activo debe ser un booleano.' })
     is_active?: boolean;
->>>>>>> nutri/main
 }
 
 // DTO para que un Nutriólogo gestione su disponibilidad
@@ -104,8 +88,6 @@ export class SearchAvailabilityDto {
     @IsOptional()
     @IsEnum(DayOfWeek, { message: 'El día de la semana no es válido.' })
     dayOfWeek?: DayOfWeek; // Para buscar disponibilidad recurrente
-<<<<<<< HEAD
-=======
 }
 
 // DTO para que un Nutriólogo cree una cita para un paciente
@@ -128,5 +110,4 @@ export class NutritionistScheduleAppointmentDto {
     @IsString({ message: 'El enlace de la reunión debe ser una URL válida.' })
     @Length(0, 500, { message: 'El enlace de la reunión no puede exceder 500 caracteres.' })
     meetingLink?: string; // Opcional, puede ser generado después
->>>>>>> nutri/main
 }

@@ -1,14 +1,6 @@
 export interface User {
   id: string;
   email: string;
-<<<<<<< HEAD
-  first_name: string;
-  last_name: string;
-  phone?: string;
-  role: Role;
-  created_at: string;
-  updated_at: string;
-=======
   first_name: string | null;
   last_name: string | null;
   phone?: string | null;
@@ -26,7 +18,6 @@ export interface User {
   created_at: string;
   updated_at: string;
   passwordChangedAt?: Date | null;
->>>>>>> nutri/main
 }
 
 export interface Role {
@@ -61,8 +52,6 @@ export interface NutritionistProfile {
   is_verified: boolean;
   is_available: boolean;
   user?: User;
-<<<<<<< HEAD
-=======
   
   // --- NUEVOS CAMPOS PARA APP MÓVIL ---
   professional_summary?: string; // Descripción breve para pacientes
@@ -87,7 +76,6 @@ export interface NutritionistProfile {
   
   // Horarios de consulta
   office_hours?: any;
->>>>>>> nutri/main
 }
 
 export interface AuthUser {

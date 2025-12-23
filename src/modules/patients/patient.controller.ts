@@ -5,14 +5,9 @@ import { AppError } from '../../utils/app.error';
 import { CreatePatientDTO, UpdatePatientDTO, PatientsSearchDTO } from './patient.dto';
 import { AppDataSource } from '../../database/data-source';
 import { RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
-<<<<<<< HEAD
-
-const patientService = new PatientService(AppDataSource);
-=======
 import { emailService } from '../../services/email.service';
 
 const patientService = new PatientService();
->>>>>>> nutri/main
 
 class PatientController {
     // ==================== MÉTODOS PARA NUTRIÓLOGOS ====================
@@ -212,13 +207,6 @@ class PatientController {
             const nutritionistId = req.user.id;
             const patientData = req.body;
 
-<<<<<<< HEAD
-            const result = await patientService.createPatientByNutritionist(nutritionistId, patientData);
-
-            res.status(201).json({
-                success: true,
-                message: 'Paciente registrado exitosamente con expediente clínico completo',
-=======
             console.log(`🏥 Creando paciente por nutriólogo: ${req.user.first_name} ${req.user.last_name}`);
             const result = await patientService.createPatientByNutritionist(nutritionistId, patientData);
 
@@ -245,27 +233,19 @@ class PatientController {
             res.status(201).json({
                 success: true,
                 message: 'Paciente registrado exitosamente en Litam con expediente clínico completo. Credenciales enviadas por email.',
->>>>>>> nutri/main
                 data: {
                     patient: result.patient,
                     temporary_credentials: {
                         email: result.patient.user.email,
                         temporary_password: result.temporary_password,
                         expires_at: result.expires_at,
-<<<<<<< HEAD
-                        instructions: 'El paciente debe cambiar su contraseña en su primer inicio de sesión'
-=======
                         instructions: 'Las credenciales han sido enviadas al email del paciente. Debe cambiar su contraseña en su primer inicio de sesión.',
                         email_sent: true
->>>>>>> nutri/main
                     }
                 }
             });
         } catch (error) {
-<<<<<<< HEAD
-=======
             console.error('💥 Error en createPatientByNutritionist:', error);
->>>>>>> nutri/main
             next(error);
         }
     }
@@ -501,8 +481,6 @@ class PatientController {
             next(new AppError('Error al obtener el perfil del paciente.', 500));
         }
     }
-<<<<<<< HEAD
-=======
 
     // ==================== QUICK ACTIONS ====================
     
@@ -560,7 +538,6 @@ class PatientController {
             next(new AppError('Error al obtener acciones rápidas.', 500));
         }
     }
->>>>>>> nutri/main
 }
 
 export default new PatientController();

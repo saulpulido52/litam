@@ -1,9 +1,5 @@
 import React from 'react';
-<<<<<<< HEAD
-import { TrendingUp, TrendingDown, Target, Scale, Activity, Award, Calendar, Users } from 'lucide-react';
-=======
 import { TrendingUp, TrendingDown, Target, Scale, Award, Calendar, Activity, Users } from 'lucide-react';
->>>>>>> nutri/main
 
 interface ProgressMetricsProps {
   patientName: string;

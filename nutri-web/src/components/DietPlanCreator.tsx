@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
-import { Calendar, Clock, Users, Plus, Settings, AlertTriangle, Shield, Database } from 'lucide-react';
-=======
 import { Calendar, Clock, Plus, Settings, Shield, Database, Users, AlertTriangle } from 'lucide-react';
->>>>>>> nutri/main
 import type { 
   CreateDietPlanDto, 
   GenerateAIDietDto,
@@ -182,15 +178,9 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
     // Extraer medicamentos del expediente
     if (record.diagnosed_diseases?.medications_list && record.diagnosed_diseases.medications_list.length > 0) {
       restrictions.medications = record.diagnosed_diseases.medications_list.map(medication => ({
-<<<<<<< HEAD
-        name: medication,
-        dosage: '',
-        frequency: '',
-=======
         name: typeof medication === 'string' ? medication : (medication as any)?.name || '',
         dosage: typeof medication === 'string' ? '' : (medication as any)?.dosage || '',
         frequency: typeof medication === 'string' ? '' : (medication as any)?.frequency || '',
->>>>>>> nutri/main
         foodInteractions: [],
         timingRequirements: ''
       }));
@@ -417,23 +407,12 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
         </div>
 
         <div className="card-body">
-<<<<<<< HEAD
-          {/* Indicador de progreso simplificado - Solo muestra el paso actual */}
-          <div className="progress-indicator mb-4">
-            <div className="d-flex justify-content-center align-items-center">
-              <div className="current-step-display">
-                <div className="step-number">{currentStep}</div>
-                <div className="step-title">{steps[currentStep - 1].title}</div>
-                <div className="step-subtitle">de {steps.length} pasos</div>
-              </div>
-=======
           {/* Indicador de progreso minimalista - solo muestra el paso actual */}
           <div className="progress-indicator mb-4">
             <div className="current-step-circle">{currentStep}</div>
             <div className="current-step-info">
               <div className="step-title">{steps[currentStep - 1].title}</div>
               <div className="step-counter">Paso {currentStep} de {steps.length}</div>
->>>>>>> nutri/main
             </div>
           </div>
 
@@ -447,17 +426,11 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
               
               <div className="row">
                 <div className="col-md-6 mb-3">
-<<<<<<< HEAD
-                  <label className="form-label">Paciente *</label>
-                  <select 
-                    className="form-select"
-=======
                   <label className="form-label" htmlFor="patient-select">Paciente *</label>
                   <select 
                     className="form-select"
                     id="patient-select"
                     name="patient-select"
->>>>>>> nutri/main
                     value={formData.patientId}
                     onChange={(e) => setFormData({...formData, patientId: e.target.value})}
                     required
@@ -471,19 +444,12 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                   </select>
                 </div>
                 <div className="col-md-6 mb-3">
-<<<<<<< HEAD
-                  <label className="form-label">Nombre del Plan *</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-=======
                   <label className="form-label" htmlFor="plan-name">Nombre del Plan *</label>
                   <input 
                     type="text" 
                     className="form-control" 
                     id="plan-name"
                     name="plan-name"
->>>>>>> nutri/main
                     placeholder={`Ej: ${getPlanTypeLabel()} de Equilibrio y Energía`}
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -492,17 +458,6 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                 </div>
               </div>
 
-<<<<<<< HEAD
-              <div className="mb-3">
-                <label className="form-label">Descripción</label>
-                <textarea 
-                  className="form-control" 
-                  rows={3} 
-                  placeholder="Describe el objetivo y características del plan..."
-                  value={formData.description || ''}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                ></textarea>
-=======
               <div className="row">
                 <div className="col-md-12 mb-3">
                   <label className="form-label" htmlFor="plan-description">Descripción</label>
@@ -516,41 +471,22 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                     placeholder="Describe el objetivo y enfoque del plan nutricional..."
                   />
                 </div>
->>>>>>> nutri/main
               </div>
 
               <div className="row">
                 <div className="col-md-6 mb-3">
-<<<<<<< HEAD
-                  <label className="form-label">Fecha de Inicio *</label>
-                  <input 
-                    type="date" 
-                    className="form-control"
-=======
                   <label className="form-label" htmlFor="start-date">Fecha de Inicio *</label>
                   <input
                     type="date"
                     className="form-control"
                     id="start-date"
                     name="start-date"
->>>>>>> nutri/main
                     value={formData.startDate}
                     onChange={(e) => setFormData({...formData, startDate: e.target.value})}
                     required
                   />
                 </div>
                 <div className="col-md-6 mb-3">
-<<<<<<< HEAD
-                  <label className="form-label">Fecha de Fin</label>
-                  <input 
-                    type="date" 
-                    className="form-control"
-                    value={formData.endDate}
-                    onChange={(e) => setFormData({...formData, endDate: e.target.value})}
-                    readOnly
-                  />
-                  <small className="text-muted">Calculada automáticamente</small>
-=======
                   <label className="form-label" htmlFor="end-date">Fecha de Fin</label>
                   <input
                     type="date"
@@ -560,7 +496,6 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                     value={formData.endDate}
                     onChange={(e) => setFormData({...formData, endDate: e.target.value})}
                   />
->>>>>>> nutri/main
                 </div>
               </div>
             </div>
@@ -716,14 +651,10 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                       type="checkbox"
                       id="showPathologicalRestrictions"
                       checked={showPathologicalRestrictions}
-<<<<<<< HEAD
-                      onChange={(e) => setShowPathologicalRestrictions(e.target.checked)}
-=======
                       onChange={(e) => {
                         console.log('Show pathological restrictions changed:', e.target.checked); // Debug
                         setShowPathologicalRestrictions(e.target.checked);
                       }}
->>>>>>> nutri/main
                     />
                     <label className="form-check-label" htmlFor="showPathologicalRestrictions">
                       <strong>Mostrar y editar restricciones patológicas</strong>
@@ -734,12 +665,6 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                   </div>
 
                   {showPathologicalRestrictions && (
-<<<<<<< HEAD
-                    <div className="alert alert-warning">
-                      <AlertTriangle className="me-2" size={16} />
-                      <strong>Modo de edición activado:</strong> Puedes agregar, modificar o eliminar restricciones según sea necesario.
-                    </div>
-=======
                     <>
                       <div className="alert alert-warning">
                         <AlertTriangle className="me-2" size={16} />
@@ -1074,16 +999,12 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                         </div>
                       </div>
                     </>
->>>>>>> nutri/main
                   )}
                 </>
               )}
             </div>
           )}
 
-<<<<<<< HEAD
-          {/* Navegación */}
-=======
           {/* Paso 4: Configuración de Comidas */}
           {currentStep === 4 && (
             <div className="step-content">
@@ -1403,7 +1324,6 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
           )}
 
           {/* Navegación entre pasos */}
->>>>>>> nutri/main
           <div className="d-flex justify-content-between mt-4">
             <div>
               {currentStep > 1 && (
@@ -1412,75 +1332,18 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                   className="btn btn-outline-secondary"
                   onClick={() => setCurrentStep(currentStep - 1)}
                 >
-<<<<<<< HEAD
-                  Anterior
-=======
                   ← Anterior
->>>>>>> nutri/main
                 </button>
               )}
             </div>
             
-<<<<<<< HEAD
-            <div className="d-flex gap-2">
-=======
             <div>
->>>>>>> nutri/main
               {currentStep < steps.length && (
                 <button
                   type="button"
                   className="btn btn-primary"
                   onClick={() => setCurrentStep(currentStep + 1)}
                 >
-<<<<<<< HEAD
-                  Siguiente
-                </button>
-              )}
-              
-              {currentStep === steps.length && (
-                <>
-                  {onGenerateAI && (
-                    <button
-                      type="button"
-                      className="btn btn-outline-success"
-                      onClick={handleGenerateAI}
-                      disabled={loading}
-                    >
-                      <Plus size={16} className="me-1" />
-                      Generar con IA
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="btn btn-success"
-                    onClick={handleSubmit}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Creando...
-                      </>
-                    ) : (
-                      <>
-                        <Calendar size={16} className="me-1" />
-                        Crear Plan
-                      </>
-                    )}
-                  </button>
-                </>
-              )}
-              
-              <button
-                type="button"
-                className="btn btn-outline-danger"
-                onClick={onCancel}
-                disabled={loading}
-              >
-                Cancelar
-              </button>
-            </div>
-=======
                   Siguiente →
                 </button>
               )}
@@ -1531,176 +1394,11 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
             >
               Cancelar
             </button>
->>>>>>> nutri/main
           </div>
         </div>
       </div>
 
       <style>{`
-<<<<<<< HEAD
-        .diet-plan-creator {
-          max-width: 100%;
-        }
-        
-        .progress-indicator {
-          background: #f8f9fa;
-          padding: 1.5rem;
-          border-radius: 0.75rem;
-          border: 1px solid #e9ecef;
-          text-align: center;
-        }
-        
-        .current-step-display {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.5rem;
-        }
-        
-        .step-number {
-          width: 60px;
-          height: 60px;
-          border-radius: 50%;
-          background: #007bff;
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.5rem;
-          font-weight: bold;
-          box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
-        }
-        
-        .step-title {
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: #495057;
-          margin: 0;
-        }
-        
-        .step-subtitle {
-          font-size: 0.9rem;
-          color: #6c757d;
-          margin: 0;
-        }
-        
-        .step-content {
-          min-height: 300px;
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-          .progress-indicator {
-            padding: 1rem;
-          }
-          
-          .step-number {
-            width: 50px;
-            height: 50px;
-            font-size: 1.25rem;
-          }
-          
-          .step-title {
-            font-size: 1.1rem;
-          }
-          
-          .step-subtitle {
-            font-size: 0.85rem;
-          }
-          
-          .step-content {
-            min-height: 250px;
-          }
-        }
-        
-        @media (max-width: 576px) {
-          .progress-indicator {
-            padding: 0.75rem;
-          }
-          
-          .step-number {
-            width: 45px;
-            height: 45px;
-            font-size: 1.1rem;
-          }
-          
-          .step-title {
-            font-size: 1rem;
-          }
-          
-          .step-subtitle {
-            font-size: 0.8rem;
-          }
-          
-          .step-content {
-            min-height: 200px;
-          }
-        }
-        
-        /* Form field improvements */
-        .form-label {
-          font-weight: 500;
-          color: #495057;
-        }
-        
-        .form-control:focus,
-        .form-select:focus {
-          border-color: #007bff;
-          box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-        }
-        
-        .btn-primary {
-          background-color: #007bff;
-          border-color: #007bff;
-        }
-        
-        .btn-primary:hover {
-          background-color: #0056b3;
-          border-color: #0056b3;
-        }
-        
-        .btn-outline-secondary:hover {
-          background-color: #6c757d;
-          border-color: #6c757d;
-        }
-        
-        /* Card improvements */
-        .card {
-          border: 1px solid #e9ecef;
-          border-radius: 0.75rem;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .card-header {
-          background-color: #f8f9fa;
-          border-bottom: 1px solid #e9ecef;
-          border-radius: 0.75rem 0.75rem 0 0 !important;
-        }
-        
-        /* Animation for step transitions */
-        .step-content {
-          animation: fadeIn 0.3s ease-in;
-        }
-        
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        /* Focus styles for accessibility */
-        .step-number:focus,
-        .btn:focus,
-        .form-control:focus,
-        .form-select:focus {
-          outline: 2px solid #212529;
-          outline-offset: 2px;
-=======
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f8f9fa;
@@ -1761,7 +1459,6 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
             .current-step-info .step-counter {
                 font-size: 0.8em;
             }
->>>>>>> nutri/main
         }
       `}</style>
     </div>

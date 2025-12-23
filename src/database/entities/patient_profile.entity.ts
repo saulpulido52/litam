@@ -50,11 +50,7 @@ export class PatientProfile {
     diagnosed_since: string | null; // ¿Desde cuándo?
 
     @Column({ type: 'text', nullable: true })
-<<<<<<< HEAD
-    important_diseases_history: string | null; // ¿Ha padecido alguna enfermedad importante?
-=======
     important_diseases_history: string | null;
->>>>>>> nutri/main
 
     @Column({ type: 'text', nullable: true })
     current_treatments: string | null; // ¿Actualmente toma algún tratamiento especial?
@@ -108,11 +104,7 @@ export class PatientProfile {
 
     // ==================== CONSUMO DE SUSTANCIAS ====================
     @Column({ type: 'varchar', length: 100, nullable: true })
-<<<<<<< HEAD
-    alcohol_consumption: string | null; // frecuencia y cantidad
-=======
     alcohol_consumption: string | null;
->>>>>>> nutri/main
 
     @Column({ type: 'varchar', length: 100, nullable: true })
     tobacco_consumption: string | null;
@@ -259,8 +251,6 @@ export class PatientProfile {
     @Column('jsonb', { array: true, nullable: true })
     clinical_studies_docs: { id: string; filename: string; url: string; upload_date: Date; description: string }[] | null;
 
-<<<<<<< HEAD
-=======
     // ==================== CAMPOS ESPECÍFICOS PARA PACIENTES PEDIÁTRICOS ====================
     
     // Identificador de tipo de paciente
@@ -437,7 +427,6 @@ export class PatientProfile {
         growth_chart_interpretation?: string; // Interpretación de curvas de crecimiento
     } | null;
 
->>>>>>> nutri/main
     // ==================== CAMPOS DE AUDITORÍA ====================
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at!: Date;

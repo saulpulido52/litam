@@ -144,8 +144,6 @@ body {
   background: #a8a8a8;
 }
 
-<<<<<<< HEAD
-=======
 /* FIX: Estilos específicos para checkboxes - SOLUCIÓN COMPLETA */
 .form-check-input {
   /* Estilos básicos para funcionalidad */
@@ -229,7 +227,6 @@ body {
   margin-top: 0.2em !important;
 }
 
->>>>>>> nutri/main
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
   .container-fluid {
@@ -244,8 +241,6 @@ body {
   .h2 {
     font-size: 1.5rem;
   }
-<<<<<<< HEAD
-=======
   
   /* Asegurar que los checkboxes funcionen en móviles */
   .form-check-input {
@@ -253,7 +248,6 @@ body {
     height: 1.3em !important;
     margin-top: 0.1em !important;
   }
->>>>>>> nutri/main
 }
 
 /* Sidebar transition fix */
@@ -644,8 +638,6 @@ input, textarea, select {
     max-width: 160px !important;
     font-size: 0.8rem !important;
   }
-<<<<<<< HEAD
-=======
   
   /* Patient card mobile optimizations */
   .patient-card {
@@ -1183,7 +1175,6 @@ input, textarea, select {
   color: white;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
->>>>>>> nutri/main
 }
 
 /* Prevenir problemas de overflow */
@@ -1202,8 +1193,5 @@ body, html {
     border-radius: 8px !important;
   }
 }
-<<<<<<< HEAD
-=======
 
 
->>>>>>> nutri/main

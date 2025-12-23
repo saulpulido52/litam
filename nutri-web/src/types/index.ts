@@ -5,24 +5,14 @@ export type {
   LoginCredentials,
   AuthResponse,
   NutritionistProfile,
-<<<<<<< HEAD
-  AuthUser,
-} from './auth';
-=======
   AuthUser} from './auth';
->>>>>>> nutri/main
 
 // Patient types
 export type {
   PatientProfile,
   PatientNutritionistRelation,
   PatientProgressLog,
-<<<<<<< HEAD
-  Patient,
-} from './patient';
-=======
   Patient} from './patient';
->>>>>>> nutri/main
 
 // Diet types
 export type {
@@ -32,12 +22,7 @@ export type {
   DietPlan,
   DietPlanSummary,
   CreateDietPlanDto,
-<<<<<<< HEAD
-  GenerateAIDietDto,
-} from './diet';
-=======
   GenerateAIDietDto} from './diet';
->>>>>>> nutri/main
 
 // Appointment types
 export type {
@@ -45,12 +30,7 @@ export type {
   NutritionistAvailability,
   CreateAppointmentDto,
   UpdateAppointmentDto,
-<<<<<<< HEAD
-  AppointmentSlot,
-} from './appointment';
-=======
   AppointmentSlot} from './appointment';
->>>>>>> nutri/main
 
 // Clinical Records types
 export type {
@@ -61,12 +41,7 @@ export type {
   TransferResult,
   NutritionistChangeRequest,
   DeleteAccountRequest,
-<<<<<<< HEAD
-  DeleteAccountResult,
-} from './clinical-record';
-=======
   DeleteAccountResult} from './clinical-record';
->>>>>>> nutri/main
 
 // API Response types
 export interface ApiResponse<T> {

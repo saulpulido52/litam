@@ -84,8 +84,6 @@ export class AdminUpdateSettingsDto {
     @IsString({ message: 'El valor de la configuración debe ser una cadena de texto.' })
     @Length(1, 255, { message: 'El valor no puede exceder 255 caracteres.' })
     settingValue?: string;
-<<<<<<< HEAD
-=======
 }
 
 // DTO para crear usuarios desde admin
@@ -222,5 +220,4 @@ export class AdminCreateEducationalContentDto {
     @IsOptional()
     @IsBoolean({ message: 'isPublished debe ser un booleano.' })
     isPublished?: boolean;
->>>>>>> nutri/main
 }

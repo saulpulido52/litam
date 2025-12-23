@@ -1,10 +1,6 @@
 {
   "compilerOptions": {
-<<<<<<< HEAD
-    "target": "ES2020",
-=======
     "target": "ES2018",
->>>>>>> nutri/main
     "module": "commonjs",
     "rootDir": "./src",
     "outDir": "./dist",
@@ -17,28 +13,8 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "sourceMap": true,
-<<<<<<< HEAD
-    "baseUrl": ".",
-    "paths": {
-      "@/*": [
-        "src/*"
-      ]
-    }
-  },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "src/__tests__",
-    "**/*.test.ts",
-    "**/*.spec.ts"
-  ]
-=======
     "baseUrl": "."
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "src/__tests__/**/*"]
->>>>>>> nutri/main
 }

@@ -2,8 +2,6 @@
 import { Request, Response, NextFunction } from 'express';
 import userService from '../../modules/users/users.service'; // Ruta corregida
 import { AppError } from '../../utils/app.error';
-<<<<<<< HEAD
-=======
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -38,7 +36,6 @@ const upload = multer({
         }
     }
 });
->>>>>>> nutri/main
 
 class UserController {
     public async getMyProfile(req: Request, res: Response, next: NextFunction) {
@@ -76,8 +73,6 @@ class UserController {
             next(new AppError('Error al actualizar el perfil.', 500));
         }
     }
-<<<<<<< HEAD
-=======
 
     public async uploadProfileImage(req: Request, res: Response, next: NextFunction) {
         try {
@@ -215,7 +210,6 @@ class UserController {
             next(new AppError('Error al eliminar la cuenta.', 500));
         }
     }
->>>>>>> nutri/main
 }
 
 export default new UserController();

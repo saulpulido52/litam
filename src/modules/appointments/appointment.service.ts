@@ -11,10 +11,7 @@ import {
     AvailabilitySlotDto,
     ManageAvailabilityDto,
     SearchAvailabilityDto,
-<<<<<<< HEAD
-=======
     NutritionistScheduleAppointmentDto,
->>>>>>> nutri/main
 } from '../../modules/appointments/appointment.dto';
 import { AppError } from '../../utils/app.error';
 import { RoleName } from '../../database/entities/role.entity';
@@ -49,28 +46,16 @@ class AppointmentService {
         const newAvailabilities: NutritionistAvailability[] = [];
         for (const slotDto of manageDto.slots) {
             // Validar que la hora de fin sea mayor que la de inicio
-<<<<<<< HEAD
-            if (slotDto.endTimeMinutes <= slotDto.startTimeMinutes) {
-                throw new AppError(`La hora de fin (${slotDto.endTimeMinutes} min) debe ser mayor que la hora de inicio (${slotDto.startTimeMinutes} min) para el ${slotDto.dayOfWeek}.`, 400);
-=======
             if (slotDto.end_time_minutes <= slotDto.start_time_minutes) {
                 throw new AppError(`La hora de fin (${slotDto.end_time_minutes} min) debe ser mayor que la hora de inicio (${slotDto.start_time_minutes} min) para el ${slotDto.day_of_week}.`, 400);
->>>>>>> nutri/main
             }
 
             const newSlot = this.availabilityRepository.create({
                 nutritionist: nutritionist,
-<<<<<<< HEAD
-                day_of_week: slotDto.dayOfWeek,
-                start_time_minutes: slotDto.startTimeMinutes,
-                end_time_minutes: slotDto.endTimeMinutes,
-                is_active: slotDto.isActive !== undefined ? slotDto.isActive : true, // Por defecto activo
-=======
                 day_of_week: slotDto.day_of_week,
                 start_time_minutes: slotDto.start_time_minutes,
                 end_time_minutes: slotDto.end_time_minutes,
                 is_active: slotDto.is_active !== undefined ? slotDto.is_active : true, // Por defecto activo
->>>>>>> nutri/main
             });
             newAvailabilities.push(newSlot);
         }
@@ -87,8 +72,6 @@ class AppointmentService {
         return availability;
     }
 
-<<<<<<< HEAD
-=======
     // NUEVO: Obtener citas existentes de un nutriólogo por rango de fechas
     public async getNutritionistAppointmentsByDateRange(nutritionistId: string, startDate: string, endDate: string) {
         const nutritionist = await this.userRepository.findOne({
@@ -121,7 +104,6 @@ class AppointmentService {
         return appointments;
     }
 
->>>>>>> nutri/main
     public async searchNutritionistAvailabilityForPatient(nutritionistId: string, searchDto: SearchAvailabilityDto) {
         // En una implementación real, esto sería mucho más complejo:
         // 1. Obtener la disponibilidad recurrente del nutriólogo.
@@ -149,8 +131,6 @@ class AppointmentService {
         return availabilitySlots;
     }
 
-<<<<<<< HEAD
-=======
     // NUEVO: Calcular slots disponibles considerando citas existentes
     public async getAvailableSlots(nutritionistId: string, date: string) {
         const nutritionist = await this.userRepository.findOne({
@@ -233,7 +213,6 @@ class AppointmentService {
         result.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
         return result;
     }
->>>>>>> nutri/main
 
     // --- Gestión de Citas (Pacientes y Nutriólogos) ---
 
@@ -274,28 +253,6 @@ class AppointmentService {
             throw new AppError('No se pueden agendar citas en el pasado.', 400);
         }
 
-<<<<<<< HEAD
-        // Verificar si hay citas superpuestas para el nutriólogo
-        const overlappingAppointment = await this.appointmentRepository.findOne({
-            where: {
-                nutritionist: { id: nutritionist.id },
-                status: AppointmentStatus.SCHEDULED, // Solo citas agendadas
-                // Lógica de superposición de tiempo:
-                start_time: Between(startTime, endTime), // La nueva cita empieza durante una existente
-                end_time: Between(startTime, endTime), // La nueva cita termina durante una existente
-                // Más compleja para cubrir todos los casos: existente_inicio < nuevo_fin AND existente_fin > nuevo_inicio
-                // Usaremos una consulta avanzada para mejor precisión.
-            },
-        });
-
-        // Consulta más robusta para superposición de citas
-        const overlappingQuery = await this.appointmentRepository
-            .createQueryBuilder('appointment')
-            .where('appointment.nutritionist_user_id = :nutritionistId', { nutritionistId: nutritionist.id })
-            .andWhere('appointment.status = :status', { status: AppointmentStatus.SCHEDULED })
-            .andWhere('(:startTime < appointment.end_time AND :endTime > appointment.start_time)', { startTime, endTime })
-            .getOne();
-=======
             // **OPTIMIZACIÓN**: Consulta más eficiente para verificar superposición de citas
     const overlappingQuery = await this.appointmentRepository
         .createQueryBuilder('appointment')
@@ -303,7 +260,6 @@ class AppointmentService {
         .andWhere('appointment.status = :status', { status: AppointmentStatus.SCHEDULED })
         .andWhere('(:startTime < appointment.end_time AND :endTime > appointment.start_time)', { startTime, endTime })
         .getOne();
->>>>>>> nutri/main
             
         if (overlappingQuery) {
             throw new AppError('El nutriólogo ya tiene una cita agendada que se superpone con esta franja horaria.', 409); // 409 Conflict
@@ -330,22 +286,6 @@ class AppointmentService {
         return newAppointment;
     }
 
-<<<<<<< HEAD
-    public async getMyAppointments(userId: string, userRole: RoleName) {
-        let appointments: Appointment[];
-        if (userRole === RoleName.PATIENT) {
-            appointments = await this.appointmentRepository.find({
-                where: { patient: { id: userId } },
-                relations: ['nutritionist', 'patient'], // Cargar ambos lados de la relación
-                order: { start_time: 'ASC' },
-            });
-        } else if (userRole === RoleName.NUTRITIONIST) {
-            appointments = await this.appointmentRepository.find({
-                where: { nutritionist: { id: userId } },
-                relations: ['patient', 'nutritionist'], // Cargar ambos lados
-                order: { start_time: 'ASC' },
-            });
-=======
     public async scheduleAppointmentForPatient(nutritionistId: string, scheduleDto: NutritionistScheduleAppointmentDto) {
         const nutritionist = await this.userRepository.findOne({
             where: { id: nutritionistId, role: { name: RoleName.NUTRITIONIST } },
@@ -445,26 +385,12 @@ class AppointmentService {
             appointments = await baseQuery
                 .where('nutritionist.id = :userId', { userId })
                 .getMany();
->>>>>>> nutri/main
         } else {
             throw new AppError('Acceso denegado. Rol no autorizado para ver citas propias.', 403);
         }
 
-<<<<<<< HEAD
-        // Ocultar hash de password de los usuarios relacionados
-        return appointments.map(appt => {
-            const { password_hash: patientHash, ...patientWithoutHash } = appt.patient;
-            const { password_hash: nutritionistHash, ...nutritionistWithoutHash } = appt.nutritionist;
-            return {
-                ...appt,
-                patient: patientWithoutHash,
-                nutritionist: nutritionistWithoutHash,
-            };
-        });
-=======
         // **OPTIMIZACIÓN**: Ya no es necesario filtrar password_hash porque no se carga
         return appointments;
->>>>>>> nutri/main
     }
 
     public async updateAppointmentStatus(appointmentId: string, newStatus: AppointmentStatus, callerId: string, callerRole: RoleName) {
@@ -503,8 +429,6 @@ class AppointmentService {
         await this.appointmentRepository.save(appointment);
         return appointment;
     }
-<<<<<<< HEAD
-=======
 
     // Actualizar una cita completa (fecha, hora, notas)
     public async updateAppointment(appointmentId: string, nutritionistId: string, updateData: any) {
@@ -583,7 +507,6 @@ class AppointmentService {
         
         return { message: 'Cita eliminada exitosamente' };
     }
->>>>>>> nutri/main
 }
 
 export default new AppointmentService();

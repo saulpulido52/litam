@@ -88,13 +88,6 @@ export interface PatientAppointment {
 export interface PatientProgress {
   id: string;
   date: string;
-<<<<<<< HEAD
-  weight: number;
-  body_fat_percentage?: number;
-  muscle_mass?: number;
-  waist_circumference?: number;
-  notes?: string;
-=======
   weight: number | null;
   body_fat_percentage?: number | null;
   muscle_mass_percentage?: number | null;
@@ -109,27 +102,18 @@ export interface PatientProgress {
   photos?: { date?: Date; url: string; description?: string }[] | null;
   adherence_to_plan?: number | null;
   feeling_level?: number | null;
->>>>>>> nutri/main
 }
 
 class PatientsService {
   // Transformar datos del backend al formato esperado por el frontend
   private transformBackendPatient(backendPatient: any): Patient {
     console.log('🔄 Transformando paciente del backend:', backendPatient);
-<<<<<<< HEAD
-
-=======
     
->>>>>>> nutri/main
     // Si ya tiene la estructura correcta, devolverlo tal como está
     if (backendPatient.first_name && backendPatient.email && !backendPatient.user) {
       return backendPatient;
     }
-<<<<<<< HEAD
-
-=======
     
->>>>>>> nutri/main
     // Si tiene la estructura con objeto "user", transformarlo
     if (backendPatient.user) {
       const transformed: Patient = {
@@ -159,41 +143,17 @@ class PatientsService {
           emergency_contact_phone: backendPatient.emergency_contact_phone
         }
       };
-<<<<<<< HEAD
-
-      console.log('✅ Paciente transformado:', transformed);
-      return transformed;
-    }
-
-=======
       
       console.log('✅ Paciente transformado:', transformed);
       return transformed;
     }
     
->>>>>>> nutri/main
     // Fallback: devolver tal como está
     return backendPatient;
   }
 
   // Obtener todos los pacientes del nutriólogo actual
   async getMyPatients(): Promise<Patient[]> {
-<<<<<<< HEAD
-    try {
-      const response = await apiService.get<{ patients: any[] }>('/patients/my-patients');
-      const rawPatients = response.data?.patients || [];
-
-      console.log('📥 Pacientes recibidos del backend:', rawPatients);
-
-      // Transformar cada paciente al formato correcto
-      const transformedPatients = rawPatients.map(patient => this.transformBackendPatient(patient));
-
-      console.log('✅ Pacientes transformados:', transformedPatients);
-      return transformedPatients;
-    } catch (error) {
-      console.error('Error fetching patients:', error);
-      throw new Error('Error al obtener la lista de pacientes');
-=======
     console.log('🔍 [PatientsService] Iniciando getMyPatients...');
     
     try {
@@ -252,7 +212,6 @@ class PatientsService {
     } catch (error) {
       console.error('🔍 [PatientsService] Error en getMyPatients:', error);
       throw error;
->>>>>>> nutri/main
     }
   }
 
@@ -263,21 +222,13 @@ class PatientsService {
       if (!response.data?.patient) {
         throw new Error('Paciente no encontrado');
       }
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       // Transformar el paciente al formato correcto
       const transformedPatient = this.transformBackendPatient(response.data.patient);
       return transformedPatient;
     } catch (error: any) {
       console.error('Error fetching patient:', error);
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       // Preservar el código de estado del error para mejor manejo
       if (error.response?.status === 404) {
         const error404 = new Error('Paciente no encontrado - 404');
@@ -288,11 +239,7 @@ class PatientsService {
         (error403 as any).status = 403;
         throw error403;
       }
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       throw new Error('Error al obtener la información del paciente');
     }
   }
@@ -302,28 +249,17 @@ class PatientsService {
     try {
       console.log('🔍 SERVICIO - Verificando email:', email);
       const response = await apiService.get<any>(`/patients/check-email?email=${encodeURIComponent(email)}`);
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       console.log('📡 SERVICIO - Respuesta completa:', response);
       console.log('📊 SERVICIO - Response keys:', Object.keys(response));
       console.log('📊 SERVICIO - Status:', response.status);
       console.log('📊 SERVICIO - Data:', response.data);
       console.log('📊 SERVICIO - Data keys:', response.data ? Object.keys(response.data) : 'NO DATA');
       console.log('📊 SERVICIO - Data stringified:', JSON.stringify(response.data, null, 2));
-<<<<<<< HEAD
-
-      // Intentar diferentes estructuras de respuesta posibles
-      let exists = false;
-
-=======
       
       // Intentar diferentes estructuras de respuesta posibles
       let exists = false;
       
->>>>>>> nutri/main
       if (response.data?.data?.exists !== undefined) {
         exists = response.data.data.exists;
         console.log('✅ SERVICIO - Usando response.data.data.exists:', exists);
@@ -343,11 +279,7 @@ class PatientsService {
             break;
           }
         }
-<<<<<<< HEAD
-
-=======
         
->>>>>>> nutri/main
         if (!exists && !possibleFields.some(field => response.data[field] !== undefined)) {
           console.log('❌ SERVICIO - No se encontró campo exists en ninguna estructura');
           // Si hay datos en la respuesta, asumimos que el email existe
@@ -358,11 +290,7 @@ class PatientsService {
         console.log('❌ SERVICIO - Estructura de respuesta no reconocida');
         exists = false;
       }
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       console.log('🎯 SERVICIO - Resultado final:', exists, typeof exists);
       return Boolean(exists);
     } catch (error: any) {
@@ -370,21 +298,13 @@ class PatientsService {
       console.warn('❌ SERVICIO - Error response:', error.response);
       console.warn('❌ SERVICIO - Error response data:', error.response?.data);
       console.warn('❌ SERVICIO - Error status:', error.response?.status);
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       // Si hay error 409 o similar, puede indicar que el email ya existe
       if (error.response?.status === 409) {
         console.log('✅ SERVICIO - Error 409 indica email duplicado, devolviendo true');
         return true;
       }
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       return false;
     }
   }
@@ -394,15 +314,6 @@ class PatientsService {
     try {
       // Remover el password ya que el backend genera uno automáticamente
       const { password, ...dataToSend } = patientData;
-<<<<<<< HEAD
-
-      console.log('🔄 Enviando datos al backend:', dataToSend);
-
-      const response = await apiService.post<{
-        success: boolean;
-        message: string;
-        data?: {
-=======
       
       console.log('🔄 Enviando datos al backend:', dataToSend);
       
@@ -410,7 +321,6 @@ class PatientsService {
         success: boolean; 
         message: string; 
         data?: { 
->>>>>>> nutri/main
           patient: Patient;
           temporary_credentials: {
             email: string;
@@ -428,16 +338,6 @@ class PatientsService {
           instructions: string;
         };
       }>('/patients/register-by-nutritionist', dataToSend);
-<<<<<<< HEAD
-
-      console.log('✅ Respuesta del backend:', response);
-      console.log('📄 Estructura de datos recibida:', response.data);
-
-      // Manejar ambas estructuras posibles
-      let responsePatient: Patient;
-      let credentialsData: any;
-
-=======
       
       console.log('✅ Respuesta del backend:', response);
       console.log('📄 Estructura de datos recibida:', response.data);
@@ -446,7 +346,6 @@ class PatientsService {
       let responsePatient: Patient;
       let credentialsData: any;
       
->>>>>>> nutri/main
       if (response.data?.data?.patient) {
         // Estructura: { data: { patient: {...}, temporary_credentials: {...} } }
         responsePatient = response.data.data.patient;
@@ -467,27 +366,16 @@ class PatientsService {
         });
         throw new Error(`Error en la respuesta del servidor. Estructura recibida: ${JSON.stringify(response.data)}`);
       }
-<<<<<<< HEAD
-
-      // Transformar el paciente al formato correcto del frontend
-      const transformedPatient = this.transformBackendPatient(responsePatient);
-
-=======
       
       // Transformar el paciente al formato correcto del frontend
       const transformedPatient = this.transformBackendPatient(responsePatient);
       
->>>>>>> nutri/main
       // Añadir las credenciales temporales al objeto patient para poder mostrarlas
       const patientWithCredentials = {
         ...transformedPatient,
         temporaryCredentials: credentialsData
       };
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       console.log('✅ Paciente creado y transformado exitosamente:', patientWithCredentials);
       return patientWithCredentials;
     } catch (error: any) {
@@ -495,20 +383,12 @@ class PatientsService {
       console.error('❌ Error response:', error.response);
       console.error('❌ Error response data:', error.response?.data);
       console.error('❌ Error status:', error.response?.status);
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       // Si es un error de Axios pero no hay response, puede ser un error de red
       if (error.code === 'NETWORK_ERROR' || !error.response) {
         throw new Error('Error de conexión. Verifique que el servidor esté funcionando.');
       }
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       // Manejo específico de errores comunes
       if (error.response?.status === 409) {
         throw new Error('Ya existe un paciente registrado con este email. Por favor, use un email diferente.');
@@ -526,20 +406,12 @@ class PatientsService {
       } else if (error.response?.status === 500) {
         throw new Error('Error interno del servidor. Intente nuevamente en unos momentos.');
       }
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       // Error detallado para debugging
       const statusCode = error.response?.status || 'Sin código';
       const serverMessage = error.response?.data?.message || error.message || 'Error desconocido';
       const errorDetails = error.response?.data || error;
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       throw new Error(
         `Error ${statusCode}: ${serverMessage}. ` +
         `Detalles: ${JSON.stringify(errorDetails, null, 2)}`
@@ -554,11 +426,7 @@ class PatientsService {
       console.log('🔄 FRONTEND - Patient ID:', patientId);
       console.log('🔄 FRONTEND - Datos de actualización:', JSON.stringify(patientData, null, 2));
       console.log('🔄 FRONTEND - Token disponible:', !!apiService.getToken());
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       // 🎯 NUEVO: Usar email como identificador si está disponible (más robusto)
       let response;
       if (patientData.email) {
@@ -568,11 +436,7 @@ class PatientsService {
         console.log('🆔 FRONTEND - Usando endpoint por ID (fallback):', patientId);
         response = await apiService.put<{ patient: Patient }>(`/patients/${patientId}`, patientData);
       }
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       console.log('✅ FRONTEND - Respuesta exitosa:', response);
       if (!response.data?.patient) {
         throw new Error('Error al actualizar el paciente');
@@ -584,11 +448,7 @@ class PatientsService {
       console.error('❌ FRONTEND - Error response data:', error.response?.data);
       console.error('❌ FRONTEND - Error status:', error.response?.status);
       console.error('❌ FRONTEND - Error message:', error.message);
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       // Si es error 403 o 404, puede ser que el paciente no existe o no tenemos acceso
       if (error.response?.status === 403 || error.response?.status === 404) {
         console.warn('⚠️ Paciente no encontrado o sin acceso. Limpiando datos desactualizados...');
@@ -600,11 +460,7 @@ class PatientsService {
         console.error('🚨 ERROR SIN RECARGA AUTOMÁTICA - Status:', error.response?.status, 'Data:', error.response?.data);
         throw new Error(`Error ${error.response?.status}: ${error.response?.data?.message || 'Datos desactualizados detectados'}`);
       }
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       const message = error.response?.data?.message || 'Error al actualizar el paciente';
       throw new Error(message);
     }
@@ -615,17 +471,10 @@ class PatientsService {
     try {
       console.log('🗑️ Removing patient from list:', patientId);
       console.log('🔍 patientId type:', typeof patientId, 'value:', patientId);
-<<<<<<< HEAD
-
-      const token = localStorage.getItem('access_token'); // 🔧 FIX: Use correct token key
-      console.log('🔍 Token for removal:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');
-
-=======
       
       const token = localStorage.getItem('access_token'); // 🔧 FIX: Use correct token key
       console.log('🔍 Token for removal:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');
       
->>>>>>> nutri/main
       // 🔧 EXTENDED DEBUG: Log more token details
       if (token) {
         console.log('🔍 Full token length:', token.length);
@@ -635,14 +484,9 @@ class PatientsService {
         console.log('🔍 Token contains newlines:', token.includes('\n') ? 'YES' : 'NO');
         console.log('🔍 Token full value:', token); // TEMPORARY: Log full token for debugging
       }
-<<<<<<< HEAD
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/patients/${patientId}/relationship`, {
-=======
       
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
     const response = await fetch(`${apiUrl}/patients/${patientId}/relationship`, {
->>>>>>> nutri/main
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -653,11 +497,7 @@ class PatientsService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
-<<<<<<< HEAD
-
-=======
         
->>>>>>> nutri/main
         // 🎯 Handle specific cases for better user experience
         if (response.status === 404) {
           if (errorData.message?.includes('relación activa') || errorData.message?.includes('Paciente no encontrado')) {
@@ -668,11 +508,7 @@ class PatientsService {
             throw new Error('Este paciente ya no está en tu lista. La página se actualizará automáticamente.');
           }
         }
-<<<<<<< HEAD
-
-=======
         
->>>>>>> nutri/main
         throw new Error(errorData.message || 'Error al remover el paciente de tu lista');
       }
 
@@ -703,12 +539,6 @@ class PatientsService {
   // Obtener progreso de un paciente
   async getPatientProgress(patientId: string): Promise<PatientProgress[]> {
     try {
-<<<<<<< HEAD
-      const response = await apiService.get<{ progress: PatientProgress[] }>(`/patients/${patientId}/progress`);
-      return response.data?.progress || [];
-    } catch (error) {
-      console.error('Error fetching patient progress:', error);
-=======
       console.log('📊 Solicitando progreso para paciente:', patientId);
       const response = await apiService.get<{ data: { logs: PatientProgress[] } }>(`/progress-tracking/patient/${patientId}`);
       
@@ -740,7 +570,6 @@ class PatientsService {
       return logs;
     } catch (error) {
       console.error('❌ Error fetching patient progress:', error);
->>>>>>> nutri/main
       throw new Error('Error al obtener el progreso del paciente');
     }
   }
@@ -748,17 +577,6 @@ class PatientsService {
   // Agregar progreso a un paciente
   async addPatientProgress(patientId: string, progressData: Omit<PatientProgress, 'id'>): Promise<PatientProgress> {
     try {
-<<<<<<< HEAD
-      const response = await apiService.post<{ progress: PatientProgress }>(`/patients/${patientId}/progress`, progressData);
-      if (!response.data?.progress) {
-        throw new Error('Error al registrar el progreso');
-      }
-      return response.data.progress;
-    } catch (error: any) {
-      console.error('Error adding patient progress:', error);
-      const message = error.response?.data?.message || 'Error al registrar el progreso';
-      throw new Error(message);
-=======
       const response = await apiService.post<{ progress: PatientProgress }>(`/progress-tracking/patient/${patientId}/progress`, progressData);
       return response.data?.progress || {} as PatientProgress;
     } catch (error) {
@@ -850,7 +668,6 @@ class PatientsService {
     } catch (error) {
       console.error('❌ Error fetching progress analysis:', error);
       throw new Error('Error al obtener el análisis de progreso');
->>>>>>> nutri/main
     }
   }
 
@@ -883,11 +700,7 @@ class PatientsService {
           thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
           return createdDate > thirtyDaysAgo;
         }).length,
-<<<<<<< HEAD
-        withConditions: patients.filter(p =>
-=======
         withConditions: patients.filter(p => 
->>>>>>> nutri/main
           p.profile?.medical_conditions && p.profile.medical_conditions.length > 0
         ).length
       };
@@ -948,22 +761,12 @@ class PatientsService {
         transfer_result?: any;
       }>('/patients/change-nutritionist', {
         newNutritionistId,
-<<<<<<< HEAD
-        reason,
-      });
-
-      if (response.status !== 'success' || !response.data) {
-        throw new Error(response.message || 'Error al solicitar cambio de nutriólogo');
-      }
-
-=======
         reason});
       
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error al solicitar cambio de nutriólogo');
       }
       
->>>>>>> nutri/main
       return response.data;
     } catch (error: any) {
       console.error('Error requesting nutritionist change:', error);
@@ -996,22 +799,12 @@ class PatientsService {
           user_account: boolean;
         };
       }>(`/patients/${patientId}/account`, {
-<<<<<<< HEAD
-        confirmPassword,
-      });
-
-      if (response.status !== 'success' || !response.data) {
-        throw new Error(response.message || 'Error al eliminar la cuenta');
-      }
-
-=======
         confirmPassword});
       
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error al eliminar la cuenta');
       }
       
->>>>>>> nutri/main
       return response.data;
     } catch (error: any) {
       console.error('Error deleting patient account:', error);
@@ -1038,19 +831,11 @@ class PatientsService {
           email: string;
         };
       }>('/patients/my-profile');
-<<<<<<< HEAD
-
-      if (response.status !== 'success' || !response.data) {
-        throw new Error(response.message || 'Error al obtener el perfil');
-      }
-
-=======
       
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error al obtener el perfil');
       }
       
->>>>>>> nutri/main
       return response.data;
     } catch (error: any) {
       console.error('Error fetching my profile:', error);
@@ -1079,11 +864,7 @@ class PatientsService {
           rating?: number;
         }[];
       }>('/nutritionists');
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       return response.data?.nutritionists || [];
     } catch (error: any) {
       console.error('Error fetching available nutritionists:', error);
@@ -1095,14 +876,8 @@ class PatientsService {
   async validatePassword(password: string): Promise<boolean> {
     try {
       const response = await apiService.post<{ valid: boolean }>('/auth/validate-password', {
-<<<<<<< HEAD
-        password,
-      });
-
-=======
         password});
       
->>>>>>> nutri/main
       return response.data?.valid || false;
     } catch (error: any) {
       console.error('Error validating password:', error);
@@ -1130,11 +905,7 @@ class PatientsService {
           reason?: string;
         }[];
       }>(`/patients/${patientId}/nutritionist-history`);
-<<<<<<< HEAD
-
-=======
       
->>>>>>> nutri/main
       return response.data?.history || [];
     } catch (error: any) {
       console.error('Error fetching nutritionist history:', error);

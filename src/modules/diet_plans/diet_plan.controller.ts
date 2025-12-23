@@ -195,24 +195,6 @@ class DietPlanController {
 
     public async deleteDietPlan(req: Request, res: Response, next: NextFunction) {
         try {
-<<<<<<< HEAD
-            if (!req.user || (req.user.role.name !== RoleName.NUTRITIONIST && req.user.role.name !== RoleName.ADMIN)) {
-                return next(new AppError('Acceso denegado. Solo nutriólogos o administradores pueden eliminar planes de dieta.', 403));
-            }
-            const { id } = req.params;
-            await dietPlanService.deleteDietPlan(id, req.user.id, req.user.role.name);
-            res.status(200).json({
-                status: 'success',
-                message: 'Plan de dieta eliminado exitosamente.',
-                data: null,
-            });
-        } catch (error: any) {
-            console.error('Error en DietPlanController.deleteDietPlan:', error); // LOG DE DEBUG
-            if (error instanceof AppError) {
-                return next(error);
-            }
-            next(new AppError('Error al eliminar el plan de dieta.', 500));
-=======
             const { id } = req.params;
             const result = await dietPlanService.deleteDietPlan(id, req.user!.id, req.user!.role.name);
             res.json(result);
@@ -257,7 +239,6 @@ class DietPlanController {
         } catch (error) {
             console.error('❌ Error en generateMealPlannerPDF controller:', error);
             return res.status(500).json({ message: 'Error interno al generar el PDF', error });
->>>>>>> nutri/main
         }
     }
 }

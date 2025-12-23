@@ -25,8 +25,6 @@ export class NutritionistProfile {
     @Column({ type: 'varchar', length: 255, nullable: true })
     license_issuing_authority: string | null; // Nuevo campo: Entidad emisora de la licencia
 
-<<<<<<< HEAD
-=======
     // === NUEVOS CAMPOS PARA VALIDACIÓN PROFESIONAL ===
     @Column({ type: 'varchar', length: 20, nullable: true })
     professional_id: string | null; // Cédula profesional
@@ -71,7 +69,6 @@ export class NutritionistProfile {
     @Column({ type: 'varchar', length: 18, nullable: true })
     curp: string | null; // CURP para validación de identidad
 
->>>>>>> nutri/main
     @Column('text', { array: true, nullable: true })
     specialties!: string[] | null;
 
@@ -108,8 +105,6 @@ export class NutritionistProfile {
     @Column({ type: 'boolean', default: false })
     is_verified!: boolean;
 
-<<<<<<< HEAD
-=======
     // --- NUEVOS CAMPOS PARA APP MÓVIL ---
     
     // Descripción profesional breve
@@ -182,7 +177,6 @@ export class NutritionistProfile {
     @Column({ type: 'integer', nullable: false, default: 0 })
     verified_reviews!: number; // Número de reseñas verificadas
 
->>>>>>> nutri/main
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at!: Date;
 

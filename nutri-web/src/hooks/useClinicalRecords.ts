@@ -17,11 +17,7 @@ export const useClinicalRecords = (): UseClinicalRecordsReturn => {
   const [records, setRecords] = useState<ClinicalRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-<<<<<<< HEAD
-
-=======
   
->>>>>>> nutri/main
   const clearError = () => {
     setError(null);
   };
@@ -122,10 +118,5 @@ export const useClinicalRecords = (): UseClinicalRecordsReturn => {
     createRecord,
     updateRecord,
     deleteRecord,
-<<<<<<< HEAD
-    clearError,
-  };
-=======
     clearError};
->>>>>>> nutri/main
 }; 

@@ -8,14 +8,11 @@ import {
     AdminVerifyNutritionistDto,
     AdminUpdateUserSubscriptionDto,
     AdminUpdateSettingsDto,
-<<<<<<< HEAD
-=======
     AdminCreateUserDto,
     AdminCreateAppointmentDto,
     AdminCreateFoodDto,
     AdminCreateRecipeDto,
     AdminCreateEducationalContentDto,
->>>>>>> nutri/main
 } from '../../modules/admin/admin.dto';
 import { RoleName } from '../../database/entities/role.entity';
 
@@ -26,12 +23,8 @@ router.use(protect, authorize(RoleName.ADMIN));
 
 // --- Gestión de Usuarios ---
 router.route('/users')
-<<<<<<< HEAD
-    .get(adminController.getAllUsers); // Filtrado por query params
-=======
     .get(adminController.getAllUsers) // Filtrado por query params
     .post(validateMiddleware(AdminCreateUserDto), adminController.adminCreateUser); // Crear usuario
->>>>>>> nutri/main
 router.route('/users/:id')
     .get(adminController.getUserById)
     .patch(validateMiddleware(AdminUpdateUserDto), adminController.adminUpdateUser)
@@ -54,8 +47,6 @@ router.route('/subscriptions/:id')
 // --- Gestión de Configuraciones (Placeholder) ---
 router.patch('/settings', validateMiddleware(AdminUpdateSettingsDto), adminController.updateGeneralSettings);
 
-<<<<<<< HEAD
-=======
 // --- HERRAMIENTAS DE INTEGRIDAD DE DATOS ---
 router.get('/system/health', adminController.getSystemHealth);
 router.get('/system/integrity/diagnosis', adminController.diagnosisDataIntegrity);
@@ -125,6 +116,5 @@ router.route('/messages')
 
 // --- MÉTRICAS AVANZADAS DEL SISTEMA ---
 router.get('/metrics/advanced', adminController.getAdvancedSystemMetrics);
->>>>>>> nutri/main
 
 export default router;

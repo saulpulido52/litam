@@ -7,12 +7,9 @@ import {
     ArrayMinSize,
     IsNumber,
     Min,
-<<<<<<< HEAD
-=======
     IsBoolean,
     IsLatitude,
     IsLongitude,
->>>>>>> nutri/main
 } from 'class-validator';
 
 export class CreateUpdateNutritionistProfileDto {
@@ -78,8 +75,6 @@ export class CreateUpdateNutritionistProfileDto {
 
     @IsOptional()
     officeHours?: any; // Mantener como 'any' para JSONB genérico
-<<<<<<< HEAD
-=======
 
     // --- NUEVOS CAMPOS PARA APP MÓVIL ---
 
@@ -153,5 +148,4 @@ export class CreateUpdateNutritionistProfileDto {
     @IsOptional()
     @IsBoolean({ message: 'El campo de disponibilidad debe ser un valor booleano.' })
     isAvailable?: boolean;
->>>>>>> nutri/main
 }

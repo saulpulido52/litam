@@ -21,11 +21,7 @@ interface UseDietPlansReturn {
   fetchAllDietPlans: () => Promise<void>;
   createDietPlan: (data: CreateDietPlanDto) => Promise<DietPlan>;
   generateDietPlanWithAI: (data: GenerateAIDietDto) => Promise<DietPlan>;
-<<<<<<< HEAD
-  updateDietPlan: (id: string, data: Partial<DietPlan>) => Promise<DietPlan>;
-=======
   updateDietPlan: (id: string, data: any) => Promise<DietPlan>;
->>>>>>> nutri/main
   updateDietPlanStatus: (id: string, status: string) => Promise<DietPlan>;
   deleteDietPlan: (id: string) => Promise<void>;
   addWeekToPlan: (dietPlanId: string, weekData: WeeklyPlanDto) => Promise<DietPlan>;
@@ -42,12 +38,7 @@ export const useDietPlans = (): UseDietPlansReturn => {
     total: 0,
     active: 0,
     completed: 0,
-<<<<<<< HEAD
-    draft: 0,
-  });
-=======
     draft: 0});
->>>>>>> nutri/main
 
   const clearError = useCallback(() => {
     setError(null);
@@ -126,14 +117,6 @@ export const useDietPlans = (): UseDietPlansReturn => {
     }
   }, []);
 
-<<<<<<< HEAD
-  const updateDietPlan = useCallback(async (id: string, data: Partial<DietPlan>): Promise<DietPlan> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const updatedPlan = await dietPlansService.updateDietPlan(id, data);
-      
-=======
   const updateDietPlan = useCallback(async (id: string, data: any): Promise<DietPlan> => {
     setLoading(true);
     setError(null);
@@ -145,17 +128,13 @@ export const useDietPlans = (): UseDietPlansReturn => {
       
       console.log('🟢 useDietPlans - Plan actualizado exitosamente:', updatedPlan);
       
->>>>>>> nutri/main
       // Refrescar la lista completa desde el backend
       await fetchAllDietPlans();
       
       return updatedPlan;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error updating diet plan';
-<<<<<<< HEAD
-=======
       console.error('🔴 useDietPlans - Error actualizando plan:', err);
->>>>>>> nutri/main
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -234,12 +213,7 @@ export const useDietPlans = (): UseDietPlansReturn => {
       total: safeDietPlans.length,
       active: safeDietPlans.filter(plan => plan.status === 'active').length,
       completed: safeDietPlans.filter(plan => plan.status === 'completed').length,
-<<<<<<< HEAD
-      draft: safeDietPlans.filter(plan => plan.status === 'draft').length,
-    };
-=======
       draft: safeDietPlans.filter(plan => plan.status === 'draft').length};
->>>>>>> nutri/main
     setStats(newStats);
   }, [dietPlans]);
 
@@ -258,10 +232,5 @@ export const useDietPlans = (): UseDietPlansReturn => {
     addWeekToPlan,
     refreshStats,
     clearError,
-<<<<<<< HEAD
-    setError,
-  };
-=======
     setError};
->>>>>>> nutri/main
 }; 

@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
-import { BarChart3, TrendingUp, Users, Calendar, FileText, Download, Eye, Target, DollarSign } from 'lucide-react';
-=======
 import { BarChart3, Calendar, Download, Target, DollarSign, Users, TrendingUp, Eye, FileText } from 'lucide-react';
->>>>>>> nutri/main
 
 interface ReportData {
   month: string;

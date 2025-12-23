@@ -862,12 +862,9 @@ export class PatientResponseDTO {
     created_at!: Date;
     updated_at!: Date;
     
-<<<<<<< HEAD
-=======
     // Información pediátrica
     is_pediatric_patient?: boolean;
     
->>>>>>> nutri/main
     // Campos calculados
     bmi?: number;
     bmi_category?: string;

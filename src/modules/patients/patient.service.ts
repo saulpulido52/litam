@@ -1,9 +1,5 @@
 // src/modules/patients/patient.service.ts
-<<<<<<< HEAD
-import { Repository, DataSource, ILike } from 'typeorm';
-=======
 import { Repository, DataSource, ILike, MoreThan } from 'typeorm';
->>>>>>> nutri/main
 import { User, UserRegistrationType } from '../../database/entities/user.entity';
 import { PatientProfile } from '../../database/entities/patient_profile.entity';
 import { PatientNutritionistRelation } from '../../database/entities/patient_nutritionist_relation.entity';
@@ -16,35 +12,17 @@ import { RelationshipStatus } from '../../database/entities/patient_nutritionist
 import { CreatePatientDTO, UpdatePatientDTO, PatientResponseDTO, PatientsSearchDTO, CreatePatientByNutritionistDTO, BasicPatientRegistrationDTO } from './patient.dto';
 import { UserSubscription, SubscriptionStatus } from '../../database/entities/user_subscription.entity';
 import { SubscriptionPlan } from '../../database/entities/subscription_plan.entity';
-<<<<<<< HEAD
-=======
 import { AppDataSource } from '../../database/data-source';
->>>>>>> nutri/main
 
 export class PatientService {
     private userRepository: Repository<User>;
     private patientProfileRepository: Repository<PatientProfile>;
-<<<<<<< HEAD
-    private relationRepository: Repository<PatientNutritionistRelation>;
-    private roleRepository: Repository<Role>;
-=======
     private roleRepository: Repository<Role>;
     private relationRepository: Repository<PatientNutritionistRelation>;
->>>>>>> nutri/main
     private appointmentRepository: Repository<Appointment>;
     private progressLogRepository: Repository<PatientProgressLog>;
     private dataSource: DataSource;
 
-<<<<<<< HEAD
-    constructor(dataSource: DataSource) {
-        this.userRepository = dataSource.getRepository(User);
-        this.patientProfileRepository = dataSource.getRepository(PatientProfile);
-        this.relationRepository = dataSource.getRepository(PatientNutritionistRelation);
-        this.roleRepository = dataSource.getRepository(Role);
-        this.appointmentRepository = dataSource.getRepository(Appointment);
-        this.progressLogRepository = dataSource.getRepository(PatientProgressLog);
-        this.dataSource = dataSource;
-=======
     constructor() {
         this.userRepository = AppDataSource.getRepository(User);
         this.patientProfileRepository = AppDataSource.getRepository(PatientProfile);
@@ -53,7 +31,6 @@ export class PatientService {
         this.appointmentRepository = AppDataSource.getRepository(Appointment);
         this.progressLogRepository = AppDataSource.getRepository(PatientProgressLog);
         this.dataSource = AppDataSource;
->>>>>>> nutri/main
     }
 
     // 🎯 FUNCIÓN: Calcular edad automáticamente desde fecha de nacimiento
@@ -81,8 +58,6 @@ export class PatientService {
         }
     }
 
-<<<<<<< HEAD
-=======
     // 🎯 FUNCIÓN: Determinar si un paciente es pediátrico (menor de 18 años)
     private isPediatricPatient(age: number | undefined, birthDate?: string): boolean {
         if (age !== undefined) {
@@ -97,7 +72,6 @@ export class PatientService {
         return false;
     }
 
->>>>>>> nutri/main
     // ==================== CREAR PACIENTE COMPLETO ====================
     async createPatient(nutritionistId: string, patientData: CreatePatientDTO): Promise<PatientResponseDTO> {
         // 1. Verificar que el nutricionista existe
@@ -134,12 +108,6 @@ export class PatientService {
 
         const savedUser = await this.userRepository.save(newUser);
 
-<<<<<<< HEAD
-        // 5. Crear perfil completo del paciente
-        const newPatientProfile = this.patientProfileRepository.create({
-            user: savedUser,
-            
-=======
         // 5. Determinar si el paciente es pediátrico
         const isPediatric = this.isPediatricPatient(patientData.age, undefined);
         console.log(`👶 Paciente ${patientData.first_name} ${patientData.last_name}: Edad ${patientData.age}, Es pediátrico: ${isPediatric}`);
@@ -151,7 +119,6 @@ export class PatientService {
             // Detección automática de paciente pediátrico
             is_pediatric_patient: isPediatric,
             
->>>>>>> nutri/main
             // Motivo de consulta
             consultation_reason: patientData.consultation_reason,
             
@@ -248,9 +215,6 @@ export class PatientService {
         return this.formatPatientResponse(savedUser, savedProfile);
     }
 
-<<<<<<< HEAD
-    // ==================== OBTENER PACIENTES DEL NUTRICIONISTA ====================
-=======
     // **OPTIMIZACIÓN**: Helper para crear consultas base reutilizables
     private createPatientRelationQuery(nutritionistId: string) {
         return this.relationRepository
@@ -284,7 +248,6 @@ export class PatientService {
 
     // ==================== OBTENER PACIENTES DEL NUTRICIONISTA ====================
     // **OPTIMIZACIÓN**: Mejorar consulta de pacientes con paginación eficiente
->>>>>>> nutri/main
     async getPatientsByNutritionist(nutritionistId: string, searchParams?: PatientsSearchDTO): Promise<{
         patients: PatientResponseDTO[];
         total: number;
@@ -293,25 +256,6 @@ export class PatientService {
         totalPages: number;
     }> {
         const page = searchParams?.page || 1;
-<<<<<<< HEAD
-        const limit = searchParams?.limit || 10;
-        const skip = (page - 1) * limit;
-
-        let query = this.relationRepository
-            .createQueryBuilder('relation')
-            .leftJoinAndSelect('relation.patient', 'patient')
-            .leftJoinAndSelect('patient.role', 'role')
-            .leftJoinAndSelect('patient.patient_profile', 'profile')
-            .leftJoinAndSelect('relation.nutritionist', 'nutritionist')
-            .where('nutritionist.id = :nutritionistId', { nutritionistId })
-            .andWhere('relation.status = :status', { status: RelationshipStatus.ACTIVE });
-
-        // Aplicar filtros de búsqueda
-        if (searchParams?.search) {
-            query = query.andWhere(
-                '(LOWER(patient.first_name) LIKE LOWER(:search) OR LOWER(patient.last_name) LIKE LOWER(:search) OR LOWER(patient.email) LIKE LOWER(:search))',
-                { search: `%${searchParams.search}%` }
-=======
         const limit = Math.min(searchParams?.limit || 10, 50); // **OPTIMIZACIÓN**: Limitar máximo a 50
         const skip = (page - 1) * limit;
 
@@ -329,7 +273,6 @@ export class PatientService {
             query = query.andWhere(
                 '(LOWER(patient.first_name) LIKE :search OR LOWER(patient.last_name) LIKE :search OR LOWER(patient.email) LIKE :search)',
                 { search: searchTerm }
->>>>>>> nutri/main
             );
         }
 
@@ -354,11 +297,7 @@ export class PatientService {
             query = query.andWhere('profile.medical_conditions && :conditions', { conditions: searchParams.medical_conditions });
         }
 
-<<<<<<< HEAD
-        // Aplicar ordenamiento
-=======
         // **OPTIMIZACIÓN**: Ordenamiento optimizado
->>>>>>> nutri/main
         const sortBy = searchParams?.sort_by || 'created_at';
         const sortOrder = searchParams?.sort_order || 'DESC';
         
@@ -370,16 +309,11 @@ export class PatientService {
             query = query.orderBy(`patient.${sortBy}`, sortOrder);
         }
 
-<<<<<<< HEAD
-        // Obtener total y resultados paginados
-        const [relations, total] = await query.skip(skip).take(limit).getManyAndCount();
-=======
         // **OPTIMIZACIÓN**: Usar Promise.all para obtener total y resultados en paralelo
         const [relations, total] = await Promise.all([
             query.skip(skip).take(limit).getMany(),
             query.getCount()
         ]);
->>>>>>> nutri/main
 
         const patients = relations.map(relation => {
             if (!relation.patient.patient_profile) {
@@ -650,38 +584,6 @@ export class PatientService {
     }
 
     // ==================== OBTENER ESTADÍSTICAS ====================
-<<<<<<< HEAD
-    async getPatientStats(nutritionistId: string): Promise<any> {
-        // Total de pacientes activos
-        const totalPatients = await this.relationRepository.count({
-            where: {
-                nutritionist: { id: nutritionistId },
-                status: RelationshipStatus.ACTIVE,
-            },
-        });
-
-        // Pacientes nuevos (último mes)
-        const oneMonthAgo = new Date();
-        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-
-        const newPatientsLastMonth = await this.relationRepository
-            .createQueryBuilder('relation')
-            .where('relation.nutritionist_user_id = :nutritionistId', { nutritionistId })
-            .andWhere('relation.status = :status', { status: RelationshipStatus.ACTIVE })
-            .andWhere('relation.accepted_at >= :oneMonthAgo', { oneMonthAgo })
-            .getCount();
-
-        // Pacientes con condiciones médicas
-        const patientsWithConditions = await this.relationRepository
-            .createQueryBuilder('relation')
-            .leftJoin('relation.patient', 'patient')
-            .leftJoin('patient.patient_profile', 'profile')
-            .where('relation.nutritionist_user_id = :nutritionistId', { nutritionistId })
-            .andWhere('relation.status = :status', { status: RelationshipStatus.ACTIVE })
-            .andWhere('profile.medical_conditions IS NOT NULL')
-            .andWhere('array_length(profile.medical_conditions, 1) > 0')
-            .getCount();
-=======
     // **OPTIMIZACIÓN**: Estadísticas de pacientes con consultas batch
     async getPatientStats(nutritionistId: string): Promise<any> {
         const oneMonthAgo = new Date();
@@ -721,7 +623,6 @@ export class PatientService {
                 .andWhere('array_length(profile.medical_conditions, 1) > 0')
                 .getCount()
         ]);
->>>>>>> nutri/main
 
         return {
             total_patients: totalPatients,
@@ -820,12 +721,9 @@ export class PatientService {
             created_at: profile.created_at,
             updated_at: profile.updated_at,
             
-<<<<<<< HEAD
-=======
             // Información pediátrica
             is_pediatric_patient: profile.is_pediatric_patient ?? false,
             
->>>>>>> nutri/main
             // Campos calculados
             bmi: bmi,
             bmi_category: this.getBMICategory(bmi),
@@ -938,12 +836,6 @@ export class PatientService {
 
         const savedUser = await this.userRepository.save(newUser);
 
-<<<<<<< HEAD
-        // 7. Crear perfil completo del paciente (todos los datos del expediente)
-        const newPatientProfile = this.patientProfileRepository.create({
-            user: savedUser,
-            
-=======
         // 7. Determinar si el paciente es pediátrico
         const isPediatric = this.isPediatricPatient(calculatedAge, patientData.birth_date);
         console.log(`👶 Paciente ${patientData.first_name} ${patientData.last_name}: Edad ${calculatedAge}, Es pediátrico: ${isPediatric}`);
@@ -955,7 +847,6 @@ export class PatientService {
             // Detección automática de paciente pediátrico
             is_pediatric_patient: isPediatric,
             
->>>>>>> nutri/main
             // Motivo de consulta
             consultation_reason: patientData.consultation_reason,
             
@@ -1073,11 +964,6 @@ export class PatientService {
 
         const savedUser = await this.userRepository.save(newUser);
 
-<<<<<<< HEAD
-        // 4. Crear perfil básico del paciente (solo datos que proporcionó)
-        const basicProfile = this.patientProfileRepository.create({
-            user: savedUser,
-=======
         // 4. Determinar si el paciente es pediátrico
         const isPediatric = this.isPediatricPatient(registrationData.age, undefined);
         console.log(`👶 Paciente ${registrationData.first_name} ${registrationData.last_name}: Edad ${registrationData.age}, Es pediátrico: ${isPediatric}`);
@@ -1086,7 +972,6 @@ export class PatientService {
         const basicProfile = this.patientProfileRepository.create({
             user: savedUser,
             is_pediatric_patient: isPediatric,
->>>>>>> nutri/main
             consultation_reason: registrationData.consultation_reason,
             current_weight: registrationData.current_weight,
             height: registrationData.height,

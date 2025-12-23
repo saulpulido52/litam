@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import type { ClinicalRecord } from '../../types';
-<<<<<<< HEAD
-=======
 import LaboratoryDocuments from './LaboratoryDocuments';
 import DrugNutrientInteractions from './DrugNutrientInteractions';
 import GrowthChartsPDFExport from '../GrowthCharts/GrowthChartsPDFExport';
->>>>>>> nutri/main
 
 interface ClinicalRecordDetailProps {
   record: ClinicalRecord;
@@ -22,24 +19,14 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
   onDelete,
   onClose,
   canEdit = true,
-<<<<<<< HEAD
-  canDelete = true,
-}) => {
-=======
   canDelete = true}) => {
->>>>>>> nutri/main
   const [activeTab, setActiveTab] = useState('basic');
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'long',
-<<<<<<< HEAD
-      day: 'numeric',
-    });
-=======
       day: 'numeric'});
->>>>>>> nutri/main
   };
 
   const formatDateTime = (dateString: string) => {
@@ -48,12 +35,7 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-<<<<<<< HEAD
-      minute: '2-digit',
-    });
-=======
       minute: '2-digit'});
->>>>>>> nutri/main
   };
 
   const calculateBMI = (weight?: number, height?: number) => {
@@ -175,8 +157,6 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
             </li>
             <li className="nav-item" role="presentation">
               <button
-<<<<<<< HEAD
-=======
                 className={`nav-link ${activeTab === 'diseases' ? 'active' : ''}`}
                 onClick={() => setActiveTab('diseases')}
               >
@@ -185,7 +165,6 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
             </li>
             <li className="nav-item" role="presentation">
               <button
->>>>>>> nutri/main
                 className={`nav-link ${activeTab === 'problems' ? 'active' : ''}`}
                 onClick={() => setActiveTab('problems')}
               >
@@ -194,8 +173,6 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
             </li>
             <li className="nav-item" role="presentation">
               <button
-<<<<<<< HEAD
-=======
                 className={`nav-link ${activeTab === 'lifestyle' ? 'active' : ''}`}
                 onClick={() => setActiveTab('lifestyle')}
               >
@@ -204,7 +181,6 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
             </li>
             <li className="nav-item" role="presentation">
               <button
->>>>>>> nutri/main
                 className={`nav-link ${activeTab === 'measurements' ? 'active' : ''}`}
                 onClick={() => setActiveTab('measurements')}
               >
@@ -227,8 +203,6 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                 <i className="fas fa-stethoscope me-1"></i>Diagnóstico
               </button>
             </li>
-<<<<<<< HEAD
-=======
             <li className="nav-item" role="presentation">
               <button
                 className={`nav-link ${activeTab === 'laboratory' ? 'active' : ''}`}
@@ -253,7 +227,6 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                 <i className="fas fa-chart-line me-1"></i>Crecimiento Pediátrico
               </button>
             </li>
->>>>>>> nutri/main
           </ul>
 
           {/* Contenido de las pestañas */}
@@ -278,8 +251,6 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                           <td><strong>Motivo de Consulta:</strong></td>
                           <td>{record.consultation_reason || 'No especificado'}</td>
                         </tr>
-<<<<<<< HEAD
-=======
                         {record.general_appearance && (
                           <tr>
                             <td><strong>Apariencia General:</strong></td>
@@ -292,7 +263,6 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                             <td>{record.gynecological_aspects}</td>
                           </tr>
                         )}
->>>>>>> nutri/main
                       </tbody>
                     </table>
                   </div>
@@ -310,8 +280,6 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                         </tr>
                       </tbody>
                     </table>
-<<<<<<< HEAD
-=======
                     
                     {record.daily_activities && (
                       <div className="mt-3">
@@ -335,14 +303,11 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                         </div>
                       </div>
                     )}
->>>>>>> nutri/main
                   </div>
                 </div>
               </div>
             )}
 
-<<<<<<< HEAD
-=======
             {/* Pestaña: Enfermedades Diagnosticadas */}
             {activeTab === 'diseases' && (
               <div className="tab-pane fade show active">
@@ -738,7 +703,6 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
               </div>
             )}
 
->>>>>>> nutri/main
             {/* Pestaña: Problemas Actuales */}
             {activeTab === 'problems' && (
               <div className="tab-pane fade show active">
@@ -750,34 +714,20 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                       <h6 className="text-primary">Problemas Gastrointestinales</h6>
                       {renderProblemsList(record.current_problems)}
                       
-<<<<<<< HEAD
-                      {record.current_problems.mouthMechanics && (
-                        <div className="mt-3">
-                          <strong>Mecánicos de la Boca:</strong>
-                          <p className="text-muted">{record.current_problems.mouthMechanics}</p>
-=======
                       {record.current_problems.mouth_mechanics && (
                         <div className="mt-3">
                           <strong>Mecánicos de la Boca:</strong>
                           <p className="text-muted">{record.current_problems.mouth_mechanics}</p>
                           <small className="text-muted">Ej: Dificultad para masticar, problemas dentales...</small>
->>>>>>> nutri/main
                         </div>
                       )}
                     </div>
                     <div className="col-md-6">
-<<<<<<< HEAD
-                      {record.current_problems.otherProblems && (
-                        <div className="mb-3">
-                          <strong>Otros Problemas:</strong>
-                          <p className="text-muted">{record.current_problems.otherProblems}</p>
-=======
                       {record.current_problems.other_problems && (
                         <div className="mb-3">
                           <strong>Otros Problemas:</strong>
                           <p className="text-muted">{record.current_problems.other_problems}</p>
                           <small className="text-muted">Describe otros problemas...</small>
->>>>>>> nutri/main
                         </div>
                       )}
                       
@@ -843,16 +793,6 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                       <h6 className="text-primary">Circunferencias</h6>
                       <table className="table table-sm">
                         <tbody>
-<<<<<<< HEAD
-                          <tr>
-                            <td><strong>Cintura:</strong></td>
-                            <td>{record.anthropometric_measurements.waist_circ_cm} cm</td>
-                          </tr>
-                          <tr>
-                            <td><strong>Cadera:</strong></td>
-                            <td>{record.anthropometric_measurements.hip_circ_cm} cm</td>
-                          </tr>
-=======
                           {record.anthropometric_measurements.waist_circ_cm && (
                             <tr>
                               <td><strong>Cintura:</strong></td>
@@ -883,7 +823,6 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                               <td>{record.anthropometric_measurements.calf_circ_cm} cm</td>
                             </tr>
                           )}
->>>>>>> nutri/main
                           {record.anthropometric_measurements.waist_circ_cm && record.anthropometric_measurements.hip_circ_cm && (
                             <tr>
                               <td><strong>Relación Cintura/Cadera:</strong></td>
@@ -898,43 +837,6 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                   </div>
                 )}
 
-<<<<<<< HEAD
-                {record.blood_pressure && (
-                  <div className="mt-4">
-                    <h6 className="text-primary">Presión Arterial</h6>
-                    <table className="table table-sm">
-                      <tbody>
-                        <tr>
-                          <td><strong>Conoce su presión arterial:</strong></td>
-                          <td>
-                            {record.blood_pressure.knows_bp ? (
-                              <span className="badge bg-success">Sí</span>
-                            ) : (
-                              <span className="badge bg-secondary">No</span>
-                            )}
-                          </td>
-                        </tr>
-                        {record.blood_pressure.knows_bp && (
-                          <>
-                            <tr>
-                              <td><strong>Sistólica:</strong></td>
-                              <td>{record.blood_pressure.systolic} mmHg</td>
-                            </tr>
-                            <tr>
-                              <td><strong>Diastólica:</strong></td>
-                              <td>{record.blood_pressure.diastolic} mmHg</td>
-                            </tr>
-                            {record.blood_pressure.habitual_bp && (
-                              <tr>
-                                <td><strong>Presión Habitual:</strong></td>
-                                <td>{record.blood_pressure.habitual_bp}</td>
-                              </tr>
-                            )}
-                          </>
-                        )}
-                      </tbody>
-                    </table>
-=======
                 {/* Evaluaciones Antropométricas */}
                 {record.anthropometric_evaluations && (
                   <div className="row mt-4">
@@ -1080,7 +982,6 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                         )}
                       </div>
                     </div>
->>>>>>> nutri/main
                   </div>
                 )}
               </div>
@@ -1199,8 +1100,6 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                 )}
               </div>
             )}
-<<<<<<< HEAD
-=======
 
             {/* Pestaña: Documentos de Laboratorio */}
             {activeTab === 'laboratory' && (
@@ -1265,7 +1164,6 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                 />
               </div>
             )}
->>>>>>> nutri/main
           </div>
         </div>
       </div>

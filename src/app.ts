@@ -9,15 +9,10 @@ import authRoutes from './modules/auth/auth.routes';
 import userRoutes from './modules/users/users.routes';
 import patientRoutes from './modules/patients/patient.routes';
 import nutritionistRoutes from './modules/nutritionists/nutritionist.routes';
-<<<<<<< HEAD
-import relationRoutes from './modules/relations/relation.routes';
-import foodRoutes from './modules/foods/food.routes';
-=======
 import nutritionistRegistrationRoutes from './modules/nutritionists/nutritionist-registration.routes';
 import relationRoutes from './modules/relations/relation.routes';
 import foodRoutes from './modules/foods/food.routes';
 import recipeRoutes from './modules/foods/recipe.routes';
->>>>>>> nutri/main
 import dietPlanRoutes from './modules/diet_plans/diet_plan.routes';
 import appointmentRoutes from './modules/appointments/appointment.routes';
 import progressTrackingRoutes from './modules/progress_tracking/progress_tracking.routes';
@@ -27,9 +22,6 @@ import adminRoutes from './modules/admin/admin.routes';
 import messagingRoutes from './modules/messaging/message.routes';
 import clinicalRecordRoutes from './modules/clinical_records/clinical_record.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
-<<<<<<< HEAD
-import { AppError } from './utils/app.error';
-=======
 import calendarRoutes from './modules/calendar/calendar.routes';
 import monetizationRoutes from './modules/monetization/monetization.routes';
 import templateRoutes from './modules/templates/weekly-plan-template.routes';
@@ -41,7 +33,6 @@ import emailRoutes from './modules/email/email.routes';
 import { AppError } from './utils/app.error';
 import { resilienceMiddleware } from './middleware/resilience.middleware';
 import { mobileOptimizationMiddleware, mobileMetricsMiddleware } from './middleware/mobile-optimization.middleware';
->>>>>>> nutri/main
 
 // Extensión de tipos para Request
 declare global {
@@ -56,15 +47,9 @@ dotenv.config();
 
 const app: Application = express();
 
-<<<<<<< HEAD
-// *** CONFIGURACIÓN DE SEGURIDAD PARA MÚLTIPLES USUARIOS ***
-
-// Helmet para seguridad HTTP
-=======
 // *** CONFIGURACIÓN DE SEGURIDAD Y ACCESIBILIDAD PARA MÚLTIPLES USUARIOS ***
 
 // Helmet para seguridad HTTP con configuración mejorada
->>>>>>> nutri/main
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -77,41 +62,6 @@ app.use(helmet({
             objectSrc: ["'none'"],
             mediaSrc: ["'self'"]
         }
-<<<<<<< HEAD
-    }
-}));
-
-// Compresión para mejorar rendimiento con múltiples usuarios
-app.use(compression());
-
-// Rate limiting general - 100 requests por 15 minutos por IP
-const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100, // máximo 100 requests por ventana de tiempo
-    message: {
-        error: 'Demasiadas peticiones desde esta IP, por favor intenta de nuevo en 15 minutos.',
-        code: 'RATE_LIMIT_EXCEEDED'
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
-// Rate limiting estricto para autenticación - 5 intentos por 15 minutos
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 5, // máximo 5 intentos de login por ventana de tiempo
-    message: {
-        error: 'Demasiados intentos de inicio de sesión, por favor intenta de nuevo en 15 minutos.',
-        code: 'AUTH_RATE_LIMIT_EXCEEDED'
-    },
-    skipSuccessfulRequests: true,
-});
-
-// Aplicar rate limiting general
-app.use('/api/', generalLimiter);
-
-// Configurar CORS optimizado para múltiples usuarios
-=======
     },
     // Headers adicionales para accesibilidad y compatibilidad
     crossOriginEmbedderPolicy: false,
@@ -124,17 +74,17 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
-
+    
     // Headers para compatibilidad con navegadores y CDN
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-User-ID, X-Platform, X-Device-ID');
-
+    
     // **CONFIGURACIÓN DE CACHE INTELIGENTE PARA MILES DE USUARIOS**
     const userAgent = req.get('User-Agent') || '';
     const path = req.path;
     const method = req.method;
-
+    
     // **CACHE AGRESIVO PARA RECURSOS ESTÁTICOS**
     if (path.includes('/assets/') || path.includes('/images/') || path.includes('/css/') || path.includes('/js/')) {
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1 año
@@ -164,12 +114,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     else {
         res.setHeader('Cache-Control', 'private, max-age=180'); // 3 minutos por defecto
     }
-
+    
     // **HEADERS ESPECÍFICOS PARA MÓVILES**
     if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iOS')) {
         res.setHeader('X-Mobile-Optimized', 'true');
         res.setHeader('X-Compression', 'gzip, br'); // Compresión preferida para móviles
-
+        
         // Cache más agresivo para móviles (redes lentas)
         if (method === 'GET' && !path.includes('/api/auth/')) {
             const currentCache = res.getHeader('Cache-Control') as string;
@@ -183,14 +133,14 @@ app.use((req: Request, res: Response, next: NextFunction) => {
             }
         }
     }
-
+    
     // **HEADERS PARA CDN (Cloudflare, etc.)**
     if (process.env.NODE_ENV === 'production') {
         res.setHeader('CF-Cache-Status', 'DYNAMIC'); // Cloudflare
         res.setHeader('X-Served-By', 'nutri-backend');
         res.setHeader('X-Cache-Tags', `path:${path.split('/')[2] || 'general'}`);
     }
-
+    
     next();
 });
 
@@ -278,7 +228,7 @@ function getRealIP(req: Request): string {
                   req.ip ||
                   req.connection.remoteAddress ||
                   'unknown';
-
+    
     return Array.isArray(realIp) ? realIp[0] : realIp.split(',')[0].trim();
 }
 
@@ -289,7 +239,7 @@ function skipHealthChecks(req: Request): boolean {
             return true;
         }
     }
-
+    
     // Rutas que no necesitan rate limiting
     const skipPaths = [
         '/api/health',
@@ -297,7 +247,7 @@ function skipHealthChecks(req: Request): boolean {
         '/api/status',
         '/metrics'
     ];
-
+    
     return skipPaths.includes(req.path);
 }
 
@@ -306,18 +256,18 @@ const intelligentRateLimit = (req: Request, res: Response, next: NextFunction) =
     const userAgent = req.get('User-Agent') || '';
     const userType = req.headers['x-user-type'] as string;
     const path = req.path;
-
+    
     // Determinar qué limiter usar
     if (userType === 'nutritionist' || path.includes('/admin/') || path.includes('/dashboard/')) {
         return nutritionistLimiter(req, res, next);
     }
-
+    
     // Detectar clientes móviles
-    if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iOS') ||
+    if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iOS') || 
         req.headers['x-platform'] === 'mobile') {
         return patientMobileLimiter(req, res, next);
     }
-
+    
     // Fallback a general limiter
     return generalLimiter(req, res, next);
 };
@@ -331,7 +281,7 @@ const authLimiter = rateLimit({
         code: 'AUTH_RATE_LIMIT_EXCEEDED'
     },
     skipSuccessfulRequests: true,
-
+    
     // **MISMA CONFIGURACIÓN DE IP QUE GENERAL LIMITER**
     keyGenerator: (req: Request) => {
         const realIp = req.headers['x-real-ip'] as string ||
@@ -341,7 +291,7 @@ const authLimiter = rateLimit({
                       'unknown';
         return Array.isArray(realIp) ? realIp[0] : realIp.split(',')[0].trim();
     },
-
+    
     skip: (req: Request) => {
         if (process.env.NODE_ENV !== 'production') {
             const ip = req.ip || req.connection.remoteAddress || '';
@@ -349,7 +299,7 @@ const authLimiter = rateLimit({
         }
         return false;
     },
-
+    
     handler: (req: Request, res: Response) => {
         const retryAfter = process.env.NODE_ENV === 'production' ? 15 * 60 : 5 * 60;
         res.status(429).json({
@@ -372,52 +322,11 @@ const authLimiter = rateLimit({
 app.use('/api/', intelligentRateLimit);
 
 // **CONFIGURACIÓN CORS OPTIMIZADA PARA VERCEL Y PRODUCCIÓN**
->>>>>>> nutri/main
 app.use(cors({
     origin: function (origin, callback) {
         // Permitir requests sin origin (mobile apps, postman, etc.)
         if (!origin) return callback(null, true);
-<<<<<<< HEAD
-
-        // Lista de orígenes permitidos (expandir según necesidades)
-        const allowedOrigins = [
-            'http://localhost:5000',
-            'http://localhost:5001', // Puerto alternativo para frontend
-            'http://localhost:3000',
-            'http://127.0.0.1:5000',
-            'http://127.0.0.1:5001', // Puerto alternativo para frontend
-            'http://127.0.0.1:3000',
-            // Añadir dominios de producción desde .env
-            ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : []),
-            ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : []),
-        ];
-
-        console.log('CORS Debug - Origin:', origin);
-        console.log('CORS Debug - Allowed:', allowedOrigins);
-
-        // Permitir cualquier despliegue de Vercel (Production & Previews)
-        if (origin && origin.endsWith('.vercel.app')) {
-            console.log('CORS Allowed (Vercel Domain)');
-            return callback(null, true);
-        }
-
-        if (allowedOrigins.indexOf(origin) !== -1 || !process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
-            callback(null, true);
-        } else {
-            console.log('CORS Blocked!');
-            callback(new Error('No permitido por CORS'));
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-User-ID'],
-    maxAge: 86400 // Cache preflight requests por 24 horas
-}));
-
-// Middleware para parsing de JSON con límite de tamaño para múltiples usuarios
-app.use(express.json({
-=======
-
+        
         // **CONFIGURACIÓN FLEXIBLE PARA DESARROLLO Y PRODUCCIÓN**
         const allowedOrigins = [
             // Desarrollo local
@@ -427,38 +336,38 @@ app.use(express.json({
             'http://127.0.0.1:5000',
             'http://127.0.0.1:5001',
             'http://127.0.0.1:3000',
-
+            
             // **DOMINIOS DE PRODUCCIÓN**
             // Agregar tu dominio de Vercel aquí
             ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : []),
-
+            
             // Dominios de Vercel (patrones automáticos)
             ...(process.env.VERCEL_URL ? [
                 `https://${process.env.VERCEL_URL}`,
                 `https://${process.env.VERCEL_URL.replace('https://', '')}`
             ] : [])
         ];
-
+        
         // **VERIFICACIÓN FLEXIBLE PARA VERCEL**
         const isAllowed = allowedOrigins.some(allowedOrigin => {
             // Exact match
             if (origin === allowedOrigin) return true;
-
+            
             // Vercel preview URLs (nutri-*.vercel.app)
-            if (process.env.NODE_ENV !== 'development' &&
+            if (process.env.NODE_ENV !== 'development' && 
                 origin.match(/https:\/\/nutri-[a-z0-9-]+\.vercel\.app$/)) {
                 return true;
             }
-
+            
             // Custom domain patterns
-            if (process.env.FRONTEND_DOMAIN &&
+            if (process.env.FRONTEND_DOMAIN && 
                 origin.includes(process.env.FRONTEND_DOMAIN)) {
                 return true;
             }
-
+            
             return false;
         });
-
+        
         if (isAllowed) {
             callback(null, true);
         } else {
@@ -471,14 +380,14 @@ app.use(express.json({
             }
         }
     },
-
+    
     // **CONFIGURACIONES OPTIMIZADAS PARA VERCEL**
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
     allowedHeaders: [
-        'Content-Type',
-        'Authorization',
-        'X-Requested-With',
+        'Content-Type', 
+        'Authorization', 
+        'X-Requested-With', 
         'X-User-ID',
         'X-Vercel-Forwarded-For', // Headers específicos de Vercel
         'X-Real-IP',
@@ -493,38 +402,15 @@ app.use(express.json({
 }));
 
 // Middleware para parsing de JSON con límite de tamaño para múltiples usuarios
-app.use(express.json({
->>>>>>> nutri/main
+app.use(express.json({ 
     limit: '10mb', // Límite de 10MB para archivos grandes (fotos de progreso, etc.)
     verify: (req: any, res, buf) => {
         // Verificación adicional si es necesario - almacenar raw body si es necesario
         req.rawBody = buf;
     }
 }));
-<<<<<<< HEAD
-app.use(express.urlencoded({
-    extended: true,
-    limit: '10mb'
-}));
-
-// Middleware de logging para debugging con múltiples usuarios
-app.use((req: Request, res: Response, next: NextFunction) => {
-    const timestamp = new Date().toISOString();
-    // Log básico al inicio - el userId se mostrará en logs específicos después de auth
-    console.log(`[${timestamp}] ${req.method} ${req.path} - IP: ${req.ip}`);
-    next();
-});
-
-// Endpoint de health check
-app.get('/api/health', (req: Request, res: Response) => {
-    res.status(200).json({
-        status: 'UP',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development',
-        uptime: process.uptime()
-=======
-app.use(express.urlencoded({
-    extended: true,
+app.use(express.urlencoded({ 
+    extended: true, 
     limit: '10mb'
 }));
 
@@ -533,14 +419,14 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     const timestamp = new Date().toISOString();
     const userAgent = req.get('User-Agent') || 'Unknown';
     const ip = req.ip || req.connection.remoteAddress || 'Unknown';
-
+    
     // Log básico al inicio - el userId se mostrará en logs específicos después de auth
     console.log(`[${timestamp}] ${req.method} ${req.path} - IP: ${ip} - UA: ${userAgent.substring(0, 100)}`);
-
+    
     // Agregar información de accesibilidad al request
     req.headers['x-request-timestamp'] = timestamp;
     req.headers['x-client-ip'] = ip;
-
+    
     next();
 });
 
@@ -563,8 +449,8 @@ app.use('/uploads', express.static('uploads', {
 
 // Endpoint de health check mejorado
 app.get('/api/health', (req: Request, res: Response) => {
-    res.status(200).json({
-        status: 'UP',
+    res.status(200).json({ 
+        status: 'UP', 
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
         uptime: process.uptime(),
@@ -598,7 +484,6 @@ app.get('/api/accessibility', (req: Request, res: Response) => {
                 accessibility: 'accessibility@nutriplatform.com'
             }
         }
->>>>>>> nutri/main
     });
 });
 
@@ -611,15 +496,10 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/nutritionists', nutritionistRoutes);
-<<<<<<< HEAD
-app.use('/api/relations', relationRoutes);
-app.use('/api/foods', foodRoutes);
-=======
 app.use('/api/nutritionists', nutritionistRegistrationRoutes);
 app.use('/api/relations', relationRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/recipes', recipeRoutes);
->>>>>>> nutri/main
 app.use('/api/diet-plans', dietPlanRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/progress-tracking', progressTrackingRoutes);
@@ -629,15 +509,6 @@ app.use('/api/educational-content', educationalContentRoutes);
 app.use('/api/messages', messagingRoutes);
 app.use('/api/clinical-records', clinicalRecordRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-<<<<<<< HEAD
-
-// Manejo de rutas no encontradas
-app.all('*', (req: Request, res: Response, next: NextFunction) => {
-    next(new AppError(`No se puede encontrar ${req.originalUrl} en este servidor!`, 404));
-});
-
-// Middleware global de manejo de errores optimizado para múltiples usuarios
-=======
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/monetization', monetizationRoutes);
 app.use('/api/templates', templateRoutes);
@@ -655,58 +526,28 @@ app.all('*', (req: Request, res: Response, next: NextFunction) => {
 });
 
 // Middleware global de manejo de errores optimizado para múltiples usuarios y accesibilidad
->>>>>>> nutri/main
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     let statusCode = 500;
     let message = 'Algo salió muy mal!';
     let status = 'error';
-<<<<<<< HEAD
-
-    // Log del error para debugging
-    const timestamp = new Date().toISOString();
-    const userId = (req as any).user?.id || 'anonymous';
-    console.error(`[${timestamp}] ERROR - User: ${userId} - IP: ${req.ip} - ${err.message}`);
-=======
     let errorCode = 'INTERNAL_SERVER_ERROR';
 
     // Log del error para debugging (mejorado para no exponer información sensible)
     const timestamp = new Date().toISOString();
     const userId = (req as any).user?.id || 'anonymous';
     const ip = req.ip || req.connection.remoteAddress || 'Unknown';
-
+    
     console.error(`[${timestamp}] ERROR - User: ${userId} - IP: ${ip} - ${err.message}`);
->>>>>>> nutri/main
 
     if (err instanceof AppError) {
         statusCode = err.statusCode;
         message = err.message;
         status = err.status;
-<<<<<<< HEAD
-    } else {
-        // Log errores no controlados
-        console.error('ERROR (No AppError):', err);
-
-        // En producción, no exponer detalles internos del error
-        if (process.env.NODE_ENV === 'production') {
-            message = 'Error interno del servidor';
-        } else {
-            message = err.message;
-        }
-    }
-
-    res.status(statusCode).json({
-        status: status,
-        message: message,
-        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-    });
-});
-
-=======
         errorCode = err.errorCode || 'APP_ERROR';
     } else {
         // Log errores no controlados
         console.error('ERROR (No AppError):', err);
-
+        
         // En producción, no exponer detalles internos del error
         if (process.env.NODE_ENV === 'production') {
             message = 'Error interno del servidor';
@@ -779,5 +620,4 @@ function getErrorSuggestions(errorCode: string): string[] {
     ];
 }
 
->>>>>>> nutri/main
 export default app;

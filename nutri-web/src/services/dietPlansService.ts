@@ -5,58 +5,6 @@ import type {
   GenerateAIDietDto,
   WeeklyPlanDto 
 } from '../types/diet';
-<<<<<<< HEAD
-
-class DietPlansService {
-  // Obtener todos los planes de dieta del nutriólogo logueado
-  async getAllDietPlans(): Promise<DietPlan[]> {
-    try {
-      const response = await apiService.get<{ dietPlans: any[] }>('/diet-plans');
-      if (response.status !== 'success' || !response.data) {
-        throw new Error(response.message || 'Error fetching diet plans');
-      }
-      
-      // Extraer dietPlans de la estructura anidada y transformar
-      const backendPlans = response.data.dietPlans || [];
-      return backendPlans.map(plan => this.transformBackendPlan(plan));
-    } catch (error) {
-      console.error('Error fetching all diet plans:', error);
-      throw error;
-    }
-  }
-
-  // Obtener todos los planes de dieta para un paciente
-  async getDietPlansForPatient(patientId: string): Promise<DietPlan[]> {
-    try {
-      const response = await apiService.get<{ dietPlans: any[] }>(`/diet-plans/patient/${patientId}`);
-      if (response.status !== 'success' || !response.data) {
-        throw new Error(response.message || 'Error fetching patient diet plans');
-      }
-      
-      // Extraer dietPlans de la estructura anidada y transformar
-      const backendPlans = response.data.dietPlans || [];
-      return backendPlans.map(plan => this.transformBackendPlan(plan));
-    } catch (error) {
-      console.error('Error fetching patient diet plans:', error);
-      throw error;
-    }
-  }
-
-  // Obtener un plan de dieta específico
-  async getDietPlanById(dietPlanId: string): Promise<DietPlan> {
-    try {
-      const response = await apiService.get<{ dietPlan: any }>(`/diet-plans/${dietPlanId}`);
-      if (response.status !== 'success' || !response.data) {
-        throw new Error(response.message || 'Error fetching diet plan');
-      }
-      
-      // Extraer dietPlan de la estructura anidada y transformar
-      return this.transformBackendPlan(response.data.dietPlan);
-    } catch (error) {
-      console.error('Error fetching diet plan:', error);
-      throw error;
-    }
-=======
 import { cacheService, CACHE_KEYS, CACHE_TTL } from './cacheService';
 
 class DietPlansService {
@@ -140,19 +88,11 @@ class DietPlansService {
       },
       CACHE_TTL.SHORT // 5 minutos para datos específicos
     );
->>>>>>> nutri/main
   }
 
   // Crear un nuevo plan de dieta
   async createDietPlan(dietPlanData: CreateDietPlanDto): Promise<DietPlan> {
     try {
-<<<<<<< HEAD
-      console.log('🟢 dietPlansService - Enviando datos al backend:', dietPlanData);
-      
-      const response = await apiService.post<{ dietPlan: any }>('/diet-plans', dietPlanData);
-      
-      console.log('🟢 dietPlansService - Respuesta del backend:', response);
-=======
       console.log('🔥 === DIETPLANSSERVICE - INICIO CREACIÓN PLAN ===');
       console.log('📨 Datos recibidos del frontend:', dietPlanData);
       
@@ -203,18 +143,11 @@ class DietPlansService {
           console.warn('⚠️ pathological_restrictions NO se guardó en la BD (campo null/undefined)');
         }
       }
->>>>>>> nutri/main
       
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error creating diet plan');
       }
       
-<<<<<<< HEAD
-      // Extraer dietPlan de la estructura anidada y transformar
-      return this.transformBackendPlan(response.data.dietPlan);
-    } catch (error) {
-      console.error('Error creating diet plan:', error);
-=======
       console.log('🎯 Transformando plan del backend al formato frontend...');
       const transformedPlan = this.transformBackendPlan(response.data.dietPlan);
       console.log('✅ Plan transformado exitosamente:', transformedPlan);
@@ -231,16 +164,12 @@ class DietPlansService {
         console.error('🔴 Error headers:', (error as any).response?.headers);
       }
       
->>>>>>> nutri/main
       throw error;
     }
   }
 
   // Transformar plan del backend al formato del frontend
   private transformBackendPlan(backendPlan: any): DietPlan {
-<<<<<<< HEAD
-    return {
-=======
     console.log('🔄 Transformando plan del backend:', {
       id: backendPlan.id,
       name: backendPlan.name,
@@ -249,7 +178,6 @@ class DietPlansService {
     });
     
     const transformed = {
->>>>>>> nutri/main
       id: backendPlan.id,
       patient_id: backendPlan.patient?.id || backendPlan.patient_id || backendPlan.patient_user_id,
       nutritionist_id: backendPlan.nutritionist?.id || backendPlan.nutritionist_id || backendPlan.nutritionist_user_id,
@@ -270,10 +198,6 @@ class DietPlansService {
       nutritionist: backendPlan.nutritionist,
       is_weekly_plan: backendPlan.is_weekly_plan,
       total_weeks: backendPlan.total_weeks,
-<<<<<<< HEAD
-      weekly_plans: backendPlan.weekly_plans || []
-    };
-=======
       weekly_plans: backendPlan.weekly_plans || [],
       pathological_restrictions: backendPlan.pathological_restrictions, // Preservar restricciones patológicas
       // === NUEVOS CAMPOS PARA COMPLETAR TABS ===
@@ -295,7 +219,6 @@ class DietPlansService {
       }
     });
     return transformed;
->>>>>>> nutri/main
   }
 
   // Generar plan de dieta con IA
@@ -313,12 +236,6 @@ class DietPlansService {
     }
   }
 
-<<<<<<< HEAD
-  // Actualizar un plan de dieta existente
-  async updateDietPlan(dietPlanId: string, updateData: Partial<DietPlan>): Promise<DietPlan> {
-    try {
-      const response = await apiService.put<{ dietPlan: any }>(`/diet-plans/${dietPlanId}`, updateData);
-=======
   // Transformar datos del formulario a formato de actualización
   private transformFormDataToUpdateData(formData: any): any {
     const updateData: any = {
@@ -356,21 +273,14 @@ class DietPlansService {
       console.log('🟢 dietPlansService - Datos transformados para actualización:', transformedData);
       
       const response = await apiService.patch<{ dietPlan: any }>(`/diet-plans/${dietPlanId}`, transformedData);
->>>>>>> nutri/main
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error updating diet plan');
       }
       
-<<<<<<< HEAD
-      return this.transformBackendPlan(response.data.dietPlan);
-    } catch (error) {
-      console.error('Error updating diet plan:', error);
-=======
       console.log('🟢 dietPlansService - Respuesta de actualización:', response);
       return this.transformBackendPlan(response.data.dietPlan);
     } catch (error) {
       console.error('🔴 dietPlansService - Error updating diet plan:', error);
->>>>>>> nutri/main
       throw error;
     }
   }
@@ -433,12 +343,7 @@ class DietPlansService {
         total: allPlans.length,
         active: allPlans.filter(plan => plan.status === 'active').length,
         completed: allPlans.filter(plan => plan.status === 'completed').length,
-<<<<<<< HEAD
-        draft: allPlans.filter(plan => plan.status === 'draft').length,
-      };
-=======
         draft: allPlans.filter(plan => plan.status === 'draft').length};
->>>>>>> nutri/main
     } catch (error) {
       console.error('Error fetching diet plans stats:', error);
       throw error;

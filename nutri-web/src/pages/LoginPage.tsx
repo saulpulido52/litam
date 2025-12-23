@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-<<<<<<< HEAD
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
-=======
 import { Container, Row, Col, Card, Button, Form, Alert, Spinner} from 'react-bootstrap';
->>>>>>> nutri/main
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
@@ -40,20 +36,11 @@ const LoginPage: React.FC = () => {
 
     try {
       // Verificar que el backend esté funcionando
-<<<<<<< HEAD
-      const healthResponse = await fetch(`${import.meta.env.VITE_API_URL}/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-=======
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
       const healthResponse = await fetch(`${apiUrl}/health`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'}});
->>>>>>> nutri/main
 
       if (healthResponse.ok) {
         setLoginState(prev => ({
@@ -73,11 +60,7 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-<<<<<<< HEAD
-
-=======
     
->>>>>>> nutri/main
     if (!loginState.email || !loginState.password) {
       setLoginState(prev => ({
         ...prev,
@@ -103,11 +86,7 @@ const LoginPage: React.FC = () => {
           ...prev,
           success: `✅ Login exitoso! Redirigiendo...`
         }));
-<<<<<<< HEAD
-
-=======
         
->>>>>>> nutri/main
         // Redirigir al dashboard después del login exitoso
         setTimeout(() => {
           console.log('🔐 LoginPage: Redirecting to dashboard...');
@@ -139,10 +118,7 @@ const LoginPage: React.FC = () => {
   };
 
   // Botones para autocompletar credenciales de prueba
-<<<<<<< HEAD
-=======
   const fillDefaultAdmin = () => setLoginState(prev => ({ ...prev, email: 'nutri.admin@sistema.com', password: 'nutri123', error: null, success: null }));
->>>>>>> nutri/main
   const fillNutri1 = () => setLoginState(prev => ({ ...prev, email: 'dr.maria.gonzalez@demo.com', password: 'demo123', error: null, success: null }));
   const fillNutri2 = () => setLoginState(prev => ({ ...prev, email: 'dr.juan.perez@demo.com', password: 'demo123', error: null, success: null }));
   const fillNutri3 = () => setLoginState(prev => ({ ...prev, email: 'dra.carmen.rodriguez@demo.com', password: 'demo123', error: null, success: null }));
@@ -164,12 +140,6 @@ const LoginPage: React.FC = () => {
               <Card.Body className="p-4">
                 <Form onSubmit={handleSubmit}>
                   {/* Botones de autocompletar credenciales */}
-<<<<<<< HEAD
-                  <div className="d-flex justify-content-between mb-3">
-                    <Button variant="outline-secondary" size="sm" onClick={fillNutri1}>Nutri 1</Button>
-                    <Button variant="outline-secondary" size="sm" onClick={fillNutri2}>Nutri 2</Button>
-                    <Button variant="outline-secondary" size="sm" onClick={fillNutri3}>Nutri 3</Button>
-=======
                   <div className="mb-3">
                     <p className="text-muted small mb-2 text-center">⚡ Acceso rápido:</p>
                     <div className="d-grid gap-2 mb-2">
@@ -182,7 +152,6 @@ const LoginPage: React.FC = () => {
                       <Button variant="outline-secondary" size="sm" onClick={fillNutri2}>Nutri 2</Button>
                       <Button variant="outline-secondary" size="sm" onClick={fillNutri3}>Nutri 3</Button>
                     </div>
->>>>>>> nutri/main
                   </div>
 
                   <Form.Group className="mb-3">
@@ -280,19 +249,6 @@ const LoginPage: React.FC = () => {
               </Card.Body>
             </Card>
 
-<<<<<<< HEAD
-            {/* Credenciales de prueba */}
-            <Card className="mt-3 border-info">
-              <Card.Header className="bg-info text-white text-center">
-                🔑 Credenciales de Prueba
-              </Card.Header>
-              <Card.Body className="text-center">
-                <p className="mb-1">
-                  <strong>Email:</strong> nutritionist@demo.com
-                </p>
-                <p className="mb-0">
-                  <strong>Password:</strong> demo123
-=======
             {/* Credenciales del Nutricionista Por Defecto */}
             <Card className="mt-3 border-success">
               <Card.Header className="bg-success text-white text-center">
@@ -325,7 +281,6 @@ const LoginPage: React.FC = () => {
                 </p>
                 <p className="mb-0">
                   <strong>Juan:</strong> dr.juan.perez@demo.com / demo123
->>>>>>> nutri/main
                 </p>
               </Card.Body>
             </Card>

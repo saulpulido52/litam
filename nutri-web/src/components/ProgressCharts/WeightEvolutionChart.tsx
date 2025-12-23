@@ -1,10 +1,6 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
-<<<<<<< HEAD
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-=======
 import { TrendingUp, TrendingDown, Minus} from 'lucide-react';
->>>>>>> nutri/main
 
 interface WeightDataPoint {
   date: string;

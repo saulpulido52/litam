@@ -1,10 +1,4 @@
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
-import { Calendar, Clock, Plus, Search, MapPin, User, Phone, Edit, Trash2, CheckCircle, AlertCircle, Eye } from 'lucide-react';
-
-interface Appointment {
-  id: number;
-=======
 import { Calendar, Clock, Plus, Search, Phone, Edit, Trash2, Settings, CalendarDays, AlertCircle, CheckCircle, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { StatusModal } from '../components/StatusModal';
@@ -15,89 +9,12 @@ import AvailabilityManager from '../components/AvailabilityManager';
 
 interface FormattedAppointment {
   id: string;
->>>>>>> nutri/main
   patient_name: string;
   patient_email: string;
   patient_phone: string;
   date: string;
   time: string;
   type: string;
-<<<<<<< HEAD
-  status: 'scheduled' | 'completed' | 'cancelled' | 'no-show';
-  notes?: string;
-  location: 'presencial' | 'virtual';
-}
-
-const AppointmentsPage: React.FC = () => {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [showModal, setShowModal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-
-  // Datos de ejemplo
-  useEffect(() => {
-    const mockAppointments: Appointment[] = [
-      {
-        id: 1,
-        patient_name: 'María González',
-        patient_email: 'maria@email.com',
-        patient_phone: '+52 555 123 4567',
-        date: '2024-12-16',
-        time: '09:00',
-        type: 'Consulta inicial',
-        status: 'scheduled',
-        notes: 'Primera consulta, evaluar objetivos',
-        location: 'presencial'
-      },
-      {
-        id: 2,
-        patient_name: 'Carlos Ruiz',
-        patient_email: 'carlos@email.com',
-        patient_phone: '+52 555 987 6543',
-        date: '2024-12-16',
-        time: '11:00',
-        type: 'Seguimiento',
-        status: 'scheduled',
-        notes: 'Revisión de plan nutricional',
-        location: 'virtual'
-      },
-      {
-        id: 3,
-        patient_name: 'Ana López',
-        patient_email: 'ana@email.com',
-        patient_phone: '+52 555 456 7890',
-        date: '2024-12-15',
-        time: '10:30',
-        type: 'Control de peso',
-        status: 'completed',
-        notes: 'Progreso excelente',
-        location: 'presencial'
-      },
-      {
-        id: 4,
-        patient_name: 'José Martín',
-        patient_email: 'jose@email.com',
-        patient_phone: '+52 555 321 0987',
-        date: '2024-12-17',
-        time: '14:00',
-        type: 'Consulta especializada',
-        status: 'scheduled',
-        notes: 'Consulta sobre alimentación deportiva',
-        location: 'virtual'
-      }
-    ];
-    setAppointments(mockAppointments);
-  }, []);
-
-  const filteredAppointments = appointments.filter(appointment => {
-    const matchesSearch = appointment.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         appointment.type.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || appointment.status === statusFilter;
-    return matchesSearch && matchesStatus;
-=======
   status: 'scheduled' | 'completed' | 'cancelled_by_patient' | 'cancelled_by_nutritionist' | 'rescheduled' | 'no_show';
   notes?: string;
   location: 'presencial' | 'virtual';
@@ -221,20 +138,10 @@ const AppointmentsPage: React.FC = () => {
     
     const matchesDate = !selectedDate || appointment.date === selectedDate;
     return matchesSearch && matchesStatus && matchesDate;
->>>>>>> nutri/main
   });
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-<<<<<<< HEAD
-      scheduled: { class: 'bg-primary text-white', text: 'Programada' },
-      completed: { class: 'bg-success text-white', text: 'Completada' },
-      cancelled: { class: 'bg-danger text-white', text: 'Cancelada' },
-      'no-show': { class: 'bg-warning text-dark', text: 'No asistió' }
-    };
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.scheduled;
-    return <span className={`badge ${config.class}`}>{config.text}</span>;
-=======
       scheduled: { class: 'bg-primary text-white', text: 'Programada', icon: '📅' },
       completed: { class: 'bg-success text-white', text: 'Completada', icon: '✅' },
       cancelled_by_patient: { class: 'bg-danger text-white', text: 'Cancelada por el paciente', icon: '❌' },
@@ -249,31 +156,16 @@ const AppointmentsPage: React.FC = () => {
         {config.text}
       </span>
     );
->>>>>>> nutri/main
   };
 
   const todayAppointments = appointments.filter(apt => apt.date === new Date().toISOString().split('T')[0]);
   const upcomingAppointments = appointments.filter(apt => new Date(apt.date) > new Date() && apt.status === 'scheduled');
 
-<<<<<<< HEAD
-  const handleStatusChange = (appointmentId: number, newStatus: 'scheduled' | 'completed' | 'cancelled' | 'no-show') => {
-    setAppointments(prev => prev.map(apt => 
-      apt.id === appointmentId ? { ...apt, status: newStatus } : apt
-    ));
-  };
-
-  const handleViewDetails = (appointment: Appointment) => {
-=======
   const handleViewDetails = (appointment: FormattedAppointment) => {
->>>>>>> nutri/main
     setSelectedAppointment(appointment);
     setShowDetailModal(true);
   };
 
-<<<<<<< HEAD
-  return (
-    <div className="container-fluid py-4">
-=======
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -474,7 +366,6 @@ const AppointmentsPage: React.FC = () => {
         </div>
       )}
 
->>>>>>> nutri/main
       {/* Header */}
       <div className="row mb-4">
         <div className="col-md-8">
@@ -483,10 +374,6 @@ const AppointmentsPage: React.FC = () => {
         </div>
         <div className="col-md-4 text-end">
           <button 
-<<<<<<< HEAD
-            className="btn btn-primary"
-            onClick={() => setShowModal(true)}
-=======
             className="btn btn-outline-primary me-2"
             onClick={() => navigate('/calendar')}
             title="Ver calendario visual"
@@ -515,7 +402,6 @@ const AppointmentsPage: React.FC = () => {
             className="btn btn-primary"
             onClick={() => setShowModal(true)}
             disabled={loading}
->>>>>>> nutri/main
           >
             <Plus size={18} className="me-2" />
             Nueva Cita
@@ -578,11 +464,7 @@ const AppointmentsPage: React.FC = () => {
                   <AlertCircle className="text-warning" size={24} />
                 </div>
                 <div>
-<<<<<<< HEAD
-                  <h5 className="mb-0">{appointments.filter(a => a.status === 'cancelled').length}</h5>
-=======
                   <h5 className="mb-0">{appointments.filter(a => a.status === 'cancelled_by_patient' || a.status === 'cancelled_by_nutritionist').length}</h5>
->>>>>>> nutri/main
                   <small className="text-muted">Canceladas</small>
                 </div>
               </div>
@@ -617,18 +499,6 @@ const AppointmentsPage: React.FC = () => {
             <option value="scheduled">Programadas</option>
             <option value="completed">Completadas</option>
             <option value="cancelled">Canceladas</option>
-<<<<<<< HEAD
-            <option value="no-show">No asistió</option>
-          </select>
-        </div>
-        <div className="col-md-3">
-          <input
-            type="date"
-            className="form-control"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-          />
-=======
             <option value="rescheduled">Reagendadas</option>
             <option value="no_show">No asistió</option>
           </select>
@@ -650,16 +520,12 @@ const AppointmentsPage: React.FC = () => {
               Todas
             </button>
           </div>
->>>>>>> nutri/main
         </div>
       </div>
 
       {/* Appointments Table */}
       <div className="card border-0 shadow-sm">
         <div className="card-header bg-white">
-<<<<<<< HEAD
-          <h5 className="card-title mb-0">Lista de Citas</h5>
-=======
           <div className="d-flex justify-content-between align-items-center">
             <h5 className="mb-0">
               <Calendar size={18} className="me-2" />
@@ -676,7 +542,6 @@ const AppointmentsPage: React.FC = () => {
               </button>
             </div>
           </div>
->>>>>>> nutri/main
         </div>
         <div className="card-body p-0">
           {filteredAppointments.length === 0 ? (
@@ -686,97 +551,6 @@ const AppointmentsPage: React.FC = () => {
               <p className="text-muted">Intenta ajustar los filtros o programa una nueva cita</p>
             </div>
           ) : (
-<<<<<<< HEAD
-            <div className="table-responsive">
-              <table className="table table-hover mb-0">
-                <thead className="table-light">
-                  <tr>
-                    <th>Paciente</th>
-                    <th>Fecha y Hora</th>
-                    <th>Tipo</th>
-                    <th>Modalidad</th>
-                    <th>Estado</th>
-                    <th>Contacto</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredAppointments.map((appointment) => (
-                    <tr key={appointment.id}>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
-                            <User size={16} className="text-primary" />
-                          </div>
-                          <div>
-                            <div className="fw-medium">{appointment.patient_name}</div>
-                            <small className="text-muted">{appointment.patient_email}</small>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div>
-                          <div className="fw-medium">{new Date(appointment.date).toLocaleDateString('es-ES')}</div>
-                          <small className="text-muted">{appointment.time}</small>
-                        </div>
-                      </td>
-                      <td>
-                        <span className="badge bg-light text-dark">{appointment.type}</span>
-                      </td>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <MapPin size={14} className="me-1" />
-                          <span className={appointment.location === 'presencial' ? 'text-success' : 'text-info'}>
-                            {appointment.location === 'presencial' ? 'Presencial' : 'Virtual'}
-                          </span>
-                        </div>
-                      </td>
-                      <td>{getStatusBadge(appointment.status)}</td>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <Phone size={14} className="me-1 text-muted" />
-                          <small>{appointment.patient_phone}</small>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="btn-group btn-group-sm">
-                          <button 
-                            className="btn btn-outline-info"
-                            onClick={() => handleViewDetails(appointment)}
-                            title="Ver detalles"
-                          >
-                            <Eye size={14} />
-                          </button>
-                          <button 
-                            className="btn btn-outline-primary"
-                            title="Editar cita"
-                          >
-                            <Edit size={14} />
-                          </button>
-                          {appointment.status === 'scheduled' && (
-                            <button 
-                              className="btn btn-outline-success"
-                              onClick={() => handleStatusChange(appointment.id, 'completed')}
-                              title="Completar cita"
-                            >
-                              <CheckCircle size={14} />
-                            </button>
-                          )}
-                          <button 
-                            className="btn btn-outline-danger"
-                            onClick={() => handleStatusChange(appointment.id, 'cancelled')}
-                            title="Cancelar cita"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-=======
             <>
               {/* Desktop Table */}
                           <div className="d-none d-md-block">
@@ -988,7 +762,6 @@ const AppointmentsPage: React.FC = () => {
                 ))}
               </div>
             </>
->>>>>>> nutri/main
           )}
         </div>
       </div>
@@ -1003,26 +776,6 @@ const AppointmentsPage: React.FC = () => {
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
               </div>
               <div className="modal-body">
-<<<<<<< HEAD
-                <form>
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Paciente</label>
-                      <select className="form-select">
-                        <option>Seleccionar paciente...</option>
-                        <option>María González</option>
-                        <option>Carlos Ruiz</option>
-                        <option>Ana López</option>
-                      </select>
-                    </div>
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Tipo de cita</label>
-                      <select className="form-select">
-                        <option>Consulta inicial</option>
-                        <option>Seguimiento</option>
-                        <option>Control de peso</option>
-                        <option>Consulta especializada</option>
-=======
                 <form onSubmit={isEditMode ? handleUpdateAppointment : handleCreateAppointment}>
                   <div className="row">
                     <div className="col-md-6 mb-3">
@@ -1062,36 +815,10 @@ const AppointmentsPage: React.FC = () => {
                         <option value="follow-up">Seguimiento</option>
                         <option value="weight-check">Control de peso</option>
                         <option value="specialized">Consulta especializada</option>
->>>>>>> nutri/main
                       </select>
                     </div>
                   </div>
                   <div className="row">
-<<<<<<< HEAD
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Fecha</label>
-                      <input type="date" className="form-control" />
-                    </div>
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Hora</label>
-                      <input type="time" className="form-control" />
-                    </div>
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Modalidad</label>
-                    <div className="d-flex gap-3">
-                      <div className="form-check">
-                        <input className="form-check-input" type="radio" name="location" id="presencial" />
-                        <label className="form-check-label" htmlFor="presencial">
-                          Presencial
-                        </label>
-                      </div>
-                      <div className="form-check">
-                        <input className="form-check-input" type="radio" name="location" id="virtual" />
-                        <label className="form-check-label" htmlFor="virtual">
-                          Virtual
-                        </label>
-=======
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label" htmlFor="appointment-date">Fecha *</label>
@@ -1176,15 +903,10 @@ const AppointmentsPage: React.FC = () => {
                             Virtual
                           </label>
                         </div>
->>>>>>> nutri/main
                       </div>
                     </div>
                   </div>
                   <div className="mb-3">
-<<<<<<< HEAD
-                    <label className="form-label">Notas adicionales</label>
-                    <textarea className="form-control" rows={3} placeholder="Información adicional sobre la cita..."></textarea>
-=======
                     <label className="form-label" htmlFor="appointment-notes">Notas adicionales</label>
                     <textarea 
                       className="form-control" 
@@ -1197,18 +919,10 @@ const AppointmentsPage: React.FC = () => {
                       autoComplete="off"
                       aria-label="Notas adicionales de la cita"
                     />
->>>>>>> nutri/main
                   </div>
                 </form>
               </div>
               <div className="modal-footer">
-<<<<<<< HEAD
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
-                  Cancelar
-                </button>
-                <button type="button" className="btn btn-primary">
-                  Programar Cita
-=======
                 <button 
                   type="button" 
                   className="btn btn-secondary" 
@@ -1231,7 +945,6 @@ const AppointmentsPage: React.FC = () => {
                   ) : (
                     isEditMode ? 'Actualizar Cita' : 'Programar Cita'
                   )}
->>>>>>> nutri/main
                 </button>
               </div>
             </div>
@@ -1255,9 +968,6 @@ const AppointmentsPage: React.FC = () => {
                     <div className="mb-3">
                       <strong>Nombre:</strong> {selectedAppointment.patient_name}<br />
                       <strong>Email:</strong> {selectedAppointment.patient_email}<br />
-<<<<<<< HEAD
-                      <strong>Teléfono:</strong> {selectedAppointment.patient_phone}
-=======
                       <strong>Teléfono:</strong> {selectedAppointment.patient_phone ? (
                   <a 
                     href={`tel:${selectedAppointment.patient_phone}`}
@@ -1269,7 +979,6 @@ const AppointmentsPage: React.FC = () => {
                 ) : (
                   <span className="text-muted ms-1">N/A</span>
                 )}
->>>>>>> nutri/main
                     </div>
                   </div>
                   <div className="col-md-6">
@@ -1308,11 +1017,7 @@ const AppointmentsPage: React.FC = () => {
                           <button 
                             className="btn btn-warning btn-sm"
                             onClick={() => {
-<<<<<<< HEAD
-                              handleStatusChange(selectedAppointment.id, 'no-show');
-=======
                               handleStatusChange(selectedAppointment.id, 'no_show');
->>>>>>> nutri/main
                               setShowDetailModal(false);
                             }}
                           >
@@ -1324,20 +1029,11 @@ const AppointmentsPage: React.FC = () => {
                       <button 
                         className="btn btn-danger btn-sm"
                         onClick={() => {
-<<<<<<< HEAD
-                          handleStatusChange(selectedAppointment.id, 'cancelled');
-=======
                           handleDeleteAppointment(selectedAppointment.id);
->>>>>>> nutri/main
                           setShowDetailModal(false);
                         }}
                       >
                         <Trash2 size={16} className="me-1" />
-<<<<<<< HEAD
-                        Cancelar Cita
-                      </button>
-                      <button className="btn btn-primary btn-sm">
-=======
                         Eliminar Cita
                       </button>
                       <button 
@@ -1347,7 +1043,6 @@ const AppointmentsPage: React.FC = () => {
                           setShowDetailModal(false);
                         }}
                       >
->>>>>>> nutri/main
                         <Edit size={16} className="me-1" />
                         Editar Cita
                       </button>
@@ -1364,8 +1059,6 @@ const AppointmentsPage: React.FC = () => {
           </div>
         </div>
       )}
-<<<<<<< HEAD
-=======
 
       {/* AvailabilityManager Modal */}
       {showAvailability && (
@@ -1489,7 +1182,6 @@ const AppointmentsPage: React.FC = () => {
           </div>
         </div>
       )}
->>>>>>> nutri/main
     </div>
   );
 };

@@ -63,11 +63,6 @@ class NutritionistService {
         if (profileDto.bio !== undefined) nutritionistProfile.bio = profileDto.bio;
         if (profileDto.officeHours !== undefined) nutritionistProfile.office_hours = profileDto.officeHours;
 
-<<<<<<< HEAD
-        await this.nutritionistProfileRepository.save(nutritionistProfile);
-        return nutritionistProfile;
-    }
-=======
         // --- NUEVOS CAMPOS PARA APP MÓVIL ---
         if (profileDto.professionalSummary !== undefined) nutritionistProfile.professional_summary = profileDto.professionalSummary;
         if (profileDto.offersInPerson !== undefined) nutritionistProfile.offers_in_person = profileDto.offersInPerson;
@@ -176,7 +171,6 @@ class NutritionistService {
 
         return profile;
     }
->>>>>>> nutri/main
 }
 
 export default new NutritionistService();

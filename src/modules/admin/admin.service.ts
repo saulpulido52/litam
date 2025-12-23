@@ -1,17 +1,11 @@
 // src/modules/admin/admin.service.ts
-<<<<<<< HEAD
-import { Repository } from 'typeorm';
-=======
 import { Repository, MoreThanOrEqual } from 'typeorm';
->>>>>>> nutri/main
 import { AppDataSource } from '../../database/data-source';
 import { User } from '../../database/entities/user.entity';
 import { Role, RoleName } from '../../database/entities/role.entity';
 import { UserSubscription, SubscriptionStatus } from '../../database/entities/user_subscription.entity';
 import { SubscriptionPlan, SubscriptionDurationType } from '../../database/entities/subscription_plan.entity'; // <-- AÑADIDO
 import { NutritionistProfile } from '../../database/entities/nutritionist_profile.entity';
-<<<<<<< HEAD
-=======
 import { PatientNutritionistRelation, RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
 import { DietPlan } from '../../database/entities/diet_plan.entity';
 import { Appointment, AppointmentStatus } from '../../database/entities/appointment.entity';
@@ -26,19 +20,15 @@ import { Message } from '../../database/entities/message.entity';
 import { WeeklyPlanTemplate } from '../../database/entities/weekly-plan-template.entity';
 import { NutritionistReview } from '../../database/entities/nutritionist_review.entity';
 import { PatientProgressLog } from '../../database/entities/patient_progress_log.entity';
->>>>>>> nutri/main
 import {
     AdminUpdateUserDto,
     AdminVerifyNutritionistDto,
     AdminUpdateUserSubscriptionDto,
-<<<<<<< HEAD
-=======
     AdminCreateUserDto,
     AdminCreateAppointmentDto,
     AdminCreateFoodDto,
     AdminCreateRecipeDto,
     AdminCreateEducationalContentDto,
->>>>>>> nutri/main
 } from '../../modules/admin/admin.dto';
 import { AppError } from '../../utils/app.error';
 import bcrypt from 'bcrypt';
@@ -49,8 +39,6 @@ class AdminService {
     private userSubscriptionRepository: Repository<UserSubscription>;
     private subscriptionPlanRepository: Repository<SubscriptionPlan>;
     private nutritionistProfileRepository: Repository<NutritionistProfile>;
-<<<<<<< HEAD
-=======
     private relationRepository: Repository<PatientNutritionistRelation>;
     private dietPlanRepository: Repository<DietPlan>;
     private appointmentRepository: Repository<Appointment>;
@@ -65,7 +53,6 @@ class AdminService {
     private weeklyPlanTemplateRepository: Repository<WeeklyPlanTemplate>;
     private nutritionistReviewRepository: Repository<NutritionistReview>;
     private patientProgressLogRepository: Repository<PatientProgressLog>;
->>>>>>> nutri/main
 
     constructor() {
         this.userRepository = AppDataSource.getRepository(User);
@@ -73,8 +60,6 @@ class AdminService {
         this.userSubscriptionRepository = AppDataSource.getRepository(UserSubscription);
         this.subscriptionPlanRepository = AppDataSource.getRepository(SubscriptionPlan);
         this.nutritionistProfileRepository = AppDataSource.getRepository(NutritionistProfile);
-<<<<<<< HEAD
-=======
         this.relationRepository = AppDataSource.getRepository(PatientNutritionistRelation);
         this.dietPlanRepository = AppDataSource.getRepository(DietPlan);
         this.appointmentRepository = AppDataSource.getRepository(Appointment);
@@ -89,7 +74,6 @@ class AdminService {
         this.weeklyPlanTemplateRepository = AppDataSource.getRepository(WeeklyPlanTemplate);
         this.nutritionistReviewRepository = AppDataSource.getRepository(NutritionistReview);
         this.patientProgressLogRepository = AppDataSource.getRepository(PatientProgressLog);
->>>>>>> nutri/main
     }
 
     // --- Gestión de Usuarios ---
@@ -283,8 +267,6 @@ class AdminService {
         await this.userSubscriptionRepository.remove(subscription);
         return { message: 'Suscripción de usuario eliminada con éxito.' };
     }
-<<<<<<< HEAD
-=======
 
     // --- GESTIÓN COMPLETA DE USUARIOS ---
 
@@ -1184,7 +1166,6 @@ class AdminService {
             throw new AppError('Error al obtener métricas de salud del sistema', 500);
         }
     }
->>>>>>> nutri/main
 }
 
 export default new AdminService();

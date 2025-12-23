@@ -10,8 +10,6 @@ import {
 } from 'typeorm';
 import { User } from '../../database/entities/user.entity'; // Para referenciar al paciente y al nutriólogo
 
-<<<<<<< HEAD
-=======
 // Enum para tipos de expediente
 export enum TipoExpediente {
     INICIAL = 'inicial',           // Expediente completo (primera vez)
@@ -25,7 +23,6 @@ export enum TipoExpediente {
     TELEHEALTH = 'telehealth'     // Consulta remota/telemedicina
 }
 
->>>>>>> nutri/main
 @Entity('clinical_records')
 export class ClinicalRecord {
     @PrimaryGeneratedColumn('uuid')
@@ -45,8 +42,6 @@ export class ClinicalRecord {
     @Column({ type: 'varchar', length: 50, nullable: true })
     expedient_number: string | null; // Número de expediente (si aplica)
 
-<<<<<<< HEAD
-=======
     // NUEVO: Tipo de expediente para diferenciar inicial de seguimiento
     @Column({ 
         type: 'enum', 
@@ -104,7 +99,6 @@ export class ClinicalRecord {
         observaciones?: string;
     } | null;
 
->>>>>>> nutri/main
     // --- DATOS PERSONALES (algunos ya en User, pero aquí para el contexto del registro) ---
     // (Nombre, Edad, Sexo, FN, EC, Escolaridad, Ocupacion, Direccion, Telefono, Email: Se obtienen de la entidad User/PatientProfile)
     
@@ -330,8 +324,6 @@ export class ClinicalRecord {
     @Column({ type: 'varchar', length: 255, nullable: true })
     graph_url: string | null; // URL de la gráfica (si se genera una imagen)
 
-<<<<<<< HEAD
-=======
     // 📄 NUEVOS CAMPOS PARA DOCUMENTOS
     @Column({ type: 'jsonb', nullable: true })
     laboratory_documents: {
@@ -378,7 +370,6 @@ export class ClinicalRecord {
         updated_date: Date;
     }[] | null;
 
->>>>>>> nutri/main
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at!: Date;
 

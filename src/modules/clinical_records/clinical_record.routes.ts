@@ -1,12 +1,8 @@
 // src/modules/clinical_records/clinical_record.routes.ts
-<<<<<<< HEAD
-import { Router } from 'express';
-=======
 import { Router, Request } from 'express';
 import multer, { FileFilterCallback } from 'multer';
 import path from 'path';
 import { promises as fs } from 'fs';
->>>>>>> nutri/main
 import clinicalRecordController from '../../modules/clinical_records/clinical_record.controller';
 import { protect, authorize } from '../../middleware/auth.middleware';
 import { validateMiddleware } from '../../middleware/validation.middleware';
@@ -15,8 +11,6 @@ import { RoleName } from '../../database/entities/role.entity';
 
 const router = Router();
 
-<<<<<<< HEAD
-=======
 // Configuración de multer para upload de documentos PDF
 const storage = multer.memoryStorage(); // Guardamos en memoria para procesar
 const upload = multer({
@@ -34,7 +28,6 @@ const upload = multer({
     }
 });
 
->>>>>>> nutri/main
 // Todas las rutas de registros clínicos requieren autenticación
 router.use(protect);
 
@@ -69,8 +62,6 @@ router.route('/:id') // Gestión de un registro específico por su ID
         clinicalRecordController.deleteClinicalRecord
     );
 
-<<<<<<< HEAD
-=======
 // --- NUEVAS RUTAS PARA DOCUMENTOS DE LABORATORIO ---
 
 // 📄 Upload de documento de laboratorio (PDF)
@@ -100,7 +91,6 @@ router.get(
     clinicalRecordController.generateExpedientePDF
 );
 
->>>>>>> nutri/main
 // --- Rutas especializadas para gestión de expedientes ---
 
 // Transferir expedientes entre nutriólogos (solo administradores)
@@ -128,8 +118,6 @@ router.get(
     clinicalRecordController.getPatientRecordsCount
 );
 
-<<<<<<< HEAD
-=======
 // === 💊 RUTAS PARA INTERACCIONES FÁRMACO-NUTRIENTE ===
 
 // 🔬 Agregar interacción fármaco-nutriente
@@ -196,5 +184,4 @@ router.get(
     clinicalRecordController.getEstadisticasSeguimiento
 );
 
->>>>>>> nutri/main
 export default router;

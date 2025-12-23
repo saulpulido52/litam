@@ -39,15 +39,9 @@ export class Appointment {
     end_time!: Date;
 
     @Column({
-<<<<<<< HEAD
-        type: 'enum',
-        enum: AppointmentStatus,
-        default: AppointmentStatus.SCHEDULED,
-=======
         type: 'varchar',
         length: 20,
         default: 'scheduled',
->>>>>>> nutri/main
         nullable: false,
     })
     status!: AppointmentStatus;
@@ -58,8 +52,6 @@ export class Appointment {
     @Column({ type: 'varchar', length: 500, nullable: true })
     meeting_link: string | null; // Enlace a videollamada (Zoom, Meet, etc.)
 
-<<<<<<< HEAD
-=======
     // --- CAMPOS PARA GOOGLE CALENDAR ---
     @Column({ type: 'varchar', length: 255, nullable: true })
     google_calendar_event_id: string | null; // ID del evento en Google Calendar
@@ -70,7 +62,6 @@ export class Appointment {
     @Column({ type: 'timestamptz', nullable: true })
     last_sync_to_google: Date | null; // Timestamp de la última sincronización con Google Calendar
 
->>>>>>> nutri/main
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at!: Date;
 

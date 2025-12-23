@@ -2,16 +2,6 @@
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../../database/data-source'; // Ruta corregida
 import { User } from '../../database/entities/user.entity'; // Ruta corregida
-<<<<<<< HEAD
-import { UpdateUserDto } from '../../modules/auth/auth.dto'; // Ruta corregida
-import { AppError } from '../../utils/app.error'; // Importar AppError
-
-class UserService {
-    private userRepository: Repository<User>;
-
-    constructor() {
-        this.userRepository = AppDataSource.getRepository(User);
-=======
 import { NutritionistProfile } from '../../database/entities/nutritionist_profile.entity'; // Agregar entidad
 import { UpdateUserDto } from '../../modules/auth/auth.dto'; // Ruta corregida
 import { AppError } from '../../utils/app.error'; // Importar AppError
@@ -25,17 +15,13 @@ class UserService {
     constructor() {
         this.userRepository = AppDataSource.getRepository(User);
         this.nutritionistProfileRepository = AppDataSource.getRepository(NutritionistProfile);
->>>>>>> nutri/main
     }
 
     public async getUserProfile(userId: string) {
         const user = await this.userRepository
             .createQueryBuilder('user')
             .leftJoinAndSelect('user.role', 'role')
-<<<<<<< HEAD
-=======
             .leftJoinAndSelect('user.nutritionist_profile', 'nutritionist_profile')
->>>>>>> nutri/main
             .where('user.id = :userId', { userId })
             .getOne();
 
@@ -47,25 +33,6 @@ class UserService {
         return userWithoutHash;
     }
 
-<<<<<<< HEAD
-    public async updateProfile(userId: string, updateDto: UpdateUserDto) {
-        const user = await this.userRepository.findOneBy({ id: userId });
-
-        if (!user) {
-            throw new AppError('Usuario no encontrado.', 404); // Usar AppError
-        }
-
-        if (updateDto.firstName !== undefined) user.first_name = updateDto.firstName;
-        if (updateDto.lastName !== undefined) user.last_name = updateDto.lastName;
-        if (updateDto.age !== undefined) user.age = updateDto.age;
-        if (updateDto.gender !== undefined) user.gender = updateDto.gender;
-
-        await this.userRepository.save(user);
-
-        const { password_hash, ...userWithoutHash } = user;
-        return userWithoutHash;
-    }
-=======
     public async updateProfile(userId: string, updateDto: any) {
         const user = await this.userRepository
             .createQueryBuilder('user')
@@ -310,7 +277,6 @@ class UserService {
 
         return { message: 'Cuenta eliminada exitosamente.' };
     }
->>>>>>> nutri/main
 }
 
 export default new UserService();

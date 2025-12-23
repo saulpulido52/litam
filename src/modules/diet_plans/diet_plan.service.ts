@@ -1,9 +1,5 @@
 // src/modules/diet_plans/diet_plan.service.ts
-<<<<<<< HEAD
-import { Repository } from 'typeorm';
-=======
 import { Repository, SelectQueryBuilder } from 'typeorm';
->>>>>>> nutri/main
 import { AppDataSource } from '../../database/data-source';
 import { User } from '../../database/entities/user.entity';
 import { DietPlan, DietPlanStatus } from '../../database/entities/diet_plan.entity';
@@ -23,26 +19,6 @@ import {
 import { AppError } from '../../utils/app.error';
 import { RoleName } from '../../database/entities/role.entity';
 import { PatientProfile } from '../../database/entities/patient_profile.entity';
-<<<<<<< HEAD
-
-class DietPlanService {
-    private dietPlanRepository: Repository<DietPlan>;
-    private mealRepository: Repository<Meal>;
-    private mealItemRepository: Repository<MealItem>;
-    private foodRepository: Repository<Food>;
-    private userRepository: Repository<User>;
-    private patientProfileRepository: Repository<PatientProfile>;
-    private relationRepository: Repository<PatientNutritionistRelation>;
-
-    constructor() {
-        this.dietPlanRepository = AppDataSource.getRepository(DietPlan);
-        this.mealRepository = AppDataSource.getRepository(Meal);
-        this.mealItemRepository = AppDataSource.getRepository(MealItem);
-        this.foodRepository = AppDataSource.getRepository(Food);
-        this.userRepository = AppDataSource.getRepository(User);
-        this.patientProfileRepository = AppDataSource.getRepository(PatientProfile);
-        this.relationRepository = AppDataSource.getRepository(PatientNutritionistRelation);
-=======
 import { PdfGenerationService } from './pdf_generation.service';
 import { DietGenerationAI } from './ai_diet_generation.service';
 
@@ -126,7 +102,6 @@ class DietPlanService {
         }
 
         return user;
->>>>>>> nutri/main
     }
 
     // --- Utilidades para fechas semanales ---
@@ -314,11 +289,7 @@ class DietPlanService {
     // --- Métodos de CRUD para Diet Plans ---
 
     // Crear un plan de dieta semanal
-<<<<<<< HEAD
-    public async createDietPlan(dietPlanDto: CreateDietPlanDto, nutritionistId: string) {
-=======
     public async createDietPlan(dietPlanDto: CreateDietPlanDto, nutritionistId: string): Promise<DietPlan> {
->>>>>>> nutri/main
         const nutritionist = await this.userRepository.findOne({
             where: { id: nutritionistId, role: { name: RoleName.NUTRITIONIST } },
         });
@@ -333,20 +304,7 @@ class DietPlanService {
             throw new AppError('Paciente no encontrado.', 404);
         }
 
-<<<<<<< HEAD
-        const activeRelation = await this.relationRepository.findOne({
-            where: {
-                patient: { id: patient.id },
-                nutritionist: { id: nutritionist.id },
-                status: RelationshipStatus.ACTIVE,
-            },
-        });
-        if (!activeRelation) {
-            throw new AppError('El nutriólogo no está vinculado activamente con este paciente.', 403);
-        }
-=======
         await this.verifyNutritionistPatientRelation(nutritionist.id, patient.id);
->>>>>>> nutri/main
 
         // Calcular macros si no están definidos
         let dailyMacros = dietPlanDto.dailyMacrosTarget;
@@ -361,10 +319,7 @@ class DietPlanService {
 
         const newDietPlan = this.dietPlanRepository.create({
             name: dietPlanDto.name,
-<<<<<<< HEAD
-=======
             description: dietPlanDto.description,
->>>>>>> nutri/main
             patient: patient,
             nutritionist: nutritionist,
             notes: dietPlanDto.notes,
@@ -378,9 +333,6 @@ class DietPlanService {
             // Campos para plan semanal
             is_weekly_plan: dietPlanDto.isWeeklyPlan || true,
             total_weeks: dietPlanDto.totalWeeks || 1,
-<<<<<<< HEAD
-            weekly_plans: dietPlanDto.weeklyPlans || []
-=======
             weekly_plans: dietPlanDto.weeklyPlans || [],
             // Restricciones patológicas - Normalizar nombres de campos
             pathological_restrictions: dietPlanDto.pathologicalRestrictions ? {
@@ -396,17 +348,11 @@ class DietPlanService {
             meal_timing: dietPlanDto.mealTiming || null,
             nutritional_goals: dietPlanDto.nutritionalGoals || null,
             flexibility_settings: dietPlanDto.flexibilitySettings || null
->>>>>>> nutri/main
         });
 
         // Guardar el plan
         await this.dietPlanRepository.save(newDietPlan);
 
-<<<<<<< HEAD
-        // Si hay planes semanales, procesarlos
-        if (dietPlanDto.weeklyPlans && dietPlanDto.weeklyPlans.length > 0) {
-            newDietPlan.weekly_plans = dietPlanDto.weeklyPlans;
-=======
         // Si hay planes semanales, procesarlos y normalizar nombres de campos
         if (dietPlanDto.weeklyPlans && dietPlanDto.weeklyPlans.length > 0) {
             // Normalizar nombres de campos de snake_case a estructura interna
@@ -421,7 +367,6 @@ class DietPlanService {
             }));
             
             newDietPlan.weekly_plans = normalizedWeeklyPlans;
->>>>>>> nutri/main
             await this.dietPlanRepository.save(newDietPlan);
         }
 
@@ -454,13 +399,9 @@ class DietPlanService {
                     where: { id: newMeal.id },
                     relations: ['meal_items', 'meal_items.food'],
                 });
-<<<<<<< HEAD
-                newDietPlan.meals.push(savedMeal!);
-=======
                 if (savedMeal) {
                     newDietPlan.meals.push(savedMeal);
                 }
->>>>>>> nutri/main
             }
         }
 
@@ -475,121 +416,6 @@ class DietPlanService {
                 'meals.meal_items.food',
             ],
         });
-<<<<<<< HEAD
-        return savedPlan;
-    }
-
-    // Generar plan de dieta con IA
-    public async generateDietPlanByAI(generateDto: GenerateDietPlanAiDto, nutritionistId: string) {
-        const nutritionist = await this.userRepository.findOne({
-            where: { id: nutritionistId, role: { name: RoleName.NUTRITIONIST } },
-        });
-        if (!nutritionist) {
-            throw new AppError('Nutriólogo no encontrado o no autorizado.', 403);
-        }
-
-        const patient = await this.userRepository.findOne({
-            where: { id: generateDto.patientId, role: { name: RoleName.PATIENT } },
-        });
-        if (!patient) {
-            throw new AppError('Paciente no encontrado.', 404);
-        }
-
-        const activeRelation = await this.relationRepository.findOne({
-            where: {
-                patient: { id: patient.id },
-                nutritionist: { id: nutritionist.id },
-                status: RelationshipStatus.ACTIVE,
-            },
-        });
-        if (!activeRelation) {
-            throw new AppError('El nutriólogo no está vinculado activamente con este paciente.', 403);
-        }
-
-        // Calcular calorías diarias si no se proporcionan
-        let dailyCalories = generateDto.dailyCaloriesTarget;
-        if (!dailyCalories) {
-            // Calcular basado en perfil del paciente
-            const patientProfile = await this.patientProfileRepository.findOne({
-                where: { user: { id: patient.id } }
-            });
-            
-            if (patientProfile) {
-                const weight = patientProfile.current_weight || 70;
-                const height = patientProfile.height || 170;
-                const age = 30;
-                const activityLevel = patientProfile.activity_level || 'sedentario';
-                
-                // Fórmula básica de Harris-Benedict
-                let bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
-                
-                // Ajustar por nivel de actividad
-                const activityMultipliers = {
-                    'sedentario': 1.2,
-                    'ligero': 1.375,
-                    'moderado': 1.55,
-                    'activo': 1.725,
-                    'muy_activo': 1.9
-                };
-                
-                const multiplier = activityMultipliers[activityLevel as keyof typeof activityMultipliers] || 1.2;
-                dailyCalories = Math.round(bmr * multiplier);
-                
-                // Ajustar según objetivo
-                switch (generateDto.goal) {
-                    case 'weight_loss':
-                        dailyCalories = Math.round(dailyCalories * 0.85); // 15% déficit
-                        break;
-                    case 'weight_gain':
-                        dailyCalories = Math.round(dailyCalories * 1.15); // 15% superávit
-                        break;
-                    case 'muscle_gain':
-                        dailyCalories = Math.round(dailyCalories * 1.1); // 10% superávit
-                        break;
-                }
-            } else {
-                dailyCalories = 2000; // Valor por defecto
-            }
-        }
-
-        // Crear el plan base
-        const createDto: CreateDietPlanDto = {
-            name: generateDto.name,
-            patientId: generateDto.patientId,
-            description: `Plan generado por IA - Objetivo: ${generateDto.goal}`,
-            startDate: generateDto.startDate,
-            endDate: generateDto.endDate,
-            dailyCaloriesTarget: dailyCalories,
-            notes: generateDto.notesForAI,
-            isWeeklyPlan: true,
-            totalWeeks: generateDto.totalWeeks,
-            generatedByIA: true,
-            iaVersion: '1.0',
-            weeklyPlans: []
-        };
-
-        // Generar planes semanales
-        const weeklyPlans: WeeklyPlanDto[] = [];
-        for (let week = 1; week <= generateDto.totalWeeks; week++) {
-            const weeklyPlan = await this.generateWeeklyPlanWithAI(
-                generateDto.patientId,
-                week,
-                generateDto.startDate,
-                dailyCalories,
-                generateDto.goal,
-                generateDto.dietaryRestrictions,
-                generateDto.allergies,
-                generateDto.preferredFoods,
-                generateDto.dislikedFoods
-            );
-            weeklyPlans.push(weeklyPlan);
-        }
-
-        createDto.weeklyPlans = weeklyPlans;
-
-        // Crear el plan usando el método existente
-        return await this.createDietPlan(createDto, nutritionistId);
-=======
         
         if (!savedPlan) {
             throw new AppError('Error al crear el plan de dieta. No se pudo recargar el plan guardado.', 500);
@@ -635,19 +461,11 @@ class DietPlanService {
             throw new AppError('Error al crear el plan de dieta generado por IA.', 500);
         }
         return result;
->>>>>>> nutri/main
     }
 
     // Agregar una semana a un plan existente
     public async addWeekToPlan(dietPlanId: string, weekData: WeeklyPlanDto, nutritionistId: string) {
-<<<<<<< HEAD
-        const dietPlan = await this.dietPlanRepository.findOne({
-            where: { id: dietPlanId },
-            relations: ['nutritionist']
-        });
-=======
         const dietPlan = await this.loadDietPlanWithMinimalRelations(dietPlanId);
->>>>>>> nutri/main
 
         if (!dietPlan) {
             throw new AppError('Plan de dieta no encontrado.', 404);
@@ -676,34 +494,6 @@ class DietPlanService {
     }
 
     // Obtener un plan de dieta por ID (Nutriólogo, Paciente, Admin)
-<<<<<<< HEAD
-    public async getDietPlanById(dietPlanId: string, userId: string, userRole: RoleName) {
-        const dietPlan = await this.dietPlanRepository.findOne({
-            where: { id: dietPlanId },
-            relations: [
-                'patient',
-                'nutritionist',
-                'meals',
-                'meals.meal_items',
-                'meals.meal_items.food',
-            ],
-        });
-
-        if (!dietPlan) {
-            throw new AppError('Plan de dieta no encontrado.', 404);
-        }
-
-        if (userRole === RoleName.NUTRITIONIST && dietPlan.nutritionist.id !== userId) {
-            throw new AppError('No tienes permiso para ver este plan de dieta.', 403);
-        }
-        if (userRole === RoleName.PATIENT && dietPlan.patient.id !== userId) {
-            throw new AppError('No tienes permiso para ver este plan de dieta.', 403);
-        }
-
-        const { password_hash: patientHash, ...patientWithoutHash } = dietPlan.patient;
-        const { password_hash: nutritionistHash, ...nutritionistWithoutHash } = dietPlan.nutritionist;
-
-=======
     public async getDietPlanById(dietPlanId: string, userId: string, userRole: RoleName): Promise<DietPlan> {
         const dietPlan = await this.loadDietPlanWithFullRelations(dietPlanId);
         if (!dietPlan) {
@@ -712,16 +502,11 @@ class DietPlanService {
         // Mapear los campos para la respuesta
         const { password_hash: patientHash, ...patientWithoutHash } = dietPlan.patient;
         const { password_hash: nutritionistHash, ...nutritionistWithoutHash } = dietPlan.nutritionist;
->>>>>>> nutri/main
         return {
             ...dietPlan,
             patient: patientWithoutHash,
             nutritionist: nutritionistWithoutHash,
-<<<<<<< HEAD
-        };
-=======
         } as DietPlan;
->>>>>>> nutri/main
     }
 
     // Obtener planes de dieta de un paciente específico (solo por su nutriólogo o admin)
@@ -770,21 +555,6 @@ class DietPlanService {
         });
     }
 
-<<<<<<< HEAD
-    // Obtener todos los planes de dieta de un nutriólogo
-    public async getDietPlansForNutritionist(nutritionistId: string) {
-        const dietPlans = await this.dietPlanRepository.find({
-            where: { nutritionist: { id: nutritionistId } },
-            relations: [
-                'patient',
-                'nutritionist',
-                'meals',
-                'meals.meal_items',
-                'meals.meal_items.food',
-            ],
-            order: { created_at: 'DESC' },
-        });
-=======
     // **OPTIMIZACIÓN**: Obtener todos los planes de dieta de un nutriólogo con carga selectiva
     public async getDietPlansForNutritionist(nutritionistId: string, includeFullMeals = false) {
         // Primero cargar los planes básicos para la lista
@@ -803,7 +573,6 @@ class DietPlanService {
         }
 
         const dietPlans = await baseQuery.getMany();
->>>>>>> nutri/main
 
         return dietPlans.map(plan => {
             const { password_hash: patientHash, ...patientWithoutHash } = plan.patient;
@@ -818,14 +587,7 @@ class DietPlanService {
 
     // Actualizar un plan de dieta (Nutriólogo)
     public async updateDietPlan(dietPlanId: string, updateDto: UpdateDietPlanDto, nutritionistId: string) {
-<<<<<<< HEAD
-        const dietPlan = await this.dietPlanRepository.findOne({
-            where: { id: dietPlanId, nutritionist: { id: nutritionistId } },
-            relations: ['meals', 'meals.meal_items', 'meals.meal_items.food'],
-        });
-=======
         const dietPlan = await this.loadDietPlanWithFullRelations(dietPlanId);
->>>>>>> nutri/main
 
         if (!dietPlan) {
             throw new AppError('Plan de dieta no encontrado o no autorizado para actualizar.', 404);
@@ -840,20 +602,14 @@ class DietPlanService {
 
 
         if (updateDto.name !== undefined) dietPlan.name = updateDto.name;
-<<<<<<< HEAD
-=======
         if (updateDto.description !== undefined) dietPlan.description = updateDto.description;
->>>>>>> nutri/main
         if (updateDto.notes !== undefined) dietPlan.notes = updateDto.notes;
         if (updateDto.startDate !== undefined) dietPlan.start_date = new Date(updateDto.startDate);
         if (updateDto.endDate !== undefined) dietPlan.end_date = new Date(updateDto.endDate);
         if (updateDto.dailyCaloriesTarget !== undefined) dietPlan.daily_calories_target = updateDto.dailyCaloriesTarget;
-<<<<<<< HEAD
-=======
         if (updateDto.isWeeklyPlan !== undefined) dietPlan.is_weekly_plan = updateDto.isWeeklyPlan;
         if (updateDto.totalWeeks !== undefined) dietPlan.total_weeks = updateDto.totalWeeks;
         if (updateDto.weeklyPlans !== undefined) dietPlan.weekly_plans = updateDto.weeklyPlans;
->>>>>>> nutri/main
 
         if (updateDto.dailyMacrosTarget !== undefined) {
             const { protein, carbohydrates, fats } = updateDto.dailyMacrosTarget;
@@ -869,8 +625,6 @@ class DietPlanService {
         }
         if (updateDto.status !== undefined) dietPlan.status = updateDto.status;
 
-<<<<<<< HEAD
-=======
         // === NUEVOS CAMPOS PARA COMPLETAR TABS ===
         if (updateDto.mealSchedules !== undefined) dietPlan.meal_schedules = updateDto.mealSchedules;
         if (updateDto.mealTiming !== undefined) dietPlan.meal_timing = updateDto.mealTiming;
@@ -890,7 +644,6 @@ class DietPlanService {
             };
         }
 
->>>>>>> nutri/main
         // Lógica para actualizar comidas/items (complejo, solo permitir para planes DRAFT o PENDING_REVIEW)
         if (updateDto.meals !== undefined) {
             if (dietPlan.status !== DietPlanStatus.DRAFT && dietPlan.status !== DietPlanStatus.PENDING_REVIEW) {
@@ -946,20 +699,7 @@ class DietPlanService {
         await this.dietPlanRepository.save(dietPlan);
         
         // Recargar el plan con todas las relaciones para devolverlo completo
-<<<<<<< HEAD
-        const updatedDietPlan = await this.dietPlanRepository.findOne({
-            where: { id: dietPlanId },
-            relations: [
-                'patient',
-                'nutritionist',
-                'meals',
-                'meals.meal_items',
-                'meals.meal_items.food',
-            ],
-        });
-=======
         const updatedDietPlan = await this.loadDietPlanWithFullRelations(dietPlanId);
->>>>>>> nutri/main
 
         if (!updatedDietPlan) {
             throw new AppError('Error al recargar el plan de dieta actualizado.', 500);
@@ -978,14 +718,7 @@ class DietPlanService {
 
     // Cambiar el estado de un plan (Nutriólogo)
     public async updateDietPlanStatus(dietPlanId: string, newStatus: DietPlanStatus, nutritionistId: string) {
-<<<<<<< HEAD
-        const dietPlan = await this.dietPlanRepository.findOne({
-            where: { id: dietPlanId, nutritionist: { id: nutritionistId } },
-            relations: ['patient'], // Necesario para verificar si hay otro plan activo para el paciente
-        });
-=======
         const dietPlan = await this.loadDietPlanWithMinimalRelations(dietPlanId);
->>>>>>> nutri/main
 
         if (!dietPlan) {
             throw new AppError('Plan de dieta no encontrado o no autorizado para actualizar.', 404);
@@ -1025,14 +758,7 @@ class DietPlanService {
 
     // Eliminar un plan de dieta (Nutriólogo/Admin)
     public async deleteDietPlan(dietPlanId: string, deleterId: string, deleterRole: RoleName) {
-<<<<<<< HEAD
-        const dietPlan = await this.dietPlanRepository.findOne({
-            where: { id: dietPlanId },
-            relations: ['nutritionist'],
-        });
-=======
         const dietPlan = await this.loadDietPlanWithMinimalRelations(dietPlanId);
->>>>>>> nutri/main
 
         if (!dietPlan) {
             throw new AppError('Plan de dieta no encontrado.', 404);
@@ -1047,9 +773,6 @@ class DietPlanService {
         }
 
         await this.dietPlanRepository.remove(dietPlan);
-<<<<<<< HEAD
-        return { message: 'Plan de dieta eliminado con éxito.' };
-=======
         return { 
             status: 'success',
             message: 'Plan de dieta eliminado con éxito.' 
@@ -1075,7 +798,6 @@ class DietPlanService {
             console.error('❌ Error generando PDF del planificador de comidas:', error);
             throw new AppError('No se pudo generar el archivo PDF.', 500);
         }
->>>>>>> nutri/main
     }
 }
 

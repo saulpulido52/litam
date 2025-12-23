@@ -1,7 +1,5 @@
 import { apiService } from './api';
 
-<<<<<<< HEAD
-=======
 export interface SimpleDashboardStats {
   total_patients: number;
   total_appointments: number;
@@ -23,7 +21,6 @@ export interface SimpleDashboardStats {
   };
 }
 
->>>>>>> nutri/main
 export interface DashboardStats {
   total_patients: number;
   new_patients_last_month: number;
@@ -37,11 +34,6 @@ export interface DashboardStats {
   total_diet_plans: number;
   active_diet_plans: number;
   completed_diet_plans: number;
-<<<<<<< HEAD
-  recent_activities: Array<{
-    id: string;
-    type: 'appointment' | 'patient' | 'diet_plan' | 'clinical_record';
-=======
   total_clinical_records: number;
   recent_clinical_records: number;
   total_income: number;
@@ -50,14 +42,10 @@ export interface DashboardStats {
   recent_activities: Array<{
     id: string;
     type: 'appointment' | 'patient' | 'diet_plan' | 'clinical_record' | 'progress' | 'message';
->>>>>>> nutri/main
     title: string;
     description: string;
     date: string;
     patient_name?: string;
-<<<<<<< HEAD
-  }>;
-=======
     icon?: string;
   }>;
   upcoming_appointments: Array<{
@@ -85,7 +73,6 @@ export interface DashboardStats {
     average_response_time: number;
     patient_satisfaction: number;
   };
->>>>>>> nutri/main
 }
 
 export interface NutritionistProfile {
@@ -99,15 +86,6 @@ export interface NutritionistProfile {
   bio: string;
   is_verified: boolean;
   license_number: string;
-<<<<<<< HEAD
-}
-
-class DashboardService {
-  // Obtener estadísticas del dashboard
-  async getDashboardStats(): Promise<DashboardStats> {
-    try {
-      const response = await apiService.get<DashboardStats>('/dashboard/stats');
-=======
   is_available: boolean;
   languages: string[];
   education: string;
@@ -162,7 +140,6 @@ class DashboardService {
   async getSimpleDashboardStats(): Promise<SimpleDashboardStats> {
     try {
       const response = await apiService.get<SimpleDashboardStats>('/dashboard/stats');
->>>>>>> nutri/main
       
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error al obtener estadísticas del dashboard');
@@ -170,8 +147,6 @@ class DashboardService {
       
       return response.data;
     } catch (error: any) {
-<<<<<<< HEAD
-=======
       console.error('Error fetching simple dashboard stats:', error);
       const message = error.response?.data?.message || 'Error al obtener estadísticas del dashboard';
       throw new Error(message);
@@ -228,16 +203,12 @@ class DashboardService {
         }
       };
     } catch (error: any) {
->>>>>>> nutri/main
       console.error('Error fetching dashboard stats:', error);
       const message = error.response?.data?.message || 'Error al obtener estadísticas del dashboard';
       throw new Error(message);
     }
   }
 
-<<<<<<< HEAD
-  // Obtener perfil del nutriólogo
-=======
   private getActivityIcon(type: string): string {
     switch (type) {
       case 'patient': return 'fas fa-user';
@@ -249,7 +220,6 @@ class DashboardService {
   }
 
   // Obtener perfil completo del nutriólogo
->>>>>>> nutri/main
   async getNutritionistProfile(): Promise<{ user: any; profile: NutritionistProfile }> {
     try {
       const response = await apiService.get<{ user: any; profile: NutritionistProfile }>('/nutritionists/me/profile');
@@ -266,12 +236,6 @@ class DashboardService {
     }
   }
 
-<<<<<<< HEAD
-  // Obtener actividades recientes
-  async getRecentActivities(limit: number = 10): Promise<DashboardStats['recent_activities']> {
-    try {
-      const response = await apiService.get<{ activities: DashboardStats['recent_activities'] }>(`/dashboard/recent-activities?limit=${limit}`);
-=======
   // Obtener actividades recientes con filtros
   async getRecentActivities(limit: number = 10, type?: string): Promise<DashboardStats['recent_activities']> {
     try {
@@ -281,7 +245,6 @@ class DashboardService {
       }
       
       const response = await apiService.get<{ activities: DashboardStats['recent_activities'] }>(url);
->>>>>>> nutri/main
       
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error al obtener actividades recientes');
@@ -295,27 +258,10 @@ class DashboardService {
     }
   }
 
-<<<<<<< HEAD
-  // Obtener resumen de ingresos (para futura integración de pagos)
-  async getIncomeSummary(period: 'week' | 'month' | 'year' = 'month'): Promise<{
-    total_income: number;
-    total_consultations: number;
-    average_per_consultation: number;
-    period: string;
-  }> {
-    try {
-      const response = await apiService.get<{
-        total_income: number;
-        total_consultations: number;
-        average_per_consultation: number;
-        period: string;
-      }>(`/dashboard/income-summary?period=${period}`);
-=======
   // Obtener resumen de ingresos detallado
   async getIncomeSummary(period: 'week' | 'month' | 'year' = 'month'): Promise<IncomeSummary> {
     try {
       const response = await apiService.get<IncomeSummary>(`/dashboard/income-summary?period=${period}`);
->>>>>>> nutri/main
       
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error al obtener resumen de ingresos');
@@ -328,8 +274,6 @@ class DashboardService {
       throw new Error(message);
     }
   }
-<<<<<<< HEAD
-=======
 
   // Obtener análisis de pacientes
   async getPatientAnalytics(): Promise<PatientAnalytics> {
@@ -522,7 +466,6 @@ class DashboardService {
       throw new Error(message);
     }
   }
->>>>>>> nutri/main
 }
 
 export const dashboardService = new DashboardService(); 

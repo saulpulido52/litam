@@ -6,12 +6,6 @@ import {
     AdminUpdateUserDto,
     AdminVerifyNutritionistDto,
     AdminUpdateUserSubscriptionDto,
-<<<<<<< HEAD
-    AdminUpdateSettingsDto, // Si se añade
-} from '../../modules/admin/admin.dto';
-import { RoleName } from '../../database/entities/role.entity';
-import { SubscriptionStatus } from '../../database/entities/user_subscription.entity'; // Para tipo en query param
-=======
     AdminUpdateSettingsDto,
     AdminCreateUserDto,
     AdminCreateAppointmentDto,
@@ -23,7 +17,6 @@ import { RoleName } from '../../database/entities/role.entity';
 import { SubscriptionStatus } from '../../database/entities/user_subscription.entity'; // Para tipo en query param
 import { PatientNutritionistRelation } from '../../database/entities/patient_nutritionist_relation.entity';
 import { RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
->>>>>>> nutri/main
 
 class AdminController {
     // --- Gestión de Usuarios ---
@@ -194,8 +187,6 @@ class AdminController {
             next(new AppError('Error al actualizar la configuración general.', 500));
         }
     }
-<<<<<<< HEAD
-=======
 
     // --- HERRAMIENTAS DE INTEGRIDAD DE DATOS ---
     
@@ -890,7 +881,6 @@ class AdminController {
         // Por ahora retornamos un buffer simple
         return Buffer.from(content, 'utf-8');
     }
->>>>>>> nutri/main
 }
 
 export default new AdminController();

@@ -4,12 +4,7 @@ import type {
   CreateClinicalRecordDto,
   UpdateClinicalRecordDto,
   ClinicalRecordStats,
-<<<<<<< HEAD
-  TransferResult,
-} from '../types';
-=======
   TransferResult} from '../types';
->>>>>>> nutri/main
 
 class ClinicalRecordsService {
   private baseUrl = '/clinical-records';
@@ -133,12 +128,7 @@ class ClinicalRecordsService {
       {
         patientId,
         fromNutritionistId,
-<<<<<<< HEAD
-        toNutritionistId,
-      }
-=======
         toNutritionistId}
->>>>>>> nutri/main
     );
     
     if (response.status !== 'success' || !response.data) {
@@ -221,12 +211,7 @@ class ClinicalRecordsService {
 
     return {
       isValid: errors.length === 0,
-<<<<<<< HEAD
-      errors,
-    };
-=======
       errors};
->>>>>>> nutri/main
   }
 
   // Calcular IMC si tenemos peso y altura
@@ -253,12 +238,7 @@ class ClinicalRecordsService {
 
     return {
       bmi: Math.round(bmi * 10) / 10,
-<<<<<<< HEAD
-      category,
-    };
-=======
       category};
->>>>>>> nutri/main
   }
 
   // Formatear fecha para mostrar
@@ -266,12 +246,7 @@ class ClinicalRecordsService {
     return new Date(dateString).toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'long',
-<<<<<<< HEAD
-      day: 'numeric',
-    });
-=======
       day: 'numeric'});
->>>>>>> nutri/main
   }
 
   // Formatear fecha y hora
@@ -281,10 +256,6 @@ class ClinicalRecordsService {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-<<<<<<< HEAD
-      minute: '2-digit',
-    });
-=======
       minute: '2-digit'});
   }
 
@@ -470,7 +441,6 @@ class ClinicalRecordsService {
     }
 
     return response.data.interactions;
->>>>>>> nutri/main
   }
 
   // Obtener expedientes más recientes

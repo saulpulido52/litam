@@ -53,8 +53,6 @@ class NutritionistController {
             next(new AppError('Error al crear/actualizar el perfil del nutriólogo.', 500));
         }
     }
-<<<<<<< HEAD
-=======
 
     // --- NUEVOS ENDPOINTS PARA APP MÓVIL ---
 
@@ -181,7 +179,6 @@ class NutritionistController {
         if (consultationFee > 1000) return 'premium';
         return 'standard';
     }
->>>>>>> nutri/main
 }
 
 export default new NutritionistController();

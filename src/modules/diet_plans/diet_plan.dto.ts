@@ -69,27 +69,6 @@ export class WeeklyMealDto {
     notes?: string;
 }
 
-<<<<<<< HEAD
-// DTO para un plan semanal
-export class WeeklyPlanDto {
-    @IsNumber({}, { message: 'El número de semana debe ser un número.' })
-    @Min(1, { message: 'El número de semana debe ser mayor que 0.' })
-    weekNumber!: number;
-
-    @IsDateString({}, { message: 'La fecha de inicio debe ser una fecha válida (YYYY-MM-DD).' })
-    startDate!: string;
-
-    @IsDateString({}, { message: 'La fecha de fin debe ser una fecha válida (YYYY-MM-DD).' })
-    endDate!: string;
-
-    @IsNumber({}, { message: 'El objetivo de calorías diario debe ser un número.' })
-    @Min(0, { message: 'El objetivo de calorías diario no puede ser negativo.' })
-    dailyCaloriesTarget!: number;
-
-    @ValidateNested()
-    @Type(() => Object)
-    dailyMacrosTarget!: {
-=======
 // DTO para un plan semanal - ACEPTA AMBOS FORMATOS (camelCase y snake_case)
 export class WeeklyPlanDto {
     @IsOptional()
@@ -132,18 +111,11 @@ export class WeeklyPlanDto {
     @ValidateNested()
     @Type(() => Object)
     dailyMacrosTarget?: {
->>>>>>> nutri/main
         protein: number;
         carbohydrates: number;
         fats: number;
     };
 
-<<<<<<< HEAD
-    @IsArray({ message: 'Las comidas deben ser un array.' })
-    @ValidateNested({ each: true })
-    @Type(() => WeeklyMealDto)
-    meals!: WeeklyMealDto[];
-=======
     @IsOptional()
     @ValidateNested()
     @Type(() => Object)
@@ -158,7 +130,6 @@ export class WeeklyPlanDto {
     @ValidateNested({ each: true })
     @Type(() => WeeklyMealDto)
     meals?: WeeklyMealDto[];
->>>>>>> nutri/main
 
     @IsOptional()
     @IsString({ message: 'Las notas deben ser una cadena de texto.' })
@@ -242,13 +213,7 @@ export class CreateDietPlanDto {
 
     @IsOptional()
     @IsArray({ message: 'Los planes semanales deben ser un array.' })
-<<<<<<< HEAD
-    @ValidateNested({ each: true })
-    @Type(() => WeeklyPlanDto)
-    weeklyPlans?: WeeklyPlanDto[];
-=======
     weeklyPlans?: any[]; // Deshabilitar validación estricta para permitir ambos formatos
->>>>>>> nutri/main
 
     @IsOptional()
     @IsBoolean({ message: 'generatedByIA debe ser un booleano.' })
@@ -263,8 +228,6 @@ export class CreateDietPlanDto {
     @ValidateNested({ each: true })
     @Type(() => MealDto)
     meals?: MealDto[]; // Mantener para compatibilidad
-<<<<<<< HEAD
-=======
 
     // Nuevos campos que el frontend está enviando
     @IsOptional()
@@ -330,7 +293,6 @@ export class CreateDietPlanDto {
         cheat_days_per_week?: number;
         free_meals_per_week?: number;
     };
->>>>>>> nutri/main
 }
 
 // DTO para actualizar un Plan de Dieta
@@ -367,13 +329,10 @@ export class UpdateDietPlanDto {
     dailyMacrosTarget?: { protein?: number; carbohydrates?: number; fats?: number };
 
     @IsOptional()
-<<<<<<< HEAD
-=======
     @IsBoolean({ message: 'isWeeklyPlan debe ser un booleano.' })
     isWeeklyPlan?: boolean;
 
     @IsOptional()
->>>>>>> nutri/main
     @IsNumber({}, { message: 'El número total de semanas debe ser un número.' })
     @Min(1, { message: 'El número total de semanas debe ser mayor que 0.' })
     @Max(52, { message: 'El número total de semanas no puede exceder 52.' })
@@ -381,13 +340,7 @@ export class UpdateDietPlanDto {
 
     @IsOptional()
     @IsArray({ message: 'Los planes semanales deben ser un array.' })
-<<<<<<< HEAD
-    @ValidateNested({ each: true })
-    @Type(() => WeeklyPlanDto)
-    weeklyPlans?: WeeklyPlanDto[];
-=======
     weeklyPlans?: any[]; // Deshabilitar validación estricta para permitir ambos formatos
->>>>>>> nutri/main
 
     @IsOptional()
     @IsEnum(DietPlanStatus, { message: 'El estado del plan de dieta no es válido.' })
@@ -398,8 +351,6 @@ export class UpdateDietPlanDto {
     @ValidateNested({ each: true })
     @Type(() => MealDto)
     meals?: MealDto[];
-<<<<<<< HEAD
-=======
 
     // === NUEVOS CAMPOS PARA COMPLETAR TABS ===
     @IsOptional()
@@ -448,7 +399,6 @@ export class UpdateDietPlanDto {
         emergencyContacts?: any[];
         emergency_contacts?: any[];
     };
->>>>>>> nutri/main
 }
 
 // DTO para solicitar generación de dieta por IA

@@ -1,9 +1,5 @@
 import apiService from './api';
-<<<<<<< HEAD
-import type { LoginCredentials, AuthResponse, User } from '../types';
-=======
 import type { LoginCredentials, AuthResponse, User} from '../types';
->>>>>>> nutri/main
 
 export class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
@@ -20,12 +16,7 @@ export class AuthService {
     return {
       status: response.status,
       message: response.message,
-<<<<<<< HEAD
-      data: response.data!,
-    };
-=======
       data: response.data!};
->>>>>>> nutri/main
   }
 
   async logout(): Promise<void> {
@@ -40,16 +31,6 @@ export class AuthService {
   }
 
   async getCurrentUser(): Promise<User> {
-<<<<<<< HEAD
-    const response = await apiService.get<User>('/users/me');
-    
-    if (response.status === 'success' && response.data) {
-      localStorage.setItem('user', JSON.stringify(response.data));
-      return response.data;
-    }
-    
-    throw new Error('Failed to get current user');
-=======
     try {
       const response = await apiService.get<User>('/users/me');
       
@@ -69,7 +50,6 @@ export class AuthService {
       }
       throw error;
     }
->>>>>>> nutri/main
   }
 
   getCurrentUserFromStorage(): User | null {

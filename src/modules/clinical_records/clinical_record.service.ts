@@ -2,13 +2,6 @@
 import { Repository, Between } from 'typeorm';
 import { AppDataSource } from '../../database/data-source';
 import { User } from '../../database/entities/user.entity';
-<<<<<<< HEAD
-import { ClinicalRecord } from '../../database/entities/clinical_record.entity';
-import { PatientNutritionistRelation, RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
-import { CreateUpdateClinicalRecordDto } from '../../modules/clinical_records/clinical_record.dto';
-import { AppError } from '../../utils/app.error';
-import { RoleName } from '../../database/entities/role.entity';
-=======
 import { ClinicalRecord, TipoExpediente } from '../../database/entities/clinical_record.entity';
 import { PatientNutritionistRelation, RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
 import { 
@@ -22,7 +15,6 @@ import { RoleName } from '../../database/entities/role.entity';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import * as PDFDocument from 'pdfkit';
->>>>>>> nutri/main
 
 class ClinicalRecordService {
     private userRepository: Repository<User>;
@@ -35,11 +27,6 @@ class ClinicalRecordService {
         this.relationRepository = AppDataSource.getRepository(PatientNutritionistRelation);
     }
 
-<<<<<<< HEAD
-    // --- Métodos para Nutriólogos y Administradores ---
-
-    public async createClinicalRecord(recordDto: CreateUpdateClinicalRecordDto, creatorId: string) {
-=======
     /**
      * 🩺 Validaciones adicionales de datos clínicos
      */
@@ -108,7 +95,6 @@ class ClinicalRecordService {
     public async createClinicalRecord(recordDto: CreateUpdateClinicalRecordDto, creatorId: string) {
         // 🩺 Validaciones adicionales de datos clínicos
         this.validateClinicalData(recordDto);
->>>>>>> nutri/main
         const creator = await this.userRepository.findOne({
             where: { id: creatorId }, // Creator can be Nutritionist or Admin
             relations: ['role'],
@@ -118,11 +104,6 @@ class ClinicalRecordService {
             throw new AppError('Usuario no encontrado o no tiene permisos (Nutriólogo/Admin) para crear registros clínicos.', 403);
         }
 
-<<<<<<< HEAD
-        const patient = await this.userRepository.findOne({
-            where: { id: recordDto.patientId, role: { name: RoleName.PATIENT } },
-        });
-=======
         // Intentar buscar primero por ID de usuario
         let patient = await this.userRepository.findOne({ 
             where: { id: recordDto.patientId, role: { name: RoleName.PATIENT } },
@@ -140,7 +121,6 @@ class ClinicalRecordService {
             }
         }
         
->>>>>>> nutri/main
         if (!patient) {
             throw new AppError('Paciente no encontrado.', 404);
         }
@@ -174,13 +154,8 @@ class ClinicalRecordService {
                 pyrosis: recordDto.currentProblems.pyrosis,
                 vomiting: recordDto.currentProblems.vomiting,
                 colitis: recordDto.currentProblems.colitis,
-<<<<<<< HEAD
-                mouth_mechanics: recordDto.currentProblems.mouthMechanics,
-                other_problems: recordDto.currentProblems.otherProblems,
-=======
                 mouth_mechanics: recordDto.currentProblems.mouth_mechanics,
                 other_problems: recordDto.currentProblems.other_problems,
->>>>>>> nutri/main
                 observations: recordDto.currentProblems.observations,
             }),
             diagnosed_diseases: recordDto.diagnosedDiseases === undefined ? undefined : (recordDto.diagnosedDiseases === null ? null : {
@@ -188,11 +163,7 @@ class ClinicalRecordService {
                 disease_name: recordDto.diagnosedDiseases.diseaseName,
                 since_when: recordDto.diagnosedDiseases.sinceWhen,
                 takes_medication: recordDto.diagnosedDiseases.takesMedication,
-<<<<<<< HEAD
-                medications_list: recordDto.diagnosedDiseases.medicationsList,
-=======
                 medications_list: recordDto.diagnosedDiseases.medications_list,
->>>>>>> nutri/main
                 has_important_disease: recordDto.diagnosedDiseases.hasImportantDisease,
                 important_disease_name: recordDto.diagnosedDiseases.importantDiseaseName,
                 takes_special_treatment: recordDto.diagnosedDiseases.takesSpecialTreatment,
@@ -342,8 +313,6 @@ class ClinicalRecordService {
             menu_details: recordDto.menuDetails,
             evolution_and_follow_up_notes: recordDto.evolutionAndFollowUpNotes,
             graph_url: recordDto.graphUrl,
-<<<<<<< HEAD
-=======
 
             // NUEVOS CAMPOS PARA SISTEMA EVOLUTIVO DE EXPEDIENTES
             tipo_expediente: recordDto.tipoExpediente || TipoExpediente.INICIAL,
@@ -380,7 +349,6 @@ class ClinicalRecordService {
                 nivel_independencia: recordDto.capacidadPaciente.nivel_independencia,
                 observaciones: recordDto.capacidadPaciente.observaciones,
             }),
->>>>>>> nutri/main
         });
 
         await this.clinicalRecordRepository.save(newRecord);
@@ -479,12 +447,7 @@ class ClinicalRecordService {
 
         const { password_hash: nutriHash, ...nutriClean } = record.nutritionist;
         const { password_hash: patientHash, ...patientClean } = record.patient;
-<<<<<<< HEAD
-        // Consider verifying if User.password_hash (select: false) is effective for relations.
-        // If so, this manual removal might be redundant.
-=======
         
->>>>>>> nutri/main
         return { ...record, nutritionist: nutriClean, patient: patientClean };
     }
 
@@ -561,13 +524,8 @@ class ClinicalRecordService {
                 pyrosis: dto.currentProblems.pyrosis,
                 vomiting: dto.currentProblems.vomiting,
                 colitis: dto.currentProblems.colitis,
-<<<<<<< HEAD
-                mouth_mechanics: dto.currentProblems.mouthMechanics,
-                other_problems: dto.currentProblems.otherProblems,
-=======
                 mouth_mechanics: dto.currentProblems.mouth_mechanics,
                 other_problems: dto.currentProblems.other_problems,
->>>>>>> nutri/main
                 observations: dto.currentProblems.observations,
             };
         }
@@ -577,11 +535,7 @@ class ClinicalRecordService {
                 disease_name: dto.diagnosedDiseases.diseaseName,
                 since_when: dto.diagnosedDiseases.sinceWhen,
                 takes_medication: dto.diagnosedDiseases.takesMedication,
-<<<<<<< HEAD
-                medications_list: dto.diagnosedDiseases.medicationsList,
-=======
                 medications_list: dto.diagnosedDiseases.medications_list,
->>>>>>> nutri/main
                 has_important_disease: dto.diagnosedDiseases.hasImportantDisease,
                 important_disease_name: dto.diagnosedDiseases.importantDiseaseName,
                 takes_special_treatment: dto.diagnosedDiseases.takesSpecialTreatment,
@@ -947,8 +901,6 @@ class ClinicalRecordService {
 
         return count;
     }
-<<<<<<< HEAD
-=======
 
     /**
      * 📄 UPLOAD DE LABORATORIO EN PDF
@@ -2342,7 +2294,6 @@ class ClinicalRecordService {
             throw new Error('Error al obtener estadísticas de seguimiento');
         }
     }
->>>>>>> nutri/main
 }
 
 export default new ClinicalRecordService();

@@ -1,10 +1,4 @@
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
-import { useParams, useNavigate } from 'react-router-dom';
-import ClinicalRecordsList from '../components/ClinicalRecords/ClinicalRecordsList';
-import ClinicalRecordForm from '../components/ClinicalRecords/ClinicalRecordForm';
-import ClinicalRecordDetail from '../components/ClinicalRecords/ClinicalRecordDetail';
-=======
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Nav, Tab, Alert, Badge } from 'react-bootstrap';
 import ClinicalRecordsList from '../components/ClinicalRecords/ClinicalRecordsList';
@@ -13,14 +7,10 @@ import ClinicalRecordDetail from '../components/ClinicalRecords/ClinicalRecordDe
 import FormularioSeguimiento from '../components/ClinicalRecords/FormularioSeguimiento';
 
 import AnalisisPaciente from '../components/ClinicalRecords/AnalisisPaciente';
->>>>>>> nutri/main
 import { patientsService } from '../services/patientsService';
 import { clinicalRecordsService } from '../services/clinicalRecordsService';
 import type { ClinicalRecord, CreateClinicalRecordDto, UpdateClinicalRecordDto } from '../types';
 
-<<<<<<< HEAD
-type ViewMode = 'list' | 'create' | 'edit' | 'view';
-=======
 // React Icons
 import { 
   MdArrowBack,
@@ -32,15 +22,11 @@ import { FaUsers, FaUserCircle, FaChartLine, FaRobot, FaStethoscope, FaTachomete
 import { HiOutlineDocumentText } from 'react-icons/hi';
 
 type ViewMode = 'list' | 'create' | 'edit' | 'view' | 'seguimiento-form' | 'dashboard';
->>>>>>> nutri/main
 
 const ClinicalRecordsPage: React.FC = () => {
   const { patientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
-<<<<<<< HEAD
-=======
   const [searchParams] = useSearchParams();
->>>>>>> nutri/main
   
   // Estados locales
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -51,8 +37,6 @@ const ClinicalRecordsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState<number>(0);
   const [hasRedirected, setHasRedirected] = useState<boolean>(false);
-<<<<<<< HEAD
-=======
   const [activeTab, setActiveTab] = useState<string>('expedientes');
 
   // Leer parámetros de query para abrir pestaña específica
@@ -62,7 +46,6 @@ const ClinicalRecordsPage: React.FC = () => {
       setActiveTab(tab);
     }
   }, [searchParams]);
->>>>>>> nutri/main
 
   // Validar que el patientId sea válido
   useEffect(() => {
@@ -195,21 +178,6 @@ const ClinicalRecordsPage: React.FC = () => {
   // Mostrar pantalla de error si el paciente es inválido
   if (patientError) {
     return (
-<<<<<<< HEAD
-      <div className="container mt-5">
-        <div className="row justify-content-center">
-          <div className="col-md-8">
-            <div className="card border-danger">
-              <div className="card-header bg-danger text-white">
-                <h4 className="mb-0">
-                  <i className="fas fa-exclamation-triangle me-2"></i>
-                  Paciente No Encontrado
-                </h4>
-              </div>
-              <div className="card-body text-center">
-                <div className="mb-4">
-                  <i className="fas fa-user-times text-danger" style={{ fontSize: '4rem' }}></i>
-=======
       <Container fluid className="py-4">
         <Row className="justify-content-center">
           <Col md={8} lg={6}>
@@ -223,37 +191,11 @@ const ClinicalRecordsPage: React.FC = () => {
               <Card.Body className="text-center">
                 <div className="mb-4">
                   <FaUserCircle className="text-danger" size={48} />
->>>>>>> nutri/main
                 </div>
                 
                 <h5 className="text-danger mb-3">Error: {patientError}</h5>
                 
                 <p className="text-muted mb-4">
-<<<<<<< HEAD
-                  El paciente con ID <code>{patientId}</code> no existe en el sistema o ya no está disponible.
-                </p>
-
-                <div className="alert alert-info">
-                  <strong>Redirigiendo automáticamente en {redirectCountdown} segundos...</strong>
-                </div>
-
-                <div className="d-grid gap-2 d-md-flex justify-content-md-center">
-                  <button 
-                    className="btn btn-primary me-md-2" 
-                    onClick={handleManualRedirect}
-                  >
-                    <i className="fas fa-users me-2"></i>
-                    Ir a Lista de Pacientes
-                  </button>
-                  
-                  <button 
-                    className="btn btn-outline-secondary" 
-                    onClick={handleClearCacheAndReload}
-                  >
-                    <i className="fas fa-sync-alt me-2"></i>
-                    Limpiar Cache y Recargar
-                  </button>
-=======
                   El paciente con ID <code>{patientId}</code>
                   no existe en el sistema o ya no está disponible.
                 </p>
@@ -279,7 +221,6 @@ const ClinicalRecordsPage: React.FC = () => {
                     <MdClose className="me-2" />
                     Limpiar Cache y Recargar
                   </Button>
->>>>>>> nutri/main
                 </div>
 
                 <div className="mt-4">
@@ -287,37 +228,17 @@ const ClinicalRecordsPage: React.FC = () => {
                     Si el problema persiste, contacta al administrador del sistema.
                   </small>
                 </div>
-<<<<<<< HEAD
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-=======
               </Card.Body>
             </Card>
           </Col>
         </Row>
       </Container>
->>>>>>> nutri/main
     );
   }
 
   // Mostrar loading mientras se valida el paciente
   if (!patientData && !patientError) {
     return (
-<<<<<<< HEAD
-      <div className="container mt-5">
-        <div className="row justify-content-center">
-          <div className="col-md-8">
-            <div className="card">
-              <div className="card-body text-center">
-                <div className="spinner-border text-primary mb-3" role="status">
-                  <span className="visually-hidden">Cargando...</span>
-                </div>
-                <h5>Validando paciente...</h5>
-                <p className="text-muted">Verificando que el paciente existe en el sistema</p>
-=======
       <div className="author-layout">
         <div className="author-dashboard">
           <div className="author-dashboard-content">
@@ -333,7 +254,6 @@ const ClinicalRecordsPage: React.FC = () => {
                     <p className="text-muted">Verificando que el paciente existe en el sistema</p>
                   </div>
                 </div>
->>>>>>> nutri/main
               </div>
             </div>
           </div>
@@ -391,98 +311,6 @@ const ClinicalRecordsPage: React.FC = () => {
     setViewMode('edit');
   };
 
-<<<<<<< HEAD
-  return (
-    <div className="container-fluid">
-      <div className="row">
-        <div className="col-12">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <h2 className="mb-1">Expedientes Clínicos</h2>
-              {patientData && (
-                <p className="text-muted mb-0">
-                  Paciente: <strong>{patientData.first_name} {patientData.last_name}</strong>
-                </p>
-              )}
-            </div>
-            
-            <div className="d-flex gap-2">
-              {viewMode === 'list' && (
-                <button
-                  className="btn btn-primary"
-                  onClick={() => setViewMode('create')}
-                >
-                  <i className="fas fa-plus me-2"></i>
-                  Nuevo Expediente
-                </button>
-              )}
-              
-              {viewMode !== 'list' && (
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setViewMode('list');
-                    setSelectedRecord(null);
-                  }}
-                >
-                  <i className="fas fa-arrow-left me-2"></i>
-                  Volver
-                </button>
-              )}
-            </div>
-          </div>
-
-          {viewMode === 'list' && (
-            <ClinicalRecordsList
-              records={records}
-              loading={loading}
-              onViewRecord={handleViewRecord}
-              onEditRecord={handleEditRecord}
-              onDeleteRecord={(record) => handleDeleteRecord(record.id)}
-              canEdit={true}
-              canDelete={true}
-            />
-          )}
-
-          {viewMode === 'create' && (
-            <ClinicalRecordForm
-              patientId={patientId!}
-              patientName={`${patientData?.first_name || ''} ${patientData?.last_name || ''}`}
-              onSubmit={handleCreateRecord}
-              onCancel={() => setViewMode('list')}
-            />
-          )}
-
-          {viewMode === 'edit' && selectedRecord && (
-            <ClinicalRecordForm
-              record={selectedRecord}
-              patientId={patientId!}
-              patientName={`${patientData?.first_name || ''} ${patientData?.last_name || ''}`}
-              onSubmit={(data) => handleUpdateRecord(selectedRecord.id, data)}
-              onCancel={() => {
-                setViewMode('list');
-                setSelectedRecord(null);
-              }}
-            />
-          )}
-
-          {viewMode === 'view' && selectedRecord && (
-            <ClinicalRecordDetail
-              record={selectedRecord}
-              onEdit={() => handleEditRecord(selectedRecord)}
-              onDelete={() => handleDeleteRecord(selectedRecord.id)}
-              onClose={() => {
-                setViewMode('list');
-                setSelectedRecord(null);
-              }}
-              canEdit={true}
-              canDelete={true}
-            />
-          )}
-        </div>
-      </div>
-    </div>
-=======
   const handleCreateSeguimiento = async () => {
     // Función comentada temporalmente
   };
@@ -795,7 +623,6 @@ const ClinicalRecordsPage: React.FC = () => {
         </Row>
       )}
     </Container>
->>>>>>> nutri/main
   );
 };
 
