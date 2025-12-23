@@ -31,6 +31,44 @@ const upload = multer({
 // Todas las rutas de registros clínicos requieren autenticación
 router.use(protect);
 
+// ============== NUEVAS RUTAS PARA SISTEMA EVOLUTIVO DE EXPEDIENTES (ESPECÍFICAS PRIMERO) ==============
+
+// 📊 Obtener estadísticas de seguimiento para nutriólogo
+router.get(
+    '/stats/seguimiento',
+    authorize(RoleName.NUTRITIONIST),
+    clinicalRecordController.getEstadisticasSeguimiento
+);
+
+// 🤖 Detectar tipo de expediente automáticamente
+router.post(
+    '/detect-type',
+    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN),
+    clinicalRecordController.detectarTipoExpediente
+);
+
+// 📋 Crear expediente con detección automática de tipo
+router.post(
+    '/evolutivo',
+    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN),
+    clinicalRecordController.createClinicalRecordEvolutivo
+);
+
+// 📊 Obtener datos previos del paciente para expediente de seguimiento
+router.get(
+    '/patient/:patientId/previous-data',
+    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN, RoleName.PATIENT),
+    clinicalRecordController.obtenerDatosPreviosPaciente
+);
+
+// 📈 Generar comparativo automático entre dos expedientes
+router.get(
+    '/compare/:expedienteActualId/:expedienteBaseId',
+    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN),
+    clinicalRecordController.generarComparativo
+);
+
+
 // --- Rutas para Nutriólogos y Administradores (Crear, Actualizar, Eliminar) ---
 router.route('/')
     .post(
@@ -149,39 +187,6 @@ router.delete(
 
 // ============== NUEVAS RUTAS PARA SISTEMA EVOLUTIVO DE EXPEDIENTES ==============
 
-// 🤖 Detectar tipo de expediente automáticamente
-router.post(
-    '/detect-type',
-    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN),
-    clinicalRecordController.detectarTipoExpediente
-);
 
-// 📊 Obtener datos previos del paciente para expediente de seguimiento
-router.get(
-    '/patient/:patientId/previous-data',
-    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN, RoleName.PATIENT),
-    clinicalRecordController.obtenerDatosPreviosPaciente
-);
-
-// 📈 Generar comparativo automático entre dos expedientes
-router.get(
-    '/compare/:expedienteActualId/:expedienteBaseId',
-    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN),
-    clinicalRecordController.generarComparativo
-);
-
-// 📋 Crear expediente con detección automática de tipo
-router.post(
-    '/evolutivo',
-    authorize(RoleName.NUTRITIONIST, RoleName.ADMIN),
-    clinicalRecordController.createClinicalRecordEvolutivo
-);
-
-// 📊 Obtener estadísticas de seguimiento para nutriólogo
-router.get(
-    '/stats/seguimiento',
-    authorize(RoleName.NUTRITIONIST),
-    clinicalRecordController.getEstadisticasSeguimiento
-);
 
 export default router;
