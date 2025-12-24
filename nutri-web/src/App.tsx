@@ -36,7 +36,7 @@ const NutritionistSettingsPage = React.lazy(() => import('./pages/NutritionistSe
 const ClinicalRecordsPage = React.lazy(() => import('./pages/ClinicalRecordsPage'));
 const SeguimientosPage = React.lazy(() => import('./pages/SeguimientosPage'));
 const ExpedientesInteligentesPage = React.lazy(() => import('./pages/ExpedientesInteligentesPage'));
-const GrowthChartsPage = React.lazy(() => import('./components/GrowthCharts/GrowthChartsPage'));
+const GrowthChartsPage = React.lazy(() => import('./pages/GrowthChartsPage'));
 const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage'));
 
 // **LAZY LOADING PARA PÁGINAS DE ADMIN**
@@ -76,7 +76,7 @@ const App: React.FC = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
-        
+
         {/* **RUTAS DE ADMINISTRACIÓN - LAZY LOADING** */}
         <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
           <Route index element={
@@ -140,12 +140,12 @@ const App: React.FC = () => {
             </Suspense>
           } />
         </Route>
-        
+
         {/* **RUTAS PROTEGIDAS - LAZY LOADING** */}
         <Route path="/" element={<MainLayout />}>
           {/* Dashboard crítico - carga inmediata */}
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-          
+
           {/* Páginas no críticas - lazy loading */}
           <Route path="/appointments" element={
             <ProtectedRoute>
@@ -260,7 +260,7 @@ const App: React.FC = () => {
             </ProtectedRoute>
           } />
         </Route>
-        
+
         {/* Ruta por defecto que redirige al home */}
         <Route path="*" element={<HomePage />} />
       </Routes>

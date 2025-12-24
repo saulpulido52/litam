@@ -11,6 +11,7 @@ const router = Router();
  * @params {
  *   fileName: string
  * }
+ * @note Esta ruta DEBE estar ANTES de router.use(protect) para permitir descargas sin auth
  */
 router.get(
     '/download/:fileName',
