@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Alert, Badge, Spinner} from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Alert, Badge, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { apiService } from '../services/api';
 
 
 interface ServerStatus {
@@ -22,23 +23,17 @@ const HomePage: React.FC = () => {
     });
 
     try {
-      // Intentar hacer una llamada simple al backend
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-      const response = await fetch(`${apiUrl}/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'}});
+      // Usar apiService que tiene el fallback robusto para producción
+      // Eliminada la llamada directa a fetch que podía usar localhost incorrectamente
+      await apiService.get('/health');
 
-      if (response.ok) {
-        setServerStatus({
-          status: 'online',
-          message: 'Servidor conectado correctamente',
-          timestamp: new Date().toLocaleTimeString()
-        });
-      } else {
-        throw new Error(`Error ${response.status}`);
-      }
+      setServerStatus({
+        status: 'online',
+        message: 'Servidor conectado correctamente',
+        timestamp: new Date().toLocaleTimeString()
+      });
     } catch (error) {
+      console.error('Error checking server connection:', error);
       setServerStatus({
         status: 'offline',
         message: 'No se pudo conectar al servidor',
@@ -97,8 +92,8 @@ const HomePage: React.FC = () => {
                   )}
                 </div>
               </div>
-              <Button 
-                variant="outline-secondary" 
+              <Button
+                variant="outline-secondary"
                 size="sm"
                 onClick={checkServerConnection}
                 disabled={serverStatus.status === 'checking'}
@@ -125,7 +120,7 @@ const HomePage: React.FC = () => {
                   Panel Profesional Nutri
                 </h2>
                 <p className="text-muted fs-5 mb-4">
-                  Plataforma web profesional para nutriólogos y administradores. 
+                  Plataforma web profesional para nutriólogos y administradores.
                   Gestión avanzada de pacientes, citas, planes nutricionales y reportes del sistema.
                 </p>
 
@@ -147,7 +142,7 @@ const HomePage: React.FC = () => {
                     </div>
                   </Col>
                 </Row>
-                
+
                 <div className="alert alert-info border-info">
                   <h6 className="mb-2">📱 <strong>Aplicaciones Móviles Disponibles:</strong></h6>
                   <p className="mb-1">🩺 <strong>App Nutriólogos:</strong> iOS y Android para atención móvil</p>
@@ -156,35 +151,35 @@ const HomePage: React.FC = () => {
 
                 <div className="d-grid gap-2 d-md-flex justify-content-md-center">
                   <Link to="/login">
-                    <Button 
-                      variant="primary" 
-                      size="lg" 
+                    <Button
+                      variant="primary"
+                      size="lg"
                       className="nutri-btn me-md-2"
                     >
                       🔐 Iniciar Sesión
                     </Button>
                   </Link>
                   <Link to="/dashboard">
-                    <Button 
-                      variant="outline-success" 
-                      size="lg" 
+                    <Button
+                      variant="outline-success"
+                      size="lg"
                       className="nutri-btn me-md-2"
                     >
                       👨‍⚕️ Panel Nutriólogo
                     </Button>
                   </Link>
                   <Link to="/admin/login">
-                    <Button 
-                      variant="outline-warning" 
-                      size="lg" 
+                    <Button
+                      variant="outline-warning"
+                      size="lg"
                       className="nutri-btn me-md-2"
                     >
                       ⚙️ Panel Admin
                     </Button>
                   </Link>
-                  <Button 
-                    variant="outline-secondary" 
-                    size="lg" 
+                  <Button
+                    variant="outline-secondary"
+                    size="lg"
                     className="nutri-btn"
                     onClick={() => {
                       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';

@@ -1,10 +1,21 @@
 import axios from 'axios';
 
 // Configurar la instancia de axios
+// Configurar la instancia de axios
+const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) return envUrl;
+  return import.meta.env.MODE === 'production'
+    ? 'https://litam.onrender.com/api'
+    : 'http://localhost:4000/api';
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000/api',
+  baseURL: getBaseUrl(),
   headers: {
-    'Content-Type': 'application/json'}});
+    'Content-Type': 'application/json'
+  }
+});
 
 // Interceptor para agregar el token de autenticación
 api.interceptors.request.use(
@@ -109,7 +120,7 @@ class MessagingService {
     try {
       console.log('🔍 [MessagingService] Obteniendo conversaciones...');
       const response = await api.get<ApiResponse<{ conversations: Conversation[] }>>('/messages/conversations');
-      
+
       if (response.data.status === 'success') {
         // El backend devuelve data: { conversations }
         const conversations = response.data.data?.conversations || [];
@@ -140,7 +151,7 @@ class MessagingService {
       const response = await api.post<ApiResponse<{ conversation: Conversation }>>('/messages/conversations', {
         participantId
       });
-      
+
       if (response.data.status === 'success') {
         console.log('✅ [MessagingService] Conversación obtenida:', response.data.data.conversation.id);
         return response.data.data.conversation;
@@ -159,17 +170,17 @@ class MessagingService {
    * Obtener mensajes de una conversación
    */
   async getConversationMessages(
-    conversationId: string, 
-    page: number = 1, 
+    conversationId: string,
+    page: number = 1,
     limit: number = 50
   ): Promise<{ messages: Message[]; total: number; totalPages: number }> {
     try {
       console.log(`🔍 [MessagingService] Obteniendo mensajes de conversación ${conversationId} (página ${page})`);
-      
+
       const response = await api.get<PaginatedResponse<Message>>(`/messages/conversations/${conversationId}/messages`, {
         params: { page, limit }
       });
-      
+
       if (response.data.status === 'success') {
         const { items, total, totalPages } = response.data.data;
         console.log(`✅ [MessagingService] ${items.length} mensajes obtenidos de ${total} total`);
@@ -194,11 +205,11 @@ class MessagingService {
   async sendMessage(conversationId: string, content: string): Promise<Message> {
     try {
       console.log(`📤 [MessagingService] Enviando mensaje a conversación ${conversationId}`);
-      
+
       const response = await api.post<ApiResponse<{ message: Message }>>(`/messages/conversations/${conversationId}/messages`, {
         content
       });
-      
+
       if (response.data.status === 'success') {
         console.log('✅ [MessagingService] Mensaje enviado exitosamente');
         return response.data.data.message;
@@ -217,12 +228,12 @@ class MessagingService {
   async markMessageAsRead(messageId: string): Promise<void> {
     try {
       console.log(`👁️ [MessagingService] Marcando mensaje ${messageId} como leído`);
-      
+
       const response = await api.patch<ApiResponse<void>>(`/messages/${messageId}/read`, {
         messageId,
         isRead: true
       });
-      
+
       if (response.data.status === 'success') {
         console.log('✅ [MessagingService] Mensaje marcado como leído');
       } else {

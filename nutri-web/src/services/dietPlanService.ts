@@ -47,13 +47,17 @@ class DietPlanService {
   // 📋 Descargar PDF del planificador de comidas usando Axios directamente
   static async downloadMealPlannerPDF(planId: string): Promise<Blob> {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+      const envUrl = import.meta.env.VITE_API_URL;
+      const apiUrl = envUrl || (import.meta.env.MODE === 'production'
+        ? 'https://litam.onrender.com/api'
+        : 'http://localhost:4000/api');
       const token = localStorage.getItem('access_token');
       const response = await axios.get(
         `${apiUrl}/diet-plans/${planId}/generate-meal-planner-pdf`,
         {
           responseType: 'blob',
-          headers: token ? { Authorization: `Bearer ${token}` } : {}}
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        }
       );
       return response.data;
     } catch (error) {

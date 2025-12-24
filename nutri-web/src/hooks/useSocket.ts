@@ -92,8 +92,15 @@ export const useSocket = (): UseSocketReturn => {
 
     console.log('🔌 [useSocket] Iniciando conexión Socket.IO...');
 
-    // Obtener URL del backend
-    const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:4000';
+    // Obtener URL del backend con fallback robusto
+    const getBackendUrl = () => {
+      const envUrl = import.meta.env.VITE_API_URL;
+      if (envUrl) return envUrl.replace('/api', '');
+      return import.meta.env.MODE === 'production'
+        ? 'https://litam.onrender.com'
+        : 'http://localhost:4000';
+    };
+    const backendUrl = getBackendUrl();
     const token = localStorage.getItem('access_token');
 
     // Configurar socket

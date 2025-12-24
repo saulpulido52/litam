@@ -76,7 +76,7 @@ export const useClinicalRecordsPreload = () => {
       '/src/components/ClinicalRecords/ClinicalRecordsList.tsx',
       '/src/components/ClinicalRecords/ClinicalRecordForm.tsx'
     ],
-    
+
     // Precargar iconos críticos
     images: [
       // Bootstrap icons que se usan en la interfaz
@@ -86,9 +86,14 @@ export const useClinicalRecordsPreload = () => {
   // 📡 Prefetch de datos comunes
   useEffect(() => {
     // DNS prefetch para APIs externas
+    const envUrl = import.meta.env.VITE_API_URL;
+    const apiUrl = envUrl || (import.meta.env.MODE === 'production'
+      ? 'https://litam.onrender.com'
+      : 'http://localhost:4000');
+
     const dnsPrefetch = document.createElement('link');
     dnsPrefetch.rel = 'dns-prefetch';
-    dnsPrefetch.href = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+    dnsPrefetch.href = apiUrl;
     document.head.appendChild(dnsPrefetch);
 
     return () => dnsPrefetch.remove();
@@ -98,8 +103,13 @@ export const useClinicalRecordsPreload = () => {
 // 🌐 Resource hints adicionales para performance
 export const addResourceHints = () => {
   // 🔗 Preconectar a dominios críticos
+  const envUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = envUrl || (import.meta.env.MODE === 'production'
+    ? 'https://litam.onrender.com'
+    : 'http://localhost:4000');
+
   const preconnectDomains = [
-    import.meta.env.VITE_API_URL || 'http://localhost:4000',
+    apiUrl,
     'https://cdn.jsdelivr.net', // Para iconos de React Icons
   ];
 

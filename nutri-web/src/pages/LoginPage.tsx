@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Button, Form, Alert, Spinner} from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { apiService } from '../services/api';
 
 
 interface LoginState {
@@ -35,32 +36,24 @@ const LoginPage: React.FC = () => {
     setLoginState(prev => ({ ...prev, error: null, success: null }));
 
     try {
-      // Verificar que el backend esté funcionando
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-      const healthResponse = await fetch(`${apiUrl}/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'}});
+      // Verificar que el backend esté funcionando usando apiService
+      await apiService.get('/health');
 
-      if (healthResponse.ok) {
-        setLoginState(prev => ({
-          ...prev,
-          success: '✅ Conexión con el backend establecida correctamente. Puedes proceder al login.'
-        }));
-      } else {
-        throw new Error('Backend no responde');
-      }
+      setLoginState(prev => ({
+        ...prev,
+        success: '✅ Conexión con el backend establecida correctamente. Puedes proceder al login.'
+      }));
     } catch (error) {
       setLoginState(prev => ({
         ...prev,
-        error: '❌ No se pudo conectar al backend. Verifica que esté funcionando en el puerto 4000.'
+        error: '❌ No se pudo conectar al backend. Verifica que esté funcionando.'
       }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!loginState.email || !loginState.password) {
       setLoginState(prev => ({
         ...prev,
@@ -86,7 +79,7 @@ const LoginPage: React.FC = () => {
           ...prev,
           success: `✅ Login exitoso! Redirigiendo...`
         }));
-        
+
         // Redirigir al dashboard después del login exitoso
         setTimeout(() => {
           console.log('🔐 LoginPage: Redirecting to dashboard...');

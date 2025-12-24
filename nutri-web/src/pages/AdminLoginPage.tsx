@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge} from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { apiService } from '../services/api';
 
 // React Icons
-import { 
+import {
   MdAdminPanelSettings,
   MdSecurity,
   MdLock,
@@ -18,13 +19,15 @@ import {
   MdInfo,
   MdShield,
   MdVerified,
-  MdDashboard} from 'react-icons/md';
-import { 
-  FaUsers, 
+  MdDashboard
+} from 'react-icons/md';
+import {
+  FaUsers,
   FaShieldAlt,
   FaDatabase,
   FaServer,
-  FaNetworkWired} from 'react-icons/fa';
+  FaNetworkWired
+} from 'react-icons/fa';
 
 interface AdminLoginState {
   email: string;
@@ -73,24 +76,19 @@ const AdminLoginPage: React.FC = () => {
     setLoginState(prev => ({ ...prev, error: null, success: null }));
 
     try {
-      // Verificar backend (público)
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-      const backendResponse = await fetch(`${apiUrl}/health`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }});
+      // Verificar backend (público) usando apiService
+      await apiService.get('/health');
 
       const systemStatus = {
-        backend: backendResponse.ok,
+        backend: true,
         database: null, // No se consulta antes de login
-        api: backendResponse.ok // Solo backend
+        api: true // Solo backend
       };
 
       setLoginState(prev => ({
         ...prev,
         systemStatus,
-        success: systemStatus.api 
-          ? '✅ Backend funcionando correctamente' 
-          : '⚠️ El backend no está disponible'
+        success: '✅ Backend funcionando correctamente'
       }));
 
     } catch (error) {
@@ -104,7 +102,7 @@ const AdminLoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!loginState.email || !loginState.password) {
       setLoginState(prev => ({
         ...prev,
@@ -128,13 +126,13 @@ const AdminLoginPage: React.FC = () => {
         // Obtener el usuario actualizado del hook useAuth
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         console.log('🔐 AdminLoginPage: Current user after login:', currentUser);
-        
+
         if (currentUser?.role?.name === 'admin') {
           setLoginState(prev => ({
             ...prev,
             success: `✅ Login exitoso! Accediendo al panel de administración...`
           }));
-          
+
           // Redirección inmediata para admin
           setTimeout(() => {
             console.log('🔐 AdminLoginPage: Redirecting admin to /admin');
@@ -145,7 +143,7 @@ const AdminLoginPage: React.FC = () => {
             ...prev,
             success: `✅ Login exitoso! Redirigiendo al dashboard...`
           }));
-          
+
           // Redirección para no-admin
           setTimeout(() => {
             console.log('🔐 AdminLoginPage: Redirecting non-admin to /dashboard');
@@ -218,8 +216,8 @@ const AdminLoginPage: React.FC = () => {
                         <MdHealthAndSafety className="me-2 text-info" />
                         Estado del Sistema
                       </h6>
-                      <Button 
-                        variant="outline-info" 
+                      <Button
+                        variant="outline-info"
                         size="sm"
                         onClick={checkSystemStatus}
                         disabled={isLoading}
@@ -228,7 +226,7 @@ const AdminLoginPage: React.FC = () => {
                         Verificar
                       </Button>
                     </div>
-                    
+
                     {loginState.systemStatus && (
                       <div className="d-flex gap-2 mb-3">
                         <Badge bg={loginState.systemStatus.backend ? 'success' : 'danger'}>
@@ -248,8 +246,8 @@ const AdminLoginPage: React.FC = () => {
 
                     {!loginState.systemStatus && (
                       <div className="text-center py-3">
-                        <Button 
-                          variant="outline-primary" 
+                        <Button
+                          variant="outline-primary"
                           size="sm"
                           onClick={checkSystemStatus}
                         >
@@ -267,17 +265,17 @@ const AdminLoginPage: React.FC = () => {
                       Acceso Rápido
                     </h6>
                     <div className="d-grid gap-2">
-                      <Button 
-                        variant="success" 
-                        size="sm" 
+                      <Button
+                        variant="success"
+                        size="sm"
                         onClick={fillAdminCredentials}
                       >
                         <MdVerified className="me-2" />
                         Admin Sistema (Principal)
                       </Button>
-                      <Button 
-                        variant="outline-secondary" 
-                        size="sm" 
+                      <Button
+                        variant="outline-secondary"
+                        size="sm"
                         onClick={fillSuperAdminCredentials}
                       >
                         <MdShield className="me-2" />

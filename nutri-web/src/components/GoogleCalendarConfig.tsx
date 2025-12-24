@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Alert, Badge, Form, Spinner } from 'react-bootstrap';
 import { Calendar, RefreshCw, Settings, AlertCircle } from 'lucide-react';
+import { apiService } from '../services/api';
 
 interface GoogleCalendarConfigProps {
     onConfigChange?: (config: any) => void;
@@ -22,8 +23,8 @@ interface SyncStatus {
     authProvider: string;
 }
 
-const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({ 
-    className = '' 
+const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({
+    className = ''
 }) => {
     const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
     const [calendars, setCalendars] = useState<CalendarInfo[]>([]);
@@ -39,19 +40,9 @@ const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({
 
     const loadSyncStatus = async () => {
         try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-    const response = await fetch(`${apiUrl}/auth/google/status`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`}});
-
-            if (response.ok) {
-                const data = await response.json();
-                setSyncStatus(data.data);
+            const response = await apiService.get<any>('/auth/google/status');
+            if (response.data) {
+                setSyncStatus(response.data);
             }
         } catch (error) {
             console.error('Error loading sync status:', error);
@@ -60,19 +51,9 @@ const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({
 
     const loadCalendars = async () => {
         try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-    const response = await fetch(`${apiUrl}/calendar/google/calendars`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`}});
-
-            if (response.ok) {
-                const data = await response.json();
-                setCalendars(data.data.calendars);
+            const response = await apiService.get<any>('/calendar/google/calendars');
+            if (response.data?.calendars) {
+                setCalendars(response.data.calendars);
             }
         } catch (error) {
             console.error('Error loading calendars:', error);
@@ -90,28 +71,12 @@ const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({
         setSuccess(null);
 
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('No hay token de autenticación');
-            }
-
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-    const response = await fetch(`${apiUrl}/calendar/google/primary-calendar`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`},
-                body: JSON.stringify({ calendarId: selectedCalendar })});
-
-            if (!response.ok) {
-                throw new Error('Error al configurar calendario principal');
-            }
-
+            await apiService.post('/calendar/google/primary-calendar', { calendarId: selectedCalendar });
             setSuccess('Calendario principal configurado exitosamente');
             loadSyncStatus();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error setting primary calendar:', error);
-            setError(error instanceof Error ? error.message : 'Error desconocido');
+            setError(error.response?.data?.message || error.message || 'Error desconocido');
         } finally {
             setIsLoading(false);
         }
@@ -123,28 +88,12 @@ const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({
         setSuccess(null);
 
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('No hay token de autenticación');
-            }
-
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-    const response = await fetch(`${apiUrl}/calendar/google/toggle-sync`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`},
-                body: JSON.stringify({ enabled })});
-
-            if (!response.ok) {
-                throw new Error('Error al cambiar estado de sincronización');
-            }
-
+            await apiService.post('/calendar/google/toggle-sync', { enabled });
             setSuccess(`Sincronización ${enabled ? 'habilitada' : 'deshabilitada'} exitosamente`);
             loadSyncStatus();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error toggling sync:', error);
-            setError(error instanceof Error ? error.message : 'Error desconocido');
+            setError(error.response?.data?.message || error.message || 'Error desconocido');
         } finally {
             setIsLoading(false);
         }
@@ -156,28 +105,13 @@ const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({
         setSuccess(null);
 
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('No hay token de autenticación');
-            }
-
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-    const response = await fetch(`${apiUrl}/calendar/google/sync-to-calendar`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`}});
-
-            if (!response.ok) {
-                throw new Error('Error al sincronizar citas con Google Calendar');
-            }
-
-            const data = await response.json();
-            setSuccess(`Sincronización completada: ${data.data.created} creados, ${data.data.updated} actualizados`);
+            const response = await apiService.post<any>('/calendar/google/sync-to-calendar', {});
+            const data = response.data;
+            setSuccess(`Sincronización completada: ${data.created} creados, ${data.updated} actualizados`);
             loadSyncStatus();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error syncing to Google Calendar:', error);
-            setError(error instanceof Error ? error.message : 'Error desconocido');
+            setError(error.response?.data?.message || error.message || 'Error desconocido');
         } finally {
             setIsLoading(false);
         }
@@ -189,28 +123,13 @@ const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({
         setSuccess(null);
 
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('No hay token de autenticación');
-            }
-
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-    const response = await fetch(`${apiUrl}/calendar/google/sync-from-calendar`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`}});
-
-            if (!response.ok) {
-                throw new Error('Error al sincronizar desde Google Calendar');
-            }
-
-            const data = await response.json();
-            setSuccess(`Sincronización completada: ${data.data.imported} importados, ${data.data.updated} actualizados`);
+            const response = await apiService.post<any>('/calendar/google/sync-from-calendar', {});
+            const data = response.data;
+            setSuccess(`Sincronización completada: ${data.imported} importados, ${data.updated} actualizados`);
             loadSyncStatus();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error syncing from Google Calendar:', error);
-            setError(error instanceof Error ? error.message : 'Error desconocido');
+            setError(error.response?.data?.message || error.message || 'Error desconocido');
         } finally {
             setIsLoading(false);
         }
@@ -252,7 +171,7 @@ const GoogleCalendarConfig: React.FC<GoogleCalendarConfigProps> = ({
                 <div className="mb-4">
                     <h6>Estado de Conexión</h6>
                     <div className="d-flex align-items-center mb-2">
-                        <Badge 
+                        <Badge
                             bg={syncStatus.isConnected ? 'success' : 'secondary'}
                             className="me-2"
                         >
