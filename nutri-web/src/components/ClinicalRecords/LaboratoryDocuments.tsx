@@ -18,7 +18,8 @@ import {
   Download,
   Calendar,
   FileDown,
-  FileText
+  FileText,
+  Eye
 } from 'lucide-react';
 import { clinicalRecordsService } from '../../services/clinicalRecordsService';
 
@@ -57,6 +58,13 @@ const LaboratoryDocuments: React.FC<LaboratoryDocumentsProps> = ({
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Helper function to get full file URL from backend
+  const getFullFileUrl = (relativeUrl: string): string => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://litam.onrender.com/api';
+    const baseUrl = apiUrl.replace('/api', '');
+    return `${baseUrl}${relativeUrl}`;
+  };
 
   // Limpiar mensajes después de un tiempo
   useEffect(() => {
@@ -298,15 +306,22 @@ const LaboratoryDocuments: React.FC<LaboratoryDocumentsProps> = ({
                     </Col>
                     <Col md={4} className="text-end">
                       <Button
+                        variant="outline-info"
+                        size="sm"
+                        onClick={() => window.open(getFullFileUrl(doc.file_url), '_blank')}
+                        className="me-2"
+                        title="Ver PDF"
+                      >
+                        <Eye size={14} />
+                      </Button>
+                      <Button
                         variant="outline-primary"
                         size="sm"
                         onClick={() => {
                           // Create a temporary link to download the file
                           const link = document.createElement('a');
-                          link.href = doc.file_url;
+                          link.href = getFullFileUrl(doc.file_url);
                           link.download = doc.original_name;
-                          link.target = '_blank';
-                          link.rel = 'noopener noreferrer';
                           document.body.appendChild(link);
                           link.click();
                           document.body.removeChild(link);
