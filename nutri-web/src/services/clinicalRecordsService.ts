@@ -4,7 +4,8 @@ import type {
   CreateClinicalRecordDto,
   UpdateClinicalRecordDto,
   ClinicalRecordStats,
-  TransferResult} from '../types';
+  TransferResult
+} from '../types';
 
 class ClinicalRecordsService {
   private baseUrl = '/clinical-records';
@@ -17,11 +18,11 @@ class ClinicalRecordsService {
       this.baseUrl,
       data
     );
-    
+
     if (response.status !== 'success' || !response.data?.record) {
       throw new Error(response.message || 'Error al crear el expediente clínico');
     }
-    
+
     return response.data.record;
   }
 
@@ -40,11 +41,11 @@ class ClinicalRecordsService {
     const response = await apiService.get<{ records: ClinicalRecord[] }>(
       `${this.baseUrl}/patient/${patientId}?${params.toString()}`
     );
-    
+
     if (response.status !== 'success' || !response.data?.records) {
       throw new Error(response.message || 'Error al obtener los expedientes');
     }
-    
+
     return response.data.records;
   }
 
@@ -53,11 +54,11 @@ class ClinicalRecordsService {
     const response = await apiService.get<{ record: ClinicalRecord }>(
       `${this.baseUrl}/${recordId}`
     );
-    
+
     if (response.status !== 'success' || !response.data?.record) {
       throw new Error(response.message || 'Error al obtener el expediente');
     }
-    
+
     return response.data.record;
   }
 
@@ -70,11 +71,11 @@ class ClinicalRecordsService {
       `${this.baseUrl}/${recordId}`,
       data
     );
-    
+
     if (response.status !== 'success' || !response.data?.record) {
       throw new Error(response.message || 'Error al actualizar el expediente');
     }
-    
+
     return response.data.record;
   }
 
@@ -83,7 +84,7 @@ class ClinicalRecordsService {
     const response = await apiService.delete(
       `${this.baseUrl}/${recordId}`
     );
-    
+
     if (response.status !== 'success') {
       throw new Error(response.message || 'Error al eliminar el expediente');
     }
@@ -96,11 +97,11 @@ class ClinicalRecordsService {
     const response = await apiService.get<{ stats: ClinicalRecordStats }>(
       `${this.baseUrl}/patient/${patientId}/stats`
     );
-    
+
     if (response.status !== 'success' || !response.data?.stats) {
       throw new Error(response.message || 'Error al obtener estadísticas');
     }
-    
+
     return response.data.stats;
   }
 
@@ -109,11 +110,11 @@ class ClinicalRecordsService {
     const response = await apiService.get<{ count: number }>(
       `${this.baseUrl}/patient/${patientId}/count`
     );
-    
+
     if (response.status !== 'success' || response.data?.count === undefined) {
       throw new Error(response.message || 'Error al obtener el conteo de expedientes');
     }
-    
+
     return response.data.count;
   }
 
@@ -128,13 +129,14 @@ class ClinicalRecordsService {
       {
         patientId,
         fromNutritionistId,
-        toNutritionistId}
+        toNutritionistId
+      }
     );
-    
+
     if (response.status !== 'success' || !response.data) {
       throw new Error(response.message || 'Error al transferir expedientes');
     }
-    
+
     return response.data;
   }
 
@@ -147,11 +149,11 @@ class ClinicalRecordsService {
       message: string;
       deleted_count: number;
     }>(`${this.baseUrl}/patient/${patientId}/all`);
-    
+
     if (response.status !== 'success' || !response.data) {
       throw new Error(response.message || 'Error al eliminar expedientes');
     }
-    
+
     return response.data;
   }
 
@@ -186,7 +188,7 @@ class ClinicalRecordsService {
       if (height < 0.5 || height > 3) {
         errors.push('La altura debe estar entre 0.5 y 3 metros (ejemplo: 1.70 para 170cm)');
       }
-      
+
       // Additional validation: warn if height seems to be in centimeters
       if (height > 50 && height < 300) {
         errors.push('La altura parece estar en centímetros. Por favor ingresa la altura en metros (ejemplo: 1.70 en lugar de 170)');
@@ -198,12 +200,12 @@ class ClinicalRecordsService {
       if (systolic <= diastolic) {
         errors.push('La presión sistólica debe ser mayor que la diastólica');
       }
-      
+
       // Additional blood pressure validations
       if (systolic < 50 || systolic > 300) {
         errors.push('La presión sistólica debe estar entre 50 y 300 mmHg');
       }
-      
+
       if (diastolic < 30 || diastolic > 200) {
         errors.push('La presión diastólica debe estar entre 30 y 200 mmHg');
       }
@@ -211,7 +213,8 @@ class ClinicalRecordsService {
 
     return {
       isValid: errors.length === 0,
-      errors};
+      errors
+    };
   }
 
   // Calcular IMC si tenemos peso y altura
@@ -238,7 +241,8 @@ class ClinicalRecordsService {
 
     return {
       bmi: Math.round(bmi * 10) / 10,
-      category};
+      category
+    };
   }
 
   // Formatear fecha para mostrar
@@ -246,7 +250,8 @@ class ClinicalRecordsService {
     return new Date(dateString).toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'});
+      day: 'numeric'
+    });
   }
 
   // Formatear fecha y hora
@@ -256,7 +261,8 @@ class ClinicalRecordsService {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'});
+      minute: '2-digit'
+    });
   }
 
   // === DOCUMENTOS DE LABORATORIO ===
@@ -264,31 +270,23 @@ class ClinicalRecordsService {
   // Generar PDF del expediente
   public async generateExpedientePDF(recordId: string): Promise<Blob> {
     try {
-      const response = await fetch(`/api/clinical-records/${recordId}/generate-pdf`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${apiService.getToken()}`,
-          'Content-Type': 'application/json'
-        }
+      // Use apiService with responseType: 'blob' to get PDF binary
+      const response = await apiService.get(`/clinical-records/${recordId}/generate-pdf`, {
+        responseType: 'blob'
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Error al generar el PDF' }));
-        throw new Error(errorData.message || 'Error al generar el PDF');
-      }
-
-      return await response.blob();
+      return response.data;
     } catch (error: any) {
       console.error('Error in generateExpedientePDF:', error);
-      throw new Error(error.message || 'Error al generar el PDF del expediente');
+      throw new Error(error.response?.data?.message || error.message || 'Error al generar el PDF del expediente');
     }
   }
 
   // Upload documento de laboratorio
   public async uploadLaboratoryDocument(
-    recordId: string, 
-    file: File, 
-    description?: string, 
+    recordId: string,
+    file: File,
+    description?: string,
     labDate?: string
   ): Promise<any> {
     try {
@@ -301,45 +299,27 @@ class ClinicalRecordsService {
         formData.append('labDate', new Date(labDate).toISOString());
       }
 
-      const response = await fetch(`/api/clinical-records/${recordId}/laboratory-documents`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiService.getToken()}`
-        },
-        body: formData
-      });
+      // Use apiService.uploadFile to ensure correct backend routing
+      const response = await apiService.uploadFile(
+        `/clinical-records/${recordId}/laboratory-documents`,
+        formData
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al subir el documento');
-      }
-
-      return await response.json();
+      return response.data;
     } catch (error: any) {
       console.error('Error in uploadLaboratoryDocument:', error);
-      throw new Error(error.message || 'Error al subir el documento de laboratorio');
+      throw new Error(error.response?.data?.message || error.message || 'Error al subir el documento de laboratorio');
     }
   }
 
   // Eliminar documento de laboratorio
   public async deleteLaboratoryDocument(recordId: string, documentId: string): Promise<any> {
     try {
-      const response = await fetch(`/api/clinical-records/${recordId}/laboratory-documents/${documentId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${apiService.getToken()}`
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al eliminar el documento');
-      }
-
-      return await response.json();
+      const response = await apiService.delete(`/clinical-records/${recordId}/laboratory-documents/${documentId}`);
+      return response.data;
     } catch (error: any) {
       console.error('Error in deleteLaboratoryDocument:', error);
-      throw new Error(error.message || 'Error al eliminar el documento de laboratorio');
+      throw new Error(error.response?.data?.message || error.message || 'Error al eliminar el documento de laboratorio');
     }
   }
 

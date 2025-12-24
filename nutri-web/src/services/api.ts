@@ -175,16 +175,17 @@ class ApiService {
   }
 
   // File upload
-  async uploadFile<T>(url: string, file: File, fieldName = 'file'): Promise<ApiResponse<T>> {
-    const formData = new FormData();
-    formData.append(fieldName, file);
+  public async uploadFile<T>(url: string, fileOrFormData: File | FormData): Promise<AxiosResponse<ApiResponse<T>>> {
+    const formData = fileOrFormData instanceof FormData ? fileOrFormData : new FormData();
+    if (fileOrFormData instanceof File) {
+      formData.append('file', fileOrFormData);
+    }
 
-    const response: AxiosResponse<ApiResponse<T>> = await this.api.post(url, formData, {
+    return this.api.post(url, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+        'Content-Type': 'multipart/form-data',
+      },
     });
-    return response.data;
   }
 }
 
