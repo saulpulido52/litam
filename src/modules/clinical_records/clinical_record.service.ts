@@ -4,7 +4,7 @@ import { AppDataSource } from '../../database/data-source';
 import { User } from '../../database/entities/user.entity';
 import { ClinicalRecord, TipoExpediente } from '../../database/entities/clinical_record.entity';
 import { PatientNutritionistRelation, RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
-import { 
+import {
     CreateUpdateClinicalRecordDto,
     DeteccionExpedienteDto,
     RespuestaDeteccionExpedienteDto,
@@ -34,7 +34,7 @@ class ClinicalRecordService {
         // Validar presión arterial
         if (recordDto.bloodPressure && recordDto.bloodPressure.knowsBp) {
             const { systolic, diastolic } = recordDto.bloodPressure;
-            
+
             if (systolic && diastolic) {
                 if (diastolic >= systolic) {
                     throw new AppError(
@@ -43,7 +43,7 @@ class ClinicalRecordService {
                         'INVALID_BLOOD_PRESSURE'
                     );
                 }
-                
+
                 // Validaciones de rangos anormales
                 if (systolic > 200 || diastolic > 120) {
                     throw new AppError(
@@ -52,7 +52,7 @@ class ClinicalRecordService {
                         'ABNORMAL_BLOOD_PRESSURE'
                     );
                 }
-                
+
                 if (systolic < 60 || diastolic < 40) {
                     throw new AppError(
                         `Valores de presión arterial anormalmente bajos (${systolic}/${diastolic}). Por favor verifica los datos.`,
@@ -66,7 +66,7 @@ class ClinicalRecordService {
         // Validar mediciones antropométricas
         if (recordDto.anthropometricMeasurements) {
             const { currentWeightKg, heightM, waistCircCm, hipCircCm } = recordDto.anthropometricMeasurements;
-            
+
             // Validar IMC extremo
             if (currentWeightKg && heightM) {
                 const bmi = currentWeightKg / (heightM * heightM);
@@ -78,7 +78,7 @@ class ClinicalRecordService {
                     );
                 }
             }
-            
+
             // Validar relación cintura-cadera
             if (waistCircCm && hipCircCm && waistCircCm > hipCircCm * 1.5) {
                 throw new AppError(
@@ -105,11 +105,11 @@ class ClinicalRecordService {
         }
 
         // Intentar buscar primero por ID de usuario
-        let patient = await this.userRepository.findOne({ 
+        let patient = await this.userRepository.findOne({
             where: { id: recordDto.patientId, role: { name: RoleName.PATIENT } },
             relations: ['role']
         });
-        
+
         // Si no se encuentra por ID de usuario, buscar por ID de perfil de paciente
         if (!patient) {
             const patientProfile = await this.userRepository.findOne({
@@ -120,7 +120,7 @@ class ClinicalRecordService {
                 patient = patientProfile;
             }
         }
-        
+
         if (!patient) {
             throw new AppError('Paciente no encontrado.', 404);
         }
@@ -142,7 +142,7 @@ class ClinicalRecordService {
         const newRecord = this.clinicalRecordRepository.create({
             record_date: new Date(recordDto.recordDate), // Ensure snake_case for entity property
             patient: patient,
-            nutritionist: creator, 
+            nutritionist: creator,
             expedient_number: recordDto.expedientNumber,
             consultation_reason: recordDto.consultationReason,
             current_problems: recordDto.currentProblems === undefined ? undefined : (recordDto.currentProblems === null ? null : {
@@ -269,13 +269,13 @@ class ClinicalRecordService {
                 weight_variation_percent: recordDto.anthropometricEvaluations.weightVariationPercent,
                 habitual_weight_variation_percent: recordDto.anthropometricEvaluations.habitualWeightVariationPercent,
                 min_max_imc_weight_kg: (recordDto.anthropometricEvaluations.minMaxImcWeightKg &&
-                                        typeof recordDto.anthropometricEvaluations.minMaxImcWeightKg.min === 'number' &&
-                                        typeof recordDto.anthropometricEvaluations.minMaxImcWeightKg.max === 'number')
-                                       ? { 
-                                           min: recordDto.anthropometricEvaluations.minMaxImcWeightKg.min,
-                                           max: recordDto.anthropometricEvaluations.minMaxImcWeightKg.max
-                                         }
-                                       : undefined,
+                    typeof recordDto.anthropometricEvaluations.minMaxImcWeightKg.min === 'number' &&
+                    typeof recordDto.anthropometricEvaluations.minMaxImcWeightKg.max === 'number')
+                    ? {
+                        min: recordDto.anthropometricEvaluations.minMaxImcWeightKg.min,
+                        max: recordDto.anthropometricEvaluations.minMaxImcWeightKg.max
+                    }
+                    : undefined,
                 adjusted_ideal_weight_kg: recordDto.anthropometricEvaluations.adjustedIdealWeightKg,
                 waist_hip_ratio_cm: recordDto.anthropometricEvaluations.waistHipRatioCm,
                 arm_muscle_area_cm2: recordDto.anthropometricEvaluations.armMuscleAreaCm2,
@@ -358,7 +358,7 @@ class ClinicalRecordService {
     public async getPatientClinicalRecords(patientId: string, callerId: string, callerRole: RoleName, startDate?: string, endDate?: string) {
         // Intentar buscar primero por ID de usuario
         let patient = await this.userRepository.findOne({ where: { id: patientId } });
-        
+
         // Si no se encuentra por ID de usuario, buscar por ID de perfil de paciente
         if (!patient) {
             const patientProfile = await this.userRepository.findOne({
@@ -371,7 +371,7 @@ class ClinicalRecordService {
                 patientId = patient.id;
             }
         }
-        
+
         if (!patient) {
             throw new AppError('Paciente no encontrado.', 404);
         }
@@ -447,7 +447,7 @@ class ClinicalRecordService {
 
         const { password_hash: nutriHash, ...nutriClean } = record.nutritionist;
         const { password_hash: patientHash, ...patientClean } = record.patient;
-        
+
         return { ...record, nutritionist: nutriClean, patient: patientClean };
     }
 
@@ -512,7 +512,7 @@ class ClinicalRecordService {
 
         if (dto.recordDate !== undefined) entityUpdate.record_date = new Date(dto.recordDate);
         if (dto.expedientNumber !== undefined) entityUpdate.expedient_number = dto.expedientNumber;
-        if (dto.consultationReason !== undefined) entityUpdate.consultation_reason = dto.consultationReason;       
+        if (dto.consultationReason !== undefined) entityUpdate.consultation_reason = dto.consultationReason;
 
         if (dto.currentProblems !== undefined) {
             entityUpdate.current_problems = dto.currentProblems === null ? null : {
@@ -661,13 +661,13 @@ class ClinicalRecordService {
                 weight_variation_percent: dto.anthropometricEvaluations.weightVariationPercent,
                 habitual_weight_variation_percent: dto.anthropometricEvaluations.habitualWeightVariationPercent,
                 min_max_imc_weight_kg: (dto.anthropometricEvaluations.minMaxImcWeightKg &&
-                                        typeof dto.anthropometricEvaluations.minMaxImcWeightKg.min === 'number' &&
-                                        typeof dto.anthropometricEvaluations.minMaxImcWeightKg.max === 'number')
-                                       ? { 
-                                           min: dto.anthropometricEvaluations.minMaxImcWeightKg.min,
-                                           max: dto.anthropometricEvaluations.minMaxImcWeightKg.max
-                                         }
-                                       : undefined,
+                    typeof dto.anthropometricEvaluations.minMaxImcWeightKg.min === 'number' &&
+                    typeof dto.anthropometricEvaluations.minMaxImcWeightKg.max === 'number')
+                    ? {
+                        min: dto.anthropometricEvaluations.minMaxImcWeightKg.min,
+                        max: dto.anthropometricEvaluations.minMaxImcWeightKg.max
+                    }
+                    : undefined,
                 adjusted_ideal_weight_kg: dto.anthropometricEvaluations.adjustedIdealWeightKg,
                 waist_hip_ratio_cm: dto.anthropometricEvaluations.waistHipRatioCm,
                 arm_muscle_area_cm2: dto.anthropometricEvaluations.armMuscleAreaCm2,
@@ -710,7 +710,7 @@ class ClinicalRecordService {
         if (dto.menuDetails !== undefined) entityUpdate.menu_details = dto.menuDetails;
         if (dto.evolutionAndFollowUpNotes !== undefined) entityUpdate.evolution_and_follow_up_notes = dto.evolutionAndFollowUpNotes;
         if (dto.graphUrl !== undefined) entityUpdate.graph_url = dto.graphUrl;
-        
+
         return entityUpdate;
     }
 
@@ -746,10 +746,10 @@ class ClinicalRecordService {
         // Transferir cada registro al nuevo nutriólogo
         for (const record of recordsToTransfer) {
             record.nutritionist = newNutritionist;
-            
+
             // Agregar nota de transferencia en las notas de evolución
             const transferNote = `\n\n--- TRANSFERENCIA ---\nExpediente transferido del Dr./Dra. ${record.nutritionist.first_name} ${record.nutritionist.last_name} al Dr./Dra. ${newNutritionist.first_name} ${newNutritionist.last_name} el ${new Date().toLocaleString('es-MX')}\n`;
-            
+
             if (record.evolution_and_follow_up_notes) {
                 record.evolution_and_follow_up_notes += transferNote;
             } else {
@@ -906,7 +906,7 @@ class ClinicalRecordService {
      * 📄 UPLOAD DE LABORATORIO EN PDF
      */
     public async uploadLaboratoryDocument(
-        recordId: string, 
+        recordId: string,
         file: Express.Multer.File,
         uploaderId: string,
         uploaderRole: RoleName,
@@ -916,19 +916,19 @@ class ClinicalRecordService {
         try {
             // Verificar permisos
             const record = await this.getClinicalRecordById(recordId, uploaderId, uploaderRole);
-            
+
             // Crear directorio si no existe
             const uploadsDir = path.join(process.cwd(), 'uploads', 'laboratory-documents');
             await fs.mkdir(uploadsDir, { recursive: true });
-            
+
             // Generar nombre único para el archivo
             const fileExtension = path.extname(file.originalname);
             const uniqueFilename = `lab_${recordId}_${Date.now()}${fileExtension}`;
             const filePath = path.join(uploadsDir, uniqueFilename);
-            
+
             // Guardar archivo
             await fs.writeFile(filePath, file.buffer);
-            
+
             // Crear metadata del documento
             const documentMetadata = {
                 id: require('crypto').randomUUID(),
@@ -942,11 +942,11 @@ class ClinicalRecordService {
                 description: description || '',
                 lab_date: labDate ? new Date(labDate) : undefined
             };
-            
+
             // Actualizar expediente con el nuevo documento
             const currentDocs = record.laboratory_documents || [];
             currentDocs.push(documentMetadata);
-            
+
             await this.clinicalRecordRepository.update(recordId, {
                 laboratory_documents: currentDocs,
                 document_metadata: {
@@ -954,13 +954,13 @@ class ClinicalRecordService {
                     total_attachments: currentDocs.length
                 }
             });
-            
+
             return {
                 status: 'success',
                 message: 'Documento de laboratorio subido exitosamente',
                 document: documentMetadata
             };
-            
+
         } catch (error) {
             console.error('Error uploading laboratory document:', error);
             throw new AppError('Error al subir el documento de laboratorio', 500);
@@ -974,21 +974,21 @@ class ClinicalRecordService {
         try {
             // Obtener expediente completo
             const record = await this.getClinicalRecordById(recordId, requesterId, requesterRole);
-            
+
             // Importar PDFKit dinámicamente
             const PDFDocument = require('pdfkit');
             const fs = require('fs').promises;
             const path = require('path');
-            
+
             // Crear directorio para PDFs generados
             const pdfDir = path.join(process.cwd(), 'generated-pdfs');
             await fs.mkdir(pdfDir, { recursive: true });
-            
+
             const pdfFilename = `expediente_${recordId}_${Date.now()}.pdf`;
             const pdfPath = path.join(pdfDir, pdfFilename);
-            
+
             // Crear documento PDF con márgenes optimizados
-            const doc = new PDFDocument({ 
+            const doc = new PDFDocument({
                 margin: 40,  // Reducido de 60 a 40 para más espacio útil
                 size: 'A4',
                 info: {
@@ -999,81 +999,81 @@ class ClinicalRecordService {
                 },
                 bufferPages: true // CLAVE: Permite calcular número total de páginas correctamente
             });
-            
+
             const stream = require('fs').createWriteStream(pdfPath);
             doc.pipe(stream);
-            
+
             // HEADER PRINCIPAL Y CONTENIDO COMPACTO
             this.addPDFCompactHeader(doc, record);
-            
+
             // 1. DATOS GENERALES DEL PACIENTE (directamente después del header)
             this.addPDFPatientInfo(doc, record);
-            
+
             // 2. MOTIVO DE CONSULTA
             if (record.consultation_reason) {
                 this.addPDFSection(doc, '2. MOTIVO DE CONSULTA', {
                     'Descripción': record.consultation_reason
                 }, false);
             }
-            
+
             // 3. PROBLEMAS ACTUALES
             if (record.current_problems) {
                 this.addPDFCurrentProblems(doc, record.current_problems);
             }
-            
+
             // 4. ENFERMEDADES DIAGNOSTICADAS
             if (record.diagnosed_diseases) {
                 this.addPDFDiagnosedDiseases(doc, record.diagnosed_diseases);
             }
-            
+
             // 5. ANTECEDENTES FAMILIARES - Siempre agregar para mantener numeración
             this.addPDFFamilyHistory(doc, record.family_medical_history || {});
-            
+
             // 6. ESTILO DE VIDA
             this.addPDFLifestyle(doc, record);
-            
+
             // 7. MEDICIONES ANTROPOMÉTRICAS
             if (record.anthropometric_measurements) {
                 this.addPDFAnthropometricMeasurements(doc, record.anthropometric_measurements, record.anthropometric_evaluations);
             }
-            
+
             // 8. HISTORIA DIETÉTICA
             if (record.dietary_history) {
                 this.addPDFDietaryHistory(doc, record.dietary_history, record.food_group_consumption_frequency, record.water_consumption_liters);
             }
-            
+
             // 9. PRESIÓN ARTERIAL
             if (record.blood_pressure) {
                 this.addPDFBloodPressure(doc, record.blood_pressure);
             }
-            
+
             // 10. DIAGNÓSTICO Y PLAN NUTRICIONAL
             this.addPDFNutritionalDiagnosisAndPlan(doc, record);
-            
+
             // 11. EVOLUCIÓN Y SEGUIMIENTO
             if (record.evolution_and_follow_up_notes) {
                 this.addPDFSection(doc, '11. EVOLUCIÓN Y SEGUIMIENTO', {
                     'Notas': record.evolution_and_follow_up_notes
                 }, true);
             }
-            
+
             // 12. DOCUMENTOS ADJUNTOS
             if (record.laboratory_documents && record.laboratory_documents.length > 0) {
                 this.addPDFLaboratoryDocuments(doc, record.laboratory_documents);
             }
-            
+
             // 🎨 FONDO GENERAL APLICADO EN TIEMPO REAL
-            
+
             // FOOTER EN TODAS LAS PÁGINAS
             this.addPDFFooter(doc, record);
-            
+
             doc.end();
-            
+
             // Esperar a que el PDF se complete
             await new Promise((resolve) => {
                 stream.on('finish', resolve);
             });
-            
+
             // Actualizar metadata del expediente
             await this.clinicalRecordRepository.update(recordId, {
                 document_metadata: {
@@ -1082,7 +1082,7 @@ class ClinicalRecordService {
                     pdf_version: (record.document_metadata?.pdf_version || 0) + 1
                 }
             });
-            
+
             return {
                 status: 'success',
                 message: 'PDF del expediente generado exitosamente',
@@ -1090,7 +1090,7 @@ class ClinicalRecordService {
                 pdf_url: `/generated-pdfs/${pdfFilename}`,
                 filename: pdfFilename
             };
-            
+
         } catch (error) {
             console.error('Error generating PDF:', error);
             throw new AppError('Error al generar el PDF del expediente', 500);
@@ -1103,28 +1103,38 @@ class ClinicalRecordService {
     public async deleteLaboratoryDocument(recordId: string, documentId: string, deleterId: string, deleterRole: RoleName) {
         try {
             const record = await this.getClinicalRecordById(recordId, deleterId, deleterRole);
-            
+
             if (!record.laboratory_documents) {
                 throw new AppError('No hay documentos para eliminar', 404);
             }
-            
+
             const documentIndex = record.laboratory_documents.findIndex(doc => doc.id === documentId);
             if (documentIndex === -1) {
                 throw new AppError('Documento no encontrado', 404);
             }
-            
+
             const documentToDelete = record.laboratory_documents[documentIndex];
-            
-            // Eliminar archivo físico
-            try {
-                await fs.unlink(documentToDelete.file_path);
-            } catch (error) {
-                console.warn('No se pudo eliminar el archivo físico:', error);
+
+            // Eliminar archivo físico (si existe)
+            // En Render, los archivos pueden no existir debido al almacenamiento efímero
+            if (documentToDelete.file_path) {
+                try {
+                    await fs.unlink(documentToDelete.file_path);
+                    console.log(`✅ Archivo físico eliminado: ${documentToDelete.file_path}`);
+                } catch (error: any) {
+                    // No fallar si el archivo no existe (código ENOENT)
+                    if (error.code === 'ENOENT') {
+                        console.warn(`⚠️ Archivo físico no encontrado (ya fue eliminado o no existe): ${documentToDelete.file_path}`);
+                    } else {
+                        console.error('❌ Error al eliminar archivo físico:', error);
+                    }
+                    // Continuar con la eliminación de la base de datos de todos modos
+                }
             }
-            
+
             // Remover del array
             record.laboratory_documents.splice(documentIndex, 1);
-            
+
             // Actualizar en base de datos
             await this.clinicalRecordRepository.update(recordId, {
                 laboratory_documents: record.laboratory_documents,
@@ -1133,14 +1143,17 @@ class ClinicalRecordService {
                     total_attachments: record.laboratory_documents.length
                 }
             });
-            
+
             return {
                 status: 'success',
                 message: 'Documento eliminado exitosamente'
             };
-            
+
         } catch (error) {
             console.error('Error deleting laboratory document:', error);
+            if (error instanceof AppError) {
+                throw error;
+            }
             throw new AppError('Error al eliminar el documento', 500);
         }
     }
@@ -1152,9 +1165,9 @@ class ClinicalRecordService {
     private addPDFSection(doc: any, title: string, data: Record<string, string | number | null | undefined>, longText: boolean = false) {
         // Filtrar SOLO entradas realmente vacías
         const filteredData = Object.fromEntries(
-            Object.entries(data).filter(([_, value]) => 
-                value !== null && 
-                value !== undefined && 
+            Object.entries(data).filter(([_, value]) =>
+                value !== null &&
+                value !== undefined &&
                 String(value).trim() !== ''
             )
         );
@@ -1169,79 +1182,79 @@ class ClinicalRecordService {
             // 🎨 APLICAR FONDO A LA NUEVA PÁGINA (sin header)
             this.addPDFPageBackgroundToNewPage(doc);
         }
-        
+
         const sectionStartY = doc.y;
-        
+
         // SOLO línea lateral azul como decoración (sin fondo individual)
         doc.rect(40, sectionStartY - 5, 4, 25)
-           .fillAndStroke('#1e40af', '#1e40af');
-        
+            .fillAndStroke('#1e40af', '#1e40af');
+
         // Título de la sección
         doc.fontSize(12).font('Helvetica-Bold')
-           .fillColor('#1e40af')
-           .text(`>> ${title}`, 55, sectionStartY + 8);
-        
+            .fillColor('#1e40af')
+            .text(`>> ${title}`, 55, sectionStartY + 8);
+
         doc.moveDown(1.0);
-        
+
         // RENDERIZAR CONTENIDO
         Object.entries(filteredData).forEach(([key, value], index) => {
             const valueStr = String(value);
-            
+
             // Control de salto de página
             const itemEstimatedHeight = longText && valueStr.length > 100 ? 50 : 30;
-            
+
             if (doc.y + itemEstimatedHeight > doc.page.height - 80) {
                 doc.addPage();
                 // 🎨 APLICAR FONDO A LA NUEVA PÁGINA (sin header)
                 this.addPDFPageBackgroundToNewPage(doc);
                 doc.moveDown(0.5);
             }
-            
+
             if (longText && valueStr.length > 100) {
                 // Campo de texto largo
                 doc.fontSize(10).font('Helvetica-Bold')
-                   .fillColor('#374151')
-                   .text(`• ${key}:`, 55, doc.y);
-                
+                    .fillColor('#374151')
+                    .text(`• ${key}:`, 55, doc.y);
+
                 doc.moveDown(0.5);
-                
+
                 doc.fontSize(9).font('Helvetica')
-                   .fillColor('#4b5563')
-                   .text(valueStr, 65, doc.y, { 
-                       width: 460, 
-                       align: 'justify',
-                       lineGap: 2
-                   });
-                
+                    .fillColor('#4b5563')
+                    .text(valueStr, 65, doc.y, {
+                        width: 460,
+                        align: 'justify',
+                        lineGap: 2
+                    });
+
                 doc.moveDown(0.8);
             } else {
                 // Campo normal
                 const labelWidth = 155;
-                
+
                 doc.fontSize(10).font('Helvetica-Bold')
-                   .fillColor('#374151')
-                   .text(`• ${key}:`, 55, doc.y, { width: labelWidth });
-                
+                    .fillColor('#374151')
+                    .text(`• ${key}:`, 55, doc.y, { width: labelWidth });
+
                 const valueX = 55 + labelWidth + 10;
                 const currentY = doc.y;
                 doc.fontSize(10).font('Helvetica')
-                   .fillColor('#4b5563')
-                   .text(valueStr, valueX, currentY, { width: 345 });
-                
+                    .fillColor('#4b5563')
+                    .text(valueStr, valueX, currentY, { width: 345 });
+
                 doc.moveDown(0.8);
             }
-            
+
             // Separador visual entre elementos
             if (index < Object.keys(filteredData).length - 1) {
                 doc.moveTo(65, doc.y + 1)
-                   .lineTo(525, doc.y + 1)
-                   .strokeColor('#e5e7eb')
-                   .lineWidth(0.3)
-                   .stroke();
+                    .lineTo(525, doc.y + 1)
+                    .strokeColor('#e5e7eb')
+                    .lineWidth(0.3)
+                    .stroke();
                 doc.moveDown(0.4);
             }
         });
-        
+
         doc.moveDown(1.0);
     }
 
@@ -1251,60 +1264,60 @@ class ClinicalRecordService {
     private addPDFCompactHeader(doc: any, record: any) {
         // 🎨 APLICAR FONDO GENERAL DE LA PRIMERA PÁGINA
         this.addPDFPageBackgroundToCurrentPage(doc);
-        
+
         // Fondo degradado para el header
         doc.rect(40, 40, 515, 80)
-           .fillAndStroke('#1e3a8a', '#1e40af');
-        
+            .fillAndStroke('#1e3a8a', '#1e40af');
+
         // Logo/Icono simulado (círculo con cruz médica)
         doc.circle(70, 70, 12)
-           .fillAndStroke('#ffffff', '#ffffff');
+            .fillAndStroke('#ffffff', '#ffffff');
         doc.moveTo(65, 70).lineTo(75, 70).strokeColor('#1e3a8a').lineWidth(2).stroke();
         doc.moveTo(70, 65).lineTo(70, 75).strokeColor('#1e3a8a').lineWidth(2).stroke();
-        
+
         // Título principal
         doc.fontSize(18).font('Helvetica-Bold')
-           .fillColor('#ffffff')
-           .text('NUTRIWEB', 95, 55);
-        
+            .fillColor('#ffffff')
+            .text('NUTRIWEB', 95, 55);
+
         doc.fontSize(12).font('Helvetica')
-           .fillColor('#e0e7ff')
-           .text('Sistema de Gestión Nutricional', 95, 75);
-        
+            .fillColor('#e0e7ff')
+            .text('Sistema de Gestión Nutricional', 95, 75);
+
         // Título del documento
         doc.fontSize(14).font('Helvetica-Bold')
-           .fillColor('#ffffff')
-           .text('EXPEDIENTE CLÍNICO NUTRICIONAL', 95, 95);
-        
+            .fillColor('#ffffff')
+            .text('EXPEDIENTE CLÍNICO NUTRICIONAL', 95, 95);
+
         // Información del expediente en caja con fondo
         const infoY = 140;
         doc.rect(40, infoY, 515, 60)
-           .fillAndStroke('#f8fafc', '#e2e8f0');
-        
+            .fillAndStroke('#f8fafc', '#e2e8f0');
+
         // Información en dos columnas con etiquetas
         doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af');
-        
+
         // Columna izquierda
         doc.text('» PACIENTE', 50, infoY + 10);
         doc.fontSize(10).font('Helvetica').fillColor('#374151')
-           .text(`${record.patient.first_name} ${record.patient.last_name}`, 50, infoY + 25);
-        
+            .text(`${record.patient.first_name} ${record.patient.last_name}`, 50, infoY + 25);
+
         doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af')
-           .text('» NUTRIOLOGO', 50, infoY + 40);
+            .text('» NUTRIOLOGO', 50, infoY + 40);
         doc.fontSize(10).font('Helvetica').fillColor('#374151')
-           .text(`Dr./Dra. ${record.nutritionist.first_name} ${record.nutritionist.last_name}`, 50, infoY + 55);
-        
+            .text(`Dr./Dra. ${record.nutritionist.first_name} ${record.nutritionist.last_name}`, 50, infoY + 55);
+
         // Columna derecha
         doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af')
-           .text('» FECHA', 350, infoY + 10);
+            .text('» FECHA', 350, infoY + 10);
         doc.fontSize(10).font('Helvetica').fillColor('#374151')
-           .text(new Date(record.record_date).toLocaleDateString('es-ES'), 350, infoY + 25);
-        
+            .text(new Date(record.record_date).toLocaleDateString('es-ES'), 350, infoY + 25);
+
         doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af')
-           .text('» NO. EXPEDIENTE', 350, infoY + 40);
+            .text('» NO. EXPEDIENTE', 350, infoY + 40);
         doc.fontSize(10).font('Helvetica').fillColor('#374151')
-           .text(record.expedient_number || 'N/A', 350, infoY + 55);
-        
+            .text(record.expedient_number || 'N/A', 350, infoY + 55);
+
         doc.y = infoY + 80;
         doc.moveDown(0.5);
     }
@@ -1322,7 +1335,7 @@ class ClinicalRecordService {
             'Género': record.patient.gender || 'N/A',
             'Teléfono': record.patient.phone || 'N/A'
         };
-        
+
         this.addPDFSection(doc, '1. DATOS GENERALES DEL PACIENTE', patientData, false);
     }
 
@@ -1339,12 +1352,12 @@ class ClinicalRecordService {
         if (currentProblems.abdominal_pain) problems.push('Dolor Abdominal');
         if (currentProblems.mouth_mechanics) problems.push(`Mecánicos de la Boca: ${currentProblems.mouth_mechanics}`);
         if (currentProblems.other_problems) problems.push(`Otros: ${currentProblems.other_problems}`);
-        
+
         const problemsData: Record<string, string> = {
             'Síntomas Reportados': problems.length > 0 ? problems.join(', ') : 'Ninguno reportado',
             'Observaciones Adicionales': currentProblems.observations || 'N/A'
         };
-        
+
         this.addPDFSection(doc, '3. PROBLEMAS ACTUALES', problemsData, false);
     }
 
@@ -1353,7 +1366,7 @@ class ClinicalRecordService {
      */
     private addPDFDiagnosedDiseases(doc: any, diagnosedDiseases: any) {
         const diseasesData: Record<string, string> = {};
-        
+
         // Verificar si tiene enfermedad general
         if (diagnosedDiseases.has_disease && diagnosedDiseases.disease_name) {
             diseasesData['Enfermedades Diagnosticadas'] = diagnosedDiseases.disease_name;
@@ -1363,28 +1376,28 @@ class ClinicalRecordService {
         } else {
             diseasesData['Enfermedades Diagnosticadas'] = 'Ninguna';
         }
-        
+
         // Medicamentos
         diseasesData['Toma Medicamentos'] = diagnosedDiseases.takes_medication ? 'Sí' : 'No';
         if (diagnosedDiseases.takes_medication && diagnosedDiseases.medications_list && diagnosedDiseases.medications_list.length > 0) {
             diseasesData['Lista de Medicamentos'] = diagnosedDiseases.medications_list.join(', ');
         }
-        
+
         // Enfermedad importante adicional
         if (diagnosedDiseases.has_important_disease && diagnosedDiseases.important_disease_name) {
             diseasesData['Enfermedad Importante'] = diagnosedDiseases.important_disease_name;
         }
-        
+
         // Tratamiento especial
         if (diagnosedDiseases.takes_special_treatment && diagnosedDiseases.special_treatment_details) {
             diseasesData['Tratamiento Especial'] = diagnosedDiseases.special_treatment_details;
         }
-        
+
         // Cirugías
         if (diagnosedDiseases.has_surgery && diagnosedDiseases.surgery_details) {
             diseasesData['Detalles de Cirugías'] = diagnosedDiseases.surgery_details;
         }
-        
+
         this.addPDFSection(doc, '4. ENFERMEDADES DIAGNOSTICADAS', diseasesData, false);
     }
 
@@ -1399,16 +1412,16 @@ class ClinicalRecordService {
         if (familyHistory && familyHistory.cancer) conditions.push('Cáncer');
         if (familyHistory && familyHistory.hypo_hyperthyroidism) conditions.push('Hipo/Hipertiroidismo');
         if (familyHistory && familyHistory.dyslipidemia) conditions.push('Dislipidemia');
-        
+
         const familyData: Record<string, string> = {
             'Condiciones Familiares': conditions.length > 0 ? conditions.join(', ') : 'Ninguna reportada'
         };
-        
+
         // Agregar otros antecedentes si existen
         if (familyHistory && familyHistory.other_history && familyHistory.other_history.trim() && familyHistory.other_history.trim() !== 'N/A') {
             familyData['Otros Antecedentes'] = familyHistory.other_history;
         }
-        
+
         this.addPDFSection(doc, '5. ANTECEDENTES FAMILIARES', familyData, false);
     }
 
@@ -1417,11 +1430,11 @@ class ClinicalRecordService {
      */
     private addPDFLifestyle(doc: any, record: any) {
         const lifestyleData: Record<string, string> = {};
-        
+
         if (record.activity_level_description && record.activity_level_description.trim()) {
             lifestyleData['Nivel de Actividad'] = record.activity_level_description;
         }
-        
+
         if (record.physical_exercise) {
             if (record.physical_exercise.performs_exercise) {
                 lifestyleData['Realiza Ejercicio'] = 'Sí';
@@ -1439,7 +1452,7 @@ class ClinicalRecordService {
                 }
             }
         }
-        
+
         if (record.consumption_habits) {
             const habits = [];
             if (record.consumption_habits.alcohol && record.consumption_habits.alcohol.trim()) {
@@ -1454,16 +1467,16 @@ class ClinicalRecordService {
             if (record.consumption_habits.other_substances && record.consumption_habits.other_substances.trim()) {
                 habits.push(`Otras sustancias: ${record.consumption_habits.other_substances}`);
             }
-            
+
             if (habits.length > 0) {
                 lifestyleData['Hábitos de Consumo'] = habits.join(', ');
             }
         }
-        
+
         if (record.water_consumption_liters && record.water_consumption_liters > 0) {
             lifestyleData['Consumo de Agua'] = `${record.water_consumption_liters} litros/día`;
         }
-        
+
         // Solo agregar si hay contenido real
         if (Object.keys(lifestyleData).length > 0) {
             this.addPDFSection(doc, '6. ESTILO DE VIDA', lifestyleData, false);
@@ -1475,7 +1488,7 @@ class ClinicalRecordService {
      */
     private addPDFAnthropometricMeasurements(doc: any, measurements: any, evaluations: any) {
         const measurementsData: Record<string, string> = {};
-        
+
         // Mediciones básicas
         if (measurements.current_weight_kg && measurements.current_weight_kg > 0) {
             measurementsData['Peso Actual'] = `${measurements.current_weight_kg} kg`;
@@ -1486,7 +1499,7 @@ class ClinicalRecordService {
         if (measurements.habitual_weight_kg && measurements.habitual_weight_kg > 0) {
             measurementsData['Peso Habitual'] = `${measurements.habitual_weight_kg} kg`;
         }
-        
+
         // Circunferencias
         if (measurements.arm_circ_cm && measurements.arm_circ_cm > 0) {
             measurementsData['Circunferencia Brazo'] = `${measurements.arm_circ_cm} cm`;
@@ -1503,7 +1516,7 @@ class ClinicalRecordService {
         if (measurements.calf_circ_cm && measurements.calf_circ_cm > 0) {
             measurementsData['Circunferencia Pantorrilla'] = `${measurements.calf_circ_cm} cm`;
         }
-        
+
         // Pliegues cutáneos
         if (measurements.triceps_skinfold_mm && measurements.triceps_skinfold_mm > 0) {
             measurementsData['Pliegue Tricipital'] = `${measurements.triceps_skinfold_mm} mm`;
@@ -1517,7 +1530,7 @@ class ClinicalRecordService {
         if (measurements.suprailiac_skinfold_mm && measurements.suprailiac_skinfold_mm > 0) {
             measurementsData['Pliegue Suprailíaco'] = `${measurements.suprailiac_skinfold_mm} mm`;
         }
-        
+
         // Evaluaciones antropométricas
         if (evaluations) {
             if (evaluations.complexion) {
@@ -1548,7 +1561,7 @@ class ClinicalRecordService {
                 measurementsData['Agua Corporal Total'] = `${evaluations.total_body_water_liters} litros`;
             }
         }
-        
+
         // Solo agregar si hay mediciones reales
         if (Object.keys(measurementsData).length > 0) {
             this.addPDFSection(doc, '7. MEDICIONES ANTROPOMÉTRICAS', measurementsData, false);
@@ -1560,7 +1573,7 @@ class ClinicalRecordService {
      */
     private addPDFDietaryHistory(doc: any, dietaryHistory: any, foodFrequency: any, waterConsumption: any) {
         const historyData: Record<string, string> = {};
-        
+
         // Mapear correctamente los campos de la entidad
         if (dietaryHistory.received_nutritional_guidance !== undefined) {
             historyData['Ha Recibido Orientación Nutricional'] = dietaryHistory.received_nutritional_guidance ? 'Sí' : 'No';
@@ -1568,7 +1581,7 @@ class ClinicalRecordService {
                 historyData['Cuándo la Recibió'] = dietaryHistory.when_received;
             }
         }
-        
+
         if (dietaryHistory.adherence_level) {
             historyData['Nivel de Adherencia'] = dietaryHistory.adherence_level;
         }
@@ -1581,46 +1594,46 @@ class ClinicalRecordService {
         if (dietaryHistory.eats_at_home_or_out) {
             historyData['Come en Casa o Fuera'] = dietaryHistory.eats_at_home_or_out;
         }
-        
+
         if (dietaryHistory.modified_alimentation_last_6_months !== undefined) {
             historyData['Modificó Alimentación (Últimos 6 meses)'] = dietaryHistory.modified_alimentation_last_6_months ? 'Sí' : 'No';
             if (dietaryHistory.modification_reason) {
                 historyData['Razón de Modificación'] = dietaryHistory.modification_reason;
             }
         }
-        
+
         if (dietaryHistory.most_hungry_time) {
             historyData['Hora de Mayor Hambre'] = dietaryHistory.most_hungry_time;
         }
-        
+
         if (dietaryHistory.preferred_foods && dietaryHistory.preferred_foods.length > 0) {
             historyData['Alimentos Preferidos'] = dietaryHistory.preferred_foods.join(', ');
         }
-        
+
         if (dietaryHistory.disliked_foods && dietaryHistory.disliked_foods.length > 0) {
             historyData['Alimentos que No Le Gustan'] = dietaryHistory.disliked_foods.join(', ');
         }
-        
+
         if (dietaryHistory.malestar_alergia_foods && dietaryHistory.malestar_alergia_foods.length > 0) {
             historyData['Alimentos que Causan Malestar/Alergia'] = dietaryHistory.malestar_alergia_foods.join(', ');
         }
-        
+
         if (dietaryHistory.takes_supplements !== undefined) {
             historyData['Toma Suplementos'] = dietaryHistory.takes_supplements ? 'Sí' : 'No';
             if (dietaryHistory.supplement_details) {
                 historyData['Detalles de Suplementos'] = dietaryHistory.supplement_details;
             }
         }
-        
+
         if (waterConsumption && waterConsumption > 0) {
             historyData['Consumo de Agua'] = `${waterConsumption} litros/día`;
         }
-        
+
         // Solo agregar sección si hay datos reales
         if (Object.keys(historyData).length > 0) {
             this.addPDFSection(doc, '8. HISTORIA DIETÉTICA', historyData, false);
         }
-        
+
         // Frecuencia de consumo de grupos de alimentos
         if (foodFrequency && Object.keys(foodFrequency).length > 0) {
             const frequencyData: Record<string, string> = {};
@@ -1630,7 +1643,7 @@ class ClinicalRecordService {
                     frequencyData[groupName] = `${freq} veces/semana`;
                 }
             });
-            
+
             if (Object.keys(frequencyData).length > 0) {
                 this.addPDFSection(doc, '8.1 FRECUENCIA DE CONSUMO POR GRUPOS DE ALIMENTOS', frequencyData, false);
             }
@@ -1642,7 +1655,7 @@ class ClinicalRecordService {
      */
     private addPDFBloodPressure(doc: any, bloodPressure: any) {
         const bpData: Record<string, string> = {};
-        
+
         if (bloodPressure.systolic && bloodPressure.diastolic) {
             bpData['Presión Arterial'] = `${bloodPressure.systolic}/${bloodPressure.diastolic} mmHg`;
         }
@@ -1652,7 +1665,7 @@ class ClinicalRecordService {
         if (bloodPressure.notes) {
             bpData['Observaciones'] = bloodPressure.notes;
         }
-        
+
         this.addPDFSection(doc, '9. PRESIÓN ARTERIAL', bpData, false);
     }
 
@@ -1661,7 +1674,7 @@ class ClinicalRecordService {
      */
     private addPDFNutritionalDiagnosisAndPlan(doc: any, record: any) {
         const diagnosisData: Record<string, string> = {};
-        
+
         if (record.nutritional_diagnosis && record.nutritional_diagnosis.trim()) {
             diagnosisData['Diagnóstico Nutricional'] = record.nutritional_diagnosis;
         }
@@ -1674,7 +1687,7 @@ class ClinicalRecordService {
         if (record.recommendations && record.recommendations.trim()) {
             diagnosisData['Recomendaciones'] = record.recommendations;
         }
-        
+
         // Solo agregar si hay contenido real
         if (Object.keys(diagnosisData).length > 0) {
             this.addPDFSection(doc, '10. DIAGNÓSTICO Y PLAN NUTRICIONAL', diagnosisData, true);
@@ -1689,10 +1702,10 @@ class ClinicalRecordService {
         if (!documents || documents.length === 0) {
             return;
         }
-        
+
         // Preparar datos de documentos para formato común
         const documentsData: Record<string, string> = {};
-        
+
         documents.forEach((document, index) => {
             const docNumber = `Documento ${index + 1}`;
             const docInfo = [
@@ -1702,10 +1715,10 @@ class ClinicalRecordService {
                 `» Tamaño: ${(document.file_size / 1024 / 1024).toFixed(2)} MB`,
                 document.description ? `» Descripción: ${document.description}` : '» Sin descripción'
             ].join(' | ');
-            
+
             documentsData[docNumber] = docInfo;
         });
-        
+
         // Usar el método común para formato consistente
         this.addPDFSection(doc, '12. DOCUMENTOS DE LABORATORIO ADJUNTOS', documentsData, true);
     }
@@ -1718,20 +1731,20 @@ class ClinicalRecordService {
         const pageWidth = doc.page.width;   // ~595pt para A4
         const pageHeight = doc.page.height; // ~842pt para A4
         const margin = 40;
-        
+
         // Área de contenido: evita el header (primeros 200pt) y footer (últimos 80pt)
         const contentX = margin;
         const contentY = 210; // Después del header + info del expediente
         const contentWidth = pageWidth - (margin * 2);  // 515pt
         const contentHeight = pageHeight - contentY - 90; // Hasta antes del footer
-        
+
         // Dibujar el fondo principal con bordes suaves - solo área de contenido
         doc.rect(contentX, contentY, contentWidth, contentHeight)
-           .fillAndStroke('#f8fafc', '#e2e8f0');
-           
+            .fillAndStroke('#f8fafc', '#e2e8f0');
+
         // Línea decorativa izquierda para toda la altura de contenido
         doc.rect(contentX, contentY, 4, contentHeight)
-           .fillAndStroke('#1e40af', '#1e40af');
+            .fillAndStroke('#1e40af', '#1e40af');
     }
 
     /**
@@ -1742,20 +1755,20 @@ class ClinicalRecordService {
         const pageWidth = doc.page.width;   // ~595pt para A4
         const pageHeight = doc.page.height; // ~842pt para A4
         const margin = 40;
-        
+
         // Área de contenido completa: desde margen superior hasta antes del footer
         const contentX = margin;
         const contentY = margin; // Desde el margen superior
         const contentWidth = pageWidth - (margin * 2);  // 515pt
         const contentHeight = pageHeight - margin - 90; // Hasta antes del footer
-        
+
         // Dibujar el fondo principal con bordes suaves
         doc.rect(contentX, contentY, contentWidth, contentHeight)
-           .fillAndStroke('#f8fafc', '#e2e8f0');
-           
+            .fillAndStroke('#f8fafc', '#e2e8f0');
+
         // Línea decorativa izquierda para toda la altura
         doc.rect(contentX, contentY, 4, contentHeight)
-           .fillAndStroke('#1e40af', '#1e40af');
+            .fillAndStroke('#1e40af', '#1e40af');
     }
 
     /**
@@ -1763,41 +1776,41 @@ class ClinicalRecordService {
      */
     private addPDFFooter(doc: any, record: any) {
         const range = doc.bufferedPageRange();
-        
+
         for (let i = range.start; i < range.start + range.count; i++) {
             doc.switchToPage(i);
-            
+
             // Fondo específico del footer (sobre el fondo general)
             doc.rect(40, doc.page.height - 80, 515, 40)
-               .fillAndStroke('#f1f5f9', '#e2e8f0');
-            
+                .fillAndStroke('#f1f5f9', '#e2e8f0');
+
             // Línea superior decorativa del footer
             doc.rect(40, doc.page.height - 80, 515, 3)
-               .fillAndStroke('#1e40af', '#1e40af');
-            
+                .fillAndStroke('#1e40af', '#1e40af');
+
             // Información del footer
             doc.fontSize(8).font('Helvetica').fillColor('#475569');
-            
+
             // Izquierda: Fecha y hora de generación
-            doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')} ${new Date().toLocaleTimeString('es-ES')}`, 
-                     50, doc.page.height - 65, { width: 180 });
-            
+            doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')} ${new Date().toLocaleTimeString('es-ES')}`,
+                50, doc.page.height - 65, { width: 180 });
+
             // Centro: Sistema y expediente
-            doc.text(`NutriWeb - Exp: ${record.expedient_number || 'N/A'}`, 
-                     230, doc.page.height - 65, { align: 'center', width: 140 });
-            
+            doc.text(`NutriWeb - Exp: ${record.expedient_number || 'N/A'}`,
+                230, doc.page.height - 65, { align: 'center', width: 140 });
+
             // Derecha: Número de página (CORREGIDO)
             const currentPageNumber = (i - range.start) + 1;
             const totalPages = range.count;
-            doc.text(`Página ${currentPageNumber} de ${totalPages}`, 
-                     370, doc.page.height - 65, { align: 'right', width: 175 });
-            
+            doc.text(`Página ${currentPageNumber} de ${totalPages}`,
+                370, doc.page.height - 65, { align: 'right', width: 175 });
+
             // Línea inferior sutil
             doc.moveTo(50, doc.page.height - 50)
-               .lineTo(545, doc.page.height - 50)
-               .strokeColor('#cbd5e1')
-               .lineWidth(0.5)
-               .stroke();
+                .lineTo(545, doc.page.height - 50)
+                .strokeColor('#cbd5e1')
+                .lineWidth(0.5)
+                .stroke();
         }
     }
 
@@ -1807,7 +1820,7 @@ class ClinicalRecordService {
      * 🔬 AGREGAR INTERACCIÓN FÁRMACO-NUTRIENTE
      */
     public async addDrugNutrientInteraction(
-        recordId: string, 
+        recordId: string,
         interactionData: {
             medicationId: string;
             nutrientsAffected: string[];
@@ -1825,10 +1838,10 @@ class ClinicalRecordService {
     ) {
         // Verificar acceso al registro
         const record = await this.getClinicalRecordById(recordId, userId, userRole);
-        
+
         // Validar que el medicamento existe en la lista de medicamentos del expediente
         const medications = record.diagnosed_diseases?.medications_list || [];
-        
+
         // Caso especial: "Sin medicamentos"
         let medicationIndex: number;
         if (interactionData.medicationId === 'no_medication') {
@@ -1836,7 +1849,7 @@ class ClinicalRecordService {
             medicationIndex = -1; // Valor especial para "Sin medicamentos"
         } else {
             medicationIndex = parseInt(interactionData.medicationId.replace('med_', ''));
-            
+
             if (isNaN(medicationIndex) || medicationIndex < 0 || medicationIndex >= medications.length) {
                 throw new AppError('El medicamento seleccionado no existe en la lista de medicamentos del paciente', 400);
             }
@@ -1908,7 +1921,7 @@ class ClinicalRecordService {
     ) {
         // Verificar acceso al registro
         const record = await this.getClinicalRecordById(recordId, userId, userRole);
-        
+
         if (!record.drug_nutrient_interactions || record.drug_nutrient_interactions.length === 0) {
             throw new AppError('No hay interacciones en este registro', 404);
         }
@@ -1924,7 +1937,7 @@ class ClinicalRecordService {
             ...updateData,
             updated_date: new Date()
         };
-        
+
         record.drug_nutrient_interactions[interactionIndex] = updatedInteraction;
 
         // Guardar cambios
@@ -1942,7 +1955,7 @@ class ClinicalRecordService {
     public async deleteDrugNutrientInteraction(recordId: string, interactionId: string, userId: string, userRole: RoleName) {
         // Verificar acceso al registro
         const record = await this.getClinicalRecordById(recordId, userId, userRole);
-        
+
         if (!record.drug_nutrient_interactions || record.drug_nutrient_interactions.length === 0) {
             throw new AppError('No hay interacciones en este registro', 404);
         }
@@ -1970,7 +1983,7 @@ class ClinicalRecordService {
     public async getDrugNutrientInteractions(recordId: string, userId: string, userRole: RoleName) {
         // Verificar acceso al registro
         const record = await this.getClinicalRecordById(recordId, userId, userRole);
-        
+
         return {
             interactions: record.drug_nutrient_interactions || [],
             total: record.drug_nutrient_interactions?.length || 0
@@ -1995,10 +2008,10 @@ class ClinicalRecordService {
 
         const tieneExpedientesPrevios = expedientesPrevios.length > 0;
         const ultimoExpediente = expedientesPrevios[0];
-        
+
         // Análisis de motivo de consulta para detectar urgencias
         const palabrasUrgencia = ['dolor', 'sangrado', 'fiebre', 'vómito', 'diarrea', 'emergencia', 'urgente', 'agudo'];
-        const esUrgencia = motivoConsulta && palabrasUrgencia.some(palabra => 
+        const esUrgencia = motivoConsulta && palabrasUrgencia.some(palabra =>
             motivoConsulta.toLowerCase().includes(palabra)
         );
 
@@ -2106,10 +2119,10 @@ class ClinicalRecordService {
 
         // Extraer últimas mediciones
         let imcCalculado = ultimoExpediente.anthropometric_evaluations?.imc_kg_t2;
-        
+
         // Si no hay IMC en evaluations pero sí hay peso y altura, calcularlo automáticamente
-        if (!imcCalculado && 
-            ultimoExpediente.anthropometric_measurements?.current_weight_kg && 
+        if (!imcCalculado &&
+            ultimoExpediente.anthropometric_measurements?.current_weight_kg &&
             ultimoExpediente.anthropometric_measurements?.height_m) {
             const peso = ultimoExpediente.anthropometric_measurements.current_weight_kg;
             const altura = ultimoExpediente.anthropometric_measurements.height_m;
@@ -2135,11 +2148,11 @@ class ClinicalRecordService {
         let tendencias = {};
         if (expedientesPrevios.length >= 2) {
             const penultimoExpediente = expedientesPrevios[1];
-            
+
             // Tendencia de peso
             const pesoActual = ultimoExpediente.anthropometric_measurements?.current_weight_kg;
             const pesoAnterior = penultimoExpediente.anthropometric_measurements?.current_weight_kg;
-            
+
             if (pesoActual && pesoAnterior) {
                 const diferenciaPeso = pesoActual - pesoAnterior;
                 tendencias = {
@@ -2151,7 +2164,7 @@ class ClinicalRecordService {
             // Tendencia de presión
             const presionActual = ultimoExpediente.blood_pressure?.systolic;
             const presionAnterior = penultimoExpediente.blood_pressure?.systolic;
-            
+
             if (presionActual && presionAnterior) {
                 const diferenciaPa = presionActual - presionAnterior;
                 tendencias = {
