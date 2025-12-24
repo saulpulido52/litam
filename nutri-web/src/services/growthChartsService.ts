@@ -1,4 +1,4 @@
-import api from './api';
+import apiService from './api';
 
 interface CalculatePercentileParams {
   ageMonths: number;
@@ -16,31 +16,62 @@ export const growthChartsService = {
   // Obtener datos de las curvas de crecimiento
   async getChartData(params: ChartDataParams) {
     const queryString = new URLSearchParams(params).toString();
-    return api.get(`/growth-charts/chart-data?${queryString}`);
+    return apiService.get(`/growth-charts/chart-data?${queryString}`);
   },
 
   // Calcular percentil y z-score
   async calculatePercentile(data: CalculatePercentileParams) {
-    return api.post('/growth-charts/calculate-percentile', data);
+    return apiService.post('/growth-charts/calculate-percentile', data);
   },
 
   // Generar reporte pediátrico PDF
-  async generatePediatricReport(data: any) {
-    return api.post('/growth-charts/pdf/generate', data);
+  async generatePediatricReport(data: any): Promise<Blob> {
+    const response: any = await apiService.post(
+      '/growth-charts/export/pediatric-report',
+      data,
+      { responseType: 'blob' }
+    );
+
+    // Handle blob response similar to laboratory documents
+    let blob: Blob;
+    if (response.data && response.data instanceof Blob) {
+      blob = response.data;
+    } else if (response instanceof Blob) {
+      blob = response;
+    } else if (response.data) {
+      blob = new Blob([response.data], { type: 'application/pdf' });
+    } else {
+      blob = new Blob([response], { type: 'application/pdf' });
+    }
+
+    return blob;
   },
 
   // Generar reporte de curvas PDF
-  async generateGrowthChartsReport(data: any) {
-    return api.post('/growth-charts/pdf/generate-charts', data);
+  async generateGrowthChartsReport(data: any): Promise<Blob> {
+    const response: any = await apiService.post(
+      '/growth-charts/export/growth-charts',
+      data,
+      { responseType: 'blob' }
+    );
+
+    // Handle blob response similar to laboratory documents
+    let blob: Blob;
+    if (response.data && response.data instanceof Blob) {
+      blob = response.data;
+    } else if (response instanceof Blob) {
+      blob = response;
+    } else if (response.data) {
+      blob = new Blob([response.data], { type: 'application/pdf' });
+    } else {
+      blob = new Blob([response], { type: 'application/pdf' });
+    }
+
+    return blob;
   },
 
   // Descargar PDF
-  async downloadPDF(filename: string) {
-    const response = await api.get(`/growth-charts/pdf/download/${filename}`, {
-      responseType: 'blob'
-    });
-    
-    const blob = new Blob([response.data as BlobPart], { type: 'application/pdf' });
+  downloadPDF(blob: Blob, filename: string) {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;

@@ -19,14 +19,15 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
   onDelete,
   onClose,
   canEdit = true,
-  canDelete = true}) => {
+  canDelete = true }) => {
   const [activeTab, setActiveTab] = useState('basic');
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'});
+      day: 'numeric'
+    });
   };
 
   const formatDateTime = (dateString: string) => {
@@ -35,7 +36,8 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'});
+      minute: '2-digit'
+    });
   };
 
   const calculateBMI = (weight?: number, height?: number) => {
@@ -53,7 +55,7 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
 
   const renderProblemsList = (problems: any) => {
     if (!problems) return null;
-    
+
     const problemLabels = {
       diarrhea: 'Diarrea',
       constipation: 'Estreñimiento',
@@ -70,7 +72,7 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
       .map(([key]) => problemLabels[key as keyof typeof problemLabels]);
 
     if (activeProblems.length === 0) return <span className="text-muted">Ninguno reportado</span>;
-    
+
     return (
       <div className="d-flex flex-wrap gap-1">
         {activeProblems.map(problem => (
@@ -98,11 +100,11 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
               )}
             </h5>
             <small className="text-muted">
-              Fecha: {formatDate(record.record_date)} | 
+              Fecha: {formatDate(record.record_date)} |
               Última actualización: {formatDateTime(record.updated_at)}
             </small>
           </div>
-          
+
           <div className="btn-group">
             {canEdit && onEdit && (
               <button className="btn btn-outline-primary btn-sm" onClick={onEdit}>
@@ -219,14 +221,17 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                 <i className="fas fa-pills me-1"></i>Fármaco-Nutriente
               </button>
             </li>
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${activeTab === 'growth' ? 'active' : ''}`}
-                onClick={() => setActiveTab('growth')}
-              >
-                <i className="fas fa-chart-line me-1"></i>Crecimiento Pediátrico
-              </button>
-            </li>
+            {/* Mostrar pestaña de Crecimiento Pediátrico solo para pacientes ≤ 18 años */}
+            {record.patient.age !== undefined && record.patient.age <= 18 && (
+              <li className="nav-item" role="presentation">
+                <button
+                  className={`nav-link ${activeTab === 'growth' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('growth')}
+                >
+                  <i className="fas fa-chart-line me-1"></i>Crecimiento Pediátrico
+                </button>
+              </li>
+            )}
           </ul>
 
           {/* Contenido de las pestañas */}
@@ -280,7 +285,7 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                         </tr>
                       </tbody>
                     </table>
-                    
+
                     {record.daily_activities && (
                       <div className="mt-3">
                         <h6><i className="fas fa-calendar-day me-2"></i>Actividades Diarias</h6>
@@ -312,7 +317,7 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
             {activeTab === 'diseases' && (
               <div className="tab-pane fade show active">
                 <h6><i className="fas fa-heartbeat me-2"></i>Enfermedades Diagnosticadas</h6>
-                
+
                 {record.diagnosed_diseases && (
                   <div className="row">
                     <div className="col-md-6">
@@ -355,20 +360,20 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                               )}
                             </td>
                           </tr>
-                                                     {record.diagnosed_diseases.takes_medication && record.diagnosed_diseases.medications_list && (
-                             <tr>
-                               <td><strong>Medicamentos:</strong></td>
-                               <td>
-                                 <div className="d-flex flex-wrap gap-1">
-                                   {record.diagnosed_diseases.medications_list.map((med, index) => (
-                                     <span key={index} className="badge bg-light text-dark">
-                                       {med}
-                                     </span>
-                                   ))}
-                                 </div>
-                               </td>
-                             </tr>
-                           )}
+                          {record.diagnosed_diseases.takes_medication && record.diagnosed_diseases.medications_list && (
+                            <tr>
+                              <td><strong>Medicamentos:</strong></td>
+                              <td>
+                                <div className="d-flex flex-wrap gap-1">
+                                  {record.diagnosed_diseases.medications_list.map((med, index) => (
+                                    <span key={index} className="badge bg-light text-dark">
+                                      {med}
+                                    </span>
+                                  ))}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
@@ -464,7 +469,7 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
             {activeTab === 'lifestyle' && (
               <div className="tab-pane fade show active">
                 <h6><i className="fas fa-running me-2"></i>Estilo de Vida</h6>
-                
+
                 <div className="row">
                   <div className="col-md-6">
                     {/* Ejercicio Físico */}
@@ -515,7 +520,7 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                         </table>
                       </div>
                     )}
-                    
+
                     {/* Nivel de Actividad */}
                     {record.activity_level_description && (
                       <div className="mb-3">
@@ -526,7 +531,7 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="col-md-6">
                     {/* Hábitos de Consumo */}
                     {record.consumption_habits && (
@@ -562,7 +567,7 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                         </table>
                       </div>
                     )}
-                    
+
                     {/* Consumo de agua */}
                     {record.water_consumption_liters && (
                       <div className="mb-3">
@@ -649,7 +654,7 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                         </table>
                       </div>
                     </div>
-                    
+
                     {record.food_group_consumption_frequency.other_frequency && record.food_group_consumption_frequency.other_frequency.length > 0 && (
                       <div className="mt-3">
                         <h6 className="text-primary">Otros Grupos de Alimentos</h6>
@@ -707,13 +712,13 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
             {activeTab === 'problems' && (
               <div className="tab-pane fade show active">
                 <h6><i className="fas fa-exclamation-triangle me-2"></i>Problemas Actuales</h6>
-                
+
                 {record.current_problems && (
                   <div className="row">
                     <div className="col-md-6">
                       <h6 className="text-primary">Problemas Gastrointestinales</h6>
                       {renderProblemsList(record.current_problems)}
-                      
+
                       {record.current_problems.mouth_mechanics && (
                         <div className="mt-3">
                           <strong>Mecánicos de la Boca:</strong>
@@ -730,7 +735,7 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                           <small className="text-muted">Describe otros problemas...</small>
                         </div>
                       )}
-                      
+
                       {record.current_problems.observations && (
                         <div>
                           <strong>Observaciones:</strong>
@@ -747,7 +752,7 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
             {activeTab === 'measurements' && (
               <div className="tab-pane fade show active">
                 <h6><i className="fas fa-ruler me-2"></i>Mediciones Antropométricas</h6>
-                
+
                 {record.anthropometric_measurements && (
                   <div className="row">
                     <div className="col-md-6">
@@ -948,13 +953,12 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                                   <tr>
                                     <td><strong>Presión Arterial:</strong></td>
                                     <td>
-                                      <span className={`badge ${
-                                        record.blood_pressure.systolic >= 140 || record.blood_pressure.diastolic >= 90 
-                                          ? 'bg-danger' 
-                                          : record.blood_pressure.systolic >= 120 || record.blood_pressure.diastolic >= 80
-                                          ? 'bg-warning' 
+                                      <span className={`badge ${record.blood_pressure.systolic >= 140 || record.blood_pressure.diastolic >= 90
+                                        ? 'bg-danger'
+                                        : record.blood_pressure.systolic >= 120 || record.blood_pressure.diastolic >= 80
+                                          ? 'bg-warning'
                                           : 'bg-success'
-                                      }`}>
+                                        }`}>
                                         {record.blood_pressure.systolic}/{record.blood_pressure.diastolic} mmHg
                                       </span>
                                     </td>
@@ -991,7 +995,7 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
             {activeTab === 'dietary' && (
               <div className="tab-pane fade show active">
                 <h6><i className="fas fa-utensils me-2"></i>Historia Dietética</h6>
-                
+
                 {record.dietary_history && (
                   <div className="row">
                     <div className="col-md-6">
@@ -1146,8 +1150,13 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                   <i className="fas fa-info-circle me-2"></i>
                   <strong>Análisis de Crecimiento Pediátrico</strong>
                   <p className="mb-1 mt-2">
-                    Esta sección permite generar reportes de crecimiento pediátrico basados en las mediciones 
+                    Esta sección permite generar reportes de crecimiento pediátrico basados en las mediciones
                     antropométricas registradas en el expediente clínico del paciente.
+                  </p>
+                  <p className="mb-0">
+                    <small>
+                      <strong>Nota:</strong> Esta funcionalidad está disponible para pacientes de 0 a 18 años.
+                    </small>
                   </p>
                   {record.patient.age && (
                     <p className="mb-0">
@@ -1157,8 +1166,8 @@ const ClinicalRecordDetail: React.FC<ClinicalRecordDetailProps> = ({
                     </p>
                   )}
                 </div>
-                
-                <GrowthChartsPDFExport 
+
+                <GrowthChartsPDFExport
                   patientId={record.patient.id}
                   patientName={`${record.patient.first_name} ${record.patient.last_name}`}
                 />
