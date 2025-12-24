@@ -1,17 +1,21 @@
 import React from 'react';
 import { Card, Row, Col, Alert } from 'react-bootstrap';
+import { type MetricType, type Standard } from '../../utils/growthCalculations';
 
 interface ResultsPanelProps {
     results: {
         percentile: number;
         zScore: number;
         interpretation: string;
+        standard: Standard;
     } | null;
     formData: {
         ageYears: number;
         ageMonths: number;
         weight: number;
+        height: number;
         gender: 'male' | 'female';
+        metric: MetricType;
     } | null;
 }
 
@@ -36,6 +40,10 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({ results, formData }) => {
         if (results.percentile < 10 || results.percentile > 90) return 'exclamation-circle-fill';
         return 'check-circle-fill';
     };
+
+    const metricLabel = formData.metric === 'weight' ? 'Peso' : 'Talla';
+    const metricValue = formData.metric === 'weight' ? formData.weight : formData.height;
+    const metricUnit = formData.metric === 'weight' ? 'kg' : 'cm';
 
     return (
         <Card className="shadow-sm">
@@ -68,8 +76,11 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({ results, formData }) => {
                                 <p className="mb-1">
                                     <strong>Género:</strong> {formData.gender === 'male' ? 'Masculino' : 'Femenino'}
                                 </p>
+                                <p className="mb-1">
+                                    <strong>Métrica:</strong> {metricLabel} para Edad
+                                </p>
                                 <p className="mb-0">
-                                    <strong>Peso:</strong> {formData.weight} kg
+                                    <strong>{metricLabel}:</strong> {metricValue} {metricUnit}
                                 </p>
                             </Card.Body>
                         </Card>
@@ -86,7 +97,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({ results, formData }) => {
                                     <strong>Z-Score:</strong> <span className="fs-5 text-info">{results.zScore.toFixed(2)}</span>
                                 </p>
                                 <p className="mb-0">
-                                    <strong>Estándar:</strong> WHO (0-5 años)
+                                    <strong>Estándar:</strong> {results.standard} ({results.standard === 'WHO' ? '0-5 años' : '5-18 años'})
                                 </p>
                             </Card.Body>
                         </Card>
@@ -103,7 +114,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({ results, formData }) => {
                             {results.percentile < 3 && (
                                 <>
                                     <li>Evaluación nutricional completa requerida</li>
-                                    <li>Considerar causas de bajo peso (malnutrición, enfermedad)</li>
+                                    <li>Considerar causas de {formData.metric === 'weight' ? 'bajo peso' : 'talla baja'}</li>
                                     <li>Plan de intervención nutricional urgente</li>
                                 </>
                             )}
@@ -124,15 +135,15 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({ results, formData }) => {
                             {results.percentile > 90 && results.percentile <= 97 && (
                                 <>
                                     <li>Evaluar hábitos alimentarios y actividad física</li>
-                                    <li>Prevención de sobrepeso</li>
+                                    <li>Prevención de {formData.metric === 'weight' ? 'sobrepeso' : 'talla excesiva'}</li>
                                     <li>Seguimiento cada 2-3 meses</li>
                                 </>
                             )}
                             {results.percentile > 97 && (
                                 <>
                                     <li>Evaluación nutricional completa requerida</li>
-                                    <li>Plan de manejo de peso pediátrico</li>
-                                    <li>Evaluación de comorbilidades</li>
+                                    {formData.metric === 'weight' && <li>Plan de manejo de peso pediátrico</li>}
+                                    {formData.metric === 'weight' && <li>Evaluación de comorbilidades</li>}
                                     <li>Seguimiento mensual recomendado</li>
                                 </>
                             )}

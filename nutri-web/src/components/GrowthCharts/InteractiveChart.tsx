@@ -1,29 +1,61 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceDot } from 'recharts';
 import { Card } from 'react-bootstrap';
-import { generatePercentileCurves } from '../../utils/growthCalculations';
+import { generatePercentileCurves, type MetricType } from '../../utils/growthCalculations';
 
 interface InteractiveChartProps {
     gender: 'male' | 'female';
+    metric: MetricType;
     patientData?: {
         age: number; // meses
-        weight: number;
+        value: number; // peso o talla
         percentile: number;
     };
 }
 
-const InteractiveChart: React.FC<InteractiveChartProps> = ({ gender, patientData }) => {
-    const curves = generatePercentileCurves(gender, 60);
+const InteractiveChart: React.FC<InteractiveChartProps> = ({ gender, metric, patientData }) => {
+    const maxAge = 216; // 18 años
+    const curves = generatePercentileCurves(gender, metric, maxAge);
+
+    const metricInfo = {
+        weight: {
+            title: 'Peso para Edad',
+            yLabel: 'Peso (kg)',
+            unit: 'kg',
+            interpretations: {
+                low: 'Bajo peso',
+                normal: 'Peso normal',
+                high: 'Sobrepeso/Obesidad'
+            }
+        },
+        height: {
+            title: 'Talla para Edad',
+            yLabel: 'Talla (cm)',
+            unit: 'cm',
+            interpretations: {
+                low: 'Talla baja',
+                normal: 'Talla normal',
+                high: 'Talla alta'
+            }
+        }
+    };
+
+    const info = metricInfo[metric];
 
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
+            const years = Math.floor(data.age / 12);
+            const months = data.age % 12;
+
             return (
                 <div className="bg-white p-3 border rounded shadow-sm">
-                    <p className="mb-1"><strong>Edad:</strong> {data.age} meses ({Math.floor(data.age / 12)}a {data.age % 12}m)</p>
+                    <p className="mb-1">
+                        <strong>Edad:</strong> {years}a {months}m ({data.age} meses)
+                    </p>
                     {payload.map((entry: any, index: number) => (
                         <p key={index} className="mb-0" style={{ color: entry.color }}>
-                            <strong>{entry.name}:</strong> {entry.value.toFixed(2)} kg
+                            <strong>{entry.name}:</strong> {entry.value.toFixed(1)} {info.unit}
                         </p>
                     ))}
                 </div>
@@ -37,10 +69,10 @@ const InteractiveChart: React.FC<InteractiveChartProps> = ({ gender, patientData
             <Card.Header className="bg-primary text-white">
                 <h5 className="mb-0">
                     <i className="bi bi-graph-up-arrow me-2"></i>
-                    Curvas de Crecimiento WHO - Peso para Edad
+                    Curvas de Crecimiento - {info.title}
                 </h5>
                 <small className="text-white-50">
-                    Estándar: WHO (0-5 años) • Género: {gender === 'male' ? 'Masculino' : 'Femenino'}
+                    Estándares: WHO (0-5 años) + CDC (5-18 años) • Género: {gender === 'male' ? 'Masculino' : 'Femenino'}
                 </small>
             </Card.Header>
             <Card.Body>
@@ -53,7 +85,7 @@ const InteractiveChart: React.FC<InteractiveChartProps> = ({ gender, patientData
                             tick={{ fontSize: 12 }}
                         />
                         <YAxis
-                            label={{ value: 'Peso (kg)', angle: -90, position: 'insideLeft' }}
+                            label={{ value: info.yLabel, angle: -90, position: 'insideLeft' }}
                             tick={{ fontSize: 12 }}
                         />
                         <Tooltip content={<CustomTooltip />} />
@@ -75,7 +107,7 @@ const InteractiveChart: React.FC<InteractiveChartProps> = ({ gender, patientData
                         {patientData && (
                             <ReferenceDot
                                 x={patientData.age}
-                                y={patientData.weight}
+                                y={patientData.value}
                                 r={8}
                                 fill="#007bff"
                                 stroke="#fff"
@@ -96,17 +128,17 @@ const InteractiveChart: React.FC<InteractiveChartProps> = ({ gender, patientData
                     <div className="row">
                         <div className="col-md-6">
                             <small>
-                                <span className="badge bg-danger me-2">P &lt; 3</span> Bajo peso severo<br />
-                                <span className="badge bg-warning text-dark me-2">P 3-10</span> Bajo peso<br />
-                                <span className="badge bg-info me-2">P 10-25</span> Peso bajo-normal<br />
+                                <span className="badge bg-danger me-2">P &lt; 3</span> {metric === 'weight' ? 'Bajo peso severo' : 'Talla muy baja'}<br />
+                                <span className="badge bg-warning text-dark me-2">P 3-10</span> {info.interpretations.low}<br />
+                                <span className="badge bg-info me-2">P 10-25</span> {metric === 'weight' ? 'Peso bajo-normal' : 'Talla bajo-normal'}<br />
                             </small>
                         </div>
                         <div className="col-md-6">
                             <small>
-                                <span className="badge bg-success me-2">P 25-75</span> Peso normal<br />
-                                <span className="badge bg-info me-2">P 75-90</span> Peso alto-normal<br />
-                                <span className="badge bg-warning text-dark me-2">P 90-97</span> Sobrepeso<br />
-                                <span className="badge bg-danger me-2">P &gt; 97</span> Obesidad
+                                <span className="badge bg-success me-2">P 25-75</span> {info.interpretations.normal}<br />
+                                <span className="badge bg-info me-2">P 75-90</span> {metric === 'weight' ? 'Peso alto-normal' : 'Talla alto-normal'}<br />
+                                <span className="badge bg-warning text-dark me-2">P 90-97</span> {metric === 'weight' ? 'Sobrepeso' : 'Talla alta'}<br />
+                                <span className="badge bg-danger me-2">P &gt; 97</span> {metric === 'weight' ? 'Obesidad' : 'Talla muy alta'}
                             </small>
                         </div>
                     </div>

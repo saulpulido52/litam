@@ -3,7 +3,7 @@ import { Container, Row, Col, Alert, Card, Toast, ToastContainer } from 'react-b
 import GrowthChartForm, { type FormData } from '../components/GrowthCharts/GrowthChartForm';
 import InteractiveChart from '../components/GrowthCharts/InteractiveChart';
 import ResultsPanel from '../components/GrowthCharts/ResultsPanel';
-import { calculateWeightForAgePercentile } from '../utils/growthCalculations';
+import { calculatePercentile } from '../utils/growthCalculations';
 import { detectPercentileAlert, saveAlert } from '../utils/alertDetection';
 
 const GrowthChartsPage: React.FC = () => {
@@ -12,6 +12,7 @@ const GrowthChartsPage: React.FC = () => {
         percentile: number;
         zScore: number;
         interpretation: string;
+        standard: 'WHO' | 'CDC';
     } | null>(null);
     const [showAlertToast, setShowAlertToast] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
@@ -19,43 +20,48 @@ const GrowthChartsPage: React.FC = () => {
     const handleCalculate = (data: FormData) => {
         const totalMonths = data.ageYears * 12 + data.ageMonths;
 
-        if (totalMonths > 60) {
-            alert('Esta herramienta está diseñada para niños de 0-5 años (0-60 meses)');
+        // Validar edad máxima
+        if (totalMonths > 216) {
+            alert('Esta herramienta está diseñada para niños de 0-18 años (0-216 meses)');
             return;
         }
 
-        if (data.weight <= 0) {
-            alert('Por favor ingresa un peso válido');
+        // Validar que se haya ingresado el valor correcto según la métrica
+        const value = data.metric === 'weight' ? data.weight : data.height;
+        if (value <= 0) {
+            alert(`Por favor ingresa un ${data.metric === 'weight' ? 'peso' : 'talla'} válido`);
             return;
         }
 
-        const calculatedResults = calculateWeightForAgePercentile(
+        // Calcular percentiles
+        const calculatedResults = calculatePercentile(
             totalMonths,
-            data.weight,
-            data.gender
+            value,
+            data.gender,
+            data.metric
         );
 
         setFormData(data);
         setResults(calculatedResults);
 
-        // Detectar y guardar alerta si es necesario
-        // Nota: En una implementación real, esto se haría con datos del paciente real
-        // Por ahora usamos un ID y nombre de ejemplo
-        const patientId = 'demo-patient';
-        const patientName = 'Paciente de Demostración';
+        // Detectar y guardar alerta si es necesario (solo para peso)
+        if (data.metric === 'weight') {
+            const patientId = 'demo-patient';
+            const patientName = 'Paciente de Demostración';
 
-        const growthAlert = detectPercentileAlert(
-            calculatedResults.percentile,
-            patientId,
-            patientName,
-            data.weight,
-            totalMonths
-        );
+            const growthAlert = detectPercentileAlert(
+                calculatedResults.percentile,
+                patientId,
+                patientName,
+                data.weight,
+                totalMonths
+            );
 
-        if (growthAlert) {
-            saveAlert(growthAlert);
-            setAlertMessage(growthAlert.message);
-            setShowAlertToast(true);
+            if (growthAlert) {
+                saveAlert(growthAlert);
+                setAlertMessage(growthAlert.message);
+                setShowAlertToast(true);
+            }
         }
     };
 
@@ -68,7 +74,7 @@ const GrowthChartsPage: React.FC = () => {
                     Curvas de Crecimiento Pediátrico
                 </h1>
                 <p className="lead text-muted">
-                    Herramienta profesional para nutriólogos - Análisis de crecimiento basado en estándares WHO
+                    Herramienta profesional para nutriólogos - Análisis de crecimiento basado en estándares WHO y CDC
                 </p>
             </div>
 
@@ -77,10 +83,11 @@ const GrowthChartsPage: React.FC = () => {
                 <div className="d-flex align-items-center">
                     <i className="bi bi-info-circle-fill fs-4 me-3"></i>
                     <div>
-                        <strong>Estándares WHO (0-5 años)</strong>
+                        <strong>Estándares WHO (0-5 años) + CDC (5-18 años)</strong>
                         <p className="mb-0 small">
-                            Esta herramienta utiliza los estándares de crecimiento de la Organización Mundial de la Salud (WHO)
-                            para evaluar el peso-para-edad en niños de 0 a 5 años. Los percentiles se calculan usando el método LMS.
+                            Esta herramienta utiliza los estándares de la Organización Mundial de la Salud (WHO) para niños de 0-5 años
+                            y los estándares de los Centros para el Control de Enfermedades (CDC) para niños de 5-18 años.
+                            Los percentiles se calculan usando el método LMS.
                         </p>
                     </div>
                 </div>
@@ -103,11 +110,12 @@ const GrowthChartsPage: React.FC = () => {
                 <Col>
                     <InteractiveChart
                         gender={formData?.gender || 'male'}
+                        metric={formData?.metric || 'weight'}
                         patientData={
                             results && formData
                                 ? {
                                     age: formData.ageYears * 12 + formData.ageMonths,
-                                    weight: formData.weight,
+                                    value: formData.metric === 'weight' ? formData.weight : formData.height,
                                     percentile: results.percentile
                                 }
                                 : undefined
@@ -126,21 +134,28 @@ const GrowthChartsPage: React.FC = () => {
                                 Información Adicional
                             </h6>
                             <Row>
-                                <Col md={4}>
+                                <Col md={3}>
                                     <h6 className="text-primary">Método LMS</h6>
                                     <p className="small">
                                         Los percentiles se calculan usando el método Lambda-Mu-Sigma (LMS),
                                         que modela la distribución de mediciones antropométricas.
                                     </p>
                                 </Col>
-                                <Col md={4}>
-                                    <h6 className="text-primary">Interpretación Clínica</h6>
+                                <Col md={3}>
+                                    <h6 className="text-primary">Estándares WHO</h6>
                                     <p className="small">
-                                        Los percentiles indican la posición del niño en relación con la población de referencia.
-                                        Valores extremos (&lt;P3 o &gt;P97) requieren evaluación clínica.
+                                        Para niños de 0-5 años se utilizan los estándares de la OMS,
+                                        basados en niños sanos de diferentes países con lactancia materna.
                                     </p>
                                 </Col>
-                                <Col md={4}>
+                                <Col md={3}>
+                                    <h6 className="text-primary">Estándares CDC</h6>
+                                    <p className="small">
+                                        Para niños de 5-18 años se utilizan los estándares del CDC,
+                                        basados en la población estadounidense.
+                                    </p>
+                                </Col>
+                                <Col md={3}>
                                     <h6 className="text-primary">Seguimiento</h6>
                                     <p className="small">
                                         El seguimiento longitudinal del crecimiento es más importante que una medición aislada.
