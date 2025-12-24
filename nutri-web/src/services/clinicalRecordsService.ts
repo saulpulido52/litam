@@ -275,7 +275,20 @@ class ClinicalRecordsService {
         responseType: 'blob'
       });
 
-      return response.data as Blob;
+      console.log('📄 PDF Response:', response);
+      console.log('📄 PDF Response.data type:', typeof response.data);
+      console.log('📄 PDF Response.data instanceof Blob:', response.data instanceof Blob);
+      console.log('📄 PDF Response.data:', response.data);
+
+      // Ensure we have a valid Blob
+      const blob = response.data;
+      if (!(blob instanceof Blob)) {
+        console.error('❌ Response is not a Blob, attempting to convert...');
+        // If it's not a Blob, try to create one from the response
+        return new Blob([blob], { type: 'application/pdf' });
+      }
+
+      return blob;
     } catch (error: any) {
       console.error('Error in generateExpedientePDF:', error);
       throw new Error(error.response?.data?.message || error.message || 'Error al generar el PDF del expediente');
