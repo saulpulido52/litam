@@ -26,48 +26,48 @@ export const growthChartsService = {
 
   // Generar reporte pediátrico PDF
   async generatePediatricReport(data: any): Promise<Blob> {
-    const response: any = await apiService.post(
-      '/growth-charts/export/pediatric-report',
-      data,
-      { responseType: 'blob' }
-    );
+    try {
+      // Use axios directly for blob response
+      const response = await apiService['api'].post(
+        '/growth-charts/export/pediatric-report',
+        data,
+        { responseType: 'blob' }
+      );
 
-    // Handle blob response similar to laboratory documents
-    let blob: Blob;
-    if (response.data && response.data instanceof Blob) {
-      blob = response.data;
-    } else if (response instanceof Blob) {
-      blob = response;
-    } else if (response.data) {
-      blob = new Blob([response.data], { type: 'application/pdf' });
-    } else {
-      blob = new Blob([response], { type: 'application/pdf' });
+      // Handle blob response - response.data should be the blob
+      if (response.data instanceof Blob) {
+        return response.data;
+      }
+
+      // Fallback: create blob from response data
+      return new Blob([response.data], { type: 'application/pdf' });
+    } catch (error) {
+      console.error('Error generating pediatric report:', error);
+      throw error;
     }
-
-    return blob;
   },
 
   // Generar reporte de curvas PDF
   async generateGrowthChartsReport(data: any): Promise<Blob> {
-    const response: any = await apiService.post(
-      '/growth-charts/export/growth-charts',
-      data,
-      { responseType: 'blob' }
-    );
+    try {
+      // Use axios directly for blob response
+      const response = await apiService['api'].post(
+        '/growth-charts/export/growth-charts',
+        data,
+        { responseType: 'blob' }
+      );
 
-    // Handle blob response similar to laboratory documents
-    let blob: Blob;
-    if (response.data && response.data instanceof Blob) {
-      blob = response.data;
-    } else if (response instanceof Blob) {
-      blob = response;
-    } else if (response.data) {
-      blob = new Blob([response.data], { type: 'application/pdf' });
-    } else {
-      blob = new Blob([response], { type: 'application/pdf' });
+      // Handle blob response - response.data should be the blob
+      if (response.data instanceof Blob) {
+        return response.data;
+      }
+
+      // Fallback: create blob from response data
+      return new Blob([response.data], { type: 'application/pdf' });
+    } catch (error) {
+      console.error('Error generating growth charts report:', error);
+      throw error;
     }
-
-    return blob;
   },
 
   // Descargar PDF
