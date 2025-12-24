@@ -181,18 +181,30 @@ class PDFExportService {
             }
         }
 
-        // Obtener historial de progreso
-        const progressLogs = await progressRepository.find({
-            where: { patient: { id: patientId } },
-            order: { date: 'ASC' },
-            take: 50 // Últimas 50 mediciones
-        });
+        // Obtener historial de progreso (con manejo de errores)
+        let progressLogs: PatientProgressLog[] = [];
+        try {
+            progressLogs = await progressRepository.find({
+                where: { patient: { id: patientId } },
+                order: { date: 'ASC' },
+                take: 50 // Últimas 50 mediciones
+            });
+        } catch (error) {
+            console.warn('No se pudo obtener historial de progreso:', error);
+            // Continuar sin historial
+        }
 
         // Obtener datos de crecimiento calculados
         const growthData = await this.calculateGrowthDataForReport(patient, progressLogs);
 
-        // Obtener alertas activas
-        const alerts = await growthAlertsService.getActiveAlertsForPatient(patientId);
+        // Obtener alertas activas (con manejo de errores)
+        let alerts: GrowthAlert[] = [];
+        try {
+            alerts = await growthAlertsService.getActiveAlertsForPatient(patientId);
+        } catch (error) {
+            console.warn('No se pudieron obtener alertas:', error);
+            // Continuar sin alertas
+        }
 
         return {
             patient,
