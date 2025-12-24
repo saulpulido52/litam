@@ -271,7 +271,7 @@ class ClinicalRecordsService {
   public async generateExpedientePDF(recordId: string): Promise<Blob> {
     try {
       // Use apiService with responseType: 'blob' to get PDF binary
-      const response: any = await apiService.get(`/clinical-records/${recordId}/generate-pdf`, {
+      const response: any = await apiService.get(`/clinical-records/${recordId}/generate-pdf`, undefined, {
         responseType: 'blob'
       });
 

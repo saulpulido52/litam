@@ -135,14 +135,25 @@ class ApiService {
   }
 
   // Generic API methods
-  async get<T>(url: string, params?: object): Promise<ApiResponse<T>> {
-    const requestKey = `GET:${url}:${JSON.stringify(params || {})}`;
+  async get<T>(url: string, params?: object, config?: any): Promise<ApiResponse<T>> {
+    // Create a unique key for this request
+    const requestKey = `${url}-${JSON.stringify(params || {})}`;
 
+    // Check if there's already a pending request for this endpoint
     if (this.requestQueue.has(requestKey)) {
+      console.log(`🔄 Reusing pending request for: ${url}`);
       return this.requestQueue.get(requestKey)!;
     }
 
-    const requestPromise = this.api.get(url, { params }).then(response => {
+    console.log(`📡 New request for: ${url}`);
+
+    // Merge params and config
+    const axiosConfig = {
+      ...config,
+      params
+    };
+
+    const requestPromise = this.api.get(url, axiosConfig).then(response => {
       this.requestQueue.delete(requestKey);
       return response.data;
     }).catch(error => {
