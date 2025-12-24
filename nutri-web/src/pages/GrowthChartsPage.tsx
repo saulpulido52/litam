@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Alert, Card } from 'react-bootstrap';
+import { Container, Row, Col, Alert, Card, Toast, ToastContainer } from 'react-bootstrap';
 import GrowthChartForm, { type FormData } from '../components/GrowthCharts/GrowthChartForm';
 import InteractiveChart from '../components/GrowthCharts/InteractiveChart';
 import ResultsPanel from '../components/GrowthCharts/ResultsPanel';
 import { calculateWeightForAgePercentile } from '../utils/growthCalculations';
+import { detectPercentileAlert, saveAlert } from '../utils/alertDetection';
 
 const GrowthChartsPage: React.FC = () => {
     const [formData, setFormData] = useState<FormData | null>(null);
@@ -12,6 +13,8 @@ const GrowthChartsPage: React.FC = () => {
         zScore: number;
         interpretation: string;
     } | null>(null);
+    const [showAlertToast, setShowAlertToast] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
 
     const handleCalculate = (data: FormData) => {
         const totalMonths = data.ageYears * 12 + data.ageMonths;
@@ -34,6 +37,26 @@ const GrowthChartsPage: React.FC = () => {
 
         setFormData(data);
         setResults(calculatedResults);
+
+        // Detectar y guardar alerta si es necesario
+        // Nota: En una implementación real, esto se haría con datos del paciente real
+        // Por ahora usamos un ID y nombre de ejemplo
+        const patientId = 'demo-patient';
+        const patientName = 'Paciente de Demostración';
+
+        const growthAlert = detectPercentileAlert(
+            calculatedResults.percentile,
+            patientId,
+            patientName,
+            data.weight,
+            totalMonths
+        );
+
+        if (growthAlert) {
+            saveAlert(growthAlert);
+            setAlertMessage(growthAlert.message);
+            setShowAlertToast(true);
+        }
     };
 
     return (
@@ -129,6 +152,29 @@ const GrowthChartsPage: React.FC = () => {
                     </Card>
                 </Col>
             </Row>
+
+            {/* Toast de Alerta */}
+            <ToastContainer position="top-end" className="p-3" style={{ zIndex: 9999 }}>
+                <Toast
+                    show={showAlertToast}
+                    onClose={() => setShowAlertToast(false)}
+                    delay={5000}
+                    autohide
+                    bg="warning"
+                >
+                    <Toast.Header>
+                        <i className="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
+                        <strong className="me-auto">Alerta de Crecimiento</strong>
+                    </Toast.Header>
+                    <Toast.Body>
+                        {alertMessage}
+                        <br />
+                        <small className="text-muted">
+                            La alerta ha sido registrada en el sistema.
+                        </small>
+                    </Toast.Body>
+                </Toast>
+            </ToastContainer>
         </Container>
     );
 };

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Container, Row, Col, Card, Button, Alert, Badge, Spinner, ProgressBar} from 'react-bootstrap';
-import { 
-  Users, 
-  Calendar, 
-  BarChart3, 
+import { Container, Row, Col, Card, Button, Alert, Badge, Spinner, ProgressBar } from 'react-bootstrap';
+import {
+  Users,
+  Calendar,
+  BarChart3,
   Clock,
   Plus,
   RefreshCw,
@@ -27,6 +27,7 @@ import { useDashboard } from '../hooks/useDashboard';
 import { usePatients } from '../hooks/usePatients';
 import { useNavigate } from 'react-router-dom';
 import RecentActivitiesCard from '../components/RecentActivitiesCard';
+import GrowthAlertPanel from '../components/GrowthCharts/GrowthAlertPanel';
 import '../styles/dashboard-modern.css';
 import apiService from '../services/api';
 
@@ -46,14 +47,14 @@ const DashboardPage: React.FC = () => {
     const debugAuth = () => {
       const token = apiService.getToken();
       const storageToken = localStorage.getItem('access_token');
-      
+
       // Solo debug si hay problemas de autenticación
       if (storageToken && !token) {
         console.log('🔄 Detected token mismatch, forcing reload...');
         apiService.forceTokenReload();
       }
     };
-    
+
     debugAuth();
     const interval = setInterval(debugAuth, 30000); // Debug cada 30 segundos
     return () => clearInterval(interval);
@@ -262,19 +263,19 @@ const DashboardPage: React.FC = () => {
   }
 
   if (dashboardError) {
-  return (
+    return (
       <Container className="py-4">
         <Alert variant="danger">
           <Alert.Heading>Error al cargar el dashboard</Alert.Heading>
           <p>{dashboardError}</p>
-          <Button 
-            variant="outline-danger" 
+          <Button
+            variant="outline-danger"
             onClick={handleRefresh}
             aria-label="Reintentar cargar dashboard"
           >
-              Reintentar
-            </Button>
-          </Alert>
+            Reintentar
+          </Button>
+        </Alert>
       </Container>
     );
   }
@@ -283,7 +284,7 @@ const DashboardPage: React.FC = () => {
     <Container className="py-4">
       {/* Header del dashboard - Más espacioso y moderno */}
       <Row className="mb-5">
-          <Col>
+        <Col>
           <div className="d-flex justify-content-between align-items-center">
             <div>
               <h1 className="mb-2 fw-bold">
@@ -292,9 +293,9 @@ const DashboardPage: React.FC = () => {
               <p className="text-muted mb-0 fs-5">
                 Bienvenido a tu dashboard. Aquí tienes un resumen de tu actividad diaria.
               </p>
-                </div>
+            </div>
             <div className="d-flex gap-3">
-                <Button 
+              <Button
                 id="refresh-dashboard-btn"
                 variant="outline-secondary"
                 size="lg"
@@ -306,8 +307,8 @@ const DashboardPage: React.FC = () => {
               >
                 <RefreshCw size={18} className={`me-2 ${dashboardLoading ? 'spin' : ''}`} aria-hidden="true" />
                 Actualizar
-                </Button>
-                <Button 
+              </Button>
+              <Button
                 id="new-patient-btn"
                 variant="primary"
                 size="lg"
@@ -318,11 +319,11 @@ const DashboardPage: React.FC = () => {
               >
                 <Plus size={18} className="me-2" aria-hidden="true" />
                 Nuevo Paciente
-                </Button>
-              </div>
+              </Button>
             </div>
-          </Col>
-        </Row>
+          </div>
+        </Col>
+      </Row>
 
       {/* Card Promocional - Expedientes Inteligentes */}
       <Row className="mb-4">
@@ -347,8 +348,8 @@ const DashboardPage: React.FC = () => {
                   </div>
                 </Col>
                 <Col md={4} className="text-end">
-                  <Button 
-                    variant="primary" 
+                  <Button
+                    variant="primary"
                     size="lg"
                     onClick={() => navigate('/expedientes-inteligentes')}
                     className="px-4"
@@ -389,10 +390,10 @@ const DashboardPage: React.FC = () => {
                       <p className="mb-0">{alert.message}</p>
                     </div>
                     {alert.action && alert.onAction && (
-                      <Button 
-                        size="lg" 
-                        variant="outline-primary" 
-                        onClick={alert.onAction} 
+                      <Button
+                        size="lg"
+                        variant="outline-primary"
+                        onClick={alert.onAction}
                         className="ms-3"
                         aria-label={alert.action}
                         title={alert.action}
@@ -441,6 +442,13 @@ const DashboardPage: React.FC = () => {
             </Card>
           </Col>
         ))}
+      </Row>
+
+      {/* Panel de Alertas de Crecimiento */}
+      <Row className="mb-5">
+        <Col>
+          <GrowthAlertPanel />
+        </Col>
       </Row>
 
       {/* Contenido principal - Distribución orgánica y aireada */}
@@ -520,8 +528,8 @@ const DashboardPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="d-flex align-items-center mb-2">
-                    <ProgressBar 
-                      now={Math.min((stat.current / stat.target) * 100, 100)} 
+                    <ProgressBar
+                      now={Math.min((stat.current / stat.target) * 100, 100)}
                       variant={stat.color}
                       className="flex-grow-1 me-3"
                       style={{ height: '8px' }}
@@ -536,9 +544,9 @@ const DashboardPage: React.FC = () => {
                   </small>
                 </div>
               ))}
-              </Card.Body>
-            </Card>
-          </Col>
+            </Card.Body>
+          </Card>
+        </Col>
 
         {/* Columna derecha - Actividades y resumen */}
         <Col lg={4} className="mb-4">
@@ -588,13 +596,13 @@ const DashboardPage: React.FC = () => {
                 <Zap size={18} className="me-2" aria-hidden="true" />
                 Acciones Rápidas
               </h6>
-                </Card.Header>
+            </Card.Header>
             <Card.Body className="p-4">
               <div className="row g-2">
                 <div className="col-6 mb-2">
-                  <Button 
+                  <Button
                     id="quick-new-patient-btn"
-                    variant="outline-primary" 
+                    variant="outline-primary"
                     className="w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3 rounded-3"
                     onClick={() => navigate('/patients')}
                     aria-label="Agregar nuevo paciente"
@@ -605,9 +613,9 @@ const DashboardPage: React.FC = () => {
                   </Button>
                 </div>
                 <div className="col-6 mb-2">
-                  <Button 
+                  <Button
                     id="quick-create-plan-btn"
-                    variant="outline-success" 
+                    variant="outline-success"
                     className="w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3 rounded-3"
                     onClick={() => navigate('/diet-plans')}
                     aria-label="Crear plan nutricional"
@@ -616,11 +624,11 @@ const DashboardPage: React.FC = () => {
                     <FileText size={20} className="mb-2" aria-hidden="true" />
                     <span className="small">Crear Plan</span>
                   </Button>
-                      </div>
+                </div>
                 <div className="col-6 mb-2">
-                  <Button 
+                  <Button
                     id="quick-schedule-appointment-btn"
-                    variant="outline-warning" 
+                    variant="outline-warning"
                     className="w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3 rounded-3"
                     onClick={() => navigate('/calendar')}
                     aria-label="Programar cita"
@@ -629,11 +637,11 @@ const DashboardPage: React.FC = () => {
                     <Calendar size={20} className="mb-2" aria-hidden="true" />
                     <span className="small">Programar Cita</span>
                   </Button>
-                      </div>
+                </div>
                 <div className="col-6 mb-2">
-                  <Button 
+                  <Button
                     id="quick-clinical-records-btn"
-                    variant="outline-info" 
+                    variant="outline-info"
                     className="w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3 rounded-3"
                     onClick={() => navigate('/clinical-records')}
                     aria-label="Ver expedientes clínicos"
@@ -642,12 +650,12 @@ const DashboardPage: React.FC = () => {
                     <Award size={20} className="mb-2" aria-hidden="true" />
                     <span className="small">Expediente</span>
                   </Button>
-                      </div>
-                      </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
       {/* Estadísticas detalladas (condicional) - Mejor espaciado */}
       {showDetailedStats && dashboardData && (
@@ -703,15 +711,15 @@ const DashboardPage: React.FC = () => {
 
       {/* Información de última actualización - Mejor espaciado */}
       <Row className="mt-5">
-          <Col>
+        <Col>
           <div className="text-center">
             <small className="text-muted">
               Última actualización: {lastRefresh.toLocaleTimeString()}
             </small>
-              </div>
-          </Col>
-        </Row>
-      </Container>
+          </div>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 
