@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Alert } from 'react-bootstrap';
-import GrowthChartForm, { FormData } from '../components/GrowthCharts/GrowthChartForm';
+import { Container, Row, Col, Alert, Card } from 'react-bootstrap';
+import GrowthChartForm, { type FormData } from '../components/GrowthCharts/GrowthChartForm';
 import InteractiveChart from '../components/GrowthCharts/InteractiveChart';
 import ResultsPanel from '../components/GrowthCharts/ResultsPanel';
 import { calculateWeightForAgePercentile } from '../utils/growthCalculations';
