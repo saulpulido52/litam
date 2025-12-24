@@ -753,7 +753,9 @@ class PDFExportService {
      */
     getFileUrl(filePath: string): string {
         const fileName = path.basename(filePath);
-        return `/growth-charts/export/download/${fileName}`;
+        // Usar variable de entorno o fallback a Render
+        const baseUrl = process.env.API_URL || 'https://litam.onrender.com';
+        return `${baseUrl}/api/growth-charts/export/download/${fileName}`;
     }
 
     /**
