@@ -4,7 +4,20 @@ import { protect } from '../../middleware/auth.middleware';
 
 const router = Router();
 
-// Aplicar middleware de autenticación a todas las rutas
+/**
+ * @route GET /api/growth-charts/export/download/:fileName
+ * @desc Descarga un archivo de reporte generado
+ * @access Public (no requiere autenticación para permitir descarga directa)
+ * @params {
+ *   fileName: string
+ * }
+ */
+router.get(
+    '/download/:fileName',
+    pdfExportController.downloadReport
+);
+
+// Aplicar middleware de autenticación a las rutas restantes
 router.use(protect);
 
 /**
@@ -42,19 +55,6 @@ router.post(
 router.post(
     '/growth-charts',
     pdfExportController.generateGrowthChartsReport
-);
-
-/**
- * @route GET /api/growth-charts/export/download/:fileName
- * @desc Descarga un archivo de reporte generado
- * @access Nutriólogos y Administradores
- * @params {
- *   fileName: string
- * }
- */
-router.get(
-    '/download/:fileName',
-    pdfExportController.downloadReport
 );
 
 /**
