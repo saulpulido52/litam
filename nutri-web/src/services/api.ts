@@ -12,7 +12,16 @@ class ApiService {
     // Si no está definida, usar localhost por defecto para desarrollo local.
     // La URL de Supabase encontrada anteriormente se ha movido a .env
     const envApiUrl = import.meta.env.VITE_API_URL;
-    const baseURL = envApiUrl || 'http://localhost:4000/api';
+
+    // Lógica robusta de fallback
+    let baseURL = envApiUrl;
+    if (!baseURL) {
+      if (import.meta.env.MODE === 'production') {
+        baseURL = 'https://litam.onrender.com/api'; // Fallback seguro para producción
+      } else {
+        baseURL = 'http://localhost:4000/api'; // Fallback para desarrollo
+      }
+    }
 
     console.log('🚀 [ApiService] Initializing...');
     console.log('🌍 [ApiService] Mode:', import.meta.env.MODE);
