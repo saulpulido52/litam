@@ -155,197 +155,197 @@ const GrowthChartsPDFExport: React.FC<GrowthChartsPDFExportProps> = ({
             Exportar Gráficos de Crecimiento - {patientName}
           </h5>
         </div>
-        <div className="card-body"
+        <div className="card-body">
           {/* Opciones de Exportación */}
           <div className="row mb-4">
-          <div className="col-md-6">
-            <h6 className="mb-3">
-              <i className="fas fa-cog me-2"></i>
-              Opciones del Reporte
-            </h6>
-            <div className="form-check mb-2">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="includeGrowthCharts"
-                checked={exportOptions.includeGrowthCharts}
-                onChange={(e) => handleOptionChange('includeGrowthCharts', e.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="includeGrowthCharts">
-                Incluir Gráficos de Crecimiento
-              </label>
-            </div>
-            <div className="form-check mb-2">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="includeAlerts"
-                checked={exportOptions.includeAlerts}
-                onChange={(e) => handleOptionChange('includeAlerts', e.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="includeAlerts">
-                Incluir Alertas Activas
-              </label>
-            </div>
-            <div className="form-check mb-2">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="includeProgressHistory"
-                checked={exportOptions.includeProgressHistory}
-                onChange={(e) => handleOptionChange('includeProgressHistory', e.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="includeProgressHistory">
-                Incluir Historial de Progreso
-              </label>
-            </div>
-            <div className="form-check mb-2">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="includeClinicalData"
-                checked={exportOptions.includeClinicalData}
-                onChange={(e) => handleOptionChange('includeClinicalData', e.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="includeClinicalData">
-                Incluir Datos Clínicos Pediátricos
-              </label>
-            </div>
-            <div className="form-check mb-3">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="includeRecommendations"
-                checked={exportOptions.includeRecommendations}
-                onChange={(e) => handleOptionChange('includeRecommendations', e.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="includeRecommendations">
-                Incluir Recomendaciones
-              </label>
-            </div>
-          </div>
-
-          <div className="col-md-6">
-            <h6 className="mb-3">
-              <i className="fas fa-chart-line me-2"></i>
-              Configuración de Curvas
-            </h6>
-
-            {/* Fuente de datos */}
-            <div className="mb-3">
-              <label className="form-label">Fuente de Referencia:</label>
-              <div className="form-check">
+            <div className="col-md-6">
+              <h6 className="mb-3">
+                <i className="fas fa-cog me-2"></i>
+                Opciones del Reporte
+              </h6>
+              <div className="form-check mb-2">
                 <input
                   className="form-check-input"
-                  type="radio"
-                  name="chartSource"
-                  id="sourceWHO"
-                  value="WHO"
-                  checked={exportOptions.chartSource === 'WHO'}
-                  onChange={(e) => handleOptionChange('chartSource', e.target.value)}
+                  type="checkbox"
+                  id="includeGrowthCharts"
+                  checked={exportOptions.includeGrowthCharts}
+                  onChange={(e) => handleOptionChange('includeGrowthCharts', e.target.checked)}
                 />
-                <label className="form-check-label" htmlFor="sourceWHO">
-                  OMS (Organización Mundial de la Salud)
+                <label className="form-check-label" htmlFor="includeGrowthCharts">
+                  Incluir Gráficos de Crecimiento
                 </label>
               </div>
-              <div className="form-check">
+              <div className="form-check mb-2">
                 <input
                   className="form-check-input"
-                  type="radio"
-                  name="chartSource"
-                  id="sourceCDC"
-                  value="CDC"
-                  checked={exportOptions.chartSource === 'CDC'}
-                  onChange={(e) => handleOptionChange('chartSource', e.target.value)}
+                  type="checkbox"
+                  id="includeAlerts"
+                  checked={exportOptions.includeAlerts}
+                  onChange={(e) => handleOptionChange('includeAlerts', e.target.checked)}
                 />
-                <label className="form-check-label" htmlFor="sourceCDC">
-                  CDC (Centers for Disease Control)
+                <label className="form-check-label" htmlFor="includeAlerts">
+                  Incluir Alertas Activas
+                </label>
+              </div>
+              <div className="form-check mb-2">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="includeProgressHistory"
+                  checked={exportOptions.includeProgressHistory}
+                  onChange={(e) => handleOptionChange('includeProgressHistory', e.target.checked)}
+                />
+                <label className="form-check-label" htmlFor="includeProgressHistory">
+                  Incluir Historial de Progreso
+                </label>
+              </div>
+              <div className="form-check mb-2">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="includeClinicalData"
+                  checked={exportOptions.includeClinicalData}
+                  onChange={(e) => handleOptionChange('includeClinicalData', e.target.checked)}
+                />
+                <label className="form-check-label" htmlFor="includeClinicalData">
+                  Incluir Datos Clínicos Pediátricos
+                </label>
+              </div>
+              <div className="form-check mb-3">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="includeRecommendations"
+                  checked={exportOptions.includeRecommendations}
+                  onChange={(e) => handleOptionChange('includeRecommendations', e.target.checked)}
+                />
+                <label className="form-check-label" htmlFor="includeRecommendations">
+                  Incluir Recomendaciones
                 </label>
               </div>
             </div>
 
-            {/* Tipos de métricas */}
-            <div className="mb-3">
-              <label className="form-label">Métricas a Incluir:</label>
-              {metricTypeOptions.map(option => (
-                <div key={option.value} className="form-check">
+            <div className="col-md-6">
+              <h6 className="mb-3">
+                <i className="fas fa-chart-line me-2"></i>
+                Configuración de Curvas
+              </h6>
+
+              {/* Fuente de datos */}
+              <div className="mb-3">
+                <label className="form-label">Fuente de Referencia:</label>
+                <div className="form-check">
                   <input
                     className="form-check-input"
-                    type="checkbox"
-                    id={`metric-${option.value}`}
-                    checked={exportOptions.metricTypes.includes(option.value)}
-                    onChange={(e) => handleMetricTypeChange(option.value, e.target.checked)}
+                    type="radio"
+                    name="chartSource"
+                    id="sourceWHO"
+                    value="WHO"
+                    checked={exportOptions.chartSource === 'WHO'}
+                    onChange={(e) => handleOptionChange('chartSource', e.target.value)}
                   />
-                  <label className="form-check-label" htmlFor={`metric-${option.value}`}>
-                    {option.label}
+                  <label className="form-check-label" htmlFor="sourceWHO">
+                    OMS (Organización Mundial de la Salud)
                   </label>
                 </div>
-              ))}
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="chartSource"
+                    id="sourceCDC"
+                    value="CDC"
+                    checked={exportOptions.chartSource === 'CDC'}
+                    onChange={(e) => handleOptionChange('chartSource', e.target.value)}
+                  />
+                  <label className="form-check-label" htmlFor="sourceCDC">
+                    CDC (Centers for Disease Control)
+                  </label>
+                </div>
+              </div>
+
+              {/* Tipos de métricas */}
+              <div className="mb-3">
+                <label className="form-label">Métricas a Incluir:</label>
+                {metricTypeOptions.map(option => (
+                  <div key={option.value} className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id={`metric-${option.value}`}
+                      checked={exportOptions.metricTypes.includes(option.value)}
+                      onChange={(e) => handleMetricTypeChange(option.value, e.target.checked)}
+                    />
+                    <label className="form-check-label" htmlFor={`metric-${option.value}`}>
+                      {option.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Botones de Exportación */}
-        <div className="row">
-          <div className="col-12">
-            <h6 className="mb-3 text-center">
-              <i className="fas fa-download me-2"></i>
-              Generar Reportes
-            </h6>
+          {/* Botones de Exportación */}
+          <div className="row">
+            <div className="col-12">
+              <h6 className="mb-3 text-center">
+                <i className="fas fa-download me-2"></i>
+                Generar Reportes
+              </h6>
+            </div>
           </div>
-        </div>
 
-        <div className="d-flex flex-column flex-md-row gap-3 justify-content-center">
-          <button
-            type="button"
-            className="btn btn-primary btn-lg"
-            onClick={generatePediatricReport}
-            disabled={isExporting}
-          >
-            {isExporting ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" />
-                Generando...
-              </>
-            ) : (
-              <>
-                <i className="fas fa-file-medical-alt me-2"></i>
-                Reporte Pediátrico Completo
-              </>
-            )}
-          </button>
+          <div className="d-flex flex-column flex-md-row gap-3 justify-content-center">
+            <button
+              type="button"
+              className="btn btn-primary btn-lg"
+              onClick={generatePediatricReport}
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" />
+                  Generando...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-file-medical-alt me-2"></i>
+                  Reporte Pediátrico Completo
+                </>
+              )}
+            </button>
 
-          <button
-            type="button"
-            className="btn btn-outline-primary btn-lg"
-            onClick={generateGrowthChartsReport}
-            disabled={isExporting || exportOptions.metricTypes.length === 0}
-          >
-            {isExporting ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" />
-                Generando...
-              </>
-            ) : (
-              <>
-                <i className="fas fa-chart-line me-2"></i>
-                Solo Curvas de Crecimiento
-              </>
-            )}
-          </button>
-        </div>
-
-        {exportOptions.metricTypes.length === 0 && (
-          <div className="alert alert-warning mt-3" role="alert">
-            <i className="fas fa-exclamation-triangle me-2"></i>
-            Selecciona al menos una métrica para generar el reporte de curvas.
+            <button
+              type="button"
+              className="btn btn-outline-primary btn-lg"
+              onClick={generateGrowthChartsReport}
+              disabled={isExporting || exportOptions.metricTypes.length === 0}
+            >
+              {isExporting ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" />
+                  Generando...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-chart-line me-2"></i>
+                  Solo Curvas de Crecimiento
+                </>
+              )}
+            </button>
           </div>
-        )}
+
+          {exportOptions.metricTypes.length === 0 && (
+            <div className="alert alert-warning mt-3" role="alert">
+              <i className="fas fa-exclamation-triangle me-2"></i>
+              Selecciona al menos una métrica para generar el reporte de curvas.
+            </div>
+          )}
+        </div>
       </div>
-    </div >
 
-      {/* Toast de notificaciones */ }
-      < div className = "toast-container position-fixed top-0 end-0 p-3" >
+      {/* Toast de notificaciones */}
+      <div className="position-fixed top-0 end-0 p-3" style={{ zIndex: 11 }}>
         <Toast
           show={showToast}
           onClose={() => setShowToast(false)}
@@ -358,9 +358,9 @@ const GrowthChartsPDFExport: React.FC<GrowthChartsPDFExportProps> = ({
             {toastMessage}
           </Toast.Body>
         </Toast>
-      </div >
+      </div>
     </>
   );
 };
 
-export default GrowthChartsPDFExport; 
+export default GrowthChartsPDFExport;
