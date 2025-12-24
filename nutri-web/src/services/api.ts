@@ -11,7 +11,13 @@ class ApiService {
     // Configurar la URL base. Priorizar VITE_API_URL.
     // Si no está definida, usar localhost por defecto para desarrollo local.
     // La URL de Supabase encontrada anteriormente se ha movido a .env
-    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+    const envApiUrl = import.meta.env.VITE_API_URL;
+    const baseURL = envApiUrl || 'http://localhost:4000/api';
+
+    console.log('🚀 [ApiService] Initializing...');
+    console.log('🌍 [ApiService] Mode:', import.meta.env.MODE);
+    console.log('🔗 [ApiService] VITE_API_URL (raw):', envApiUrl);
+    console.log('🔗 [ApiService] Final baseURL:', baseURL);
 
     this.api = axios.create({
       baseURL,
