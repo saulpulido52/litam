@@ -221,37 +221,47 @@ class PDFExportService {
         // Obtener medición más reciente
         const latestLog = progressLogs[progressLogs.length - 1];
 
-        if (latestLog.weight && patient.age && patient.gender) {
-            const ageMonths = patient.age * 12; // Conversión aproximada
+        if (latestLog.weight && patient.age) {
+            // Cálculos básicos sin base de datos
+            const ageYears = patient.age;
+            const weight = latestLog.weight;
 
-            // Calcular métricas actuales
-            const height = 150; // Valor por defecto - en implementación real vendría del log
-            growthData.currentMetrics = await growthChartsService.calculateMultipleMetrics(
-                ageMonths,
-                latestLog.weight,
-                height,
-                patient.gender as Gender
-            );
+            // Estimación de altura basada en edad (valores aproximados)
+            const estimatedHeight = this.estimateHeightByAge(ageYears, patient.gender as Gender);
 
-            // Calcular percentiles históricos (simplificado)
-            for (const log of progressLogs.slice(-10)) { // Últimas 10 mediciones
+            // Calcular IMC
+            const bmi = weight / Math.pow(estimatedHeight / 100, 2);
+
+            // Crear métricas básicas
+            growthData.currentMetrics = {
+                weight: {
+                    value: weight,
+                    unit: 'kg',
+                    interpretation: this.interpretWeight(weight, ageYears)
+                },
+                estimatedHeight: {
+                    value: estimatedHeight,
+                    unit: 'cm',
+                    interpretation: 'Estimación basada en edad'
+                },
+                bmi: {
+                    value: bmi.toFixed(2),
+                    interpretation: this.interpretBMI(bmi, ageYears)
+                },
+                age: {
+                    years: ageYears,
+                    months: ageYears * 12
+                }
+            };
+
+            // Historial simplificado (últimas 5 mediciones)
+            for (const log of progressLogs.slice(-5)) {
                 if (log.weight) {
-                    try {
-                        const result = await growthChartsService.calculateGrowthPercentile({
-                            ageMonths: ageMonths - (progressLogs.length - progressLogs.indexOf(log)),
-                            value: log.weight,
-                            gender: patient.gender as Gender,
-                            metricType: GrowthMetricType.WEIGHT_FOR_AGE
-                        });
-
-                        growthData.historicalPercentiles.push({
-                            date: log.date,
-                            percentile: result.percentile,
-                            zScore: result.zScore
-                        });
-                    } catch (error) {
-                        console.warn('Error calculando percentil histórico:', error);
-                    }
+                    growthData.historicalPercentiles.push({
+                        date: log.date,
+                        weight: log.weight,
+                        notes: log.notes || 'Sin notas'
+                    });
                 }
             }
         }
@@ -445,7 +455,7 @@ class PDFExportService {
     }
 
     /**
-     * Agrega datos actuales de crecimiento
+     * Agrega datos actuales de crecimiento (versión simplificada)
      */
     private addCurrentGrowthData(doc: any, metrics: any, y: number): number {
         doc.fontSize(14)
@@ -454,32 +464,47 @@ class PDFExportService {
 
         y += 25;
 
-        if (metrics.weightForAge) {
+        // Nota informativa
+        doc.fontSize(9)
+            .fillColor('#7f8c8d')
+            .text('Nota: Valores aproximados. Percentiles detallados disponibles próximamente.', 50, y);
+
+        y += 20;
+
+        if (metrics.weight) {
             doc.fontSize(11)
                 .fillColor('#333333')
                 .font('Helvetica-Bold')
-                .text('Peso para Edad:', 50, y)
+                .text('Peso:', 50, y)
                 .font('Helvetica')
-                .text(`P${metrics.weightForAge.percentile.toFixed(1)} (Z: ${metrics.weightForAge.zScore.toFixed(2)})`, 150, y)
-                .text(metrics.weightForAge.interpretation, 300, y);
+                .text(`${metrics.weight.value} ${metrics.weight.unit}`, 150, y)
+                .text(metrics.weight.interpretation, 300, y);
             y += 18;
         }
 
-        if (metrics.heightForAge) {
+        if (metrics.estimatedHeight) {
             doc.font('Helvetica-Bold')
-                .text('Talla para Edad:', 50, y)
+                .text('Talla (estimada):', 50, y)
                 .font('Helvetica')
-                .text(`P${metrics.heightForAge.percentile.toFixed(1)} (Z: ${metrics.heightForAge.zScore.toFixed(2)})`, 150, y)
-                .text(metrics.heightForAge.interpretation, 300, y);
+                .text(`${metrics.estimatedHeight.value} ${metrics.estimatedHeight.unit}`, 150, y)
+                .text(metrics.estimatedHeight.interpretation, 300, y);
             y += 18;
         }
 
-        if (metrics.bmiForAge) {
+        if (metrics.bmi) {
             doc.font('Helvetica-Bold')
-                .text('IMC para Edad:', 50, y)
+                .text('IMC:', 50, y)
                 .font('Helvetica')
-                .text(`P${metrics.bmiForAge.percentile.toFixed(1)} (Z: ${metrics.bmiForAge.zScore.toFixed(2)})`, 150, y)
-                .text(metrics.bmiForAge.interpretation, 300, y);
+                .text(metrics.bmi.value, 150, y)
+                .text(metrics.bmi.interpretation, 300, y);
+            y += 18;
+        }
+
+        if (metrics.age) {
+            doc.font('Helvetica-Bold')
+                .text('Edad:', 50, y)
+                .font('Helvetica')
+                .text(`${metrics.age.years} años (${metrics.age.months} meses)`, 150, y);
             y += 18;
         }
 
@@ -717,6 +742,77 @@ class PDFExportService {
     getFileUrl(filePath: string): string {
         const fileName = path.basename(filePath);
         return `/growth-charts/export/download/${fileName}`;
+    }
+
+    /**
+     * Estima altura basada en edad (valores aproximados)
+     */
+    private estimateHeightByAge(ageYears: number, gender: Gender): number {
+        // Valores aproximados de altura promedio por edad
+        const heightTable: { [key: number]: { male: number; female: number } } = {
+            0: { male: 50, female: 49 },
+            1: { male: 76, female: 74 },
+            2: { male: 88, female: 86 },
+            3: { male: 96, female: 95 },
+            4: { male: 103, female: 101 },
+            5: { male: 110, female: 108 },
+            6: { male: 116, female: 115 },
+            7: { male: 122, female: 121 },
+            8: { male: 128, female: 127 },
+            9: { male: 134, female: 133 },
+            10: { male: 139, female: 138 },
+            11: { male: 144, female: 144 },
+            12: { male: 150, female: 151 },
+            13: { male: 156, female: 157 },
+            14: { male: 164, female: 160 },
+            15: { male: 170, female: 162 },
+            16: { male: 173, female: 163 },
+            17: { male: 175, female: 163 },
+            18: { male: 176, female: 163 }
+        };
+
+        const age = Math.min(Math.floor(ageYears), 18);
+        const data = heightTable[age] || heightTable[18];
+
+        return gender === Gender.MALE ? data.male : data.female;
+    }
+
+    /**
+     * Interpreta peso basado en edad
+     */
+    private interpretWeight(weight: number, ageYears: number): string {
+        // Rangos muy aproximados
+        if (ageYears <= 2) {
+            if (weight < 8) return 'Bajo peso';
+            if (weight > 15) return 'Peso elevado';
+            return 'Peso adecuado';
+        } else if (ageYears <= 5) {
+            if (weight < 12) return 'Bajo peso';
+            if (weight > 22) return 'Peso elevado';
+            return 'Peso adecuado';
+        } else if (ageYears <= 10) {
+            if (weight < 20) return 'Bajo peso';
+            if (weight > 45) return 'Peso elevado';
+            return 'Peso adecuado';
+        } else {
+            if (weight < 35) return 'Bajo peso';
+            if (weight > 70) return 'Peso elevado';
+            return 'Peso adecuado';
+        }
+    }
+
+    /**
+     * Interpreta IMC basado en edad
+     */
+    private interpretBMI(bmi: number, ageYears: number): string {
+        if (ageYears < 2) {
+            return 'IMC no aplicable para menores de 2 años';
+        }
+
+        if (bmi < 14) return 'Bajo peso';
+        if (bmi < 18) return 'Peso normal';
+        if (bmi < 25) return 'Sobrepeso';
+        return 'Obesidad';
     }
 
     /**
