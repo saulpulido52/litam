@@ -150,9 +150,7 @@ export default defineConfig(({ mode }) => ({
 
   // **VARIABLES DE ENTORNO OPTIMIZADAS**
   define: {
-    'import.meta.env.VITE_API_URL': JSON.stringify(
-      (mode === 'production' ? 'https://litam.onrender.com/api' : '/api')  // ← USAR PROXY EN DESARROLLO
-    ),
+    // 'import.meta.env.VITE_API_URL': ... REMOVED to allow environment variable override
     'import.meta.env.VITE_APP_NAME': JSON.stringify('Litam - Dashboard Nutriólogo'),
     'import.meta.env.VITE_APP_VERSION': JSON.stringify('1.0.0'),
     'import.meta.env.VITE_NODE_ENV': JSON.stringify(mode),
