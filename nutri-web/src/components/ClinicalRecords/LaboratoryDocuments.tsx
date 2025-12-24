@@ -12,10 +12,10 @@ import {
   ListGroup,
   Badge
 } from 'react-bootstrap';
-import { 
-  CloudUpload, 
-  Trash2, 
-  Download, 
+import {
+  CloudUpload,
+  Trash2,
+  Download,
   Calendar,
   FileDown,
   FileText
@@ -76,8 +76,8 @@ const LaboratoryDocuments: React.FC<LaboratoryDocumentsProps> = ({
         setError('Solo se permiten archivos PDF');
         return;
       }
-      if (file.size > 10 * 1024 * 1024) { // 10MB
-        setError('El archivo es demasiado grande. Máximo 10MB');
+      if (file.size > 5 * 1024 * 1024) { // 5MB
+        setError('El archivo es demasiado grande. Máximo 5MB');
         return;
       }
       setSelectedFile(file);
@@ -92,7 +92,7 @@ const LaboratoryDocuments: React.FC<LaboratoryDocumentsProps> = ({
     setError(null);
 
     try {
-      await clinicalRecordsService.uploadLaboratoryDocument(
+      const result = await clinicalRecordsService.uploadLaboratoryDocument(
         recordId,
         selectedFile,
         description,
@@ -100,6 +100,12 @@ const LaboratoryDocuments: React.FC<LaboratoryDocumentsProps> = ({
       );
 
       setSuccess('Documento de laboratorio subido exitosamente');
+
+      // Show preview of uploaded file if URL is available
+      if (result?.data?.file_url) {
+        window.open(result.data.file_url, '_blank');
+      }
+
       setUploadDialogOpen(false);
       setSelectedFile(null);
       setDescription('');
@@ -133,18 +139,18 @@ const LaboratoryDocuments: React.FC<LaboratoryDocumentsProps> = ({
     try {
       // Usar el servicio para generar el PDF
       const pdfBlob = await clinicalRecordsService.generateExpedientePDF(recordId);
-      
+
       // Crear URL temporal para el blob
       const pdfUrl = window.URL.createObjectURL(pdfBlob);
-      
+
       // Nombre del archivo
       const filename = `expediente_${recordId}_${Date.now()}.pdf`;
-      
+
       setSuccess('PDF del expediente generado exitosamente');
-      
+
       // Abrir el PDF en nueva ventana
       window.open(pdfUrl, '_blank');
-      
+
       // También crear enlace de descarga
       const link = document.createElement('a');
       link.href = pdfUrl;
@@ -153,12 +159,12 @@ const LaboratoryDocuments: React.FC<LaboratoryDocumentsProps> = ({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Limpiar URL temporal después de un tiempo
       setTimeout(() => {
         window.URL.revokeObjectURL(pdfUrl);
       }, 10000);
-      
+
     } catch (error: any) {
       console.error('Error generating PDF:', error);
       setError(error.message);
@@ -217,8 +223,8 @@ const LaboratoryDocuments: React.FC<LaboratoryDocumentsProps> = ({
             </h4>
             <div>
               {canUpload && (
-                <Button 
-                  variant="primary" 
+                <Button
+                  variant="primary"
                   onClick={() => setUploadDialogOpen(true)}
                   className="me-2"
                   disabled={uploading}
@@ -264,7 +270,7 @@ const LaboratoryDocuments: React.FC<LaboratoryDocumentsProps> = ({
                       <div>
                         <strong>{doc.original_name}</strong>
                         <div className="mt-2">
-                          <Badge 
+                          <Badge
                             bg={doc.uploaded_by === 'patient' ? 'primary' : 'secondary'}
                             className="me-2"
                           >
@@ -294,9 +300,17 @@ const LaboratoryDocuments: React.FC<LaboratoryDocumentsProps> = ({
                       <Button
                         variant="outline-primary"
                         size="sm"
-                        href={doc.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        onClick={() => {
+                          // Create a temporary link to download the file
+                          const link = document.createElement('a');
+                          link.href = doc.file_url;
+                          link.download = doc.original_name;
+                          link.target = '_blank';
+                          link.rel = 'noopener noreferrer';
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
                         className="me-2"
                       >
                         <Download size={14} className="me-1" />
@@ -338,7 +352,7 @@ const LaboratoryDocuments: React.FC<LaboratoryDocumentsProps> = ({
               onChange={handleFileSelect}
             />
             <Form.Text className="text-muted">
-              Solo se permiten archivos PDF. Tamaño máximo: 10MB
+              Solo se permiten archivos PDF. Tamaño máximo: 5MB
             </Form.Text>
           </Form.Group>
 
