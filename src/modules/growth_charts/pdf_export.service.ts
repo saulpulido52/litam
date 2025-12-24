@@ -41,7 +41,7 @@ class PDFExportService {
     constructor() {
         this.logoPath = path.join(__dirname, '../../../assets/logo.png');
         this.outputDir = path.join(__dirname, '../../../generated/reports');
-        
+
         // Crear directorio si no existe
         if (!fs.existsSync(this.outputDir)) {
             fs.mkdirSync(this.outputDir, { recursive: true });
@@ -59,15 +59,15 @@ class PDFExportService {
         try {
             // Obtener datos del paciente
             const reportData = await this.gatherReportData(patientId, nutritionistId);
-            
+
             // Crear documento PDF
             const doc = new PDFDocument({
                 size: 'A4',
                 margins: { top: 50, bottom: 50, left: 50, right: 50 },
                 info: {
                     Title: `Reporte Pediátrico - ${reportData.patient.first_name} ${reportData.patient.last_name}`,
-                    Author: reportData.nutritionist ? 
-                        `${reportData.nutritionist.first_name} ${reportData.nutritionist.last_name}` : 
+                    Author: reportData.nutritionist ?
+                        `${reportData.nutritionist.first_name} ${reportData.nutritionist.last_name}` :
                         'Sistema Nutri',
                     Subject: 'Reporte de Crecimiento Pediátrico',
                     Keywords: 'pediatría, crecimiento, nutrición, OMS, CDC',
@@ -79,7 +79,7 @@ class PDFExportService {
             // Generar nombre de archivo único
             const fileName = `reporte_pediatrico_${patientId}_${Date.now()}.pdf`;
             const filePath = path.join(this.outputDir, fileName);
-            
+
             // Stream hacia archivo
             const stream = fs.createWriteStream(filePath);
             doc.pipe(stream);
@@ -113,7 +113,7 @@ class PDFExportService {
     ): Promise<string> {
         try {
             const reportData = await this.gatherReportData(patientId);
-            
+
             const doc = new PDFDocument({
                 size: 'A4',
                 layout: 'landscape', // Mejor para gráficos
@@ -122,7 +122,7 @@ class PDFExportService {
 
             const fileName = `curvas_crecimiento_${patientId}_${Date.now()}.pdf`;
             const filePath = path.join(this.outputDir, fileName);
-            
+
             const stream = fs.createWriteStream(filePath);
             doc.pipe(stream);
 
@@ -220,7 +220,7 @@ class PDFExportService {
 
         // Obtener medición más reciente
         const latestLog = progressLogs[progressLogs.length - 1];
-        
+
         if (latestLog.weight && patient.age && patient.gender) {
             const ageMonths = patient.age * 12; // Conversión aproximada
 
@@ -324,9 +324,9 @@ class PDFExportService {
 
         // Nota sobre las curvas
         doc.fontSize(10)
-           .fillColor('#666666')
-           .text(`Referencia: ${source === 'WHO' ? 'Organización Mundial de la Salud (OMS)' : 'Centers for Disease Control (CDC)'}`, 50, currentY)
-           .text(`Fecha del reporte: ${new Date().toLocaleDateString('es-ES')}`, 50, currentY + 15);
+            .fillColor('#666666')
+            .text(`Referencia: ${source === 'WHO' ? 'Organización Mundial de la Salud (OMS)' : 'Centers for Disease Control (CDC)'}`, 50, currentY)
+            .text(`Fecha del reporte: ${new Date().toLocaleDateString('es-ES')}`, 50, currentY + 15);
 
         currentY += 50;
 
@@ -354,19 +354,19 @@ class PDFExportService {
 
         // Título principal
         doc.fontSize(20)
-           .fillColor('#2c3e50')
-           .text('REPORTE PEDIÁTRICO DE CRECIMIENTO', 120, y + 10);
+            .fillColor('#2c3e50')
+            .text('REPORTE PEDIÁTRICO DE CRECIMIENTO', 120, y + 10);
 
         doc.fontSize(12)
-           .fillColor('#7f8c8d')
-           .text('Sistema de Monitoreo Nutricional Pediátrico', 120, y + 35);
+            .fillColor('#7f8c8d')
+            .text('Sistema de Monitoreo Nutricional Pediátrico', 120, y + 35);
 
         // Línea separadora
         doc.strokeColor('#3498db')
-           .lineWidth(2)
-           .moveTo(50, y + 65)
-           .lineTo(545, y + 65)
-           .stroke();
+            .lineWidth(2)
+            .moveTo(50, y + 65)
+            .lineTo(545, y + 65)
+            .stroke();
 
         return y + 85;
     }
@@ -376,14 +376,14 @@ class PDFExportService {
      */
     private addSimpleHeader(doc: any, title: string, y: number): number {
         doc.fontSize(16)
-           .fillColor('#2c3e50')
-           .text(title, 50, y);
+            .fillColor('#2c3e50')
+            .text(title, 50, y);
 
         doc.strokeColor('#3498db')
-           .lineWidth(1)
-           .moveTo(50, y + 25)
-           .lineTo(792 - 50, y + 25) // Ancho de página landscape
-           .stroke();
+            .lineWidth(1)
+            .moveTo(50, y + 25)
+            .lineTo(792 - 50, y + 25) // Ancho de página landscape
+            .stroke();
 
         return y + 40;
     }
@@ -395,8 +395,8 @@ class PDFExportService {
         const { patient, patientProfile } = data;
 
         doc.fontSize(14)
-           .fillColor('#2c3e50')
-           .text('INFORMACIÓN DEL PACIENTE', 50, y);
+            .fillColor('#2c3e50')
+            .text('INFORMACIÓN DEL PACIENTE', 50, y);
 
         y += 25;
 
@@ -436,10 +436,10 @@ class PDFExportService {
      */
     private addBasicPatientInfo(doc: any, patient: User, y: number): number {
         doc.fontSize(12)
-           .fillColor('#333333')
-           .text(`Paciente: ${patient.first_name} ${patient.last_name}`, 50, y)
-           .text(`Edad: ${patient.age} años`, 300, y)
-           .text(`Género: ${patient.gender === 'male' ? 'Masculino' : 'Femenino'}`, 450, y);
+            .fillColor('#333333')
+            .text(`Paciente: ${patient.first_name} ${patient.last_name}`, 50, y)
+            .text(`Edad: ${patient.age} años`, 300, y)
+            .text(`Género: ${patient.gender === 'male' ? 'Masculino' : 'Femenino'}`, 450, y);
 
         return y + 30;
     }
@@ -449,37 +449,37 @@ class PDFExportService {
      */
     private addCurrentGrowthData(doc: any, metrics: any, y: number): number {
         doc.fontSize(14)
-           .fillColor('#2c3e50')
-           .text('EVALUACIÓN ACTUAL DE CRECIMIENTO', 50, y);
+            .fillColor('#2c3e50')
+            .text('EVALUACIÓN ACTUAL DE CRECIMIENTO', 50, y);
 
         y += 25;
 
         if (metrics.weightForAge) {
             doc.fontSize(11)
-               .fillColor('#333333')
-               .font('Helvetica-Bold')
-               .text('Peso para Edad:', 50, y)
-               .font('Helvetica')
-               .text(`P${metrics.weightForAge.percentile.toFixed(1)} (Z: ${metrics.weightForAge.zScore.toFixed(2)})`, 150, y)
-               .text(metrics.weightForAge.interpretation, 300, y);
+                .fillColor('#333333')
+                .font('Helvetica-Bold')
+                .text('Peso para Edad:', 50, y)
+                .font('Helvetica')
+                .text(`P${metrics.weightForAge.percentile.toFixed(1)} (Z: ${metrics.weightForAge.zScore.toFixed(2)})`, 150, y)
+                .text(metrics.weightForAge.interpretation, 300, y);
             y += 18;
         }
 
         if (metrics.heightForAge) {
             doc.font('Helvetica-Bold')
-               .text('Talla para Edad:', 50, y)
-               .font('Helvetica')
-               .text(`P${metrics.heightForAge.percentile.toFixed(1)} (Z: ${metrics.heightForAge.zScore.toFixed(2)})`, 150, y)
-               .text(metrics.heightForAge.interpretation, 300, y);
+                .text('Talla para Edad:', 50, y)
+                .font('Helvetica')
+                .text(`P${metrics.heightForAge.percentile.toFixed(1)} (Z: ${metrics.heightForAge.zScore.toFixed(2)})`, 150, y)
+                .text(metrics.heightForAge.interpretation, 300, y);
             y += 18;
         }
 
         if (metrics.bmiForAge) {
             doc.font('Helvetica-Bold')
-               .text('IMC para Edad:', 50, y)
-               .font('Helvetica')
-               .text(`P${metrics.bmiForAge.percentile.toFixed(1)} (Z: ${metrics.bmiForAge.zScore.toFixed(2)})`, 150, y)
-               .text(metrics.bmiForAge.interpretation, 300, y);
+                .text('IMC para Edad:', 50, y)
+                .font('Helvetica')
+                .text(`P${metrics.bmiForAge.percentile.toFixed(1)} (Z: ${metrics.bmiForAge.zScore.toFixed(2)})`, 150, y)
+                .text(metrics.bmiForAge.interpretation, 300, y);
             y += 18;
         }
 
@@ -491,28 +491,28 @@ class PDFExportService {
      */
     private addAlertsSection(doc: any, alerts: GrowthAlert[], y: number): number {
         doc.fontSize(14)
-           .fillColor('#e74c3c')
-           .text('ALERTAS ACTIVAS', 50, y);
+            .fillColor('#e74c3c')
+            .text('ALERTAS ACTIVAS', 50, y);
 
         y += 25;
 
         if (alerts.length === 0) {
             doc.fontSize(10)
-               .fillColor('#27ae60')
-               .text('✅ No hay alertas activas', 50, y);
+                .fillColor('#27ae60')
+                .text('✅ No hay alertas activas', 50, y);
             return y + 30;
         }
 
         alerts.slice(0, 5).forEach(alert => { // Máximo 5 alertas
             const icon = alert.getAlertIcon();
             const color = alert.getSeverityColor();
-            
+
             doc.fontSize(10)
-               .fillColor(color)
-               .text(`${icon} ${alert.title}`, 50, y)
-               .fillColor('#333333')
-               .text(alert.description.substring(0, 100) + '...', 70, y + 12);
-            
+                .fillColor(color)
+                .text(`${icon} ${alert.title}`, 50, y)
+                .fillColor('#333333')
+                .text(alert.description.substring(0, 100) + '...', 70, y + 12);
+
             y += 35;
         });
 
@@ -524,41 +524,41 @@ class PDFExportService {
      */
     private addProgressHistory(doc: any, progressLogs: PatientProgressLog[], y: number): number {
         doc.fontSize(14)
-           .fillColor('#2c3e50')
-           .text('HISTORIAL DE PROGRESO (ÚLTIMAS 10 MEDICIONES)', 50, y);
+            .fillColor('#2c3e50')
+            .text('HISTORIAL DE PROGRESO (ÚLTIMAS 10 MEDICIONES)', 50, y);
 
         y += 25;
 
         // Encabezados de tabla
         doc.fontSize(9)
-           .fillColor('#7f8c8d')
-           .text('Fecha', 50, y)
-           .text('Peso (kg)', 120, y)
-           .text('% Grasa', 180, y)
-           .text('% Músculo', 240, y)
-           .text('Notas', 300, y);
+            .fillColor('#7f8c8d')
+            .text('Fecha', 50, y)
+            .text('Peso (kg)', 120, y)
+            .text('% Grasa', 180, y)
+            .text('% Músculo', 240, y)
+            .text('Notas', 300, y);
 
         y += 15;
 
         // Línea de encabezado
         doc.strokeColor('#bdc3c7')
-           .lineWidth(0.5)
-           .moveTo(50, y)
-           .lineTo(545, y)
-           .stroke();
+            .lineWidth(0.5)
+            .moveTo(50, y)
+            .lineTo(545, y)
+            .stroke();
 
         y += 10;
 
         // Datos
         progressLogs.slice(-10).forEach(log => {
             doc.fontSize(8)
-               .fillColor('#333333')
-               .text(new Date(log.date).toLocaleDateString('es-ES'), 50, y)
-               .text(log.weight?.toFixed(1) || 'N/A', 120, y)
-               .text(log.body_fat_percentage?.toFixed(1) || 'N/A', 180, y)
-               .text(log.muscle_mass_percentage?.toFixed(1) || 'N/A', 240, y)
-               .text(log.notes?.substring(0, 30) || '', 300, y);
-            
+                .fillColor('#333333')
+                .text(new Date(log.date).toLocaleDateString('es-ES'), 50, y)
+                .text(log.weight?.toFixed(1) || 'N/A', 120, y)
+                .text(log.body_fat_percentage?.toFixed(1) || 'N/A', 180, y)
+                .text(log.muscle_mass_percentage?.toFixed(1) || 'N/A', 240, y)
+                .text(log.notes?.substring(0, 30) || '', 300, y);
+
             y += 15;
         });
 
@@ -572,32 +572,32 @@ class PDFExportService {
         if (!profile.is_pediatric_patient) return y;
 
         doc.fontSize(14)
-           .fillColor('#2c3e50')
-           .text('INFORMACIÓN PEDIÁTRICA ESPECÍFICA', 50, y);
+            .fillColor('#2c3e50')
+            .text('INFORMACIÓN PEDIÁTRICA ESPECÍFICA', 50, y);
 
         y += 25;
 
         // Datos de nacimiento
         if (profile.birth_history) {
             doc.fontSize(11)
-               .fillColor('#333333')
-               .font('Helvetica-Bold')
-               .text('Datos de Nacimiento:', 50, y);
-            
+                .fillColor('#333333')
+                .font('Helvetica-Bold')
+                .text('Datos de Nacimiento:', 50, y);
+
             y += 15;
-            
+
             if (profile.birth_history.birth_weight_kg) {
                 doc.fontSize(9)
-                   .font('Helvetica')
-                   .text(`• Peso al nacer: ${profile.birth_history.birth_weight_kg} kg`, 60, y);
+                    .font('Helvetica')
+                    .text(`• Peso al nacer: ${profile.birth_history.birth_weight_kg} kg`, 60, y);
                 y += 12;
             }
-            
+
             if (profile.birth_history.birth_length_cm) {
                 doc.text(`• Talla al nacer: ${profile.birth_history.birth_length_cm} cm`, 60, y);
                 y += 12;
             }
-            
+
             if (profile.birth_history.gestational_age_weeks) {
                 doc.text(`• Edad gestacional: ${profile.birth_history.gestational_age_weeks} semanas`, 60, y);
                 y += 12;
@@ -608,18 +608,18 @@ class PDFExportService {
         if (profile.feeding_history) {
             y += 10;
             doc.fontSize(11)
-               .font('Helvetica-Bold')
-               .text('Historial de Alimentación:', 50, y);
-            
+                .font('Helvetica-Bold')
+                .text('Historial de Alimentación:', 50, y);
+
             y += 15;
-            
+
             if (profile.feeding_history.breastfeeding_duration_months) {
                 doc.fontSize(9)
-                   .font('Helvetica')
-                   .text(`• Lactancia materna: ${profile.feeding_history.breastfeeding_duration_months} meses`, 60, y);
+                    .font('Helvetica')
+                    .text(`• Lactancia materna: ${profile.feeding_history.breastfeeding_duration_months} meses`, 60, y);
                 y += 12;
             }
-            
+
             if (profile.feeding_history.complementary_feeding_start_months) {
                 doc.text(`• Inicio alimentación complementaria: ${profile.feeding_history.complementary_feeding_start_months} meses`, 60, y);
                 y += 12;
@@ -634,8 +634,8 @@ class PDFExportService {
      */
     private addRecommendations(doc: any, data: PediatricReportData, y: number): number {
         doc.fontSize(14)
-           .fillColor('#27ae60')
-           .text('RECOMENDACIONES', 50, y);
+            .fillColor('#27ae60')
+            .text('RECOMENDACIONES', 50, y);
 
         y += 25;
 
@@ -649,8 +649,8 @@ class PDFExportService {
 
         recommendations.forEach(rec => {
             doc.fontSize(10)
-               .fillColor('#333333')
-               .text(`• ${rec}`, 60, y);
+                .fillColor('#333333')
+                .text(`• ${rec}`, 60, y);
             y += 15;
         });
 
@@ -673,18 +673,18 @@ class PDFExportService {
 
         // Marco del gráfico
         doc.rect(50, y, 692, 200) // Ancho landscape - márgenes
-           .stroke('#bdc3c7');
+            .stroke('#bdc3c7');
 
         // Título del gráfico
         doc.fontSize(12)
-           .fillColor('#2c3e50')
-           .text(`${title} - Referencia ${source}`, 60, y + 10);
+            .fillColor('#2c3e50')
+            .text(`${title} - Referencia ${source}`, 60, y + 10);
 
         // Placeholder
         doc.fontSize(10)
-           .fillColor('#7f8c8d')
-           .text('[Gráfico de curvas de crecimiento]', 300, y + 90)
-           .text('En desarrollo: integración con librería de gráficos', 300, y + 110);
+            .fillColor('#7f8c8d')
+            .text('[Gráfico de curvas de crecimiento]', 300, y + 90)
+            .text('En desarrollo: integración con librería de gráficos', 300, y + 110);
 
         return y + 220;
     }
@@ -698,9 +698,9 @@ class PDFExportService {
         const footerY = pageHeight - bottomMargin;
 
         doc.fontSize(8)
-           .fillColor('#7f8c8d')
-           .text(`Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}`, 50, footerY)
-           .text('Sistema Nutri - Plataforma de Nutrición Pediátrica', 50, footerY + 12);
+            .fillColor('#7f8c8d')
+            .text(`Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}`, 50, footerY)
+            .text('Sistema Nutri - Plataforma de Nutrición Pediátrica', 50, footerY + 12);
 
         if (data.nutritionist) {
             doc.text(`Nutriólogo: ${data.nutritionist.first_name} ${data.nutritionist.last_name}`, 50, footerY + 24);
@@ -716,7 +716,7 @@ class PDFExportService {
      */
     getFileUrl(filePath: string): string {
         const fileName = path.basename(filePath);
-        return `/api/reports/download/${fileName}`;
+        return `/growth-charts/export/download/${fileName}`;
     }
 
     /**
@@ -731,7 +731,7 @@ class PDFExportService {
             files.forEach(file => {
                 const filePath = path.join(this.outputDir, file);
                 const stats = fs.statSync(filePath);
-                
+
                 if (now - stats.mtime.getTime() > maxAge) {
                     fs.unlinkSync(filePath);
                     console.log(`Archivo limpiado: ${file}`);
