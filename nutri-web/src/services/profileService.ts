@@ -80,9 +80,9 @@ class ProfileService {
       console.log('ProfileService - Fetching profile...');
       const response = await api.get<any>('/users/me');
       console.log('ProfileService - Response:', response.data);
-      
+
       const responseData = response.data;
-      
+
       // Manejar ambos formatos de respuesta
       if (responseData?.status === 'success' && responseData?.data?.user) {
         // Formato: { status: 'success', data: { user } }
@@ -105,18 +105,18 @@ class ProfileService {
   async updateProfile(data: ProfileData) {
     try {
       console.log('ProfileService - Updating profile with data:', data);
-      
+
       // Determinar si es un nutricionista y usar el endpoint correcto
       const isNutritionist = data.license_number || data.specialties || data.experience_years;
-      
+
       let endpoint = '/users/me';
       if (isNutritionist) {
         endpoint = '/nutritionists/profile';
       }
-      
+
       const response = await api.patch<any>(endpoint, data);
       const responseData = response.data;
-      
+
       // Manejar ambos formatos de respuesta
       if (responseData?.status === 'success' && responseData?.data?.user) {
         // Formato: { status: 'success', data: { user } }
@@ -147,7 +147,7 @@ class ProfileService {
     try {
       const response = await api.get<any>('/users/me/stats');
       const responseData = response.data;
-      
+
       // Manejar ambos formatos de respuesta
       if (responseData?.status === 'success' && responseData?.data) {
         // Formato: { status: 'success', data: { ...stats } }
@@ -264,12 +264,16 @@ class ProfileService {
 
   async uploadProfileImage(file: File): Promise<{ profile_image: string }> {
     try {
-      const response = await api.uploadFile<{ profile_image: string; user: any }>('/users/me/profile-image', file, 'profile_image');
-      
+      // Create FormData with the correct field name
+      const formData = new FormData();
+      formData.append('profile_image', file);
+
+      const response = await api.uploadFile<{ profile_image: string; user: any }>('/users/me/profile-image', formData);
+
       console.log('📤 Upload response:', response);
-      
-      if (response.status === 'success' && response.data) {
-        return { profile_image: response.data.profile_image };
+
+      if (response.data && response.data.data) {
+        return { profile_image: response.data.data.profile_image };
       } else {
         throw new Error('Estructura de respuesta inválida del servidor');
       }

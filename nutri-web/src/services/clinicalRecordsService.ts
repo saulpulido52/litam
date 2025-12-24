@@ -271,11 +271,11 @@ class ClinicalRecordsService {
   public async generateExpedientePDF(recordId: string): Promise<Blob> {
     try {
       // Use apiService with responseType: 'blob' to get PDF binary
-      const response = await apiService.get(`/clinical-records/${recordId}/generate-pdf`, {
+      const response: any = await apiService.get(`/clinical-records/${recordId}/generate-pdf`, {
         responseType: 'blob'
       });
 
-      return response.data;
+      return response.data as Blob;
     } catch (error: any) {
       console.error('Error in generateExpedientePDF:', error);
       throw new Error(error.response?.data?.message || error.message || 'Error al generar el PDF del expediente');
