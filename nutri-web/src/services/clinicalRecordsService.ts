@@ -278,15 +278,26 @@ class ClinicalRecordsService {
       console.log('📄 PDF Response:', response);
       console.log('📄 PDF Response.data type:', typeof response.data);
       console.log('📄 PDF Response.data instanceof Blob:', response.data instanceof Blob);
-      console.log('📄 PDF Response.data:', response.data);
 
-      // Ensure we have a valid Blob
-      const blob = response.data;
-      if (!(blob instanceof Blob)) {
-        console.error('❌ Response is not a Blob, attempting to convert...');
-        // If it's not a Blob, try to create one from the response
-        return new Blob([blob], { type: 'application/pdf' });
+      // When using responseType: 'blob', Axios may put the blob directly in response
+      // instead of response.data
+      let blob: Blob;
+
+      if (response.data && response.data instanceof Blob) {
+        blob = response.data;
+      } else if (response instanceof Blob) {
+        blob = response;
+      } else if (response.data) {
+        // Try to create a Blob from response.data
+        blob = new Blob([response.data], { type: 'application/pdf' });
+      } else {
+        // Last resort: try to create Blob from response itself
+        blob = new Blob([response], { type: 'application/pdf' });
       }
+
+      console.log('✅ Final blob:', blob);
+      console.log('✅ Blob size:', blob.size);
+      console.log('✅ Blob type:', blob.type);
 
       return blob;
     } catch (error: any) {
