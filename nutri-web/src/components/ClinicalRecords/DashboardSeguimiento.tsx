@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Table, Badge, ProgressBar, Alert, Spinner } from 'react-bootstrap';
 import { FaChartBar, FaUsers, FaCalendarCheck, FaChartArea, FaBullseye } from 'react-icons/fa';
+import apiService from '../../services/api';
 
 interface EstadisticasSeguimiento {
     por_tipo: Array<{
@@ -16,7 +17,7 @@ const DashboardSeguimiento: React.FC = () => {
     const [estadisticas, setEstadisticas] = useState<EstadisticasSeguimiento | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-// Helper para convertir total a número de manera segura
+    // Helper para convertir total a número de manera segura
     const toNumber = (value: string | number): number => {
         return typeof value === 'string' ? parseInt(value) || 0 : value;
     };
@@ -24,37 +25,12 @@ const DashboardSeguimiento: React.FC = () => {
     useEffect(() => {
         const cargarEstadisticas = async () => {
             try {
-                const token = localStorage.getItem('access_token');
-                if (!token) {
-                    throw new Error('No hay sesión activa. Por favor inicia sesión nuevamente.');
-                }
-
-                const response = await fetch('/api/clinical-records/stats/seguimiento', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.status === 401) {
-                    localStorage.removeItem('access_token');
-                    throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
-                }
-
-                if (response.status === 403) {
-                    throw new Error('No tienes permisos para ver estadísticas de seguimiento.');
-                }
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => null);
-                    const errorMessage = errorData?.message || `Error del servidor: ${response.status}`;
-                    throw new Error(errorMessage);
-                }
-
-                const data = await response.json();
-                setEstadisticas(data.data);
-            } catch (err) {
+                const response = await apiService.get('/clinical-records/stats/seguimiento');
+                setEstadisticas(response.data);
+            } catch (err: any) {
                 console.error('Error cargando estadísticas:', err);
-                setError(err instanceof Error ? err.message : 'Error desconocido');
+                const errorMessage = err.response?.data?.message || err.message || 'Error al cargar estadísticas';
+                setError(errorMessage);
             } finally {
                 setLoading(false);
             }
@@ -200,9 +176,9 @@ const DashboardSeguimiento: React.FC = () => {
                                         {estadisticas.por_tipo
                                             .sort((a, b) => toNumber(b.total) - toNumber(a.total))
                                             .map((item, index) => {
-                                                const porcentaje = totalExpedientes > 0 ? 
+                                                const porcentaje = totalExpedientes > 0 ?
                                                     Math.round((toNumber(item.total) / totalExpedientes) * 100) : 0;
-                                                
+
                                                 return (
                                                     <tr key={index}>
                                                         <td>
@@ -215,8 +191,8 @@ const DashboardSeguimiento: React.FC = () => {
                                                         </td>
                                                         <td>{porcentaje}%</td>
                                                         <td>
-                                                            <ProgressBar 
-                                                                now={porcentaje} 
+                                                            <ProgressBar
+                                                                now={porcentaje}
                                                                 variant={getTipoBadgeColor(item.tipo)}
                                                                 style={{ height: '8px' }}
                                                             />
@@ -246,15 +222,15 @@ const DashboardSeguimiento: React.FC = () => {
                                     <span>Seguimientos: {expedientesSeguimiento}</span>
                                 </div>
                                 <ProgressBar className="mb-2">
-                                    <ProgressBar 
-                                        variant="primary" 
-                                        now={expedientesIniciales > 0 ? (expedientesIniciales / (expedientesIniciales + expedientesSeguimiento)) * 100 : 0} 
-                                        key={1} 
+                                    <ProgressBar
+                                        variant="primary"
+                                        now={expedientesIniciales > 0 ? (expedientesIniciales / (expedientesIniciales + expedientesSeguimiento)) * 100 : 0}
+                                        key={1}
                                     />
-                                    <ProgressBar 
-                                        variant="success" 
-                                        now={expedientesSeguimiento > 0 ? (expedientesSeguimiento / (expedientesIniciales + expedientesSeguimiento)) * 100 : 0} 
-                                        key={2} 
+                                    <ProgressBar
+                                        variant="success"
+                                        now={expedientesSeguimiento > 0 ? (expedientesSeguimiento / (expedientesIniciales + expedientesSeguimiento)) * 100 : 0}
+                                        key={2}
                                     />
                                 </ProgressBar>
                                 <small className="text-muted">
@@ -266,16 +242,16 @@ const DashboardSeguimiento: React.FC = () => {
                                 <h6 className="text-muted mb-2">Actividad Reciente</h6>
                                 <div className="d-flex justify-content-between align-items-center mb-2">
                                     <span>Expedientes últimos 30 días:</span>
-                                    <Badge bg={estadisticas.ultimos_30_dias > 10 ? 'success' : 
-                                             estadisticas.ultimos_30_dias > 5 ? 'warning' : 'danger'} 
-                                           pill>
+                                    <Badge bg={estadisticas.ultimos_30_dias > 10 ? 'success' :
+                                        estadisticas.ultimos_30_dias > 5 ? 'warning' : 'danger'}
+                                        pill>
                                         {estadisticas.ultimos_30_dias}
                                     </Badge>
                                 </div>
-                                <ProgressBar 
-                                    now={Math.min((estadisticas.ultimos_30_dias / 20) * 100, 100)} 
-                                    variant={estadisticas.ultimos_30_dias > 10 ? 'success' : 
-                                            estadisticas.ultimos_30_dias > 5 ? 'warning' : 'danger'}
+                                <ProgressBar
+                                    now={Math.min((estadisticas.ultimos_30_dias / 20) * 100, 100)}
+                                    variant={estadisticas.ultimos_30_dias > 10 ? 'success' :
+                                        estadisticas.ultimos_30_dias > 5 ? 'warning' : 'danger'}
                                 />
                                 <small className="text-muted">
                                     Meta: 20+ expedientes por mes
@@ -286,18 +262,18 @@ const DashboardSeguimiento: React.FC = () => {
                                 <h6 className="text-muted mb-2">Indicadores de Calidad</h6>
                                 <div className="row text-center">
                                     <div className="col">
-                                        <div className={`p-2 rounded ${porcentajeSeguimiento >= 60 ? 'bg-success' : 
-                                                                     porcentajeSeguimiento >= 40 ? 'bg-warning' : 'bg-danger'} text-white`}>
+                                        <div className={`p-2 rounded ${porcentajeSeguimiento >= 60 ? 'bg-success' :
+                                            porcentajeSeguimiento >= 40 ? 'bg-warning' : 'bg-danger'} text-white`}>
                                             <small>Continuidad</small>
                                             <div><strong>{porcentajeSeguimiento}%</strong></div>
                                         </div>
                                     </div>
                                     <div className="col">
-                                        <div className={`p-2 rounded ${totalExpedientes >= 50 ? 'bg-success' : 
-                                                                     totalExpedientes >= 20 ? 'bg-warning' : 'bg-danger'} text-white`}>
+                                        <div className={`p-2 rounded ${totalExpedientes >= 50 ? 'bg-success' :
+                                            totalExpedientes >= 20 ? 'bg-warning' : 'bg-danger'} text-white`}>
                                             <small>Volumen</small>
-                                            <div><strong>{totalExpedientes >= 50 ? 'Alto' : 
-                                                          totalExpedientes >= 20 ? 'Medio' : 'Bajo'}</strong></div>
+                                            <div><strong>{totalExpedientes >= 50 ? 'Alto' :
+                                                totalExpedientes >= 20 ? 'Medio' : 'Bajo'}</strong></div>
                                         </div>
                                     </div>
                                 </div>
@@ -318,8 +294,8 @@ const DashboardSeguimiento: React.FC = () => {
                             <Alert variant={porcentajeSeguimiento >= 60 ? 'success' : 'warning'} className="mb-3">
                                 <strong>Continuidad de Atención:</strong>
                                 <br />
-                                {porcentajeSeguimiento >= 60 ? 
-                                    '✅ Excelente seguimiento de pacientes' : 
+                                {porcentajeSeguimiento >= 60 ?
+                                    '✅ Excelente seguimiento de pacientes' :
                                     '⚠️ Considera implementar más seguimientos regulares'
                                 }
                             </Alert>
@@ -328,8 +304,8 @@ const DashboardSeguimiento: React.FC = () => {
                             <Alert variant={estadisticas.ultimos_30_dias >= 10 ? 'success' : 'info'} className="mb-3">
                                 <strong>Actividad Mensual:</strong>
                                 <br />
-                                {estadisticas.ultimos_30_dias >= 10 ? 
-                                    '✅ Buena actividad de consultas' : 
+                                {estadisticas.ultimos_30_dias >= 10 ?
+                                    '✅ Buena actividad de consultas' :
                                     '💡 Oportunidad de aumentar consultas'
                                 }
                             </Alert>
