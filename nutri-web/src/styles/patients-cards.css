@@ -18,9 +18,9 @@
 
 .patients-grid-new {
   display: grid;
-  /* Usar auto-fit para que las tarjetas se estiren y ocupen el espacio disponible */
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
-  gap: 20px;
+  /* Mejorado: Cards más anchas y mejor distribución */
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 24px;
 }
 
 .patient-card-new {
@@ -32,6 +32,8 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  /* Asegurar que todas las cards tengan la misma altura */
 }
 
 .patient-card-new:hover {
@@ -43,45 +45,54 @@
 .patient-header-new {
   display: flex;
   align-items: center;
-  padding: 16px;
-  gap: 12px;
+  padding: 20px;
+  gap: 14px;
   background: linear-gradient(to bottom, #ffffff, #f8fafc);
   border-bottom: 1px solid var(--slate-100);
 }
 
 .patient-avatar-new {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--white);
   flex-shrink: 0;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
 }
 
-.patient-avatar-new.male { background-color: var(--blue-500); }
-.patient-avatar-new.female { background-color: #ec4899; }
-.patient-avatar-new.other { background-color: var(--slate-500); }
+.patient-avatar-new.male {
+  background-color: var(--blue-500);
+}
+
+.patient-avatar-new.female {
+  background-color: #ec4899;
+}
+
+.patient-avatar-new.other {
+  background-color: var(--slate-500);
+}
 
 .patient-title-new {
   flex-grow: 1;
-  min-width: 0; /* Permite truncar texto en flex items */
+  min-width: 0;
+  /* Permite truncar texto en flex items */
 }
 
 .patient-name-new {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--slate-800);
-  margin: 0;
+  margin: 0 0 4px 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .patient-email-new {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--slate-600);
   margin: 0;
   white-space: nowrap;
@@ -92,7 +103,7 @@
 .status-badge-new {
   font-size: 0.7rem;
   font-weight: 600;
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 9999px;
   text-transform: uppercase;
   flex-shrink: 0;
@@ -111,35 +122,37 @@
 .patient-info-grid-new {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px 15px;
-  padding: 16px;
+  gap: 14px 18px;
+  padding: 20px;
   font-size: 0.9em;
 }
 
 .info-item-new {
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
 .info-label-new {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--slate-400);
   text-transform: uppercase;
-  margin-bottom: 2px;
   letter-spacing: 0.5px;
+  font-weight: 500;
 }
 
 .info-value-new {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 500;
   color: var(--slate-600);
+  word-wrap: break-word;
 }
 
 .pediatric-info-new {
   background-color: var(--blue-50);
-  padding: 10px 14px;
-  margin: 0 16px 16px;
-  border-radius: 6px;
+  padding: 14px 18px;
+  margin: 0 20px 20px;
+  border-radius: 8px;
   border-left: 3px solid var(--blue-500);
   font-size: 0.85em;
 }
@@ -147,19 +160,21 @@
 .pediatric-title-new {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-weight: 600;
   color: var(--blue-600);
-  margin-bottom: 8px;
-  font-size: 0.9em;
+  margin-bottom: 10px;
+  font-size: 0.95em;
 }
 
 .patient-actions-new {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2 botones por fila */
-  gap: 8px;
-  padding: 16px;
-  margin-top: auto; /* Empuja los botones al final */
+  grid-template-columns: repeat(3, 1fr);
+  /* 3 botones por fila para mejor distribución */
+  gap: 10px;
+  padding: 20px;
+  margin-top: auto;
+  /* Empuja los botones al final */
   background-color: #f8fafc;
   border-top: 1px solid var(--slate-100);
 }
@@ -170,27 +185,83 @@
   justify-content: center;
   gap: 6px;
   font-size: 0.85rem;
-  padding: 8px;
+  padding: 10px 12px;
   border-radius: 6px;
   width: 100%;
+  white-space: nowrap;
+  transition: all 0.2s ease;
 }
 
-.action-btn-new:nth-last-child(1):nth-child(odd) {
-    grid-column: span 2; /* Si hay un número impar de botones, el último ocupa todo el ancho */
+.action-btn-new:hover {
+  transform: translateY(-2px);
 }
 
-/* El botón de eliminar (rojo) queremos que sea pequeño o específico */
+/* Botón de Ver Expedientes ocupa 2 columnas para destacarlo */
+.action-btn-new.btn-primary {
+  grid-column: span 2;
+}
+
+/* Botón de eliminar en la última posición */
 .action-btn-new.btn-outline-danger {
-   /* Opcional: hacerlo menos prominente si se desea */
+  grid-column: 3;
+  grid-row: 2;
 }
 
 /* Responsive adjustments */
+@media (max-width: 1200px) {
+  .patients-grid-new {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .patients-grid-new {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .patient-actions-new {
+    grid-template-columns: repeat(2, 1fr);
+    /* 2 botones por fila en tablets */
+  }
+
+  .action-btn-new.btn-primary {
+    grid-column: span 2;
+    /* Ver Expedientes sigue ocupando 2 columnas */
+  }
+
+  .action-btn-new.btn-outline-danger {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
 @media (max-width: 576px) {
-    .patients-grid-new {
-        grid-template-columns: 1fr; /* Una sola columna en móviles muy pequeños */
-    }
-    
-    .patient-actions-new {
-        grid-template-columns: 1fr; /* Botones apilados en móvil */
-    }
-} 
+  .patients-grid-new {
+    grid-template-columns: 1fr;
+    /* Una sola columna en móviles */
+  }
+
+  .patient-actions-new {
+    grid-template-columns: 1fr;
+    /* Botones apilados en móvil */
+  }
+
+  .action-btn-new.btn-primary {
+    grid-column: span 1;
+  }
+
+  .patient-header-new {
+    padding: 16px;
+  }
+
+  .patient-info-grid-new {
+    padding: 16px;
+  }
+
+  .pediatric-info-new {
+    margin: 0 16px 16px;
+    padding: 12px 16px;
+  }
+}
