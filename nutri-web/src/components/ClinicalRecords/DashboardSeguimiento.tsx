@@ -26,7 +26,9 @@ const DashboardSeguimiento: React.FC = () => {
         const cargarEstadisticas = async () => {
             try {
                 const response = await apiService.get<{ data: EstadisticasSeguimiento }>('/clinical-records/stats/seguimiento');
-                setEstadisticas(response.data.data);
+                if (response.data?.data) {
+                    setEstadisticas(response.data.data);
+                }
             } catch (err: any) {
                 console.error('Error cargando estadísticas:', err);
                 const errorMessage = err.response?.data?.message || err.message || 'Error al cargar estadísticas';
