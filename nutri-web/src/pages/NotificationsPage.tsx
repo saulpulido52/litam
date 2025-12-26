@@ -24,32 +24,15 @@ import { useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../styles/notifications.css';
-
-// Tipos
-interface Notification {
-  id: string;
-  type: 'appointment' | 'patient' | 'reminder' | 'system' | 'success' | 'warning' | 'info';
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-  pinned: boolean;
-  priority: 'low' | 'medium' | 'high';
-  category: string;
-  actionUrl?: string;
-  metadata?: {
-    patientId?: string;
-    patientName?: string;
-    appointmentId?: string;
-    recordId?: string;
-  };
-}
+import notificationService from '../services/notificationService';
+import type { Notification } from '../services/notificationService';
 
 const NotificationsPage: React.FC = () => {
   const navigate = useNavigate();
 
   // Estados
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [filterTime, setFilterTime] = useState<string>('all');
@@ -58,136 +41,22 @@ const NotificationsPage: React.FC = () => {
   const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Generar notificaciones de ejemplo
+  // Cargar notificaciones del usuario actual
   useEffect(() => {
-    const generateSampleNotifications = (): Notification[] => {
-      return [
-        {
-          id: '1',
-          type: 'appointment',
-          title: 'Nueva Cita Programada',
-          message: 'Tienes una nueva cita con María González para mañana a las 10:00 AM',
-          time: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-          read: false,
-          pinned: true,
-          priority: 'high',
-          category: 'Citas',
-          actionUrl: '/appointments',
-          metadata: {
-            patientId: '123',
-            patientName: 'María González',
-            appointmentId: 'app-001'
-          }
-        },
-        {
-          id: '2',
-          type: 'patient',
-          title: 'Nuevo Paciente Registrado',
-          message: 'Carlos Rodríguez se ha registrado como tu paciente',
-          time: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-          read: false,
-          pinned: false,
-          priority: 'medium',
-          category: 'Pacientes',
-          actionUrl: '/patients',
-          metadata: {
-            patientId: '456',
-            patientName: 'Carlos Rodríguez'
-          }
-        },
-        {
-          id: '3',
-          type: 'reminder',
-          title: 'Recordatorio de Seguimiento',
-          message: 'Es momento de revisar el progreso de Ana Martínez',
-          time: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-          read: true,
-          pinned: false,
-          priority: 'medium',
-          category: 'Seguimiento',
-          actionUrl: '/progress',
-          metadata: {
-            patientId: '789',
-            patientName: 'Ana Martínez'
-          }
-        },
-        {
-          id: '4',
-          type: 'system',
-          title: 'Actualización del Sistema',
-          message: 'Se han aplicado mejoras en el sistema de expedientes clínicos',
-          time: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-          read: true,
-          pinned: false,
-          priority: 'low',
-          category: 'Sistema',
-          actionUrl: '/dashboard'
-        },
-        {
-          id: '5',
-          type: 'success',
-          title: 'Expediente Completado',
-          message: 'El expediente clínico de Juan Pérez ha sido completado exitosamente',
-          time: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
-          read: true,
-          pinned: false,
-          priority: 'medium',
-          category: 'Expedientes',
-          actionUrl: '/clinical-records',
-          metadata: {
-            patientId: '101',
-            patientName: 'Juan Pérez',
-            recordId: 'rec-001'
-          }
-        },
-        {
-          id: '6',
-          type: 'warning',
-          title: 'Plan Nutricional Vencido',
-          message: 'El plan nutricional de Laura Sánchez expira en 3 días',
-          time: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4).toISOString(),
-          read: false,
-          pinned: true,
-          priority: 'high',
-          category: 'Planes Nutricionales',
-          actionUrl: '/diet-plans',
-          metadata: {
-            patientId: '202',
-            patientName: 'Laura Sánchez'
-          }
-        },
-        {
-          id: '7',
-          type: 'info',
-          title: 'Nuevo Reporte Disponible',
-          message: 'El reporte mensual de pacientes está listo para revisión',
-          time: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
-          read: true,
-          pinned: false,
-          priority: 'low',
-          category: 'Reportes',
-          actionUrl: '/reports'
-        },
-        {
-          id: '8',
-          type: 'appointment',
-          title: 'Cita Cancelada',
-          message: 'Pedro López ha cancelado su cita del viernes',
-          time: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-          read: false,
-          pinned: false,
-          priority: 'medium',
-          category: 'Citas',
-          actionUrl: '/appointments',
-          metadata: {
-            patientId: '303',
-            patientName: 'Pedro López'
-          }
-        }
-      ];
+    const loadNotifications = async () => {
+      try {
+        setLoading(true);
+        const data = await notificationService.getNotifications();
+        setNotifications(data);
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+        toast.error('Error al cargar notificaciones');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setNotifications(generateSampleNotifications());
+    loadNotifications();
   }, []);
 
   // Filtrar notificaciones
@@ -314,11 +183,12 @@ const NotificationsPage: React.FC = () => {
   };
 
   // Funciones de acción
-  const markAsRead = (notificationId: string) => {
+  const markAsRead = async (notificationId: string) => {
     setNotifications(prev =>
       prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
     );
     toast.success('Marcada como leída', { autoClose: 2000 });
+    await notificationService.markAsRead(notificationId);
   };
 
   const markAsUnread = (notificationId: string) => {
@@ -328,7 +198,7 @@ const NotificationsPage: React.FC = () => {
     toast.info('Marcada como no leída', { autoClose: 2000 });
   };
 
-  const togglePin = (notificationId: string) => {
+  const togglePin = async (notificationId: string) => {
     setNotifications(prev =>
       prev.map(n => {
         if (n.id === notificationId) {
@@ -339,16 +209,19 @@ const NotificationsPage: React.FC = () => {
         return n;
       })
     );
+    await notificationService.togglePin(notificationId);
   };
 
-  const deleteNotification = (notificationId: string) => {
+  const deleteNotification = async (notificationId: string) => {
     setNotifications(prev => prev.filter(n => n.id !== notificationId));
     toast.success('Notificación eliminada', { autoClose: 2000 });
+    await notificationService.deleteNotification(notificationId);
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     toast.success('🎉 Todas las notificaciones marcadas como leídas', { autoClose: 2000 });
+    await notificationService.markAllAsRead();
   };
 
   const deleteSelected = () => {
@@ -672,7 +545,14 @@ const NotificationsPage: React.FC = () => {
 
                 {/* Notifications List */}
                 <div className="notifications-list">
-                  {filteredNotifications.length === 0 ? (
+                  {loading ? (
+                    // Loading skeleton
+                    <>
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="skeleton skeleton-card"></div>
+                      ))}
+                    </>
+                  ) : filteredNotifications.length === 0 ? (
                     <div className="empty-state">
                       <div className="empty-state-icon">
                         <Bell size={80} />
