@@ -32,6 +32,7 @@ import { WeeklyPlanTemplate } from './entities/weekly-plan-template.entity';
 import { TemplateMeal } from './entities/template-meal.entity';
 import { TemplateFood } from './entities/template-food.entity';
 import { TemplateRecipe } from './entities/template-recipe.entity';
+import { Notification } from './entities/notification.entity';
 
 dotenv.config();
 
@@ -164,6 +165,7 @@ export const AppDataSource = new DataSource({
         TemplateMeal,
         TemplateFood,
         TemplateRecipe,
+        Notification,
     ],
     migrations: [path.join(__dirname, 'migrations', '*{.ts,.js}')],
     subscribers: [],

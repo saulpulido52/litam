@@ -65,6 +65,7 @@ export interface ProfileStats {
   completion_rate: number;
   average_rating: number;
   total_reviews: number;
+  appointments_today: number;
 }
 
 // Interfaces específicas por rol
@@ -323,7 +324,8 @@ class ProfileService {
           experience_years: 0,
           completion_rate: 0,
           average_rating: 0,
-          total_reviews: 0
+          total_reviews: 0,
+          appointments_today: 0
         };
       }
     } catch (error) {
@@ -335,7 +337,8 @@ class ProfileService {
         experience_years: 0,
         completion_rate: 0,
         average_rating: 0,
-        total_reviews: 0
+        total_reviews: 0,
+        appointments_today: 0
       };
     }
   }

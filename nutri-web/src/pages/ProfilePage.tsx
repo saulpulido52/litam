@@ -64,9 +64,9 @@ const ProfilePage: React.FC = () => {
 
   // Safe stats
   const patientCount = stats?.total_patients || 0;
-  const experienceYears = profile?.years_of_experience || 0;
-  const rating = 4.9; // Mock datum
-  const todayAppointments = 5; // Mock datum
+  const experienceYears = profile?.years_of_experience || stats?.experience_years || 0;
+  const rating = stats?.average_rating || 4.9;
+  const todayAppointments = stats?.appointments_today || 0;
 
   return (
     <div className="profile-page-container">

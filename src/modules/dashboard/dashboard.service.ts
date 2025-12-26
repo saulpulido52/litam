@@ -30,6 +30,7 @@ export interface SimpleDashboardStats {
     last_diet_plan: string | null;
     last_clinical_record: string | null;
   };
+  appointments_today: number;
 }
 
 export class DashboardService {
@@ -314,7 +315,6 @@ export class DashboardService {
           last_diet_plan: null,
           last_clinical_record: null,
         },
-        // @ts-ignore - Agregamos temporalmente esta propiedad aunque no esté en la interfaz estricta aún
         appointments_today
       };
     } catch (error) {

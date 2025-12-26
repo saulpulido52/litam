@@ -15,7 +15,9 @@ export interface CreateNotificationDto {
 }
 
 class NotificationsService {
-    private notificationsRepository = AppDataSource.getRepository(Notification);
+    private get notificationsRepository() {
+        return AppDataSource.getRepository(Notification);
+    }
 
     /**
      * Get all notifications for a specific user
