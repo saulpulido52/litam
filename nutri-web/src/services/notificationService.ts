@@ -1,6 +1,20 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// Lógica robusta de fallback igual que api.ts
+const envApiUrl = import.meta.env.VITE_API_URL;
+let API_URL = envApiUrl;
+
+if (!API_URL) {
+    if (import.meta.env.MODE === 'production') {
+        API_URL = 'https://litam.onrender.com/api'; // Fallback seguro para producción
+    } else {
+        API_URL = 'http://localhost:3000/api'; // Fallback para desarrollo
+    }
+}
+
+console.log('🔔 [NotificationService] Mode:', import.meta.env.MODE);
+console.log('🔔 [NotificationService] VITE_API_URL:', envApiUrl);
+console.log('🔔 [NotificationService] Final API_URL:', API_URL);
 
 export interface Notification {
     id: string;
