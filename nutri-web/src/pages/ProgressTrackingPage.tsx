@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, Scale, Target, Calendar, Plus, ArrowLeft, BarChart3, User, Activity, Flame } from 'lucide-react';
+import { TrendingUp, Scale, Target, Calendar, Plus, ArrowLeft, BarChart3, User, Activity, Flame } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import EnhancedEvolutionChart from '../components/ProgressCharts/EnhancedEvolutionChart';
-import ProgressMetrics from '../components/ProgressCharts/ProgressMetrics';
+// import ProgressMetrics from '../components/ProgressCharts/ProgressMetrics'; // Unused
 import { usePatients } from '../hooks/usePatients';
 import patientsService from '../services/patientsService';
 import { MetricCard } from '../components/Progress/MetricCard';
@@ -183,11 +183,7 @@ const ProgressTrackingPage: React.FC = () => {
     ? progressEntries.filter(entry => entry.patient_id === selectedPatient)
     : progressEntries;
 
-  const getProgressTrend = (currentValue: number, previousValue?: number) => {
-    if (!previousValue) return null;
-    const change = currentValue - previousValue;
-    return change > 0 ? 'up' : change < 0 ? 'down' : 'stable';
-  };
+
 
   const calculateBMI = (weight: number, height: number) => {
     const bmi = weight / ((height / 100) ** 2);

@@ -8,9 +8,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
-  ResponsiveContainer,
-  ReferenceLine
+  ResponsiveContainer
 } from 'recharts';
 import { Calendar, TrendingUp, TrendingDown } from 'lucide-react';
 
@@ -29,14 +27,7 @@ const EnhancedEvolutionChart: React.FC<EnhancedEvolutionChartProps> = ({ data, p
   const [selectedMetric, setSelectedMetric] = useState<string>('weight');
   const [chartType, setChartType] = useState<'line' | 'area'>('area');
 
-  // Helper para obtener el número de la semana
-  const getWeekNumber = (d: Date) => {
-    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-    return `W${weekNo}, ${d.getUTCFullYear()}`;
-  };
+
 
   const filteredData = useMemo(() => {
     if (timePeriod === 'all') return data;
@@ -78,11 +69,7 @@ const EnhancedEvolutionChart: React.FC<EnhancedEvolutionChartProps> = ({ data, p
     bmi: '#10b981'
   };
 
-  const getMetricGoal = () => {
-    // Aquí podrías obtener la meta del paciente desde props o contexto
-    // Por ahora retornamos null
-    return null;
-  };
+
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -266,14 +253,7 @@ const EnhancedEvolutionChart: React.FC<EnhancedEvolutionChartProps> = ({ data, p
                 fill={`url(#gradient-${selectedMetric})`}
                 animationDuration={1000}
               />
-              {getMetricGoal() && (
-                <ReferenceLine
-                  y={getMetricGoal()}
-                  stroke="#10b981"
-                  strokeDasharray="5 5"
-                  label="Meta"
-                />
-              )}
+
             </AreaChart>
           ) : (
             <LineChart data={chartData}>
@@ -297,14 +277,7 @@ const EnhancedEvolutionChart: React.FC<EnhancedEvolutionChartProps> = ({ data, p
                 activeDot={{ r: 6 }}
                 animationDuration={1000}
               />
-              {getMetricGoal() && (
-                <ReferenceLine
-                  y={getMetricGoal()}
-                  stroke="#10b981"
-                  strokeDasharray="5 5"
-                  label="Meta"
-                />
-              )}
+
             </LineChart>
           )}
         </ResponsiveContainer>
