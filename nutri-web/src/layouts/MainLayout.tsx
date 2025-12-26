@@ -508,6 +508,29 @@ const MainLayout: React.FC = () => {
                         </Button>
                       </div>
                     )}
+
+                    <div className="notifications-footer" style={{
+                      borderTop: '1px solid #e5e7eb',
+                      padding: '12px 16px',
+                      textAlign: 'center'
+                    }}>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={() => {
+                          setNotificationsOpen(false);
+                          navigate('/notifications');
+                        }}
+                        style={{
+                          color: '#2c7a7b',
+                          textDecoration: 'none',
+                          fontWeight: 600,
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        Ver Todas las Notificaciones →
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>

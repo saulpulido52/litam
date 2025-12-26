@@ -382,10 +382,6 @@ const NotificationsPage: React.FC = () => {
     );
   };
 
-  const selectAll = () => {
-    setSelectedNotifications(filteredNotifications.map(n => n.id));
-  };
-
   const deselectAll = () => {
     setSelectedNotifications([]);
   };
