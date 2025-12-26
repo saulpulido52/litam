@@ -100,18 +100,18 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     };
 
     const handleSpecialtiesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value;
+        // Just store the raw value - we'll split it when submitting
         setFormData(prev => ({
             ...prev,
-            specialties: val.split(',').map(s => s.trim())
+            specialties: [e.target.value] // Store as single-item array with raw string
         }));
     }
 
     const handleCertificationsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value;
+        // Just store the raw value - we'll split it when submitting
         setFormData(prev => ({
             ...prev,
-            certifications: val.split(',').map(s => s.trim())
+            certifications: [e.target.value] // Store as single-item array with raw string
         }));
     }
 
@@ -137,7 +137,18 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
         setLoading(true);
         try {
-            await onSave(formData);
+            // Process comma-separated strings into arrays before submitting
+            const processedData = {
+                ...formData,
+                specialties: Array.isArray(formData.specialties) && formData.specialties.length === 1 && typeof formData.specialties[0] === 'string'
+                    ? formData.specialties[0].split(',').map(s => s.trim()).filter(s => s.length > 0)
+                    : formData.specialties,
+                certifications: Array.isArray(formData.certifications) && formData.certifications.length === 1 && typeof formData.certifications[0] === 'string'
+                    ? formData.certifications[0].split(',').map(s => s.trim()).filter(s => s.length > 0)
+                    : formData.certifications
+            };
+
+            await onSave(processedData);
             setSuccessMessage('Perfil actualizado exitosamente');
             setTimeout(onHide, 1500); // Close after brief success msg
         } catch (err: any) {

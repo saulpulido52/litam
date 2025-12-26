@@ -4,10 +4,9 @@
 -- 1. Extensiones necesarias
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 2. Reparar tabla 'roles' (Por si acaso, aunque debería existir)
-ALTER TABLE "roles" ADD COLUMN IF NOT EXISTS "name" character varying(50);
--- Si hay filas con NULL, esto evitará el error al intentar hacerlo NOT NULL después:
-UPDATE "roles" SET "name" = 'unknown' WHERE "name" IS NULL;
+-- 2. Reparar tabla 'roles' (Saltado para evitar conflictos de Enum)
+-- La tabla roles parece estar bien configurada como Enum en Supabase.
+-- Continuamos con las tablas faltantes críticas...
 
 -- 3. Crear tabla 'nutritionist_availabilities' (Si no existe)
 CREATE TABLE IF NOT EXISTS "nutritionist_availabilities" (
