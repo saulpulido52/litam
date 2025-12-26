@@ -87,87 +87,88 @@ const MainLayout: React.FC = () => {
   const notificationBtnRef = useRef<HTMLButtonElement>(null);
   const notificationMenuPos = useRef<{ top: number, left: number }>({ top: 0, left: 0 });
 
-  // Estado para notificaciones
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      type: 'appointment',
-      title: 'Nueva Cita Programada',
-      message: 'María González tiene una cita mañana a las 10:00 AM',
-      time: '2 min',
-      read: false,
-      icon: MdEvent,
-      iconColor: '#007bff',
-      bgColor: '#e3f2fd',
-      actionUrl: '/appointments',
-      priority: 'high'
-    },
-    {
-      id: '2',
-      type: 'patient',
-      title: 'Nuevo Paciente Registrado',
-      message: 'Juan Pérez se ha registrado como paciente',
-      time: '15 min',
-      read: false,
-      icon: FaUserPlus,
-      iconColor: '#28a745',
-      bgColor: '#e8f5e8',
-      actionUrl: '/patients',
-      priority: 'medium'
-    },
-    {
-      id: '3',
-      type: 'reminder',
-      title: 'Recordatorio de Seguimiento',
-      message: 'Carlos Rodríguez necesita seguimiento de su plan nutricional',
-      time: '1 hora',
-      read: false,
-      icon: MdNotifications,
-      iconColor: '#ffc107',
-      bgColor: '#fff8e1',
-      actionUrl: '/patients',
-      priority: 'medium'
-    },
-    {
-      id: '4',
-      type: 'system',
-      title: 'Actualización del Sistema',
-      message: 'Nuevas funcionalidades disponibles en la plataforma',
-      time: '2 horas',
-      read: false,
-      icon: MdSystemUpdate,
-      iconColor: '#6c757d',
-      bgColor: '#f8f9fa',
-      actionUrl: '/dashboard',
-      priority: 'low'
-    },
-    {
-      id: '5',
-      type: 'success',
-      title: 'Plan Nutricional Completado',
-      message: 'Ana López ha completado exitosamente su plan de 4 semanas',
-      time: '3 horas',
-      read: false,
-      icon: MdCheckCircle,
-      iconColor: '#28a745',
-      bgColor: '#e8f5e8',
-      actionUrl: '/diet-plans',
-      priority: 'high'
-    },
-    {
-      id: '6',
-      type: 'warning',
-      title: 'Paciente Inactivo',
-      message: 'Roberto Silva no ha reportado progreso en 2 semanas',
-      time: '1 día',
-      read: false,
-      icon: MdWarning,
-      iconColor: '#fd7e14',
-      bgColor: '#fff3e0',
-      actionUrl: '/patients',
-      priority: 'medium'
-    }
-  ]);
+  // Estado para notificaciones - cargar desde el servicio
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  // Cargar notificaciones al montar el componente
+  useEffect(() => {
+    const loadNotifications = async () => {
+      try {
+        // Importar dinámicamente el servicio para evitar problemas de dependencias circulares
+        const { default: notificationService } = await import('../services/notificationService');
+        const data = await notificationService.getNotifications();
+
+        // Mapear las notificaciones del servicio al formato del MainLayout
+        const mappedNotifications: Notification[] = data.map(n => {
+          // Determinar icono según tipo
+          let icon, iconColor, bgColor;
+          switch (n.type) {
+            case 'appointment':
+              icon = MdEvent;
+              iconColor = '#007bff';
+              bgColor = '#e3f2fd';
+              break;
+            case 'patient':
+              icon = FaUserPlus;
+              iconColor = '#28a745';
+              bgColor = '#e8f5e8';
+              break;
+            case 'reminder':
+              icon = MdNotifications;
+              iconColor = '#ffc107';
+              bgColor = '#fff8e1';
+              break;
+            case 'system':
+              icon = MdSystemUpdate;
+              iconColor = '#6c757d';
+              bgColor = '#f8f9fa';
+              break;
+            case 'success':
+              icon = MdCheckCircle;
+              iconColor = '#28a745';
+              bgColor = '#e8f5e8';
+              break;
+            case 'warning':
+              icon = MdWarning;
+              iconColor = '#fd7e14';
+              bgColor = '#fff3e0';
+              break;
+            default:
+              icon = MdNotifications;
+              iconColor = '#6c757d';
+              bgColor = '#f8f9fa';
+          }
+
+          // Formatear tiempo relativo
+          const formatTime = (timeString: string) => {
+            const now = new Date();
+            const notifTime = new Date(timeString);
+            const diffInMinutes = Math.floor((now.getTime() - notifTime.getTime()) / (1000 * 60));
+
+            if (diffInMinutes < 1) return 'Ahora mismo';
+            if (diffInMinutes < 60) return `${diffInMinutes} min`;
+            if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
+            return `${Math.floor(diffInMinutes / 1440)}d`;
+          };
+
+          return {
+            ...n,
+            time: formatTime(n.time),
+            icon,
+            iconColor,
+            bgColor
+          };
+        });
+
+        setNotifications(mappedNotifications);
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+        // Silently fail - backend not ready yet
+      }
+    };
+
+    loadNotifications();
+  }, []);
 
   // Calcular notificaciones no leídas
   const unreadCount = notifications.filter(n => !n.read).length;
