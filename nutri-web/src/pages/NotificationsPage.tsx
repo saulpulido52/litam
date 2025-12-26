@@ -50,7 +50,7 @@ const NotificationsPage: React.FC = () => {
         setNotifications(data);
       } catch (error) {
         console.error('Error loading notifications:', error);
-        toast.error('Error al cargar notificaciones');
+        // Silently fail - backend not implemented yet
       } finally {
         setLoading(false);
       }
