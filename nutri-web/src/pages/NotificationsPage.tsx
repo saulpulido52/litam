@@ -1,22 +1,31 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Container, Row, Col, Card, Button, Modal, Form, Alert, Badge } from 'react-bootstrap';
-import { 
-  Bell, 
-  Info, 
-  Trash2,
-  Search,
-  RefreshCw,
-  Settings,
+import { Container, Row, Col, Button, Badge, Form } from 'react-bootstrap';
+import {
+  Bell,
   Calendar,
   User,
+  Settings,
   CheckCircle,
   AlertCircle,
+  Info,
+  Search,
   Eye,
   EyeOff,
-  X} from 'lucide-react';
+  Trash2,
+  Pin,
+  PinOff,
+  X,
+  Filter,
+  TrendingUp,
+  Clock,
+  AlertTriangle
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import '../styles/notifications.css';
 
-// Tipos para las notificaciones
+// Tipos
 interface Notification {
   id: string;
   type: 'appointment' | 'patient' | 'reminder' | 'system' | 'success' | 'warning' | 'info';
@@ -24,6 +33,7 @@ interface Notification {
   message: string;
   time: string;
   read: boolean;
+  pinned: boolean;
   priority: 'low' | 'medium' | 'high';
   category: string;
   actionUrl?: string;
@@ -35,30 +45,31 @@ interface Notification {
   };
 }
 
-const NotificationsPage: React.FC = () => {
+const NotificationsPage: React.FC = () =& gt; {
   const navigate = useNavigate();
-  
+
   // Estados
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filterType, setFilterType] = useState<string>('all');
+  const [filterPriority, setFilterPriority] = useState<string>('all');
+  const [filterTime, setFilterTime] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showRead, setShowRead] = useState(true);
-  const [sortBy, setSortBy] = useState<'time' | 'priority' | 'type'>('time');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  // Variable/función removida - no utilizada
-// Generar notificaciones de ejemplo
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Generar notificaciones de ejemplo
   useEffect(() => {
     const generateSampleNotifications = (): Notification[] => {
-      const sampleNotifications: Notification[] = [
+      return [
         {
           id: '1',
           type: 'appointment',
           title: 'Nueva Cita Programada',
           message: 'Tienes una nueva cita con María González para mañana a las 10:00 AM',
-          time: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 min ago
+          time: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
           read: false,
+          pinned: true,
           priority: 'high',
           category: 'Citas',
           actionUrl: '/appointments',
@@ -73,8 +84,9 @@ const NotificationsPage: React.FC = () => {
           type: 'patient',
           title: 'Nuevo Paciente Registrado',
           message: 'Carlos Rodríguez se ha registrado como tu paciente',
-          time: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+          time: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
           read: false,
+          pinned: false,
           priority: 'medium',
           category: 'Pacientes',
           actionUrl: '/patients',
@@ -88,8 +100,9 @@ const NotificationsPage: React.FC = () => {
           type: 'reminder',
           title: 'Recordatorio de Seguimiento',
           message: 'Es momento de revisar el progreso de Ana Martínez',
-          time: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+          time: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
           read: true,
+          pinned: false,
           priority: 'medium',
           category: 'Seguimiento',
           actionUrl: '/progress',
@@ -103,8 +116,9 @@ const NotificationsPage: React.FC = () => {
           type: 'system',
           title: 'Actualización del Sistema',
           message: 'Se han aplicado mejoras en el sistema de expedientes clínicos',
-          time: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
+          time: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
           read: true,
+          pinned: false,
           priority: 'low',
           category: 'Sistema',
           actionUrl: '/dashboard'
@@ -114,8 +128,9 @@ const NotificationsPage: React.FC = () => {
           type: 'success',
           title: 'Expediente Completado',
           message: 'El expediente clínico de Juan Pérez ha sido completado exitosamente',
-          time: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(), // 3 days ago
+          time: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
           read: true,
+          pinned: false,
           priority: 'medium',
           category: 'Expedientes',
           actionUrl: '/clinical-records',
@@ -130,8 +145,9 @@ const NotificationsPage: React.FC = () => {
           type: 'warning',
           title: 'Plan Nutricional Vencido',
           message: 'El plan nutricional de Laura Sánchez expira en 3 días',
-          time: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4).toISOString(), // 4 days ago
+          time: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4).toISOString(),
           read: false,
+          pinned: true,
           priority: 'high',
           category: 'Planes Nutricionales',
           actionUrl: '/diet-plans',
@@ -145,77 +161,131 @@ const NotificationsPage: React.FC = () => {
           type: 'info',
           title: 'Nuevo Reporte Disponible',
           message: 'El reporte mensual de pacientes está listo para revisión',
-          time: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(), // 5 days ago
+          time: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
           read: true,
+          pinned: false,
           priority: 'low',
           category: 'Reportes',
           actionUrl: '/reports'
+        },
+        {
+          id: '8',
+          type: 'appointment',
+          title: 'Cita Cancelada',
+          message: 'Pedro López ha cancelado su cita del viernes',
+          time: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+          read: false,
+          pinned: false,
+          priority: 'medium',
+          category: 'Citas',
+          actionUrl: '/appointments',
+          metadata: {
+            patientId: '303',
+            patientName: 'Pedro López'
+          }
         }
       ];
-      
-      return sampleNotifications;
     };
 
     setNotifications(generateSampleNotifications());
   }, []);
 
-  // Filtrar y ordenar notificaciones
+  // Filtrar notificaciones
   const filteredNotifications = useMemo(() => {
     let filtered = notifications;
 
     // Filtrar por tipo
     if (filterType !== 'all') {
-      filtered = filtered.filter(notification => notification.type === filterType);
+      filtered = filtered.filter(n => n.type === filterType);
     }
 
-    // Filtrar por término de búsqueda
+    // Filtrar por prioridad
+    if (filterPriority !== 'all') {
+      filtered = filtered.filter(n => n.priority === filterPriority);
+    }
+
+    // Filtrar por tiempo
+    if (filterTime !== 'all') {
+      const now = new Date();
+      filtered = filtered.filter(n => {
+        const notifTime = new Date(n.time);
+        const diffDays = Math.floor((now.getTime() - notifTime.getTime()) / (1000 * 60 * 60 * 24));
+
+        switch (filterTime) {
+          case 'today':
+            return diffDays === 0;
+          case 'week':
+            return diffDays <= 7;
+          case 'month':
+            return diffDays <= 30;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Filtrar por búsqueda
     if (searchTerm) {
-      filtered = filtered.filter(notification =>
-        notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        notification.message.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(n =>
+        n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        n.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        n.metadata?.patientName?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Filtrar por estado de lectura
     if (!showRead) {
-      filtered = filtered.filter(notification => !notification.read);
+      filtered = filtered.filter(n => !n.read);
     }
 
-    // Ordenar
-    filtered.sort((a, b) => {
-      let comparison = 0;
-      
-      switch (sortBy) {
-        case 'time':
-          comparison = new Date(a.time).getTime() - new Date(b.time).getTime();
-          break;
-        case 'priority':
-          const priorityOrder = { high: 3, medium: 2, low: 1 };
-          comparison = priorityOrder[a.priority] - priorityOrder[b.priority];
-          break;
-        case 'type':
-          comparison = a.type.localeCompare(b.type);
-          break;
-      }
-      
-      return sortOrder === 'asc' ? comparison : -comparison;
+    // Ordenar: ancladas primero, luego por tiempo
+    return filtered.sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return new Date(b.time).getTime() - new Date(a.time).getTime();
     });
-
-    return filtered;
-  }, [notifications, filterType, searchTerm, showRead, sortBy, sortOrder]);
+  }, [notifications, filterType, filterPriority, filterTime, searchTerm, showRead]);
 
   // Estadísticas
   const stats = useMemo(() => {
     const total = notifications.length;
     const unread = notifications.filter(n => !n.read).length;
-    const highPriority = notifications.filter(n => n.priority === 'high').length;
+    const urgent = notifications.filter(n => n.priority === 'high').length;
     const today = notifications.filter(n => {
       const notificationDate = new Date(n.time);
-      const today = new Date();
-      return notificationDate.toDateString() === today.toDateString();
+      const todayDate = new Date();
+      return notificationDate.toDateString() === todayDate.toDateString();
     }).length;
 
-    return { total, unread, highPriority, today };
+    return { total, unread, urgent, today };
+  }, [notifications]);
+
+  // Contadores por tipo y prioridad
+  const typeCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      all: notifications.length,
+      appointment: 0,
+      patient: 0,
+      reminder: 0,
+      system: 0,
+      success: 0,
+      warning: 0,
+      info: 0
+    };
+
+    notifications.forEach(n => {
+      counts[n.type]++;
+    });
+
+    return counts;
+  }, [notifications]);
+
+  const priorityCounts = useMemo(() => {
+    return {
+      high: notifications.filter(n => n.priority === 'high').length,
+      medium: notifications.filter(n => n.priority === 'medium').length,
+      low: notifications.filter(n => n.priority === 'low').length
+    };
   }, [notifications]);
 
   // Funciones de utilidad
@@ -223,7 +293,7 @@ const NotificationsPage: React.FC = () => {
     const now = new Date();
     const notificationTime = new Date(timeString);
     const diffInMinutes = Math.floor((now.getTime() - notificationTime.getTime()) / (1000 * 60));
-    
+
     if (diffInMinutes < 1) return 'Ahora mismo';
     if (diffInMinutes < 60) return `Hace ${diffInMinutes} min`;
     if (diffInMinutes < 1440) return `Hace ${Math.floor(diffInMinutes / 60)}h`;
@@ -232,81 +302,73 @@ const NotificationsPage: React.FC = () => {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'appointment': return <Calendar size={16} />;
-      case 'patient': return <User size={16} />;
-      case 'reminder': return <Bell size={16} />;
-      case 'system': return <Settings size={16} />;
-      case 'success': return <CheckCircle size={16} />;
-      case 'warning': return <AlertCircle size={16} />;
-      case 'info': return <Info size={16} />;
-      default: return <Bell size={16} />;
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'appointment': return 'primary';
-      case 'patient': return 'success';
-      case 'reminder': return 'warning';
-      case 'system': return 'secondary';
-      case 'success': return 'success';
-      case 'warning': return 'warning';
-      case 'info': return 'info';
-      default: return 'secondary';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'danger';
-      case 'medium': return 'warning';
-      case 'low': return 'success';
-      default: return 'secondary';
+      case 'appointment': return <Calendar size={20} />;
+      case 'patient': return <User size={20} />;
+      case 'reminder': return <Bell size={20} />;
+      case 'system': return <Settings size={20} />;
+      case 'success': return <CheckCircle size={20} />;
+      case 'warning': return <AlertCircle size={20} />;
+      case 'info': return <Info size={20} />;
+      default: return <Bell size={20} />;
     }
   };
 
   // Funciones de acción
   const markAsRead = (notificationId: string) => {
     setNotifications(prev =>
-      prev.map(notification =>
-        notification.id === notificationId
-          ? { ...notification, read: true }
-          : notification
-      )
+      prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
     );
+    toast.success('Marcada como leída', { autoClose: 2000 });
   };
 
   const markAsUnread = (notificationId: string) => {
     setNotifications(prev =>
-      prev.map(notification =>
-        notification.id === notificationId
-          ? { ...notification, read: false }
-          : notification
-      )
+      prev.map(n => n.id === notificationId ? { ...n, read: false } : n)
     );
+    toast.info('Marcada como no leída', { autoClose: 2000 });
   };
 
-  const markAllAsRead = () => {
+  const togglePin = (notificationId: string) => {
     setNotifications(prev =>
-      prev.map(notification => ({ ...notification, read: true }))
+      prev.map(n => {
+        if (n.id === notificationId) {
+          const newPinned = !n.pinned;
+          toast.success(newPinned ? '📌 Notificación anclada' : 'Notificación desanclada', { autoClose: 2000 });
+          return { ...n, pinned: newPinned };
+        }
+        return n;
+      })
     );
   };
 
   const deleteNotification = (notificationId: string) => {
-    setNotifications(prev =>
-      prev.filter(notification => notification.id !== notificationId)
-    );
+    setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    toast.success('Notificación eliminada', { autoClose: 2000 });
   };
 
-  // Variable/función removida - no utilizada
-const deleteSelected = () => {
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    toast.success('🎉 Todas las notificaciones marcadas como leídas', { autoClose: 2000 });
+  };
+
+  const deleteSelected = () => {
     setNotifications(prev => prev.filter(n => !selectedNotifications.includes(n.id)));
     setSelectedNotifications([]);
-    setShowDeleteModal(false);
+    toast.success(`${selectedNotifications.length} notificaciones eliminadas`, { autoClose: 2000 });
+  };
+
+  const markSelectedAsRead = () => {
+    setNotifications(prev =>
+      prev.map(n => selectedNotifications.includes(n.id) ? { ...n, read: true } : n)
+    );
+    setSelectedNotifications([]);
+    toast.success(`${selectedNotifications.length} notificaciones marcadas como leídas`, { autoClose: 2000 });
   };
 
   const handleNotificationClick = (notification: Notification) => {
-    markAsRead(notification.id);
+    if (!notification.read) {
+      markAsRead(notification.id);
+    }
     if (notification.actionUrl) {
       navigate(notification.actionUrl);
     }
@@ -320,340 +382,406 @@ const deleteSelected = () => {
     );
   };
 
-  // Variable/función removida - no utilizada
-const deselectAll = () => {
+  const selectAll = () => {
+    setSelectedNotifications(filteredNotifications.map(n => n.id));
+  };
+
+  const deselectAll = () => {
     setSelectedNotifications([]);
   };
 
   return (
-    <Container fluid className="py-4">
-      {/* Header */}
-      <Row className="mb-4">
-        <Col>
-          <div className="d-flex justify-content-between align-items-center">
-            <div>
-              <h1 className="h3 mb-1">Centro de Notificaciones</h1>
-              <p className="text-muted mb-0">
-                Gestiona todas tus notificaciones y mantente al día
-              </p>
-            </div>
-            <div className="d-flex gap-2">
-              <Button variant="outline-primary" onClick={markAllAsRead}>
-                <CheckCircle size={16} className="me-2" />
-                Marcar Todo como Leído
-              </Button>
-              <Button variant="outline-secondary" onClick={() => window.location.reload()}>
-                <RefreshCw size={16} className="me-2" />
-                Actualizar
-              </Button>
-            </div>
-          </div>
-        </Col>
-      </Row>
+    <>
+      <ToastContainer position="top-right" />
+      <div className="notifications-page">
+        {/* Header */}
+        <div className="notifications-header">
+          <Container fluid>
+            <Row className="align-items-center">
+              <Col>
+                <h1 className="notifications-title">
+                  <Bell size={28} />
+                  Notificaciones
+                </h1>
+                <p className="notifications-subtitle">
+                  Mantente al día con todas tus actualizaciones
+                </p>
+              </Col>
+              <Col xs="auto">
+                <div className="d-flex gap-2">
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={markAllAsRead}
+                    disabled={stats.unread === 0}
+                  >
+                    <CheckCircle size={16} className="me-2" />
+                    Marcar Todo Leído
+                  </Button>
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    className="d-md-none"
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                  >
+                    <Filter size={16} />
+                  </Button>
+                </div>
+              </Col>
+            </Row>
+          </Container>
+        </div>
 
-      {/* Estadísticas */}
-      <Row className="mb-4">
-        <Col md={3}>
-          <Card className="text-center">
-            <Card.Body>
-              <h4 className="text-primary mb-0">{stats.total}</h4>
-              <small className="text-muted">Total</small>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="text-center">
-            <Card.Body>
-              <h4 className="text-warning mb-0">{stats.unread}</h4>
-              <small className="text-muted">No Leídas</small>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="text-center">
-            <Card.Body>
-              <h4 className="text-danger mb-0">{stats.highPriority}</h4>
-              <small className="text-muted">Alta Prioridad</small>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="text-center">
-            <Card.Body>
-              <h4 className="text-success mb-0">{stats.today}</h4>
-              <small className="text-muted">Hoy</small>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+        <Container fluid className="py-4">
+          {/* Stats Cards */}
+          <Row className="mb-4">
+            <Col md={3} sm={6} className="mb-3 mb-md-0">
+              <div className="stats-card total">
+                <div className="stats-icon">
+                  <Bell size={24} />
+                </div>
+                <div className="stats-number">{stats.total}</div>
+                <div className="stats-label">Total</div>
+              </div>
+            </Col>
+            <Col md={3} sm={6} className="mb-3 mb-md-0">
+              <div className="stats-card unread">
+                <div className="stats-icon">
+                  <AlertTriangle size={24} />
+                </div>
+                <div className="stats-number">{stats.unread}</div>
+                <div className="stats-label">No Leídas</div>
+              </div>
+            </Col>
+            <Col md={3} sm={6} className="mb-3 mb-md-0">
+              <div className="stats-card urgent">
+                <div className="stats-icon">
+                  <AlertCircle size={24} />
+                </div>
+                <div className="stats-number">{stats.urgent}</div>
+                <div className="stats-label">Urgentes</div>
+              </div>
+            </Col>
+            <Col md={3} sm={6}>
+              <div className="stats-card today">
+                <div className="stats-icon">
+                  <Clock size={24} />
+                </div>
+                <div className="stats-number">{stats.today}</div>
+                <div className="stats-label">Hoy</div>
+              </div>
+            </Col>
+          </Row>
 
-      {/* Filtros y Controles */}
-      <Row className="mb-4">
-        <Col>
-          <Card>
-            <Card.Body>
-              <Row className="align-items-end">
-                <Col md={3}>
-                  <Form.Group>
-                    <Form.Label>Filtrar por Tipo</Form.Label>
-                    <Form.Select
-                      value={filterType}
-                      onChange={(e) => setFilterType(e.target.value)}
-                    >
-                      <option value="all">Todos los tipos</option>
-                      <option value="appointment">Citas</option>
-                      <option value="patient">Pacientes</option>
-                      <option value="reminder">Recordatorios</option>
-                      <option value="system">Sistema</option>
-                      <option value="success">Éxito</option>
-                      <option value="warning">Advertencias</option>
-                      <option value="info">Información</option>
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={3}>
-                  <Form.Group>
-                    <Form.Label>Ordenar por</Form.Label>
-                    <Form.Select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value as any)}
-                    >
-                      <option value="time">Fecha</option>
-                      <option value="priority">Prioridad</option>
-                      <option value="type">Tipo</option>
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={2}>
-                  <Form.Group>
-                    <Form.Label>Orden</Form.Label>
-                    <Form.Select
-                      value={sortOrder}
-                      onChange={(e) => setSortOrder(e.target.value as any)}
-                    >
-                      <option value="desc">Descendente</option>
-                      <option value="asc">Ascendente</option>
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={3}>
-                  <Form.Group>
-                    <Form.Label>Buscar</Form.Label>
-                    <div className="position-relative">
-                      <Search size={16} className="position-absolute top-50 start-0 translate-middle-y ms-2 text-muted" />
-                      <Form.Control
-                        type="text"
-                        placeholder="Buscar notificaciones..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="ps-4"
-                      />
+          <Row>
+            {/* Sidebar */}
+            <Col lg={3} className="mb-4 mb-lg-0">
+              <div className={`notifications-sidebar ${sidebarOpen ? 'open' : ''}`}>
+                {/* Close button for mobile */}
+                <div className="d-lg-none d-flex justify-content-between align-items-center mb-3">
+                  <h6 className="mb-0">Filtros</h6>
+                  <Button variant="link" size="sm" onClick={() => setSidebarOpen(false)}>
+                    <X size={20} />
+                  </Button>
+                </div>
+
+                {/* Filter by Type */}
+                <div className="sidebar-section">
+                  <div className="sidebar-title">Por Tipo</div>
+                  <div
+                    className={`filter-item ${filterType === 'all' ? 'active' : ''}`}
+                    onClick={() => setFilterType('all')}
+                  >
+                    <div className="filter-item-left">
+                      <div className="filter-icon"><TrendingUp size={16} /></div>
+                      <span>Todas</span>
                     </div>
-                  </Form.Group>
-                </Col>
-                <Col md={1}>
-                  <Form.Group>
-                    <Form.Check
-                      type="checkbox"
-                      id="show-read"
-                      label="Mostrar leídas"
-                      checked={showRead}
-                      onChange={(e) => setShowRead(e.target.checked)}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Acciones en lote */}
-      {selectedNotifications.length > 0 && (
-        <Row className="mb-3">
-          <Col>
-            <Card className="border-warning">
-              <Card.Body className="py-2">
-                <div className="d-flex justify-content-between align-items-center">
-                  <span>
-                    <Badge bg="warning" className="me-2">
-                      {selectedNotifications.length}
-                    </Badge>
-                    notificación{selectedNotifications.length !== 1 ? 'es' : ''} seleccionada{selectedNotifications.length !== 1 ? 's' : ''}
-                  </span>
-                  <div className="d-flex gap-2">
-                    <Button variant="outline-success" size="sm" onClick={markAllAsRead}>
-                      <CheckCircle size={14} className="me-1" />
-                      Marcar como leídas
-                    </Button>
-                    <Button variant="outline-danger" size="sm" onClick={() => setShowDeleteModal(true)}>
-                      <Trash2 size={14} className="me-1" />
-                      Eliminar
-                    </Button>
-                    <Button variant="outline-secondary" size="sm" onClick={deselectAll}>
-                      <X size={14} className="me-1" />
-                      Deseleccionar
-                    </Button>
+                    <span className="filter-count">{typeCounts.all}</span>
+                  </div>
+                  <div
+                    className={`filter-item ${filterType === 'appointment' ? 'active' : ''}`}
+                    onClick={() => setFilterType('appointment')}
+                  >
+                    <div className="filter-item-left">
+                      <div className="filter-icon"><Calendar size={16} /></div>
+                      <span>Citas</span>
+                    </div>
+                    <span className="filter-count">{typeCounts.appointment}</span>
+                  </div>
+                  <div
+                    className={`filter-item ${filterType === 'patient' ? 'active' : ''}`}
+                    onClick={() => setFilterType('patient')}
+                  >
+                    <div className="filter-item-left">
+                      <div className="filter-icon"><User size={16} /></div>
+                      <span>Pacientes</span>
+                    </div>
+                    <span className="filter-count">{typeCounts.patient}</span>
+                  </div>
+                  <div
+                    className={`filter-item ${filterType === 'reminder' ? 'active' : ''}`}
+                    onClick={() => setFilterType('reminder')}
+                  >
+                    <div className="filter-item-left">
+                      <div className="filter-icon"><Bell size={16} /></div>
+                      <span>Recordatorios</span>
+                    </div>
+                    <span className="filter-count">{typeCounts.reminder}</span>
+                  </div>
+                  <div
+                    className={`filter-item ${filterType === 'system' ? 'active' : ''}`}
+                    onClick={() => setFilterType('system')}
+                  >
+                    <div className="filter-item-left">
+                      <div className="filter-icon"><Settings size={16} /></div>
+                      <span>Sistema</span>
+                    </div>
+                    <span className="filter-count">{typeCounts.system}</span>
                   </div>
                 </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      )}
 
-      {/* Lista de Notificaciones */}
-      <Row>
-        <Col>
-          {filteredNotifications.length === 0 ? (
-            <Card>
-              <Card.Body className="text-center py-5">
-                <Bell size={48} className="text-muted mb-3" />
-                <h5 className="text-muted">No hay notificaciones</h5>
-                <p className="text-muted">
-                  {searchTerm || filterType !== 'all' 
-                    ? 'No se encontraron notificaciones con los filtros aplicados'
-                    : 'No tienes notificaciones pendientes'
-                  }
-                </p>
-              </Card.Body>
-            </Card>
-          ) : (
-            <div className="notifications-list">
-              {filteredNotifications.map((notification) => (
-                <Card 
-                  key={notification.id} 
-                  className={`mb-3 notification-card ${!notification.read ? 'border-primary' : ''}`}
-                >
-                  <Card.Body className="py-3">
-                    <div className="d-flex align-items-start">
-                      <div className="me-3">
-                        <Form.Check
-                          type="checkbox"
-                          checked={selectedNotifications.includes(notification.id)}
-                          onChange={() => toggleSelection(notification.id)}
-                          className="mt-1"
-                        />
-                      </div>
-                      
-                      <div className="flex-grow-1">
-                        <div className="d-flex justify-content-between align-items-start mb-2">
-                          <div className="d-flex align-items-center">
-                            <div className={`me-2 text-${getTypeColor(notification.type)}`}>
-                              {getTypeIcon(notification.type)}
-                            </div>
-                            <h6 className="mb-0 fw-bold">
-                              {notification.title}
-                              {!notification.read && (
-                                <Badge bg="primary" className="ms-2">Nueva</Badge>
-                              )}
-                            </h6>
-                          </div>
-                          <div className="d-flex align-items-center gap-2">
-                            <Badge bg={getPriorityColor(notification.priority)}>
-                              {notification.priority.toUpperCase()}
-                            </Badge>
-                            <small className="text-muted">
-                              {formatTime(notification.time)}
-                            </small>
-                          </div>
-                        </div>
-                        
-                        <p className="text-muted mb-2">{notification.message}</p>
-                        
-                        <div className="d-flex justify-content-between align-items-center">
-                          <div className="d-flex gap-2">
-                            <Badge bg="light" text="dark">
-                              {notification.category}
-                            </Badge>
-                            {notification.metadata?.patientName && (
-                              <Badge bg="info">
-                                {notification.metadata.patientName}
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          <div className="d-flex gap-1">
-                            {notification.read ? (
-                              <Button 
-                                variant="outline-secondary" 
-                                size="sm"
-                                onClick={() => markAsUnread(notification.id)}
-                                title="Marcar como no leída"
-                              >
-                                <EyeOff size={14} />
-                              </Button>
-                            ) : (
-                              <Button 
-                                variant="outline-primary" 
-                                size="sm"
-                                onClick={() => markAsRead(notification.id)}
-                                title="Marcar como leída"
-                              >
-                                <Eye size={14} />
-                              </Button>
-                            )}
-                            
-                            {notification.actionUrl && (
-                              <Button 
-                                variant="outline-success" 
-                                size="sm"
-                                onClick={() => handleNotificationClick(notification)}
-                                title="Ver detalles"
-                              >
-                                Ver
-                              </Button>
-                            )}
-                            
-                            <Button 
-                              variant="outline-danger" 
-                              size="sm"
-                              onClick={() => deleteNotification(notification.id)}
-                              title="Eliminar notificación"
-                            >
-                              <Trash2 size={14} />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
+                {/* Filter by Priority */}
+                <div className="sidebar-section">
+                  <div className="sidebar-title">Por Prioridad</div>
+                  <div
+                    className={`filter-item ${filterPriority === 'high' ? 'active' : ''}`}
+                    onClick={() => setFilterPriority(filterPriority === 'high' ? 'all' : 'high')}
+                  >
+                    <div className="filter-item-left">
+                      <div className="priority-dot high"></div>
+                      <span>Alta</span>
                     </div>
-                  </Card.Body>
-                </Card>
-              ))}
-            </div>
-          )}
-        </Col>
-      </Row>
+                    <span className="filter-count">{priorityCounts.high}</span>
+                  </div>
+                  <div
+                    className={`filter-item ${filterPriority === 'medium' ? 'active' : ''}`}
+                    onClick={() => setFilterPriority(filterPriority === 'medium' ? 'all' : 'medium')}
+                  >
+                    <div className="filter-item-left">
+                      <div className="priority-dot medium"></div>
+                      <span>Media</span>
+                    </div>
+                    <span className="filter-count">{priorityCounts.medium}</span>
+                  </div>
+                  <div
+                    className={`filter-item ${filterPriority === 'low' ? 'active' : ''}`}
+                    onClick={() => setFilterPriority(filterPriority === 'low' ? 'all' : 'low')}
+                  >
+                    <div className="filter-item-left">
+                      <div className="priority-dot low"></div>
+                      <span>Baja</span>
+                    </div>
+                    <span className="filter-count">{priorityCounts.low}</span>
+                  </div>
+                </div>
 
-      {/* Modal de confirmación de eliminación */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <Trash2 className="text-danger me-2" />
-            Confirmar Eliminación
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>
-            ¿Estás seguro de que quieres eliminar {selectedNotifications.length} notificación{selectedNotifications.length !== 1 ? 'es' : ''}?
-          </p>
-          <Alert variant="warning">
-            <AlertCircle className="me-2" />
-            Esta acción no se puede deshacer.
-          </Alert>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Cancelar
-          </Button>
-          <Button variant="danger" onClick={deleteSelected}>
-            <Trash2 size={16} className="me-2" />
-            Eliminar
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </Container>
+                {/* Filter by Time */}
+                <div className="sidebar-section">
+                  <div className="sidebar-title">Por Tiempo</div>
+                  <div
+                    className={`filter-item ${filterTime === 'today' ? 'active' : ''}`}
+                    onClick={() => setFilterTime(filterTime === 'today' ? 'all' : 'today')}
+                  >
+                    <span>Hoy</span>
+                  </div>
+                  <div
+                    className={`filter-item ${filterTime === 'week' ? 'active' : ''}`}
+                    onClick={() => setFilterTime(filterTime === 'week' ? 'all' : 'week')}
+                  >
+                    <span>Esta Semana</span>
+                  </div>
+                  <div
+                    className={`filter-item ${filterTime === 'month' ? 'active' : ''}`}
+                    onClick={() => setFilterTime(filterTime === 'month' ? 'all' : 'month')}
+                  >
+                    <span>Este Mes</span>
+                  </div>
+                </div>
+
+                {/* Show Read Toggle */}
+                <div className="sidebar-section">
+                  <Form.Check
+                    type="switch"
+                    id="show-read-switch"
+                    label="Mostrar leídas"
+                    checked={showRead}
+                    onChange={(e) => setShowRead(e.target.checked)}
+                  />
+                </div>
+              </div>
+            </Col>
+
+            {/* Main Content */}
+            <Col lg={9}>
+              <div className="notifications-main">
+                {/* Toolbar */}
+                <div className="notifications-toolbar">
+                  {/* Search Bar */}
+                  <div className="search-bar">
+                    <Search size={16} className="search-icon" />
+                    <Form.Control
+                      type="text"
+                      placeholder="Buscar notificaciones..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Filter Chips */}
+                  <div className="filter-chips">
+                    <div
+                      className={`filter-chip ${filterTime === 'today' ? 'active' : ''}`}
+                      onClick={() => setFilterTime(filterTime === 'today' ? 'all' : 'today')}
+                    >
+                      Hoy
+                    </div>
+                    <div
+                      className={`filter-chip ${filterTime === 'week' ? 'active' : ''}`}
+                      onClick={() => setFilterTime(filterTime === 'week' ? 'all' : 'week')}
+                    >
+                      Esta Semana
+                    </div>
+                    <div
+                      className={`filter-chip ${filterTime === 'month' ? 'active' : ''}`}
+                      onClick={() => setFilterTime(filterTime === 'month' ? 'all' : 'month')}
+                    >
+                      Este Mes
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bulk Actions Bar */}
+                {selectedNotifications.length > 0 && (
+                  <div className="bulk-actions-bar">
+                    <div className="bulk-actions-info">
+                      <Badge bg="warning">{selectedNotifications.length}</Badge>
+                      <span>seleccionada{selectedNotifications.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="bulk-actions-buttons">
+                      <Button variant="outline-success" size="sm" onClick={markSelectedAsRead}>
+                        <CheckCircle size={14} className="me-1" />
+                        Marcar Leídas
+                      </Button>
+                      <Button variant="outline-danger" size="sm" onClick={deleteSelected}>
+                        <Trash2 size={14} className="me-1" />
+                        Eliminar
+                      </Button>
+                      <Button variant="outline-secondary" size="sm" onClick={deselectAll}>
+                        <X size={14} className="me-1" />
+                        Deseleccionar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Notifications List */}
+                <div className="notifications-list">
+                  {filteredNotifications.length === 0 ? (
+                    <div className="empty-state">
+                      <div className="empty-state-icon">
+                        <Bell size={80} />
+                      </div>
+                      <h3 className="empty-state-title">
+                        {searchTerm || filterType !== 'all' || filterPriority !== 'all' || filterTime !== 'all'
+                          ? 'No se encontraron notificaciones'
+                          : '¡Todo al día!'}
+                      </h3>
+                      <p className="empty-state-message">
+                        {searchTerm || filterType !== 'all' || filterPriority !== 'all' || filterTime !== 'all'
+                          ? 'Intenta ajustar los filtros de búsqueda'
+                          : 'No tienes notificaciones pendientes 🎉'}
+                      </p>
+                    </div>
+                  ) : (
+                    filteredNotifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`notification-card ${notification.type} ${!notification.read ? 'unread' : ''} ${notification.pinned ? 'pinned' : ''}`}
+                      >
+                        <div className="d-flex align-items-start">
+                          {/* Checkbox */}
+                          <Form.Check
+                            type="checkbox"
+                            checked={selectedNotifications.includes(notification.id)}
+                            onChange={() => toggleSelection(notification.id)}
+                            className="me-3 mt-1"
+                          />
+
+                          {/* Icon */}
+                          <div className="notification-icon-wrapper">
+                            {getTypeIcon(notification.type)}
+                          </div>
+
+                          {/* Content */}
+                          <div className="notification-content">
+                            <div className="notification-header">
+                              <h6 className="notification-title">
+                                {notification.title}
+                                {!notification.read && <Badge className="badge-new ms-2">Nueva</Badge>}
+                                {notification.pinned && <Badge className="badge-pinned ms-2">Anclada</Badge>}
+                              </h6>
+                            </div>
+
+                            <p className="notification-message">{notification.message}</p>
+
+                            <div className="notification-footer">
+                              <div className="notification-meta">
+                                <span className="notification-time">{formatTime(notification.time)}</span>
+                                <Badge className={`badge-priority ${notification.priority}`}>
+                                  {notification.priority === 'high' ? 'ALTA' : notification.priority === 'medium' ? 'MEDIA' : 'BAJA'}
+                                </Badge>
+                                <Badge className="badge-category">{notification.category}</Badge>
+                                {notification.metadata?.patientName && (
+                                  <Badge bg="info">{notification.metadata.patientName}</Badge>
+                                )}
+                              </div>
+
+                              <div className="notification-actions">
+                                <button
+                                  className="notification-action-btn primary"
+                                  onClick={() => notification.read ? markAsUnread(notification.id) : markAsRead(notification.id)}
+                                  title={notification.read ? 'Marcar como no leída' : 'Marcar como leída'}
+                                >
+                                  {notification.read ? <EyeOff size={14} /> : <Eye size={14} />}
+                                </button>
+                                <button
+                                  className="notification-action-btn"
+                                  onClick={() => togglePin(notification.id)}
+                                  title={notification.pinned ? 'Desanclar' : 'Anclar'}
+                                >
+                                  {notification.pinned ? <PinOff size={14} /> : <Pin size={14} />}
+                                </button>
+                                {notification.actionUrl && (
+                                  <Button
+                                    variant="outline-success"
+                                    size="sm"
+                                    onClick={() => handleNotificationClick(notification)}
+                                  >
+                                    Ver
+                                  </Button>
+                                )}
+                                <button
+                                  className="notification-action-btn danger"
+                                  onClick={() => deleteNotification(notification.id)}
+                                  title="Eliminar"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </Col>
+          </Row>
+        </Container>
+      </div>
+    </>
   );
 };
 
-export default NotificationsPage; 
+export default NotificationsPage;
