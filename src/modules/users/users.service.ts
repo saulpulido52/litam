@@ -22,7 +22,7 @@ class UserService {
             .createQueryBuilder('user')
             .leftJoinAndSelect('user.role', 'role')
             .leftJoinAndSelect('user.nutritionist_profile', 'nutritionist_profile')
-            // .leftJoinAndSelect('user.nutritionist_availabilities', 'nutritionist_availabilities')
+            .leftJoinAndSelect('user.nutritionist_availabilities', 'nutritionist_availabilities')
             .where('user.id = :userId', { userId })
             .getOne();
 
@@ -39,7 +39,7 @@ class UserService {
             .createQueryBuilder('user')
             .leftJoinAndSelect('user.role', 'role')
             .leftJoinAndSelect('user.nutritionist_profile', 'nutritionist_profile')
-            // .leftJoinAndSelect('user.nutritionist_availabilities', 'nutritionist_availabilities')
+            .leftJoinAndSelect('user.nutritionist_availabilities', 'nutritionist_availabilities')
             .where('user.id = :userId', { userId })
             .getOne();
 
