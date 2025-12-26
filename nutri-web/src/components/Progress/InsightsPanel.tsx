@@ -20,7 +20,7 @@ interface Insight {
     description: string;
 }
 
-export const InsightsPanel: React.FC<InsightsPanelProps> = ({ entries, patientName }) => {
+export const InsightsPanel: React.FC<InsightsPanelProps> = ({ entries }) => {
     const generateInsights = (): Insight[] => {
         if (entries.length < 2) {
             return [{

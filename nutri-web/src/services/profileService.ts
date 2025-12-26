@@ -205,7 +205,6 @@ class ProfileService {
         data.specialties ||
         data.years_of_experience;
 
-      const responses: any[] = [];
       const promises: Promise<any>[] = [];
 
       // 1. Actualizar datos básicos de usuario (/users/me)

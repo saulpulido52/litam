@@ -15,7 +15,7 @@ const ProfilePage: React.FC = () => {
     profile,
     stats,
     loading,
-    error,
+    // error, // Unused
     updateProfile,
     uploadProfileImage,
     loadProfile,
@@ -318,7 +318,7 @@ const ProfilePage: React.FC = () => {
 
                       // Group by day
                       const grouped: { [key: string]: string[] } = {};
-                      profile.nutritionist_availabilities.forEach(slot => {
+                      profile.nutritionist_availabilities.forEach((slot: any) => {
                         if (!slot.is_active) return;
                         if (!grouped[slot.day_of_week]) grouped[slot.day_of_week] = [];
                         grouped[slot.day_of_week].push(`${formatTime(slot.start_time_minutes)} - ${formatTime(slot.end_time_minutes)}`);
