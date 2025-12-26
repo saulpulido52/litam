@@ -115,9 +115,9 @@ export const AppDataSource = new DataSource({
     maxQueryExecutionTime: process.env.NODE_ENV === 'production' ? 5000 : 10000,  // 5s en prod, 10s en dev
 
     // **CONFIGURACIONES DE SEGURIDAD PARA PRODUCCIÓN**
-    synchronize: true, // TEMPORAL: True para crear tablas faltantes
+    synchronize: false, // NUNCA en producción
     dropSchema: false,  // Seguridad adicional
-    migrationsRun: false, // Desactivar migraciones mientras usamos synchronize
+    migrationsRun: false, // Inyección manual de SQL requerida
 
     // **LOGGING OPTIMIZADO PARA SUPABASE**
     logging: process.env.NODE_ENV === 'production'
