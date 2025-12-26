@@ -30,6 +30,7 @@ import growthAlertsRoutes from './modules/growth_charts/growth_alerts.routes';
 import pdfExportRoutes from './modules/growth_charts/pdf_export.routes';
 import clinicalIntegrationRoutes from './modules/growth_charts/clinical_integration.routes';
 import emailRoutes from './modules/email/email.routes';
+import notificationsRoutes from './modules/notifications/notifications.routes';
 import { AppError } from './utils/app.error';
 import { resilienceMiddleware } from './middleware/resilience.middleware';
 import { mobileOptimizationMiddleware, mobileMetricsMiddleware } from './middleware/mobile-optimization.middleware';
@@ -523,6 +524,7 @@ app.use('/api/growth-charts/alerts', growthAlertsRoutes);
 app.use('/api/growth-charts/export', pdfExportRoutes);
 app.use('/api/growth-charts/clinical-integration', clinicalIntegrationRoutes);
 app.use('/api/email', emailRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Manejo de rutas no encontradas con mejor información de accesibilidad
 app.all('*', (req: Request, res: Response, next: NextFunction) => {
