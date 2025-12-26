@@ -45,7 +45,7 @@ interface Notification {
   };
 }
 
-const NotificationsPage: React.FC = () =& gt; {
+const NotificationsPage: React.FC = () => {
   const navigate = useNavigate();
 
   // Estados
