@@ -3,10 +3,10 @@ import { validate, ValidationError } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import { AppError } from '../utils/app.error';
 
-export function validateMiddleware<T extends object>(type: { new (): T }) {
+export function validateMiddleware<T extends object>(type: { new(): T }) {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const dto = plainToInstance(type, req.body);
+            const dto = plainToInstance(type, req.body, { enableImplicitConversion: true });
             const errors: ValidationError[] = await validate(dto, {
                 whitelist: true,
                 forbidNonWhitelisted: true,
@@ -37,7 +37,7 @@ export function validateMiddleware<T extends object>(type: { new (): T }) {
 
                 // Crear respuesta de error mejorada para accesibilidad
                 const validationError = new AppError('Error de validación', 400, 'VALIDATION_ERROR');
-                
+
                 return res.status(400).json({
                     status: 'error',
                     message: 'Error de validación',
