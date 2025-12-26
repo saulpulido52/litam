@@ -14,12 +14,24 @@ export interface ProfileData {
 
   // Professional / Nutritionist Fields
   license_number?: string;
+  license_issuing_authority?: string | null;
+  professional_id?: string | null;
+  professional_id_issuer?: string | null;
+  university?: string | null;
+  degree_title?: string | null;
+  graduation_date?: string | null;
+  verification_status?: 'pending' | 'approved' | 'rejected' | 'under_review';
+  is_verified?: boolean;
   specialties?: string[];
   years_of_experience?: number;
   education?: string | string[];
   bio?: string;
   certifications?: string[];
+  areas_of_interest?: string[];
+  treatment_approach?: string;
+  languages?: string[];
   consultation_fee?: number;
+  professional_summary?: string;
 
   // Clinic Fields
   clinic_name?: string;
@@ -29,6 +41,20 @@ export interface ProfileData {
   clinic_phone?: string;
   clinic_country?: string;
   clinic_zip_code?: string;
+  clinic_notes?: string;
+  latitude?: number;
+  longitude?: number;
+
+  // Social Media
+  social_media?: {
+    instagram?: string;
+    facebook?: string;
+    linkedin?: string;
+    twitter?: string;
+    youtube?: string;
+    tiktok?: string;
+    website?: string;
+  };
 
   // Availability
   im_available?: boolean;
@@ -78,6 +104,7 @@ export interface NutritionistProfile extends ProfileData {
   clinic_address?: string;
   consultation_hours?: string;
   certifications?: string[];
+  degree_title?: string; // Add this too for NutritionistProfile
 }
 
 export interface PatientProfile extends ProfileData {

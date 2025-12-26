@@ -57,10 +57,17 @@ const ProfilePage: React.FC = () => {
   }
 
   // Safe access to profile data
+  // Safe access to profile data
   const fullName = profile ? `${profile.first_name} ${profile.last_name}` : 'Usuario';
-  const role = profile?.role === 'nutritionist' ? 'Nutriólogo Clínico & Deportivo' : 'Profesional de la Salud';
+  const role = profile?.degree_title || (profile?.specialties && profile.specialties.length > 0 ? profile.specialties[0] : 'Profesional de la Salud');
   const email = profile?.email || 'Sin email registrado';
-  const phone = profile?.phone || 'Sin teléfono registrado';
+  const phone = profile?.phone || profile?.clinic_phone || 'Sin teléfono registrado';
+  const location = profile?.clinic_city && profile?.clinic_country
+    ? `${profile.clinic_city}, ${profile.clinic_country}`
+    : 'Ubicación no registrada';
+
+  const isVerified = profile?.verification_status === 'approved' || profile?.is_verified;
+  const isAvailable = profile?.im_available;
 
   // Safe stats
   const patientCount = stats?.total_patients || 0;
@@ -124,13 +131,19 @@ const ProfilePage: React.FC = () => {
               <div className="profile-title">
                 <Award size={20} />
                 {role}
-                <span className="verified-badge ms-3">
-                  <Shield size={14} /> Cédula Verificada
-                </span>
+                {isVerified && (
+                  <span className="verified-badge ms-3">
+                    <Shield size={14} /> Cédula Verificada
+                  </span>
+                )}
               </div>
               <p className="text-secondary mb-0">
-                <MapPin size={16} className="me-1" /> Ciudad de México, MX •
-                <span className="text-success ms-2">● Disponible Hoy</span>
+                <MapPin size={16} className="me-1" /> {location} •
+                {isAvailable ? (
+                  <span className="text-success ms-2">● Disponible Hoy</span>
+                ) : (
+                  <span className="text-danger ms-2">● No disponible</span>
+                )}
               </p>
             </div>
 
