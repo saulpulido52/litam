@@ -223,38 +223,13 @@
   .nutritionist-settings-nav .nav-buttons {
     flex-direction: column;
   }
-  
+
   .nutritionist-settings-nav .btn {
     width: 100%;
     margin-bottom: 0.5rem;
   }
-  
+
   .day-card {
     margin-bottom: 1rem;
   }
 }
-
-/* Estilos para el modo oscuro (si se implementa) */
-@media (prefers-color-scheme: dark) {
-  .configuration-card {
-    background-color: #2d3748;
-    color: #e2e8f0;
-  }
-  
-  .configuration-card .card-header {
-    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-    border-bottom-color: #4a5568;
-  }
-  
-  .form-control {
-    background-color: #4a5568;
-    border-color: #718096;
-    color: #e2e8f0;
-  }
-  
-  .form-control:focus {
-    background-color: #4a5568;
-    border-color: #63b3ed;
-    color: #e2e8f0;
-  }
-} 

@@ -7,7 +7,7 @@ export const useProfile = () => {
   const [stats, setStats] = useState<ProfileStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const loadProfile = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -16,15 +16,16 @@ export const useProfile = () => {
       const profileData = await profileService.getProfile();
       console.log('useProfile - Profile loaded successfully:', profileData);
       setProfile(profileData);
+
+      // Guardar en caché si es un perfil válido (no es el fallback mínimo)
+      if (profileData && profileData.id) {
+        localStorage.setItem('cached_profile', JSON.stringify(profileData));
+      }
     } catch (err: any) {
       console.error('useProfile - Error loading profile:', err);
-      const errorMessage = err.message || 'Error al cargar el perfil';
-      setError(errorMessage);
-      console.error('useProfile - Error details:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status
-      });
+      // No establecer error ya que getProfile() ahora retorna datos de fallback
+      // Solo loguear para debugging
+      console.warn('useProfile - Using fallback profile data');
     } finally {
       setLoading(false);
     }
@@ -108,6 +109,24 @@ export const useProfile = () => {
     }
   };
 
+  const uploadProfileImage = async (file: File) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await profileService.uploadProfileImage(file);
+      // Actualizar el perfil local con la nueva imagen
+      if (profile) {
+        setProfile({ ...profile, profile_image: result.profile_image });
+      }
+      return result;
+    } catch (err: any) {
+      setError(err.message || 'Error al subir la imagen');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const clearError = () => {
     setError(null);
   };
@@ -123,6 +142,7 @@ export const useProfile = () => {
     updatePassword,
     updateNotificationSettings,
     deleteAccount,
+    uploadProfileImage, // <--- Added this
     clearError,
     reloadProfile: loadProfile,
     reloadStats: loadStats

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Alert, Spinner, Tab, Nav, Form } from 'react-bootstrap';
-import { 
-  User, 
-  Shield, 
-  Bell, 
-  Calendar, 
-  CreditCard, 
+import {
+  User,
+  Shield,
+  Bell,
+  Calendar,
+  CreditCard,
   Save,
   Edit,
   CheckCircle,
@@ -13,7 +13,6 @@ import {
   Building
 } from 'lucide-react';
 import { useProfile } from '../hooks/useProfile';
-import '../styles/profile.css';
 import '../styles/nutritionist-settings.css';
 
 interface SettingsState {
@@ -32,7 +31,7 @@ interface SettingsState {
     professional_summary: string;
     bio: string;
   };
-  
+
   // Configuración de consultorio
   clinic: {
     clinic_name: string;
@@ -46,7 +45,7 @@ interface SettingsState {
     latitude: number;
     longitude: number;
   };
-  
+
   // Configuración de disponibilidad
   availability: {
     is_available: boolean;
@@ -62,7 +61,7 @@ interface SettingsState {
       sunday: { active: boolean; start: string; end: string; type: string };
     };
   };
-  
+
   // Configuración de notificaciones
   notifications: {
     email_notifications: boolean;
@@ -72,7 +71,7 @@ interface SettingsState {
     system_updates: boolean;
     marketing_emails: boolean;
   };
-  
+
   // Configuración de privacidad
   privacy: {
     profile_visible: boolean;
@@ -81,7 +80,7 @@ interface SettingsState {
     allow_messages: boolean;
     allow_reviews: boolean;
   };
-  
+
   // Configuración de pagos
   payments: {
     accept_cash: boolean;
@@ -94,7 +93,7 @@ interface SettingsState {
 
 const NutritionistSettingsPage: React.FC = () => {
   const { profile, loading, updateProfile } = useProfile();
-  
+
   const [settings, setSettings] = useState<SettingsState>({
     professional: {
       license_number: '',
@@ -233,7 +232,7 @@ const NutritionistSettingsPage: React.FC = () => {
 
   const handleSave = useCallback(async () => {
     setUiState(prev => ({ ...prev, isSaving: true }));
-    
+
     try {
       const updateData = {
         ...settings.professional,
@@ -244,20 +243,20 @@ const NutritionistSettingsPage: React.FC = () => {
       };
 
       await updateProfile(updateData as any);
-      
-      setUiState(prev => ({ 
-        ...prev, 
+
+      setUiState(prev => ({
+        ...prev,
         isSaving: false,
         isEditing: false,
-        showSuccessAlert: true 
+        showSuccessAlert: true
       }));
-      
+
       setTimeout(() => {
         setUiState(prev => ({ ...prev, showSuccessAlert: false }));
       }, 3000);
     } catch (error) {
-      setUiState(prev => ({ 
-        ...prev, 
+      setUiState(prev => ({
+        ...prev,
         isSaving: false,
         showErrorAlert: true,
         errorMessage: error instanceof Error ? error.message : 'Error al guardar'
@@ -384,7 +383,7 @@ const NutritionistSettingsPage: React.FC = () => {
       {/* Contenido de las pestañas */}
       <Tab.Container activeKey={uiState.activeTab}>
         <Tab.Content>
-          
+
           {/* Perfil Profesional */}
           <Tab.Pane eventKey="professional" active={uiState.activeTab === 'professional'}>
             <Card>
@@ -785,7 +784,7 @@ const NutritionistSettingsPage: React.FC = () => {
                             <span className="me-2">{day.icon}</span>
                             <h6 className="mb-0">{day.label}</h6>
                           </div>
-                          
+
                           <Form.Check
                             type="checkbox"
                             label="Disponible"
@@ -830,7 +829,7 @@ const NutritionistSettingsPage: React.FC = () => {
                                   />
                                 </Col>
                               </Row>
-                              
+
                               <Form.Select
                                 size="sm"
                                 className="mt-2"

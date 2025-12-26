@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  Menu, 
-  X, 
-  Bell, 
-  Settings, 
-  LogOut, 
+import {
+  Menu,
+  X,
+  Bell,
+  Settings,
+  LogOut,
   ChevronDown,
   Sun,
   Moon,
@@ -24,13 +24,12 @@ import { Image, Button } from 'react-bootstrap';
 import { useAuth } from '../hooks/useAuth';
 import '../styles/author-sidebar.css';
 import '../styles/dashboard-modern.css';
-import '../styles/profile.css';
-import { MdEvent, MdNotifications, MdSystemUpdate, MdCheckCircle, MdWarning} from 'react-icons/md';
+import { MdEvent, MdNotifications, MdSystemUpdate, MdCheckCircle, MdWarning } from 'react-icons/md';
 import { FaUserPlus } from 'react-icons/fa';
-import { 
-  Dropdown, 
-  DropdownToggle, 
-  DropdownMenu, 
+import {
+  Dropdown,
+  DropdownToggle,
+  DropdownMenu,
   DropdownItem
 } from 'react-bootstrap';
 
@@ -50,9 +49,9 @@ interface Notification {
 }
 
 // Componente de avatar que muestra imagen de perfil o ícono por defecto
-const UserAvatar: React.FC<{ 
-  profileImage?: string | null; 
-  size?: number; 
+const UserAvatar: React.FC<{
+  profileImage?: string | null;
+  size?: number;
   className?: string;
   showIcon?: boolean;
 }> = ({ profileImage, size = 24, className = '', showIcon = true }) => {
@@ -69,7 +68,7 @@ const UserAvatar: React.FC<{
       />
     );
   }
-  
+
   return showIcon ? <User size={size} /> : null;
 };
 
@@ -86,7 +85,7 @@ const MainLayout: React.FC = () => {
   const [notificationsPerPage] = useState(4);
   const [currentPage, setCurrentPage] = useState(1);
   const notificationBtnRef = useRef<HTMLButtonElement>(null);
-  const notificationMenuPos = useRef<{top: number, left: number}>({top: 0, left: 0});
+  const notificationMenuPos = useRef<{ top: number, left: number }>({ top: 0, left: 0 });
 
   // Estado para notificaciones
   const [notifications, setNotifications] = useState<Notification[]>([
@@ -206,7 +205,7 @@ const MainLayout: React.FC = () => {
     const handleResize = () => {
       const mobile = window.innerWidth < 992;
       setIsMobile(mobile);
-      
+
       if (!mobile && sidebarOpen) {
         setSidebarOpen(false);
       }
@@ -270,7 +269,8 @@ const MainLayout: React.FC = () => {
       const rect = notificationBtnRef.current.getBoundingClientRect();
       notificationMenuPos.current = {
         top: rect.bottom + 8,
-        left: rect.right - 320};
+        left: rect.right - 320
+      };
     }
   }, [notificationsOpen]);
 
@@ -284,9 +284,9 @@ const MainLayout: React.FC = () => {
   };
 
   const markNotificationAsRead = (notificationId: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === notificationId 
+    setNotifications(prev =>
+      prev.map(notification =>
+        notification.id === notificationId
           ? { ...notification, read: true }
           : notification
       )
@@ -294,16 +294,16 @@ const MainLayout: React.FC = () => {
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev => 
+    setNotifications(prev =>
       prev.map(notification => ({ ...notification, read: true }))
     );
   };
 
   // Variable/función removida - no utilizada
-const handleNotificationClick = (notification: Notification) => {
+  const handleNotificationClick = (notification: Notification) => {
     markNotificationAsRead(notification.id);
     setNotificationsOpen(false);
-    
+
     if (notification.actionUrl) {
       navigate(notification.actionUrl);
     }
@@ -314,7 +314,7 @@ const handleNotificationClick = (notification: Notification) => {
   };
 
   // Variable/función removida - no utilizada
-// Navigation array
+  // Navigation array
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'Pacientes', href: '/patients', icon: UsersIcon },
@@ -341,7 +341,7 @@ const handleNotificationClick = (notification: Notification) => {
             <span className="author-logo-web">Nutri</span>
           </div>
           {isMobile && (
-            <button 
+            <button
               className="author-close-btn"
               onClick={() => setSidebarOpen(false)}
             >
@@ -434,7 +434,7 @@ const handleNotificationClick = (notification: Notification) => {
                 </button>
 
                 {notificationsOpen && (
-                  <div 
+                  <div
                     className="notifications-menu-fixed"
                     ref={notificationsRef}
                     style={{
@@ -548,7 +548,7 @@ const handleNotificationClick = (notification: Notification) => {
 
       {/* Mobile Overlay */}
       {sidebarOpen && (
-        <div 
+        <div
           className="author-sidebar-overlay"
           onClick={() => setSidebarOpen(false)}
         />

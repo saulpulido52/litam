@@ -340,8 +340,13 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Estados vacíos */
@@ -435,6 +440,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -765,40 +771,40 @@
 }
 
 /* Colores de los íconos */
-.icon-info { 
-  border-color: #a5d8ff; 
-  background-color: #e7f5ff; 
-  color: #1c7ed6; 
+.icon-info {
+  border-color: #a5d8ff;
+  background-color: #e7f5ff;
+  color: #1c7ed6;
 }
 
-.icon-success { 
-  border-color: #96f2d7; 
-  background-color: #e6fcf5; 
-  color: #2f9e44; 
+.icon-success {
+  border-color: #96f2d7;
+  background-color: #e6fcf5;
+  color: #2f9e44;
 }
 
-.icon-warning { 
-  border-color: #ffd480; 
-  background-color: #fff9e6; 
-  color: #f59f00; 
+.icon-warning {
+  border-color: #ffd480;
+  background-color: #fff9e6;
+  color: #f59f00;
 }
 
-.icon-primary { 
-  border-color: #b3d9ff; 
-  background-color: #e7f3ff; 
-  color: #0066cc; 
+.icon-primary {
+  border-color: #b3d9ff;
+  background-color: #e7f3ff;
+  color: #0066cc;
 }
 
-.icon-secondary { 
-  border-color: #e0e0e0; 
-  background-color: #f8f9fa; 
-  color: #6c757d; 
+.icon-secondary {
+  border-color: #e0e0e0;
+  background-color: #f8f9fa;
+  color: #6c757d;
 }
 
-.icon-default { 
-  border-color: #dee2e6; 
-  background-color: #f1f3f5; 
-  color: #495057; 
+.icon-default {
+  border-color: #dee2e6;
+  background-color: #f1f3f5;
+  color: #495057;
 }
 
 .activity-content {
@@ -1086,13 +1092,14 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
 }
 
 /* Grid enhancements */
-.row.g-4 > * {
+.row.g-4>* {
   padding: 1rem;
 }
 
@@ -1102,29 +1109,29 @@
     padding: 1rem 0;
     margin-bottom: 1rem;
   }
-  
+
   .dashboard-header h1 {
     font-size: 1.75rem;
   }
-  
+
   .card {
     border-radius: 12px;
     margin-bottom: 1rem;
   }
-  
+
   .card-header {
     padding: 1rem;
   }
-  
+
   .card-body {
     padding: 1rem;
   }
-  
+
   .btn {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
   }
-  
+
   .metric-card {
     padding: 1rem;
     border-radius: 16px;
@@ -1135,20 +1142,20 @@
   .dashboard-header h1 {
     font-size: 1.5rem;
   }
-  
+
   .card {
     border-radius: 8px;
   }
-  
+
   .btn {
     padding: 0.4rem 0.8rem;
     font-size: 0.85rem;
   }
-  
+
   .activity-timeline {
     padding-left: 1.5rem;
   }
-  
+
   .activity-item::before {
     width: 10px;
     height: 10px;
@@ -1156,26 +1163,7 @@
   }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .dashboard-container {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  }
-  
-  .card {
-    background: #2d2d2d;
-    color: #ffffff;
-  }
-  
-  .card-header {
-    background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
-    border-bottom-color: #404040;
-  }
-  
-  .metric-card {
-    background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
-  }
-}
+
 
 /* Print styles */
 @media print {
@@ -1183,11 +1171,11 @@
     box-shadow: none;
     border: 1px solid #dee2e6;
   }
-  
+
   .btn {
     display: none;
   }
-  
+
   .activity-timeline::before {
     background: #000;
   }
@@ -1205,11 +1193,11 @@
   .card {
     border: 2px solid #000;
   }
-  
+
   .btn {
     border: 2px solid currentColor;
   }
-  
+
   .progress {
     border: 1px solid #000;
   }
@@ -1217,13 +1205,14 @@
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
+
   .card,
   .btn,
   .metric-card,
   .activity-item::before {
     transition: none;
   }
-  
+
   .spin {
     animation: none;
   }
@@ -1259,6 +1248,7 @@
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -1539,4 +1529,4 @@
 
 .text-danger {
   color: #dc3545 !important;
-} 
+}

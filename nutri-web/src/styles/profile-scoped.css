@@ -1,0 +1,294 @@
+/* =========================================
+   Profile Page V2 - Modern Wellness Design
+   ========================================= */
+
+.profile-page-container {
+    --primary-color: #2c7a7b;
+    /* Teal 600 */
+    --primary-light: #81e6d9;
+    /* Teal 200 */
+    --secondary-color: #319795;
+    /* Teal 500 */
+    --accent-color: #38b2ac;
+    /* Teal 400 */
+    --bg-color: #f7fafc;
+    /* Gray 50 */
+    --card-bg: #ffffff;
+    --text-primary: #2d3748;
+    /* Gray 800 */
+    --text-secondary: #718096;
+    /* Gray 500 */
+    --success-color: #48bb78;
+    --glass-border: rgba(255, 255, 255, 0.4);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--text-primary);
+    background-color: var(--bg-color);
+    min-height: 100vh;
+    padding-bottom: 4rem;
+}
+
+/* --- Layout Grid (Bento) --- */
+.profile-page-container .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1.5rem;
+    padding: 1rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* --- Components --- */
+
+/* Glass Card */
+.profile-page-container .glass-card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-page-container .glass-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+}
+
+/* Header Section */
+.profile-page-container .profile-header {
+    grid-column: span 12;
+    position: relative;
+    background: linear-gradient(120deg, #e6fffa 0%, #e8f5e9 100%);
+    border-radius: 24px;
+    padding: 2rem;
+    margin-bottom: 1rem;
+    border: 1px solid #fff;
+    overflow: visible;
+    /* Allow avatar to overlap if needed */
+}
+
+.profile-page-container .header-content {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.profile-page-container .profile-avatar-lg {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    border: 6px solid #fff;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+    object-fit: cover;
+}
+
+.profile-page-container .profile-info h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #1a202c;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.profile-page-container .profile-title {
+    font-size: 1.25rem;
+    color: var(--secondary-color);
+    font-weight: 500;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.profile-page-container .verified-badge {
+    background: #e6fffa;
+    color: var(--primary-color);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Stats Row */
+.profile-page-container .stats-row {
+    grid-column: span 12;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.profile-page-container .stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid #edf2f7;
+    transition: transform 0.2s;
+}
+
+.profile-page-container .stat-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-light);
+}
+
+.profile-page-container .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: #e6fffa;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.profile-page-container .stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2d3748;
+    line-height: 1.2;
+}
+
+.profile-page-container .stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Column Layouts */
+.profile-page-container .col-sidebar {
+    grid-column: span 12;
+}
+
+.profile-page-container .col-main {
+    grid-column: span 12;
+}
+
+@media (min-width: 992px) {
+    .profile-page-container .col-sidebar {
+        grid-column: span 4;
+    }
+
+    .profile-page-container .col-main {
+        grid-column: span 8;
+    }
+}
+
+/* Section Cards */
+.profile-page-container .section-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    border: 1px solid #edf2f7;
+}
+
+.profile-page-container .section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Contact List */
+.profile-page-container .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: #f7fafc;
+    margin-bottom: 0.75rem;
+    transition: background 0.2s;
+}
+
+.profile-page-container .contact-item:hover {
+    background: #edf2f7;
+}
+
+.profile-page-container .contact-icon {
+    color: var(--secondary-color);
+}
+
+/* Tags */
+.profile-page-container .tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.profile-page-container .tag {
+    background: #ebf8ff;
+    color: #2b6cb0;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Action Buttons */
+.profile-page-container .btn-edit {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.profile-page-container .btn-edit:hover {
+    background: #285e61;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(44, 122, 123, 0.3);
+}
+
+.profile-page-container .btn-secondary-action {
+    background: white;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+/* Schedule Grid placeholder */
+.profile-page-container .schedule-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.5rem;
+    text-align: center;
+    font-size: 0.75rem;
+}
+
+.profile-page-container .schedule-day {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.profile-page-container .schedule-slot {
+    background: #f0fff4;
+    color: #276749;
+    padding: 4px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+}
+
+.profile-page-container .schedule-slot.busy {
+    background: #fff5f5;
+    color: #c53030;
+}

@@ -53,24 +53,24 @@ export class DashboardService {
     // **OPTIMIZACIÓN**: Ejecutar todas las consultas de conteo en paralelo
     const [
       total_patients,
-      total_appointments, 
+      total_appointments,
       total_diet_plans,
       total_clinical_records
     ] = await Promise.all([
       this.relationRepository.count({
-        where: { 
+        where: {
           nutritionist: { id: nutritionistId },
-          status: RelationshipStatus.ACTIVE 
+          status: RelationshipStatus.ACTIVE
         }
       }),
-      this.appointmentRepository.count({ 
-        where: { nutritionist: { id: nutritionistId } } 
+      this.appointmentRepository.count({
+        where: { nutritionist: { id: nutritionistId } }
       }),
-      this.dietPlanRepository.count({ 
-        where: { nutritionist: { id: nutritionistId } } 
+      this.dietPlanRepository.count({
+        where: { nutritionist: { id: nutritionistId } }
       }),
-      this.clinicalRecordRepository.count({ 
-        where: { nutritionist: { id: nutritionistId } } 
+      this.clinicalRecordRepository.count({
+        where: { nutritionist: { id: nutritionistId } }
       })
     ]);
 
@@ -91,43 +91,43 @@ export class DashboardService {
         recent_appointments,
         recent_clinical_records
       ] = await Promise.all([
-        this.dietPlanRepository.find({ 
+        this.dietPlanRepository.find({
           where: { nutritionist: { id: nutritionistId } },
-          order: { created_at: 'DESC' }, 
+          order: { created_at: 'DESC' },
           take: 3
         }),
-        this.appointmentRepository.find({ 
+        this.appointmentRepository.find({
           where: { nutritionist: { id: nutritionistId } },
           relations: ['patient'],
-          order: { created_at: 'DESC' }, 
+          order: { created_at: 'DESC' },
           take: 3
         }),
-        this.clinicalRecordRepository.find({ 
+        this.clinicalRecordRepository.find({
           where: { nutritionist: { id: nutritionistId } },
-          order: { created_at: 'DESC' }, 
+          order: { created_at: 'DESC' },
           take: 3
         })
       ]);
 
       // **OPTIMIZACIÓN**: Crear actividades de forma más eficiente
       const recent_activities: Array<{ type: string; id: string; date: string; description: string }> = [
-        ...recent_diet_plans.map(d => ({ 
-          type: 'diet_plan', 
-          id: d.id, 
-          date: d.created_at.toISOString(), 
-          description: `Plan: ${d.name || 'Plan nutricional'}` 
+        ...recent_diet_plans.map(d => ({
+          type: 'diet_plan',
+          id: d.id,
+          date: d.created_at.toISOString(),
+          description: `Plan: ${d.name || 'Plan nutricional'}`
         })),
-        ...recent_appointments.map(a => ({ 
-          type: 'appointment', 
-          id: a.id, 
-          date: a.created_at.toISOString(), 
+        ...recent_appointments.map(a => ({
+          type: 'appointment',
+          id: a.id,
+          date: a.created_at.toISOString(),
           description: `Cita: ${a.patient?.first_name || ''} ${a.patient?.last_name || ''}`.trim() || 'Cita programada'
         })),
-        ...recent_clinical_records.map(c => ({ 
-          type: 'clinical_record', 
-          id: c.id, 
-          date: c.created_at.toISOString(), 
-          description: `Expediente: ${c.expedient_number || 'Registro clínico'}` 
+        ...recent_clinical_records.map(c => ({
+          type: 'clinical_record',
+          id: c.id,
+          date: c.created_at.toISOString(),
+          description: `Expediente: ${c.expedient_number || 'Registro clínico'}`
         }))
       ];
 
@@ -148,21 +148,21 @@ export class DashboardService {
   }> {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    
+
     // **OPTIMIZACIÓN**: Ejecutar consultas semanales en paralelo
     const [new_patients, new_appointments] = await Promise.all([
-      this.relationRepository.count({ 
-        where: { 
+      this.relationRepository.count({
+        where: {
           nutritionist: { id: nutritionistId },
           status: RelationshipStatus.ACTIVE,
-          requested_at: MoreThan(oneWeekAgo) 
-        } 
+          requested_at: MoreThan(oneWeekAgo)
+        }
       }),
-      this.appointmentRepository.count({ 
-        where: { 
+      this.appointmentRepository.count({
+        where: {
           nutritionist: { id: nutritionistId },
-          created_at: MoreThan(oneWeekAgo) 
-        } 
+          created_at: MoreThan(oneWeekAgo)
+        }
       })
     ]);
 
@@ -177,11 +177,11 @@ export class DashboardService {
       return { completion_rate: 0 };
     }
 
-    const total_completed = await this.appointmentRepository.count({ 
-      where: { 
+    const total_completed = await this.appointmentRepository.count({
+      where: {
         nutritionist: { id: nutritionistId },
-        status: AppointmentStatus.COMPLETED 
-      } 
+        status: AppointmentStatus.COMPLETED
+      }
     });
 
     return {
@@ -238,22 +238,22 @@ export class DashboardService {
     try {
       // Conteos básicos
       const total_patients = await this.relationRepository.count({
-        where: { 
+        where: {
           nutritionist: { id: nutritionistId },
-          status: RelationshipStatus.ACTIVE 
+          status: RelationshipStatus.ACTIVE
         }
       });
 
-      const total_appointments = await this.appointmentRepository.count({ 
-        where: { nutritionist: { id: nutritionistId } } 
+      const total_appointments = await this.appointmentRepository.count({
+        where: { nutritionist: { id: nutritionistId } }
       });
 
-      const total_diet_plans = await this.dietPlanRepository.count({ 
-        where: { nutritionist: { id: nutritionistId } } 
+      const total_diet_plans = await this.dietPlanRepository.count({
+        where: { nutritionist: { id: nutritionistId } }
       });
 
-      const total_clinical_records = await this.clinicalRecordRepository.count({ 
-        where: { nutritionist: { id: nutritionistId } } 
+      const total_clinical_records = await this.clinicalRecordRepository.count({
+        where: { nutritionist: { id: nutritionistId } }
       });
 
       // Actividades recientes simplificadas
@@ -262,30 +262,43 @@ export class DashboardService {
       // Resumen semanal
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      
-      const new_patients = await this.relationRepository.count({ 
-        where: { 
+
+      const new_patients = await this.relationRepository.count({
+        where: {
           nutritionist: { id: nutritionistId },
           status: RelationshipStatus.ACTIVE,
-          requested_at: MoreThan(oneWeekAgo) 
-        } 
+          requested_at: MoreThan(oneWeekAgo)
+        }
       });
-      
-      const new_appointments = await this.appointmentRepository.count({ 
-        where: { 
+
+      const new_appointments = await this.appointmentRepository.count({
+        where: {
           nutritionist: { id: nutritionistId },
-          created_at: MoreThan(oneWeekAgo) 
-        } 
+          created_at: MoreThan(oneWeekAgo)
+        }
       });
 
       // Métricas de rendimiento
-      const total_completed = await this.appointmentRepository.count({ 
-        where: { 
+      const total_completed = await this.appointmentRepository.count({
+        where: {
           nutritionist: { id: nutritionistId },
-          status: AppointmentStatus.COMPLETED 
-        } 
+          status: AppointmentStatus.COMPLETED
+        }
       });
       const completion_rate = total_appointments > 0 ? Math.round((total_completed / total_appointments) * 100) : 0;
+
+      // Citas de hoy (Nuevo cálculo para Profile V2)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const appointments_today = await this.appointmentRepository.count({
+        where: {
+          nutritionist: { id: nutritionistId },
+          start_time: Between(today, tomorrow)
+        }
+      });
 
       return {
         total_patients,
@@ -301,6 +314,8 @@ export class DashboardService {
           last_diet_plan: null,
           last_clinical_record: null,
         },
+        // @ts-ignore - Agregamos temporalmente esta propiedad aunque no esté en la interfaz estricta aún
+        appointments_today
       };
     } catch (error) {
       console.error('Error en getSimpleDashboardStats:', error);

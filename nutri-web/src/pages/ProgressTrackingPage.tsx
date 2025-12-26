@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, Scale, Target, Calendar, Plus, ArrowLeft, BarChart3, User } from 'lucide-react';
+import { TrendingUp, TrendingDown, Scale, Target, Calendar, Plus, ArrowLeft, BarChart3, User, Activity, Flame } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import EnhancedEvolutionChart from '../components/ProgressCharts/EnhancedEvolutionChart';
 import ProgressMetrics from '../components/ProgressCharts/ProgressMetrics';
 import { usePatients } from '../hooks/usePatients';
 import patientsService from '../services/patientsService';
+import { MetricCard } from '../components/Progress/MetricCard';
+import { BeforeAfterCard } from '../components/Progress/BeforeAfterCard';
+import { SimpleGoal } from '../components/Progress/SimpleGoal';
+import { PhotoComparison } from '../components/Progress/PhotoComparison';
+import { InsightsPanel } from '../components/Progress/InsightsPanel';
+import '../styles/progress-modern.css';
 
 interface ProgressEntry {
   id: string;
@@ -49,12 +55,12 @@ const ProgressTrackingPage: React.FC = () => {
     // Función para cargar datos de progreso reales
     const loadProgressData = async () => {
       if (!selectedPatient) return;
-      
+
       setLoading(true);
       try {
         console.log('📊 Cargando datos de progreso para paciente:', selectedPatient);
         const progressData = await patientsService.getPatientProgress(selectedPatient);
-        
+
         // Transformar datos de la API al formato esperado por el componente
         const transformedEntries: ProgressEntry[] = progressData.map((progress: any) => ({
           id: progress.id,
@@ -68,7 +74,7 @@ const ProgressTrackingPage: React.FC = () => {
           notes: progress.notes || '',
           progress_photos: progress.photos || []
         }));
-        
+
         setProgressEntries(transformedEntries);
         console.log('✅ Datos de progreso cargados:', transformedEntries);
       } catch (error) {
@@ -93,17 +99,17 @@ const ProgressTrackingPage: React.FC = () => {
     try {
       console.log('🤖 Generando análisis automático de progreso...');
       const result = await patientsService.generateAutomaticProgress(selectedPatient);
-      
+
       console.log('✅ Análisis automático generado:', result);
-      
+
       // Validar que la respuesta tenga la estructura correcta
       if (!result || typeof result !== 'object') {
         throw new Error('Respuesta inválida del servidor');
       }
-      
+
       // Establecer datos de análisis
       setAnalysisData(result.analysis || {});
-      
+
       // Actualizar los datos de progreso con los nuevos logs generados (si existen)
       if (result.logs && Array.isArray(result.logs) && result.logs.length > 0) {
         const transformedEntries: ProgressEntry[] = result.logs.map((progress: any) => ({
@@ -118,19 +124,19 @@ const ProgressTrackingPage: React.FC = () => {
           notes: progress.notes || 'Generado automáticamente',
           progress_photos: progress.photos || []
         }));
-        
+
         setProgressEntries(transformedEntries);
         console.log('📊 Datos de progreso actualizados:', transformedEntries);
       } else {
         console.log('ℹ️ No se generaron nuevos logs de progreso');
       }
-      
+
       setActiveTab('analysis'); // Cambiar a la pestaña de análisis
-      
+
       // Mostrar notificación de éxito
       const basedOnInfo = result.basedOn || {};
       alert(`✅ Análisis automático generado exitosamente!\n\nBasado en:\n- ${basedOnInfo.clinicalRecords || 0} expedientes clínicos\n- Plan activo: ${basedOnInfo.activePlan || 'Ninguno'}`);
-      
+
     } catch (error: any) {
       console.error('❌ Error al generar análisis automático:', error);
       const errorMessage = error?.message || 'Error desconocido';
@@ -143,7 +149,7 @@ const ProgressTrackingPage: React.FC = () => {
   // Cargar análisis si existe
   const loadAnalysis = async () => {
     if (!selectedPatient) return;
-    
+
     try {
       const analysis = await patientsService.getProgressAnalysis(selectedPatient);
       setAnalysisData(analysis);
@@ -173,7 +179,7 @@ const ProgressTrackingPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [selectedPatient, analysisData, autoGenerating]);
 
-  const filteredEntries = selectedPatient 
+  const filteredEntries = selectedPatient
     ? progressEntries.filter(entry => entry.patient_id === selectedPatient)
     : progressEntries;
 
@@ -210,7 +216,7 @@ const ProgressTrackingPage: React.FC = () => {
         </div>
         <div className="col-md-4 text-end">
           <div className="d-flex gap-2 justify-content-end">
-            <button 
+            <button
               className="btn btn-primary"
               onClick={() => setShowAddModal(true)}
               disabled={!selectedPatient}
@@ -226,7 +232,7 @@ const ProgressTrackingPage: React.FC = () => {
       <div className="row mb-4">
         <div className="col-md-6">
           <label className="form-label">Seleccionar Paciente</label>
-          <select 
+          <select
             className="form-select"
             value={selectedPatient || ''}
             onChange={(e) => setSelectedPatient(e.target.value)}
@@ -244,7 +250,7 @@ const ProgressTrackingPage: React.FC = () => {
       {/* Tabs */}
       <ul className="nav nav-tabs mb-4">
         <li className="nav-item">
-          <button 
+          <button
             className={`nav-link ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => setActiveTab('overview')}
           >
@@ -253,7 +259,7 @@ const ProgressTrackingPage: React.FC = () => {
           </button>
         </li>
         <li className="nav-item">
-          <button 
+          <button
             className={`nav-link ${activeTab === 'charts' ? 'active' : ''}`}
             onClick={() => setActiveTab('charts')}
           >
@@ -262,7 +268,7 @@ const ProgressTrackingPage: React.FC = () => {
           </button>
         </li>
         <li className="nav-item">
-          <button 
+          <button
             className={`nav-link ${activeTab === 'history' ? 'active' : ''}`}
             onClick={() => setActiveTab('history')}
           >
@@ -271,7 +277,7 @@ const ProgressTrackingPage: React.FC = () => {
           </button>
         </li>
         <li className="nav-item">
-          <button 
+          <button
             className={`nav-link ${activeTab === 'analysis' ? 'active' : ''}`}
             onClick={() => setActiveTab('analysis')}
           >
@@ -284,113 +290,104 @@ const ProgressTrackingPage: React.FC = () => {
       {/* Tab Content */}
       {activeTab === 'overview' && (
         <>
-          {/* Progress Metrics Dashboard */}
+          {/* Modern Metric Cards */}
           {selectedPatient && selectedPatientData && latestEntry && (
-            <div className="row mb-4">
-              <div className="col-12">
-                <ProgressMetrics
-                  patientName={selectedPatientData.first_name}
-                  currentWeight={latestEntry.weight}
-                  targetWeight={selectedPatientData.profile?.target_weight ?? 0}
-                  initialWeight={selectedPatientData.profile?.current_weight ?? 0}
-                  currentBodyFat={latestEntry.body_fat}
-                  initialBodyFat={28} // Simulado - en producción vendría de la primera medición
-                  currentMuscleMass={latestEntry.muscle_mass}
-                  initialMuscleMass={42} // Simulado - en producción vendría de la primera medición
-                  height={selectedPatientData.profile?.height ?? 170}
-                  daysInProgram={30} // Simulado - en producción se calcularía
-                  totalMeasurements={filteredEntries.length}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Progress Overview */}
-          {selectedPatient && selectedPatientData && latestEntry && (
-            <div className="row mb-4">
-              <div className="col-12">
-                <div className="card border-0 shadow-sm">
-                  <div className="card-header bg-primary text-white">
-                    <h5 className="mb-0">
-                      <User size={20} className="me-2" />
-                      Resumen de Progreso - {selectedPatientData.first_name} {selectedPatientData.last_name}
-                    </h5>
-                  </div>
-                  <div className="card-body">
-                    <div className="row">
-                      <div className="col-md-3">
-                        <div className="text-center">
-                          <Scale size={32} className="text-primary mb-2" />
-                          <h4 className="mb-1">{latestEntry.weight} kg</h4>
-                          <small className="text-muted">Peso Actual</small>
-                          {previousEntry && (
-                            <div className="mt-1">
-                              {getProgressTrend(latestEntry.weight, previousEntry.weight) === 'down' ? (
-                                <span className="text-success">
-                                  <TrendingDown size={16} /> -{((previousEntry.weight - latestEntry.weight) || 0).toFixed(1)} kg
-                                </span>
-                              ) : getProgressTrend(latestEntry.weight, previousEntry.weight) === 'up' ? (
-                                <span className="text-danger">
-                                  <TrendingUp size={16} /> +{((latestEntry.weight - previousEntry.weight) || 0).toFixed(1)} kg
-                                </span>
-                              ) : (
-                                <span className="text-muted">Sin cambios</span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="col-md-3">
-                        <div className="text-center">
-                          <Target size={32} className="text-success mb-2" />
-                          <h4 className="mb-1">{selectedPatientData.profile?.target_weight ?? '-'} kg</h4>
-                          <small className="text-muted">Peso Meta</small>
-                          <div className="mt-1">
-                            <span className="text-info">
-                              {selectedPatientData.profile?.target_weight !== undefined && latestEntry.weight !== undefined
-                                ? ((latestEntry.weight - selectedPatientData.profile.target_weight) || 0).toFixed(1)
-                                : '-'} kg restantes
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-3">
-                        <div className="text-center">
-                          <h4 className="mb-1 text-info">{selectedPatientData && selectedPatientData.profile
-                            ? calculateBMI(Number(latestEntry?.weight ?? 0), Number(selectedPatientData.profile.height) || 1)
-                            : '-'}</h4>
-                          <small className="text-muted">IMC Actual</small>
-                          <div className="mt-1">
-                            <span className="badge bg-light text-dark">
-                              {selectedPatientData && selectedPatientData.profile && Number(calculateBMI(Number(latestEntry?.weight ?? 0), Number(selectedPatientData.profile.height) || 1)) < 25 ? 'Normal' : 'Sobrepeso'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-3">
-                        <div className="text-center">
-                          <h4 className="mb-1 text-warning">{latestEntry.body_fat}%</h4>
-                          <small className="text-muted">Grasa Corporal</small>
-                          {previousEntry && (
-                            <div className="mt-1">
-                              {getProgressTrend(latestEntry.body_fat, previousEntry.body_fat) === 'down' ? (
-                                <span className="text-success">
-                                  <TrendingDown size={16} /> -{((previousEntry.body_fat - latestEntry.body_fat) || 0).toFixed(1)}%
-                                </span>
-                              ) : (
-                                <span className="text-danger">
-                                  <TrendingUp size={16} /> +{((latestEntry.body_fat - previousEntry.body_fat) || 0).toFixed(1)}%
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+            <>
+              <div className="row mb-4 g-3">
+                <div className="col-md-3">
+                  <MetricCard
+                    title="Peso Actual"
+                    value={latestEntry.weight}
+                    unit="kg"
+                    change={previousEntry ? latestEntry.weight - previousEntry.weight : undefined}
+                    icon={<Scale size={40} />}
+                    gradient="weight"
+                    isPositiveGood={false}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <MetricCard
+                    title="Grasa Corporal"
+                    value={latestEntry.body_fat}
+                    unit="%"
+                    change={previousEntry ? latestEntry.body_fat - previousEntry.body_fat : undefined}
+                    icon={<Flame size={40} />}
+                    gradient="fat"
+                    isPositiveGood={false}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <MetricCard
+                    title="Masa Muscular"
+                    value={latestEntry.muscle_mass}
+                    unit="kg"
+                    change={previousEntry ? latestEntry.muscle_mass - previousEntry.muscle_mass : undefined}
+                    icon={<Activity size={40} />}
+                    gradient="muscle"
+                    isPositiveGood={true}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <MetricCard
+                    title="IMC"
+                    value={selectedPatientData.profile ? calculateBMI(latestEntry.weight, selectedPatientData.profile.height || 170) : '-'}
+                    unit=""
+                    icon={<Target size={40} />}
+                    gradient="bmi"
+                  />
                 </div>
               </div>
-            </div>
+
+              {/* Goal Card */}
+              <div className="row mb-4">
+                <div className="col-12">
+                  <SimpleGoal
+                    currentWeight={latestEntry.weight}
+                    initialWeight={filteredEntries.length > 0 ? filteredEntries[filteredEntries.length - 1].weight : latestEntry.weight}
+                    patientId={selectedPatient}
+                  />
+                </div>
+              </div>
+
+              {/* Before/After Comparison */}
+              {filteredEntries.length >= 2 && (
+                <div className="row mb-4">
+                  <div className="col-12">
+                    <BeforeAfterCard
+                      firstMeasurement={{
+                        weight: filteredEntries[filteredEntries.length - 1].weight,
+                        body_fat: filteredEntries[filteredEntries.length - 1].body_fat,
+                        muscle_mass: filteredEntries[filteredEntries.length - 1].muscle_mass,
+                        date: filteredEntries[filteredEntries.length - 1].date
+                      }}
+                      latestMeasurement={{
+                        weight: latestEntry.weight,
+                        body_fat: latestEntry.body_fat,
+                        muscle_mass: latestEntry.muscle_mass,
+                        date: latestEntry.date
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Photo Comparison */}
+              <div className="row mb-4">
+                <div className="col-12">
+                  <PhotoComparison patientId={selectedPatient} />
+                </div>
+              </div>
+
+              {/* Insights Panel */}
+              <div className="row mb-4">
+                <div className="col-12">
+                  <InsightsPanel
+                    entries={filteredEntries}
+                    patientName={`${selectedPatientData.first_name} ${selectedPatientData.last_name}`}
+                  />
+                </div>
+              </div>
+            </>
           )}
 
           {/* Progress Entries Table */}
@@ -479,7 +476,7 @@ const ProgressTrackingPage: React.FC = () => {
         <div className="row">
           <div className="col-12 mb-4">
             {selectedPatient && selectedPatientData ? (
-              <EnhancedEvolutionChart 
+              <EnhancedEvolutionChart
                 data={filteredEntries}
                 patientName={`${selectedPatientData.first_name} ${selectedPatientData.last_name}`}
               />
@@ -602,7 +599,7 @@ const ProgressTrackingPage: React.FC = () => {
             ) : analysisData && Object.keys(analysisData).length > 0 ? (
               <div className="p-4">
                 <h4 className="mb-3">Análisis de Progreso - {selectedPatientData?.first_name} {selectedPatientData?.last_name}</h4>
-                
+
                 {/* Análisis de Peso */}
                 {analysisData.weightProgress && (
                   <div className="row mb-4">
@@ -615,13 +612,12 @@ const ProgressTrackingPage: React.FC = () => {
                           <p><strong>Peso Actual:</strong> {analysisData.weightProgress.currentWeight ? `${analysisData.weightProgress.currentWeight} kg` : 'No disponible'}</p>
                           <p><strong>Peso Anterior:</strong> {analysisData.weightProgress.previousWeight ? `${analysisData.weightProgress.previousWeight} kg` : 'No disponible'}</p>
                           <p><strong>Cambio:</strong> {analysisData.weightProgress.weightChange ? `${analysisData.weightProgress.weightChange > 0 ? '+' : ''}${analysisData.weightProgress.weightChange.toFixed(1)} kg` : 'Sin cambios'}</p>
-                          <p><strong>Tendencia:</strong> 
-                            <span className={`badge ms-2 ${
-                              analysisData.weightProgress.trend === 'improving' ? 'bg-success' : 
+                          <p><strong>Tendencia:</strong>
+                            <span className={`badge ms-2 ${analysisData.weightProgress.trend === 'improving' ? 'bg-success' :
                               analysisData.weightProgress.trend === 'concerning' ? 'bg-danger' : 'bg-secondary'
-                            }`}>
-                              {analysisData.weightProgress.trend === 'improving' ? '↗ Mejorando' : 
-                               analysisData.weightProgress.trend === 'concerning' ? '↗ Preocupante' : '→ Estable'}
+                              }`}>
+                              {analysisData.weightProgress.trend === 'improving' ? '↗ Mejorando' :
+                                analysisData.weightProgress.trend === 'concerning' ? '↗ Preocupante' : '→ Estable'}
                             </span>
                           </p>
                         </div>
@@ -636,13 +632,12 @@ const ProgressTrackingPage: React.FC = () => {
                           <p><strong>IMC Actual:</strong> {analysisData.anthropometricProgress?.bmiCurrent ? analysisData.anthropometricProgress.bmiCurrent.toFixed(1) : 'No disponible'}</p>
                           <p><strong>IMC Anterior:</strong> {analysisData.anthropometricProgress?.bmiPrevious ? analysisData.anthropometricProgress.bmiPrevious.toFixed(1) : 'No disponible'}</p>
                           <p><strong>Cambio Cintura:</strong> {analysisData.anthropometricProgress?.waistChange ? `${analysisData.anthropometricProgress.waistChange > 0 ? '+' : ''}${analysisData.anthropometricProgress.waistChange.toFixed(1)} cm` : 'Sin cambios'}</p>
-                          <p><strong>Composición Corporal:</strong> 
-                            <span className={`badge ms-2 ${
-                              analysisData.anthropometricProgress?.bodyCompositionTrend === 'improving' ? 'bg-success' : 
+                          <p><strong>Composición Corporal:</strong>
+                            <span className={`badge ms-2 ${analysisData.anthropometricProgress?.bodyCompositionTrend === 'improving' ? 'bg-success' :
                               analysisData.anthropometricProgress?.bodyCompositionTrend === 'concerning' ? 'bg-danger' : 'bg-secondary'
-                            }`}>
-                              {analysisData.anthropometricProgress?.bodyCompositionTrend === 'improving' ? '↗ Mejorando' : 
-                               analysisData.anthropometricProgress?.bodyCompositionTrend === 'concerning' ? '↗ Preocupante' : '→ Estable'}
+                              }`}>
+                              {analysisData.anthropometricProgress?.bodyCompositionTrend === 'improving' ? '↗ Mejorando' :
+                                analysisData.anthropometricProgress?.bodyCompositionTrend === 'concerning' ? '↗ Preocupante' : '→ Estable'}
                             </span>
                           </p>
                         </div>
@@ -663,13 +658,12 @@ const ProgressTrackingPage: React.FC = () => {
                           <p><strong>Plan Actual:</strong> {analysisData.dietPlanAdherence.currentPlan?.name || 'Sin plan activo'}</p>
                           <p><strong>Duración del Plan:</strong> {analysisData.dietPlanAdherence.planDuration || 0} días</p>
                           <p><strong>Progreso Esperado:</strong> {analysisData.dietPlanAdherence.expectedProgress}</p>
-                          <p><strong>Estado:</strong> 
-                            <span className={`badge ms-2 ${
-                              analysisData.dietPlanAdherence.actualVsExpected === 'on_track' ? 'bg-success' : 
+                          <p><strong>Estado:</strong>
+                            <span className={`badge ms-2 ${analysisData.dietPlanAdherence.actualVsExpected === 'on_track' ? 'bg-success' :
                               analysisData.dietPlanAdherence.actualVsExpected === 'ahead' ? 'bg-info' : 'bg-warning'
-                            }`}>
-                              {analysisData.dietPlanAdherence.actualVsExpected === 'on_track' ? '✅ En meta' : 
-                               analysisData.dietPlanAdherence.actualVsExpected === 'ahead' ? '🚀 Adelantado' : '⚠️ Atrasado'}
+                              }`}>
+                              {analysisData.dietPlanAdherence.actualVsExpected === 'on_track' ? '✅ En meta' :
+                                analysisData.dietPlanAdherence.actualVsExpected === 'ahead' ? '🚀 Adelantado' : '⚠️ Atrasado'}
                             </span>
                           </p>
                         </div>
@@ -697,7 +691,7 @@ const ProgressTrackingPage: React.FC = () => {
                               </ul>
                             </div>
                           )}
-                          
+
                           {analysisData.recommendations.concernFlags && analysisData.recommendations.concernFlags.length > 0 && (
                             <div className="mb-3">
                               <h6 className="text-warning">⚠️ Áreas de Atención</h6>
@@ -708,7 +702,7 @@ const ProgressTrackingPage: React.FC = () => {
                               </ul>
                             </div>
                           )}
-                          
+
                           {analysisData.recommendations.suggestedChanges && analysisData.recommendations.suggestedChanges.length > 0 && (
                             <div className="mb-3">
                               <h6 className="text-info">🔄 Cambios Sugeridos</h6>
@@ -785,7 +779,7 @@ const ProgressTrackingPage: React.FC = () => {
 
       {/* Add Progress Modal */}
       {showAddModal && selectedPatientData && (
-        <div className="modal fade show d-block" tabIndex={-1} style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+        <div className="modal fade show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
@@ -797,80 +791,80 @@ const ProgressTrackingPage: React.FC = () => {
                   <div className="row">
                     <div className="col-md-6 mb-3">
                       <label className="form-label" htmlFor="progress-date">Fecha</label>
-                      <input 
-                        type="date" 
-                        className="form-control" 
+                      <input
+                        type="date"
+                        className="form-control"
                         id="progress-date"
                         name="progress-date"
-                        defaultValue={new Date().toISOString().split('T')[0]} 
+                        defaultValue={new Date().toISOString().split('T')[0]}
                       />
                     </div>
                     <div className="col-md-6 mb-3">
                       <label className="form-label" htmlFor="progress-weight">Peso (kg)</label>
-                      <input 
-                        type="number" 
-                        className="form-control" 
+                      <input
+                        type="number"
+                        className="form-control"
                         id="progress-weight"
                         name="progress-weight"
-                        step="0.1" 
-                        placeholder="70.5" 
+                        step="0.1"
+                        placeholder="70.5"
                       />
                     </div>
                   </div>
                   <div className="row">
                     <div className="col-md-4 mb-3">
                       <label className="form-label" htmlFor="progress-body-fat">Grasa Corporal (%)</label>
-                      <input 
-                        type="number" 
-                        className="form-control" 
+                      <input
+                        type="number"
+                        className="form-control"
                         id="progress-body-fat"
                         name="progress-body-fat"
-                        step="0.1" 
-                        placeholder="25.5" 
+                        step="0.1"
+                        placeholder="25.5"
                       />
                     </div>
                     <div className="col-md-4 mb-3">
                       <label className="form-label" htmlFor="progress-muscle-mass">Masa Muscular (kg)</label>
-                      <input 
-                        type="number" 
-                        className="form-control" 
+                      <input
+                        type="number"
+                        className="form-control"
                         id="progress-muscle-mass"
                         name="progress-muscle-mass"
-                        step="0.1" 
-                        placeholder="45.2" 
+                        step="0.1"
+                        placeholder="45.2"
                       />
                     </div>
                     <div className="col-md-4 mb-3">
                       <label className="form-label" htmlFor="progress-waist">Cintura (cm)</label>
-                      <input 
-                        type="number" 
-                        className="form-control" 
+                      <input
+                        type="number"
+                        className="form-control"
                         id="progress-waist"
                         name="progress-waist"
-                        step="0.1" 
-                        placeholder="85.0" 
+                        step="0.1"
+                        placeholder="85.0"
                       />
                     </div>
                   </div>
                   <div className="mb-3">
                     <label className="form-label" htmlFor="progress-notes">Notas del Progreso</label>
-                    <textarea 
-                      className="form-control" 
+                    <textarea
+                      className="form-control"
                       id="progress-notes"
                       name="progress-notes"
-                      rows={3} 
+                      rows={3}
                       placeholder="Describe el progreso del paciente..."
                     />
                   </div>
                   <div className="mb-3">
                     <label className="form-label" htmlFor="progress-photos">Fotos de Progreso (Opcional)</label>
-                    <input 
-                      type="file" 
-                      className="form-control" 
+                    <input
+                      type="file"
+                      className="form-control"
                       id="progress-photos"
                       name="progress-photos"
-                      multiple 
-                      accept="image/*" 
+                      multiple
+                      accept="image/*"
                     />
                   </div>
                 </form>

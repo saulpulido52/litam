@@ -40,7 +40,6 @@ export class NutritionistAvailability {
     day_of_week!: DayOfWeek;
 
     @Column({ type: 'integer', nullable: false })
-    @Column({ type: 'integer', nullable: false })
     start_time_minutes!: number; // Minutos desde la medianoche (ej: 540 para 09:00, 1020 para 17:00)
 
     @Column({ type: 'integer', nullable: false })
