@@ -607,7 +607,7 @@ const ProgressTrackingPage: React.FC = () => {
                         <div className="card-body">
                           <p><strong>Peso Actual:</strong> {analysisData.weightProgress.currentWeight ? `${analysisData.weightProgress.currentWeight} kg` : 'No disponible'}</p>
                           <p><strong>Peso Anterior:</strong> {analysisData.weightProgress.previousWeight ? `${analysisData.weightProgress.previousWeight} kg` : 'No disponible'}</p>
-                          <p><strong>Cambio:</strong> {analysisData.weightProgress.weightChange ? `${analysisData.weightProgress.weightChange > 0 ? '+' : ''}${analysisData.weightProgress.weightChange.toFixed(1)} kg` : 'Sin cambios'}</p>
+                          <p><strong>Cambio:</strong> {analysisData.weightProgress.weightChange ? `${analysisData.weightProgress.weightChange > 0 ? '+' : ''}${Number(analysisData.weightProgress.weightChange).toFixed(1)} kg` : 'Sin cambios'}</p>
                           <p><strong>Tendencia:</strong>
                             <span className={`badge ms-2 ${analysisData.weightProgress.trend === 'improving' ? 'bg-success' :
                               analysisData.weightProgress.trend === 'concerning' ? 'bg-danger' : 'bg-secondary'
@@ -625,9 +625,9 @@ const ProgressTrackingPage: React.FC = () => {
                           <h5 className="card-title mb-0">📏 Medidas Antropométricas</h5>
                         </div>
                         <div className="card-body">
-                          <p><strong>IMC Actual:</strong> {analysisData.anthropometricProgress?.bmiCurrent ? analysisData.anthropometricProgress.bmiCurrent.toFixed(1) : 'No disponible'}</p>
-                          <p><strong>IMC Anterior:</strong> {analysisData.anthropometricProgress?.bmiPrevious ? analysisData.anthropometricProgress.bmiPrevious.toFixed(1) : 'No disponible'}</p>
-                          <p><strong>Cambio Cintura:</strong> {analysisData.anthropometricProgress?.waistChange ? `${analysisData.anthropometricProgress.waistChange > 0 ? '+' : ''}${analysisData.anthropometricProgress.waistChange.toFixed(1)} cm` : 'Sin cambios'}</p>
+                          <p><strong>IMC Actual:</strong> {analysisData.anthropometricProgress?.bmiCurrent ? Number(analysisData.anthropometricProgress.bmiCurrent).toFixed(1) : 'No disponible'}</p>
+                          <p><strong>IMC Anterior:</strong> {analysisData.anthropometricProgress?.bmiPrevious ? Number(analysisData.anthropometricProgress.bmiPrevious).toFixed(1) : 'No disponible'}</p>
+                          <p><strong>Cambio Cintura:</strong> {analysisData.anthropometricProgress?.waistChange ? `${analysisData.anthropometricProgress.waistChange > 0 ? '+' : ''}${Number(analysisData.anthropometricProgress.waistChange).toFixed(1)} cm` : 'Sin cambios'}</p>
                           <p><strong>Composición Corporal:</strong>
                             <span className={`badge ms-2 ${analysisData.anthropometricProgress?.bodyCompositionTrend === 'improving' ? 'bg-success' :
                               analysisData.anthropometricProgress?.bodyCompositionTrend === 'concerning' ? 'bg-danger' : 'bg-secondary'
@@ -740,9 +740,9 @@ const ProgressTrackingPage: React.FC = () => {
                                 {analysisData.timelineData.map((entry: any, index: number) => (
                                   <tr key={index}>
                                     <td>{new Date(entry.date).toLocaleDateString('es-ES')}</td>
-                                    <td>{entry.weight ? entry.weight.toFixed(1) : '-'}</td>
-                                    <td>{entry.bmi ? entry.bmi.toFixed(1) : '-'}</td>
-                                    <td>{entry.waist ? entry.waist.toFixed(1) : '-'}</td>
+                                    <td>{entry.weight ? Number(entry.weight).toFixed(1) : '-'}</td>
+                                    <td>{entry.bmi ? Number(entry.bmi).toFixed(1) : '-'}</td>
+                                    <td>{entry.waist ? Number(entry.waist).toFixed(1) : '-'}</td>
                                     <td>
                                       <span className={`badge ${entry.planActive ? 'bg-success' : 'bg-secondary'}`}>
                                         {entry.planActive ? 'Sí' : 'No'}
