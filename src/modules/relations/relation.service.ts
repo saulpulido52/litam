@@ -110,6 +110,23 @@ class RelationService {
         // Lógica de transición de estados
         switch (newStatus) {
             case RelationshipStatus.ACTIVE:
+                // ENFORCE: Single Active Nutritionist Rule
+                // Buscar si el paciente ya tiene un nutriólogo activo diferente al actual
+                const currentActive = await this.relationRepository.findOne({
+                    where: {
+                        patient: { id: relation.patient.id },
+                        status: RelationshipStatus.ACTIVE
+                    }
+                });
+
+                if (currentActive && currentActive.id !== relation.id) {
+                    // Desactivar la relación anterior automáticamente (History preservation)
+                    currentActive.status = RelationshipStatus.INACTIVE;
+                    currentActive.ended_at = new Date();
+                    currentActive.elimination_reason = 'Cambio de nutriólogo (Auto-archivado al aceptar nuevo)';
+                    await this.relationRepository.save(currentActive);
+                }
+
                 relation.status = RelationshipStatus.ACTIVE;
                 relation.accepted_at = new Date();
                 break;
