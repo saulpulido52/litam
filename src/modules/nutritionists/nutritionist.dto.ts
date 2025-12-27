@@ -47,12 +47,12 @@ export class CreateUpdateNutritionistProfileDto {
 
     @IsOptional()
     @IsString({ message: 'El RFC debe ser texto.' })
-    @Length(12, 13, { message: 'El RFC debe tener 12 o 13 caracteres.' })
+    @Length(10, 13, { message: 'El RFC debe tener entre 10 y 13 caracteres.' })
     rfc?: string;
 
     @IsOptional()
     @IsString({ message: 'La CURP debe ser texto.' })
-    @Length(18, 18, { message: 'La CURP debe tener exactamente 18 caracteres.' })
+    @Length(10, 20, { message: 'La CURP debe tener entre 10 y 20 caracteres.' })
     curp?: string;
 
     @IsOptional()
