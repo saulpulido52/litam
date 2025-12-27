@@ -404,7 +404,7 @@ const MainLayout: React.FC = () => {
                 </button>
               )}
               <div className="author-header-title">
-                <h1>Panel Nutri</h1>
+                <h1>Panel Litam</h1>
                 <p className="author-header-subtitle">
                   Gestión profesional de nutrición
                 </p>

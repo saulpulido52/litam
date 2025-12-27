@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Button, Form, Alert, Spinner } from 'react-b
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { apiService } from '../services/api';
+import { Grape } from 'lucide-react';
 
 
 interface LoginState {
@@ -123,10 +124,11 @@ const LoginPage: React.FC = () => {
           <Col md={6} lg={5}>
             {/* Header */}
             <div className="text-center mb-4">
-              <Link to="/" className="text-decoration-none">
-                <h2 className="nutri-primary">🥗 Nutri</h2>
+              <Link to="/" className="text-decoration-none d-flex justify-content-center align-items-center gap-2">
+                <Grape size={32} color="#2c7a7b" />
+                <h2 className="nutri-primary mb-0">Litam</h2>
               </Link>
-              <p className="text-muted">Inicia sesión en tu cuenta</p>
+              <p className="text-muted mt-2">Inicia sesión en tu cuenta</p>
             </div>
 
             <Card className="nutri-card shadow-lg">
@@ -137,7 +139,7 @@ const LoginPage: React.FC = () => {
                     <p className="text-muted small mb-2 text-center">⚡ Acceso rápido:</p>
                     <div className="d-grid gap-2 mb-2">
                       <Button variant="success" size="sm" onClick={fillDefaultAdmin}>
-                        🥗 Admin Sistema (Por Defecto)
+                        <Grape size={16} className="me-1" /> Admin Sistema (Por Defecto)
                       </Button>
                     </div>
                     <div className="d-flex justify-content-between">
