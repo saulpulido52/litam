@@ -18,7 +18,8 @@ import {
   FileText as FileTextIcon,
   TrendingUp as TrendingUpIcon,
   MessageSquare,
-  User
+  User,
+  Grape
 } from 'lucide-react';
 import { Image, Button } from 'react-bootstrap';
 import { useAuth } from '../hooks/useAuth';
@@ -338,8 +339,8 @@ const MainLayout: React.FC = () => {
       <div className={`author-sidebar ${isMobile ? 'author-sidebar-mobile' : 'author-sidebar-desktop'} ${sidebarOpen ? 'open' : ''}`} ref={sidebarRef}>
         <div className="author-sidebar-header">
           <div className="author-logo">
-            <span className="author-logo-nutri">🥗</span>
-            <span className="author-logo-web">Nutri</span>
+            <Grape className="author-logo-icon" size={28} color="#2c7a7b" />
+            <span className="author-logo-web" style={{ marginLeft: '8px' }}>Litam</span>
           </div>
           {isMobile && (
             <button

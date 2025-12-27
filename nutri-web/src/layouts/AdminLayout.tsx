@@ -20,9 +20,9 @@ const AdminLayout: React.FC = () => {
       <aside className="bg-light border-end p-3 d-flex flex-column" style={{ minWidth: 240 }}>
         <div className="mb-4 text-center">
           <MdAdminPanelSettings size={48} className="text-primary mb-2" />
-                          <h5 className="mb-0">Admin Litam</h5>
+          <h5 className="mb-0">Admin Litam</h5>
         </div>
-        
+
         <Nav className="flex-column gap-2 flex-grow-1">
           <NavLink to="/admin" end className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
             <MdDashboard className="me-2" /> Dashboard
@@ -57,18 +57,18 @@ const AdminLayout: React.FC = () => {
           <NavLink to="/admin/auditoria-eliminaciones" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
             <MdDeleteForever className="me-2" /> Auditoría Eliminaciones
           </NavLink>
-          
+
           <NavLink to="/admin/settings" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
             <MdSettings className="me-2" /> Configuración
           </NavLink>
         </Nav>
-        
+
         {/* Botón de cerrar sesión */}
         <div className="mt-auto pt-3 border-top">
-          <Button 
-            variant="outline-danger" 
-            size="sm" 
-            className="w-100" 
+          <Button
+            variant="outline-danger"
+            size="sm"
+            className="w-100"
             onClick={handleLogout}
           >
             <MdLogout className="me-2" />
