@@ -527,6 +527,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                                                         onChange={handleChange}
                                                         maxLength={13}
                                                     />
+                                                    <Form.Text className="text-muted">10-13 caracteres</Form.Text>
                                                 </Form.Group>
                                             </Col>
                                             <Col md={6}>
@@ -537,8 +538,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                                                         name="curp"
                                                         value={formData.curp || ''}
                                                         onChange={handleChange}
-                                                        maxLength={18}
+                                                        maxLength={20}
                                                     />
+                                                    <Form.Text className="text-muted">10-20 caracteres</Form.Text>
                                                 </Form.Group>
                                             </Col>
                                         </Row>
