@@ -26,17 +26,20 @@ export interface ServiceStats {
 
 export const reportsService = {
     async getFinancialStats(): Promise<FinancialStats[]> {
-        const response = await apiService.get<{ data: FinancialStats[] }>('/reports/financial');
-        return response.data;
+        const response = await apiService.get<FinancialStats[]>('/reports/financial');
+        return response.data || [];
     },
 
     async getPatientProgress(): Promise<PatientProgress[]> {
-        const response = await apiService.get<{ data: PatientProgress[] }>('/reports/patient-progress');
-        return response.data;
+        const response = await apiService.get<PatientProgress[]>('/reports/patient-progress');
+        return response.data || [];
     },
 
     async getServiceStats(): Promise<ServiceStats> {
-        const response = await apiService.get<{ data: ServiceStats }>('/reports/services');
+        const response = await apiService.get<ServiceStats>('/reports/services');
+        if (!response.data) {
+            throw new Error('No data received from service stats');
+        }
         return response.data;
     }
 };
