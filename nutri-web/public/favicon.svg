@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Leaf -->
+  <path fill="#4CAF50" d="M256 64c0 0 32-64 96-64 48 0 80 48 80 96 0 0-48 16-96-16-16-11-32-16-48-16-16 0-32 0-32 0z"/>
+  <!-- Stem -->
+  <path fill="none" stroke="#388E3C" stroke-width="12" stroke-linecap="round" d="M280 80q-20-40-60-40"/>
+  
+  <!-- Grapes (Purple #9C27B0) -->
+  <g fill="#9C27B0" stroke="#7B1FA2" stroke-width="8">
+    <!-- Top Row -->
+    <circle cx="160" cy="200" r="48"/>
+    <circle cx="256" cy="200" r="48"/>
+    <circle cx="352" cy="200" r="48"/>
+    
+    <!-- Middle Row -->
+    <circle cx="208" cy="280" r="48"/>
+    <circle cx="304" cy="280" r="48"/>
+    
+    <!-- Bottom Row -->
+    <circle cx="256" cy="360" r="48"/>
+  </g>
+  
+  <!-- Highlights (White reflections) -->
+  <g fill="#E1BEE7">
+    <circle cx="145" cy="185" r="12"/>
+    <circle cx="241" cy="185" r="12"/>
+    <circle cx="337" cy="185" r="12"/>
+    <circle cx="193" cy="265" r="12"/>
+    <circle cx="289" cy="265" r="12"/>
+    <circle cx="241" cy="345" r="12"/>
+  </g>
+</svg>

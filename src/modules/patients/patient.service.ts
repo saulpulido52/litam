@@ -36,20 +36,20 @@ export class PatientService {
     // 🎯 FUNCIÓN: Calcular edad automáticamente desde fecha de nacimiento
     private calculateAgeFromBirthDate(birthDate: string): number | undefined {
         if (!birthDate) return undefined;
-        
+
         try {
             const today = new Date();
             const birth = new Date(birthDate);
-            
+
             if (birth > today) return undefined; // Fecha inválida en el futuro
-            
+
             let age = today.getFullYear() - birth.getFullYear();
             const monthDiff = today.getMonth() - birth.getMonth();
-            
+
             if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
                 age--;
             }
-            
+
             console.log(`📅 Edad calculada: ${age} años desde fecha de nacimiento: ${birthDate}`);
             return age >= 0 ? age : undefined;
         } catch (error) {
@@ -63,12 +63,12 @@ export class PatientService {
         if (age !== undefined) {
             return age < 18;
         }
-        
+
         if (birthDate) {
             const calculatedAge = this.calculateAgeFromBirthDate(birthDate);
             return calculatedAge !== undefined && calculatedAge < 18;
         }
-        
+
         return false;
     }
 
@@ -115,18 +115,18 @@ export class PatientService {
         // 6. Crear perfil completo del paciente
         const newPatientProfile = this.patientProfileRepository.create({
             user: savedUser,
-            
+
             // Detección automática de paciente pediátrico
             is_pediatric_patient: isPediatric,
-            
+
             // Motivo de consulta
             consultation_reason: patientData.consultation_reason,
-            
+
             // Datos biométricos
             current_weight: patientData.current_weight,
             height: patientData.height,
             activity_level: patientData.activity_level,
-            
+
             // Antecedentes patológicos
             medical_conditions: patientData.medical_conditions,
             allergies: patientData.allergies,
@@ -136,33 +136,33 @@ export class PatientService {
             important_diseases_history: patientData.important_diseases_history,
             current_treatments: patientData.current_treatments,
             surgeries_history: patientData.surgeries_history,
-            
+
             // Problemas actuales
             current_symptoms: patientData.current_symptoms,
-            
+
             // Antecedentes familiares
             family_history: patientData.family_history,
-            
+
             // Actividad física
             does_exercise: patientData.does_exercise,
             exercise_type: patientData.exercise_type,
             exercise_frequency: patientData.exercise_frequency,
             exercise_duration: patientData.exercise_duration,
             exercise_since: patientData.exercise_since,
-            
+
             // Consumo de sustancias
             alcohol_consumption: patientData.alcohol_consumption,
             tobacco_consumption: patientData.tobacco_consumption,
             coffee_consumption: patientData.coffee_consumption,
-            
+
             // Signos vitales y físicos
             general_appearance: patientData.general_appearance,
             knows_blood_pressure: patientData.knows_blood_pressure,
             usual_blood_pressure: patientData.usual_blood_pressure,
-            
+
             // Indicadores bioquímicos
             biochemical_indicators: patientData.biochemical_indicators,
-            
+
             // Indicadores dietéticos
             previous_nutritional_guidance: patientData.previous_nutritional_guidance,
             previous_guidance_when: patientData.previous_guidance_when,
@@ -179,13 +179,13 @@ export class PatientService {
             takes_supplements: patientData.takes_supplements,
             supplements_details: patientData.supplements_details,
             daily_water_glasses: patientData.daily_water_glasses,
-            
+
             // Estilo de vida
             daily_schedule: patientData.daily_schedule,
-            
+
             // Frecuencia de consumo por grupos
             food_frequency: patientData.food_frequency,
-            
+
             // Campos existentes mantenidos
             goals: patientData.goals,
             intolerances: patientData.intolerances,
@@ -235,7 +235,7 @@ export class PatientService {
                 'relation.id',
                 'patient.id',
                 'patient.first_name',
-                'patient.last_name', 
+                'patient.last_name',
                 'patient.email',
                 'patient.age',
                 'patient.gender',
@@ -300,7 +300,7 @@ export class PatientService {
         // **OPTIMIZACIÓN**: Ordenamiento optimizado
         const sortBy = searchParams?.sort_by || 'created_at';
         const sortOrder = searchParams?.sort_order || 'DESC';
-        
+
         if (sortBy === 'name') {
             query = query.orderBy('patient.first_name', sortOrder).addOrderBy('patient.last_name', sortOrder);
         } else if (sortBy === 'weight') {
@@ -381,7 +381,7 @@ export class PatientService {
                 .andWhere('relation.status = :status', { status: RelationshipStatus.ACTIVE })
                 .select(['relation', 'patient.id', 'patient.email'])
                 .getOne();
-                
+
             if (relation) {
                 console.log(`✅ Relación encontrada por email, actualizando patientId: ${relation.patient.id}`);
                 patientId = relation.patient.id; // Usar el ID correcto
@@ -406,7 +406,7 @@ export class PatientService {
         if (updateData.first_name !== undefined) patient.first_name = updateData.first_name;
         if (updateData.last_name !== undefined) patient.last_name = updateData.last_name;
         if (updateData.gender !== undefined) patient.gender = updateData.gender;
-        
+
         // 🎯 CALCULAR EDAD AUTOMÁTICAMENTE desde fecha de nacimiento si se proporciona
         if (updateData.birth_date !== undefined) {
             patient.birth_date = new Date(updateData.birth_date); // Convertir string a Date
@@ -424,15 +424,15 @@ export class PatientService {
 
         // Actualizar perfil del paciente con todos los campos
         const profile = patient.patient_profile;
-        
+
         // Motivo de consulta
         if (updateData.consultation_reason !== undefined) profile.consultation_reason = updateData.consultation_reason;
-        
+
         // Datos biométricos
         if (updateData.current_weight !== undefined) profile.current_weight = updateData.current_weight;
         if (updateData.height !== undefined) profile.height = updateData.height;
         if (updateData.activity_level !== undefined) profile.activity_level = updateData.activity_level;
-        
+
         // Antecedentes patológicos
         if (updateData.medical_conditions !== undefined) profile.medical_conditions = updateData.medical_conditions;
         if (updateData.allergies !== undefined) profile.allergies = updateData.allergies;
@@ -442,30 +442,30 @@ export class PatientService {
         if (updateData.important_diseases_history !== undefined) profile.important_diseases_history = updateData.important_diseases_history;
         if (updateData.current_treatments !== undefined) profile.current_treatments = updateData.current_treatments;
         if (updateData.surgeries_history !== undefined) profile.surgeries_history = updateData.surgeries_history;
-        
+
         // Problemas actuales
         if (updateData.current_symptoms !== undefined) profile.current_symptoms = updateData.current_symptoms;
-        
+
         // Antecedentes familiares
         if (updateData.family_history !== undefined) profile.family_history = updateData.family_history;
-        
+
         // Actividad física
         if (updateData.does_exercise !== undefined) profile.does_exercise = updateData.does_exercise;
         if (updateData.exercise_type !== undefined) profile.exercise_type = updateData.exercise_type;
         if (updateData.exercise_frequency !== undefined) profile.exercise_frequency = updateData.exercise_frequency;
         if (updateData.exercise_duration !== undefined) profile.exercise_duration = updateData.exercise_duration;
         if (updateData.exercise_since !== undefined) profile.exercise_since = updateData.exercise_since;
-        
+
         // Consumo de sustancias
         if (updateData.alcohol_consumption !== undefined) profile.alcohol_consumption = updateData.alcohol_consumption;
         if (updateData.tobacco_consumption !== undefined) profile.tobacco_consumption = updateData.tobacco_consumption;
         if (updateData.coffee_consumption !== undefined) profile.coffee_consumption = updateData.coffee_consumption;
-        
+
         // Signos vitales y físicos
         if (updateData.general_appearance !== undefined) profile.general_appearance = updateData.general_appearance;
         if (updateData.knows_blood_pressure !== undefined) profile.knows_blood_pressure = updateData.knows_blood_pressure;
         if (updateData.usual_blood_pressure !== undefined) profile.usual_blood_pressure = updateData.usual_blood_pressure;
-        
+
         // Indicadores bioquímicos
         if (updateData.biochemical_indicators !== undefined) {
             profile.biochemical_indicators = {
@@ -474,7 +474,7 @@ export class PatientService {
                 last_update: new Date()
             };
         }
-        
+
         // Indicadores dietéticos
         if (updateData.previous_nutritional_guidance !== undefined) profile.previous_nutritional_guidance = updateData.previous_nutritional_guidance;
         if (updateData.previous_guidance_when !== undefined) profile.previous_guidance_when = updateData.previous_guidance_when;
@@ -491,13 +491,13 @@ export class PatientService {
         if (updateData.takes_supplements !== undefined) profile.takes_supplements = updateData.takes_supplements;
         if (updateData.supplements_details !== undefined) profile.supplements_details = updateData.supplements_details;
         if (updateData.daily_water_glasses !== undefined) profile.daily_water_glasses = updateData.daily_water_glasses;
-        
+
         // Estilo de vida
         if (updateData.daily_schedule !== undefined) profile.daily_schedule = updateData.daily_schedule;
-        
+
         // Frecuencia de consumo por grupos
         if (updateData.food_frequency !== undefined) profile.food_frequency = updateData.food_frequency;
-        
+
         // Campos existentes mantenidos
         if (updateData.goals !== undefined) profile.goals = updateData.goals;
         if (updateData.intolerances !== undefined) profile.intolerances = updateData.intolerances;
@@ -517,7 +517,7 @@ export class PatientService {
     async updatePatientByEmail(email: string, nutritionistId: string, updateData: UpdatePatientDTO): Promise<PatientResponseDTO> {
         console.log(`🚀🚀🚀 MÉTODO INDEPENDIENTE EJECUTÁNDOSE - Email: ${email} 🚀🚀🚀`);
         console.log(`🔍 UPDATE BY EMAIL - Buscando paciente por email: ${email}`);
-        
+
         // 1. Buscar usuario por email
         const patient = await this.userRepository.findOne({
             where: { email: email },
@@ -549,7 +549,7 @@ export class PatientService {
         if (updateData.first_name !== undefined) patient.first_name = updateData.first_name;
         if (updateData.last_name !== undefined) patient.last_name = updateData.last_name;
         if (updateData.gender !== undefined) patient.gender = updateData.gender;
-        
+
         // 🎯 CALCULAR EDAD AUTOMÁTICAMENTE desde fecha de nacimiento si se proporciona
         if (updateData.birth_date !== undefined) {
             patient.birth_date = new Date(updateData.birth_date); // Convertir string a Date
@@ -567,7 +567,7 @@ export class PatientService {
 
         // 4. Actualizar perfil del paciente
         const profile = patient.patient_profile;
-        
+
         if (updateData.consultation_reason !== undefined) profile.consultation_reason = updateData.consultation_reason;
         if (updateData.current_weight !== undefined) profile.current_weight = updateData.current_weight;
         if (updateData.height !== undefined) profile.height = updateData.height;
@@ -602,7 +602,7 @@ export class PatientService {
                     status: RelationshipStatus.ACTIVE,
                 },
             }),
-            
+
             // Pacientes nuevos (último mes)
             this.relationRepository.count({
                 where: {
@@ -611,7 +611,7 @@ export class PatientService {
                     accepted_at: MoreThan(oneMonthAgo)
                 }
             }),
-            
+
             // Pacientes con condiciones médicas - consulta optimizada
             this.relationRepository
                 .createQueryBuilder('relation')
@@ -635,7 +635,7 @@ export class PatientService {
     // ==================== FORMATEAR RESPUESTA ====================
     private formatPatientResponse(user: User, profile: PatientProfile): PatientResponseDTO {
         const bmi = this.calculateBMI(profile.current_weight, profile.height);
-        
+
         return {
             id: profile.id,
             user: {
@@ -649,13 +649,13 @@ export class PatientService {
                 gender: user.gender ?? undefined,
                 created_at: user.created_at,
             },
-            
+
             // Expediente clínico completo
             consultation_reason: profile.consultation_reason ?? undefined,
             current_weight: profile.current_weight ?? undefined,
             height: profile.height ?? undefined,
             activity_level: profile.activity_level ?? undefined,
-            
+
             // Antecedentes
             medical_conditions: profile.medical_conditions ?? undefined,
             allergies: profile.allergies ?? undefined,
@@ -665,11 +665,11 @@ export class PatientService {
             important_diseases_history: profile.important_diseases_history ?? undefined,
             current_treatments: profile.current_treatments ?? undefined,
             surgeries_history: profile.surgeries_history ?? undefined,
-            
+
             // Problemas actuales y antecedentes familiares
             current_symptoms: profile.current_symptoms ?? undefined,
             family_history: profile.family_history ?? undefined,
-            
+
             // Actividad física y consumo
             does_exercise: profile.does_exercise ?? undefined,
             exercise_type: profile.exercise_type ?? undefined,
@@ -679,13 +679,13 @@ export class PatientService {
             alcohol_consumption: profile.alcohol_consumption ?? undefined,
             tobacco_consumption: profile.tobacco_consumption ?? undefined,
             coffee_consumption: profile.coffee_consumption ?? undefined,
-            
+
             // Signos vitales
             general_appearance: profile.general_appearance ?? undefined,
             knows_blood_pressure: profile.knows_blood_pressure ?? undefined,
             usual_blood_pressure: profile.usual_blood_pressure ?? undefined,
             biochemical_indicators: profile.biochemical_indicators ?? undefined,
-            
+
             // Indicadores dietéticos
             previous_nutritional_guidance: profile.previous_nutritional_guidance ?? undefined,
             previous_guidance_when: profile.previous_guidance_when ?? undefined,
@@ -702,11 +702,11 @@ export class PatientService {
             takes_supplements: profile.takes_supplements ?? undefined,
             supplements_details: profile.supplements_details ?? undefined,
             daily_water_glasses: profile.daily_water_glasses ?? undefined,
-            
+
             // Estilo de vida
             daily_schedule: profile.daily_schedule ?? undefined,
             food_frequency: profile.food_frequency ?? undefined,
-            
+
             // Campos existentes
             goals: profile.goals ?? undefined,
             intolerances: profile.intolerances ?? undefined,
@@ -716,14 +716,14 @@ export class PatientService {
             food_preferences: profile.food_preferences ?? undefined,
             monthly_budget: profile.monthly_budget ?? undefined,
             meal_schedule: profile.meal_schedule ?? undefined,
-            
+
             // Metadatos
             created_at: profile.created_at,
             updated_at: profile.updated_at,
-            
+
             // Información pediátrica
             is_pediatric_patient: profile.is_pediatric_patient ?? false,
-            
+
             // Campos calculados
             bmi: bmi,
             bmi_category: this.getBMICategory(bmi),
@@ -734,8 +734,8 @@ export class PatientService {
     // ==================== VERIFICAR EMAIL ====================
     async checkEmailExists(email: string): Promise<boolean> {
         try {
-            const existingUser = await this.userRepository.findOne({ 
-                where: { email: email.toLowerCase() } 
+            const existingUser = await this.userRepository.findOne({
+                where: { email: email.toLowerCase() }
             });
             return !!existingUser;
         } catch (error) {
@@ -762,7 +762,7 @@ export class PatientService {
     // 🎯 NUEVO: Formatear fecha de nacimiento de forma segura
     private formatBirthDate(birthDate: Date | string | null | undefined): string | undefined {
         if (!birthDate) return undefined;
-        
+
         try {
             const date = typeof birthDate === 'string' ? new Date(birthDate) : birthDate;
             if (isNaN(date.getTime())) return undefined;
@@ -775,34 +775,33 @@ export class PatientService {
 
     // ==================== ESCENARIO 1: REGISTRO POR NUTRIÓLOGO ====================
     async createPatientByNutritionist(
-        nutritionistId: string, 
+        nutritionistId: string,
         patientData: CreatePatientByNutritionistDTO
     ): Promise<{
         patient: PatientResponseDTO;
         temporary_password: string;
         expires_at: Date;
     }> {
-        // 1. Verificar que el nutricionista existe
-        const nutritionist = await this.userRepository.findOneBy({ id: nutritionistId });
+        // **OPTIMIZACIÓN**: Ejecutar consultas en paralelo
+        const [nutritionist, patientRole, existingUser] = await Promise.all([
+            this.userRepository.findOneBy({ id: nutritionistId }),
+            this.roleRepository.findOne({ where: { name: RoleName.PATIENT } }),
+            this.userRepository.findOne({ where: { email: patientData.email } })
+        ]);
+
         if (!nutritionist) {
             throw new AppError('Nutricionista no encontrado', 404);
         }
-
-        // 2. Buscar rol de paciente
-        const patientRole = await this.roleRepository.findOne({ where: { name: RoleName.PATIENT } });
         if (!patientRole) {
             throw new AppError('Rol de paciente no encontrado en el sistema', 500);
         }
-
-        // 3. Verificar que el email no esté en uso
-        const existingUser = await this.userRepository.findOne({ where: { email: patientData.email } });
         if (existingUser) {
             throw new AppError('Ya existe un usuario con este email', 409);
         }
 
-        // 4. Generar contraseña temporal
+        // **OPTIMIZACIÓN**: Generar contraseña temporal con menos rounds (8 en lugar de 10)
         const temporaryPassword = this.generateTemporaryPassword();
-        const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+        const hashedPassword = await bcrypt.hash(temporaryPassword, 8);
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + 24); // Expira en 24 horas
 
@@ -843,18 +842,18 @@ export class PatientService {
         // 8. Crear perfil completo del paciente (todos los datos del expediente)
         const newPatientProfile = this.patientProfileRepository.create({
             user: savedUser,
-            
+
             // Detección automática de paciente pediátrico
             is_pediatric_patient: isPediatric,
-            
+
             // Motivo de consulta
             consultation_reason: patientData.consultation_reason,
-            
+
             // Datos biométricos
             current_weight: patientData.current_weight,
             height: patientData.height,
             activity_level: patientData.activity_level,
-            
+
             // ... (todos los campos del expediente clínico como en el método original)
             medical_conditions: patientData.medical_conditions,
             allergies: patientData.allergies,
@@ -898,16 +897,11 @@ export class PatientService {
             goals: patientData.goals,
             intolerances: patientData.intolerances,
             clinical_notes: patientData.clinical_notes,
-            pregnancy_status: patientData.pregnancy_status,
-            dietary_preferences: patientData.dietary_preferences,
-            food_preferences: patientData.food_preferences,
             monthly_budget: patientData.monthly_budget,
             meal_schedule: patientData.meal_schedule,
         });
 
-        const savedProfile = await this.patientProfileRepository.save(newPatientProfile);
-
-        // 8. Crear relación paciente-nutricionista directa
+        // **OPTIMIZACIÓN**: Crear relación paciente-nutricionista
         const relationship = this.relationRepository.create({
             patient: savedUser,
             nutritionist: nutritionist,
@@ -917,7 +911,11 @@ export class PatientService {
             accepted_at: new Date(),
         });
 
-        await this.relationRepository.save(relationship);
+        // **OPTIMIZACIÓN**: Guardar profile y relationship en paralelo
+        const [savedProfile] = await Promise.all([
+            this.patientProfileRepository.save(newPatientProfile),
+            this.relationRepository.save(relationship)
+        ]);
 
         return {
             patient: this.formatPatientResponse(savedUser, savedProfile),
@@ -985,7 +983,7 @@ export class PatientService {
 
         // 5. Crear suscripción al plan seleccionado
         const subscription = await this.createUserSubscription(
-            savedUser.id, 
+            savedUser.id,
             registrationData.selected_plan_id
         );
 
@@ -1080,7 +1078,7 @@ export class PatientService {
     }
 
     // ==================== MÉTODOS ADICIONALES PARA GESTIÓN DE PERFILES ====================
-    
+
     async markProfileAsCompleted(patientId: string): Promise<void> {
         const user = await this.userRepository.findOne({ where: { id: patientId } });
         if (!user) {
@@ -1113,7 +1111,7 @@ export class PatientService {
     }
 
     // ==================== FUNCIONALIDADES DE ELIMINACIÓN ====================
-    
+
     /**
      * Terminar relación entre nutriólogo y paciente (remover de la lista)
      * El paciente mantiene su cuenta, solo se termina la relación con el nutriólogo
@@ -1297,8 +1295,8 @@ export class PatientService {
      * Esto automáticamente transferirá todos los expedientes al nuevo nutriólogo
      */
     async requestNutritionistChange(
-        patientId: string, 
-        newNutritionistId: string, 
+        patientId: string,
+        newNutritionistId: string,
         reason?: string
     ): Promise<{
         message: string;

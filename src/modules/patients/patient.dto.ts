@@ -55,55 +55,6 @@ export class PatientProfileDto {
     objectives?: string[];
 }
 
-// ⭐ AHORA definir CreatePatientByNutritionistDto
-export class CreatePatientByNutritionistDto {
-    // --- Campos obligatorios del usuario ---
-    @IsNotEmpty({ message: 'El email es obligatorio.' })
-    @IsEmail({}, { message: 'El email debe tener un formato válido.' })
-    email!: string;
-
-    @IsNotEmpty({ message: 'La contraseña temporal es obligatoria.' })
-    @IsString({ message: 'La contraseña debe ser una cadena de texto.' })
-    @Length(6, 50, { message: 'La contraseña debe tener entre 6 y 50 caracteres.' })
-    password!: string;
-
-    @IsNotEmpty({ message: 'El nombre es obligatorio.' })
-    @IsString({ message: 'El nombre debe ser una cadena de texto.' })
-    @Length(2, 100, { message: 'El nombre debe tener entre 2 y 100 caracteres.' })
-    first_name!: string;
-
-    @IsNotEmpty({ message: 'Los apellidos son obligatorios.' })
-    @IsString({ message: 'Los apellidos deben ser una cadena de texto.' })
-    @Length(2, 100, { message: 'Los apellidos deben tener entre 2 y 100 caracteres.' })
-    last_name!: string;
-
-    // --- Campos opcionales del usuario ---
-    @IsOptional()
-    @IsString({ message: 'El teléfono debe ser una cadena de texto.' })
-    @Length(10, 20, { message: 'El teléfono debe tener entre 10 y 20 caracteres.' })
-    phone?: string;
-
-    @IsOptional()
-    @IsDateString({}, { message: 'La fecha de nacimiento debe ser una fecha válida (YYYY-MM-DD).' })
-    birth_date?: string;
-
-    @IsOptional()
-    @IsNumber({}, { message: 'La edad debe ser un número.' })
-    @Min(1, { message: 'La edad debe ser mayor que 0.' })
-    @Max(120, { message: 'La edad no puede exceder 120 años.' })
-    age?: number;
-
-    @IsOptional()
-    @IsString({ message: 'El género debe ser una cadena de texto.' })
-    @IsIn(['male', 'female', 'other'], { message: 'El género debe ser: male, female o other.' })
-    gender?: 'male' | 'female' | 'other';
-
-    // --- Perfil del paciente (opcional) ---
-    @IsOptional()
-    @ValidateNested({ message: 'Los datos del perfil no son válidos.' })
-    @Type(() => PatientProfileDto)
-    profile?: PatientProfileDto;
-}
 
 // DTO para la creación inicial del perfil del paciente o para actualizarlo
 export class CreateUpdatePatientProfileDto {
@@ -790,13 +741,13 @@ export class PatientResponseDTO {
         gender?: string;
         created_at: Date;
     };
-    
+
     // Expediente clínico completo
     consultation_reason?: string;
     current_weight?: number;
     height?: number;
     activity_level?: string;
-    
+
     // Antecedentes
     medical_conditions?: string[];
     allergies?: string[];
@@ -806,11 +757,11 @@ export class PatientResponseDTO {
     important_diseases_history?: string;
     current_treatments?: string;
     surgeries_history?: string;
-    
+
     // Problemas actuales y antecedentes familiares
     current_symptoms?: CurrentSymptomsDTO;
     family_history?: FamilyHistoryDTO;
-    
+
     // Actividad física y consumo
     does_exercise?: boolean;
     exercise_type?: string;
@@ -820,13 +771,13 @@ export class PatientResponseDTO {
     alcohol_consumption?: string;
     tobacco_consumption?: string;
     coffee_consumption?: string;
-    
+
     // Signos vitales
     general_appearance?: string;
     knows_blood_pressure?: boolean;
     usual_blood_pressure?: string;
     biochemical_indicators?: BiochemicalIndicatorsDTO;
-    
+
     // Indicadores dietéticos
     previous_nutritional_guidance?: boolean;
     previous_guidance_when?: string;
@@ -843,11 +794,11 @@ export class PatientResponseDTO {
     takes_supplements?: boolean;
     supplements_details?: string;
     daily_water_glasses?: number;
-    
+
     // Estilo de vida
     daily_schedule?: DailyScheduleDTO;
     food_frequency?: FoodFrequencyDTO;
-    
+
     // Campos existentes
     goals?: string[];
     intolerances?: string[];
@@ -857,14 +808,14 @@ export class PatientResponseDTO {
     food_preferences?: string[];
     monthly_budget?: number;
     meal_schedule?: string;
-    
+
     // Metadatos
     created_at!: Date;
     updated_at!: Date;
-    
+
     // Información pediátrica
     is_pediatric_patient?: boolean;
-    
+
     // Campos calculados
     bmi?: number;
     bmi_category?: string;
@@ -930,6 +881,11 @@ export class CreatePatientByNutritionistDTO {
     @IsString()
     @IsEmail()
     email!: string;
+
+    @IsOptional()
+    @IsString({ message: 'La contraseña debe ser una cadena de texto.' })
+    @Length(6, 50, { message: 'La contraseña debe tener entre 6 y 50 caracteres.' })
+    password?: string;
 
     @IsString()
     first_name!: string;

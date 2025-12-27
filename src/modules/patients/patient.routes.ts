@@ -11,12 +11,23 @@ const router = Router();
 // ==================== RUTAS PARA NUTRIÓLOGOS ====================
 
 // Verificar si un email ya existe
+// ==================== NUEVAS RUTAS PARA LOS DOS ESCENARIOS ====================
+
+// POST /api/patients/register-by-nutritionist - ESCENARIO 1: Nutriólogo registra paciente con expediente completo
+router.post('/register-by-nutritionist', protect, authorize(RoleName.NUTRITIONIST), validateMiddleware(CreatePatientByNutritionistDTO), patientController.createPatientByNutritionist);
+
+// POST /api/patients/register-basic - ESCENARIO 2: Registro básico del paciente (público)
+router.post('/register-basic', validateMiddleware(BasicPatientRegistrationDTO), patientController.registerBasicPatient);
+
+// ==================== RUTAS PARA NUTRIÓLOGOS ====================
+
+// Verificar si un email ya existe
 router.get('/check-email', protect, authorize(RoleName.NUTRITIONIST), patientController.checkEmailExists);
 
 // Obtener todos los pacientes del nutriólogo (con búsqueda y filtros)
 router.get('/my-patients', protect, authorize(RoleName.NUTRITIONIST), patientController.getMyPatients);
 
-// Crear un nuevo paciente
+// Crear un nuevo paciente (RUTA GENÉRICA - DEBE IR DESPUÉS DE LAS ESPECÍFICAS)
 router.post('/', protect, authorize(RoleName.NUTRITIONIST), validateMiddleware(CreatePatientDTO), patientController.createPatient);
 
 // Obtener estadísticas de pacientes (PRIMERO - rutas específicas)
@@ -33,18 +44,6 @@ router.put('/:patientId', protect, authorize(RoleName.NUTRITIONIST), validateMid
 
 // 🎯 NUEVO: Actualizar paciente por EMAIL (más robusto que por ID)
 router.put('/by-email/:email', protect, authorize(RoleName.NUTRITIONIST), validateMiddleware(UpdatePatientDTO), patientController.updatePatientByEmail);
-
-// ==================== RUTAS EXISTENTES ====================
-// GET /api/patients - Obtener todos los pacientes del nutricionista autenticado - DUPLICADA (se usa my-patients)
-// router.get('/', protect, patientController.getMyPatients);
-
-// GET /api/patients/stats - Obtener estadísticas de pacientes
-router.get('/stats', protect, patientController.getPatientStats);
-
-// ==================== NUEVAS RUTAS PARA LOS DOS ESCENARIOS ====================
-
-// POST /api/patients/register-by-nutritionist - ESCENARIO 1: Nutriólogo registra paciente con expediente completo
-router.post('/register-by-nutritionist', protect, authorize(RoleName.NUTRITIONIST), validateMiddleware(CreatePatientByNutritionistDTO), patientController.createPatientByNutritionist);
 
 // POST /api/patients/register-basic - ESCENARIO 2: Registro básico del paciente (público)
 router.post('/register-basic', validateMiddleware(BasicPatientRegistrationDTO), patientController.registerBasicPatient);

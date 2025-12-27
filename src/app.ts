@@ -14,6 +14,7 @@ import relationRoutes from './modules/relations/relation.routes';
 import foodRoutes from './modules/foods/food.routes';
 import recipeRoutes from './modules/foods/recipe.routes';
 import dietPlanRoutes from './modules/diet_plans/diet_plan.routes';
+import reportsRoutes from './modules/reports/reports.routes';
 import appointmentRoutes from './modules/appointments/appointment.routes';
 import progressTrackingRoutes from './modules/progress_tracking/progress_tracking.routes';
 import subscriptionRoutes from './modules/subscriptions/subscription.routes';

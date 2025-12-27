@@ -1,85 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Calendar, Download, Target, DollarSign, Users, TrendingUp, Eye, FileText } from 'lucide-react';
-
-interface ReportData {
-  month: string;
-  newPatients: number;
-  appointments: number;
-  completedPlans: number;
-  revenue: number;
-}
-
-interface PatientSummary {
-  id: number;
-  name: string;
-  startDate: string;
-  initialWeight: number;
-  currentWeight: number;
-  targetWeight: number;
-  progress: number;
-  status: 'on-track' | 'behind' | 'completed';
-}
+import { BarChart3, Calendar, Download, Target, DollarSign, Users } from 'lucide-react';
+import { reportsService } from '../services/reportsService';
+import type { FinancialStats, PatientProgress } from '../services/reportsService';
+import { toast } from 'react-toastify';
 
 const ReportsPage: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<'month' | 'quarter' | 'year'>('month');
-  const [reportData, setReportData] = useState<ReportData[]>([]);
-  const [patientSummaries, setPatientSummaries] = useState<PatientSummary[]>([]);
+  const [reportData, setReportData] = useState<FinancialStats[]>([]);
+  const [patientSummaries, setPatientSummaries] = useState<PatientProgress[]>([]);
+  const [serviceStats, setServiceStats] = useState<any>(null); // Simplified for now
   const [activeTab, setActiveTab] = useState<'overview' | 'patients' | 'financial'>('overview');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Datos de ejemplo para reportes
-    const mockReportData: ReportData[] = [
-      { month: 'Octubre', newPatients: 12, appointments: 145, completedPlans: 8, revenue: 24500 },
-      { month: 'Noviembre', newPatients: 15, appointments: 168, completedPlans: 12, revenue: 28900 },
-      { month: 'Diciembre', newPatients: 18, appointments: 189, completedPlans: 15, revenue: 32100 }
-    ];
-
-    const mockPatientSummaries: PatientSummary[] = [
-      {
-        id: 1,
-        name: 'María González',
-        startDate: '2024-09-01',
-        initialWeight: 75,
-        currentWeight: 68,
-        targetWeight: 65,
-        progress: 70,
-        status: 'on-track'
-      },
-      {
-        id: 2,
-        name: 'Carlos Ruiz',
-        startDate: '2024-10-15',
-        initialWeight: 90,
-        currentWeight: 85,
-        targetWeight: 80,
-        progress: 50,
-        status: 'on-track'
-      },
-      {
-        id: 3,
-        name: 'Ana López',
-        startDate: '2024-08-01',
-        initialWeight: 58,
-        currentWeight: 62,
-        targetWeight: 62,
-        progress: 100,
-        status: 'completed'
-      },
-      {
-        id: 4,
-        name: 'José Martín',
-        startDate: '2024-11-01',
-        initialWeight: 95,
-        currentWeight: 93,
-        targetWeight: 85,
-        progress: 20,
-        status: 'behind'
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [financial, progress, services] = await Promise.all([
+          reportsService.getFinancialStats(),
+          reportsService.getPatientProgress(),
+          reportsService.getServiceStats()
+        ]);
+        setReportData(financial);
+        setPatientSummaries(progress);
+        setServiceStats(services);
+      } catch (error) {
+        console.error(error);
+        toast.error('Error al cargar reportes');
+      } finally {
+        setLoading(false);
       }
-    ];
-
-    setReportData(mockReportData);
-    setPatientSummaries(mockPatientSummaries);
-  }, []);
+    };
+    fetchData();
+  }, [selectedPeriod]); // TODO: Pass period to service
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -95,9 +48,14 @@ const ReportsPage: React.FC = () => {
   const calculateTotalPatients = () => reportData.reduce((total, data) => total + data.newPatients, 0);
   const calculateTotalAppointments = () => reportData.reduce((total, data) => total + data.appointments, 0);
   const calculateCompletionRate = () => {
+    if (patientSummaries.length === 0) return 0;
     const completed = patientSummaries.filter(p => p.status === 'completed').length;
     return ((completed / patientSummaries.length) * 100).toFixed(1);
   };
+
+  if (loading) {
+    return <div className="p-5 text-center"><div className="spinner-border text-primary" role="status"></div></div>;
+  }
 
   return (
     <div className="container-fluid py-4">
@@ -109,21 +67,19 @@ const ReportsPage: React.FC = () => {
         </div>
         <div className="col-md-4 text-end">
           <div className="btn-group me-2">
-            <button 
+            <button
               className={`btn btn-outline-primary ${selectedPeriod === 'month' ? 'active' : ''}`}
               onClick={() => setSelectedPeriod('month')}
             >
               Mensual
             </button>
-            <button 
+            <button
               className={`btn btn-outline-primary ${selectedPeriod === 'quarter' ? 'active' : ''}`}
-              onClick={() => setSelectedPeriod('quarter')}
             >
               Trimestral
             </button>
-            <button 
+            <button
               className={`btn btn-outline-primary ${selectedPeriod === 'year' ? 'active' : ''}`}
-              onClick={() => setSelectedPeriod('year')}
             >
               Anual
             </button>
@@ -146,11 +102,7 @@ const ReportsPage: React.FC = () => {
                 </div>
                 <div>
                   <h5 className="mb-0">{calculateTotalPatients()}</h5>
-                  <small className="text-muted">Nuevos pacientes</small>
-                  <div className="text-success small">
-                    <TrendingUp size={12} className="me-1" />
-                    +15% vs mes anterior
-                  </div>
+                  <small className="text-muted">Nuevos pacientes (año)</small>
                 </div>
               </div>
             </div>
@@ -165,11 +117,7 @@ const ReportsPage: React.FC = () => {
                 </div>
                 <div>
                   <h5 className="mb-0">{calculateTotalAppointments()}</h5>
-                  <small className="text-muted">Citas realizadas</small>
-                  <div className="text-success small">
-                    <TrendingUp size={12} className="me-1" />
-                    +8% vs mes anterior
-                  </div>
+                  <small className="text-muted">Citas (año)</small>
                 </div>
               </div>
             </div>
@@ -185,10 +133,6 @@ const ReportsPage: React.FC = () => {
                 <div>
                   <h5 className="mb-0">{calculateCompletionRate()}%</h5>
                   <small className="text-muted">Tasa de éxito</small>
-                  <div className="text-success small">
-                    <TrendingUp size={12} className="me-1" />
-                    +5% vs mes anterior
-                  </div>
                 </div>
               </div>
             </div>
@@ -203,11 +147,7 @@ const ReportsPage: React.FC = () => {
                 </div>
                 <div>
                   <h5 className="mb-0">${calculateTotalRevenue().toLocaleString()}</h5>
-                  <small className="text-muted">Ingresos totales</small>
-                  <div className="text-success small">
-                    <TrendingUp size={12} className="me-1" />
-                    +12% vs mes anterior
-                  </div>
+                  <small className="text-muted">Ingresos est. (año)</small>
                 </div>
               </div>
             </div>
@@ -218,7 +158,7 @@ const ReportsPage: React.FC = () => {
       {/* Tabs */}
       <ul className="nav nav-tabs mb-4">
         <li className="nav-item">
-          <button 
+          <button
             className={`nav-link ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => setActiveTab('overview')}
           >
@@ -227,7 +167,7 @@ const ReportsPage: React.FC = () => {
           </button>
         </li>
         <li className="nav-item">
-          <button 
+          <button
             className={`nav-link ${activeTab === 'patients' ? 'active' : ''}`}
             onClick={() => setActiveTab('patients')}
           >
@@ -236,7 +176,7 @@ const ReportsPage: React.FC = () => {
           </button>
         </li>
         <li className="nav-item">
-          <button 
+          <button
             className={`nav-link ${activeTab === 'financial' ? 'active' : ''}`}
             onClick={() => setActiveTab('financial')}
           >
@@ -262,8 +202,7 @@ const ReportsPage: React.FC = () => {
                         <th>Mes</th>
                         <th>Nuevos Pacientes</th>
                         <th>Citas</th>
-                        <th>Planes Completados</th>
-                        <th>Ingresos</th>
+                        <th>Ingresos Est.</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -274,9 +213,9 @@ const ReportsPage: React.FC = () => {
                             <div className="d-flex align-items-center">
                               <span className="me-2">{data.newPatients}</span>
                               <div className="progress flex-grow-1" style={{ height: '4px' }}>
-                                <div 
-                                  className="progress-bar bg-primary" 
-                                  style={{ width: `${(data.newPatients / 20) * 100}%` }}
+                                <div
+                                  className="progress-bar bg-primary"
+                                  style={{ width: `${Math.min(100, (data.newPatients / 5) * 100)}%` }}
                                 ></div>
                               </div>
                             </div>
@@ -285,15 +224,12 @@ const ReportsPage: React.FC = () => {
                             <div className="d-flex align-items-center">
                               <span className="me-2">{data.appointments}</span>
                               <div className="progress flex-grow-1" style={{ height: '4px' }}>
-                                <div 
-                                  className="progress-bar bg-success" 
-                                  style={{ width: `${(data.appointments / 200) * 100}%` }}
+                                <div
+                                  className="progress-bar bg-success"
+                                  style={{ width: `${Math.min(100, (data.appointments / 20) * 100)}%` }}
                                 ></div>
                               </div>
                             </div>
-                          </td>
-                          <td>
-                            <span className="badge bg-info">{data.completedPlans}</span>
                           </td>
                           <td className="text-success fw-medium">
                             ${data.revenue.toLocaleString()}
@@ -307,62 +243,34 @@ const ReportsPage: React.FC = () => {
             </div>
           </div>
           <div className="col-md-4">
+            {/* Service Stats Summary */}
             <div className="card border-0 shadow-sm mb-4">
               <div className="card-header bg-white">
-                <h6 className="card-title mb-0">Distribución de Citas</h6>
+                <h6 className="card-title mb-0">Distribución de Servicios</h6>
               </div>
               <div className="card-body">
-                <div className="mb-3">
-                  <div className="d-flex justify-content-between">
-                    <span>Consultas Iniciales</span>
-                    <strong>35%</strong>
-                  </div>
-                  <div className="progress mt-1">
-                    <div className="progress-bar bg-primary" style={{ width: '35%' }}></div>
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <div className="d-flex justify-content-between">
-                    <span>Seguimientos</span>
-                    <strong>45%</strong>
-                  </div>
-                  <div className="progress mt-1">
-                    <div className="progress-bar bg-success" style={{ width: '45%' }}></div>
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <div className="d-flex justify-content-between">
-                    <span>Control de Peso</span>
-                    <strong>20%</strong>
-                  </div>
-                  <div className="progress mt-1">
-                    <div className="progress-bar bg-warning" style={{ width: '20%' }}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="card border-0 shadow-sm">
-              <div className="card-header bg-white">
-                <h6 className="card-title mb-0">Horarios Más Solicitados</h6>
-              </div>
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <span>9:00 - 11:00 AM</span>
-                  <span className="badge bg-success">Alto</span>
-                </div>
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <span>2:00 - 4:00 PM</span>
-                  <span className="badge bg-success">Alto</span>
-                </div>
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <span>4:00 - 6:00 PM</span>
-                  <span className="badge bg-warning">Medio</span>
-                </div>
-                <div className="d-flex justify-content-between align-items-center">
-                  <span>6:00 - 8:00 PM</span>
-                  <span className="badge bg-secondary">Bajo</span>
-                </div>
+                {serviceStats && (
+                  <>
+                    <div className="mb-3">
+                      <div className="d-flex justify-content-between">
+                        <span>Citas</span>
+                        <strong>{serviceStats.appointments?.count || 0}</strong>
+                      </div>
+                      <div className="progress mt-1">
+                        <div className="progress-bar bg-primary" style={{ width: '60%' }}></div>
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <div className="d-flex justify-content-between">
+                        <span>Planes</span>
+                        <strong>{serviceStats.dietPlans?.count || 0}</strong>
+                      </div>
+                      <div className="progress mt-1">
+                        <div className="progress-bar bg-success" style={{ width: '40%' }}></div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -383,10 +291,9 @@ const ReportsPage: React.FC = () => {
                     <th>Fecha de Inicio</th>
                     <th>Peso Inicial</th>
                     <th>Peso Actual</th>
-                    <th>Peso Meta</th>
+                    <th>Peso Meta (Est)</th>
                     <th>Progreso</th>
                     <th>Estado</th>
-                    <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -407,7 +314,7 @@ const ReportsPage: React.FC = () => {
                       <td>
                         <div className="d-flex align-items-center">
                           <div className="progress me-2" style={{ width: '100px', height: '8px' }}>
-                            <div 
+                            <div
                               className={`progress-bar ${patient.status === 'completed' ? 'bg-success' : patient.status === 'on-track' ? 'bg-primary' : 'bg-warning'}`}
                               style={{ width: `${patient.progress}%` }}
                             ></div>
@@ -416,18 +323,11 @@ const ReportsPage: React.FC = () => {
                         </div>
                       </td>
                       <td>{getStatusBadge(patient.status)}</td>
-                      <td>
-                        <div className="btn-group btn-group-sm">
-                          <button className="btn btn-outline-info">
-                            <Eye size={14} />
-                          </button>
-                          <button className="btn btn-outline-primary">
-                            <FileText size={14} />
-                          </button>
-                        </div>
-                      </td>
                     </tr>
                   ))}
+                  {patientSummaries.length === 0 && (
+                    <tr><td colSpan={7} className="text-center py-4">No hay datos de progreso de pacientes aún.</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -435,7 +335,7 @@ const ReportsPage: React.FC = () => {
         </div>
       )}
 
-      {activeTab === 'financial' && (
+      {activeTab === 'financial' && serviceStats && (
         <div className="row">
           <div className="col-md-6">
             <div className="card border-0 shadow-sm">
@@ -445,58 +345,21 @@ const ReportsPage: React.FC = () => {
               <div className="card-body">
                 <div className="mb-3">
                   <div className="d-flex justify-content-between">
-                    <span>Consultas Individuales</span>
-                    <strong>$18,500</strong>
+                    <span>Consultas</span>
+                    <strong>${serviceStats.appointments.revenue.toLocaleString()}</strong>
                   </div>
                   <div className="progress mt-1">
                     <div className="progress-bar bg-primary" style={{ width: '60%' }}></div>
                   </div>
-                  <small className="text-muted">60% del total</small>
                 </div>
                 <div className="mb-3">
                   <div className="d-flex justify-content-between">
                     <span>Planes Nutricionales</span>
-                    <strong>$9,200</strong>
+                    <strong>${serviceStats.dietPlans.revenue.toLocaleString()}</strong>
                   </div>
                   <div className="progress mt-1">
                     <div className="progress-bar bg-success" style={{ width: '30%' }}></div>
                   </div>
-                  <small className="text-muted">30% del total</small>
-                </div>
-                <div className="mb-3">
-                  <div className="d-flex justify-content-between">
-                    <span>Seguimientos</span>
-                    <strong>$3,100</strong>
-                  </div>
-                  <div className="progress mt-1">
-                    <div className="progress-bar bg-info" style={{ width: '10%' }}></div>
-                  </div>
-                  <small className="text-muted">10% del total</small>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="col-md-6">
-            <div className="card border-0 shadow-sm">
-              <div className="card-header bg-white">
-                <h5 className="card-title mb-0">Proyección de Ingresos</h5>
-              </div>
-              <div className="card-body">
-                <div className="mb-4">
-                  <h3 className="text-success">$38,500</h3>
-                  <small className="text-muted">Proyección para el próximo mes</small>
-                </div>
-                <div className="mb-3">
-                  <span className="badge bg-success me-2">↗ +20%</span>
-                  <span>Tendencia positiva basada en nuevos pacientes</span>
-                </div>
-                <div className="mb-3">
-                  <span className="badge bg-info me-2">📊</span>
-                  <span>Promedio de ingresos mensuales: $28,900</span>
-                </div>
-                <div className="mb-3">
-                  <span className="badge bg-warning me-2">⚡</span>
-                  <span>Oportunidad de crecimiento en seguimientos</span>
                 </div>
               </div>
             </div>

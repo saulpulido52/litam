@@ -152,20 +152,20 @@ class AppointmentService {
             }
         });
 
-            // **OPTIMIZACIÓN**: Obtener citas existentes con campos mínimos
-    const startOfDay = new Date(targetDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(targetDate);
-    endOfDay.setHours(23, 59, 59, 999);
+        // **OPTIMIZACIÓN**: Obtener citas existentes con campos mínimos
+        const startOfDay = new Date(targetDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(targetDate);
+        endOfDay.setHours(23, 59, 59, 999);
 
-    const existingAppointments = await this.appointmentRepository.find({
-        where: {
-            nutritionist: { id: nutritionistId },
-            status: AppointmentStatus.SCHEDULED,
-            start_time: Between(startOfDay, endOfDay)
-        },
-        select: ['start_time', 'end_time'] // **OPTIMIZACIÓN**: Solo campos necesarios
-    });
+        const existingAppointments = await this.appointmentRepository.find({
+            where: {
+                nutritionist: { id: nutritionistId },
+                status: AppointmentStatus.SCHEDULED,
+                start_time: Between(startOfDay, endOfDay)
+            },
+            select: ['start_time', 'end_time'] // **OPTIMIZACIÓN**: Solo campos necesarios
+        });
 
         // Calcular slots disponibles
         const availableSlots: any[] = [];
@@ -253,14 +253,14 @@ class AppointmentService {
             throw new AppError('No se pueden agendar citas en el pasado.', 400);
         }
 
-            // **OPTIMIZACIÓN**: Consulta más eficiente para verificar superposición de citas
-    const overlappingQuery = await this.appointmentRepository
-        .createQueryBuilder('appointment')
-        .where('appointment.nutritionist_user_id = :nutritionistId', { nutritionistId: nutritionist.id })
-        .andWhere('appointment.status = :status', { status: AppointmentStatus.SCHEDULED })
-        .andWhere('(:startTime < appointment.end_time AND :endTime > appointment.start_time)', { startTime, endTime })
-        .getOne();
-            
+        // **OPTIMIZACIÓN**: Consulta más eficiente para verificar superposición de citas
+        const overlappingQuery = await this.appointmentRepository
+            .createQueryBuilder('appointment')
+            .where('appointment.nutritionist_user_id = :nutritionistId', { nutritionistId: nutritionist.id })
+            .andWhere('appointment.status = :status', { status: AppointmentStatus.SCHEDULED })
+            .andWhere('(:startTime < appointment.end_time AND :endTime > appointment.start_time)', { startTime, endTime })
+            .getOne();
+
         if (overlappingQuery) {
             throw new AppError('El nutriólogo ya tiene una cita agendada que se superpone con esta franja horaria.', 409); // 409 Conflict
         }
@@ -294,12 +294,18 @@ class AppointmentService {
             throw new AppError('Nutriólogo no encontrado o no autorizado.', 403);
         }
 
-        const patient = await this.userRepository.findOne({
-            where: { id: scheduleDto.patientId, role: { name: RoleName.PATIENT } },
+        // **FIX**: El patientId en el DTO es el ID del perfil del paciente, no el user.id
+        // Primero buscamos el perfil del paciente para obtener el user asociado
+        const patientProfile = await AppDataSource.getRepository('PatientProfile').findOne({
+            where: { id: scheduleDto.patientId },
+            relations: ['user']
         });
-        if (!patient) {
+
+        if (!patientProfile || !patientProfile.user) {
             throw new AppError('Paciente no encontrado.', 404);
         }
+
+        const patient = patientProfile.user;
 
         // Verificar relación activa entre nutriólogo y paciente
         const activeRelation = await this.relationRepository.findOne({
@@ -330,7 +336,7 @@ class AppointmentService {
             .andWhere('appointment.status = :status', { status: AppointmentStatus.SCHEDULED })
             .andWhere('(:startTime < appointment.end_time AND :endTime > appointment.start_time)', { startTime, endTime })
             .getOne();
-            
+
         if (overlappingQuery) {
             throw new AppError('Ya tienes una cita agendada que se superpone con esta franja horaria.', 409);
         }
@@ -352,7 +358,7 @@ class AppointmentService {
     // **OPTIMIZACIÓN**: Método optimizado para obtener citas con carga selectiva
     public async getMyAppointments(userId: string, userRole: RoleName) {
         let appointments: Appointment[];
-        
+
         // **OPTIMIZACIÓN**: Usar query builder para seleccionar solo campos necesarios
         const baseQuery = this.appointmentRepository
             .createQueryBuilder('appointment')
@@ -504,7 +510,7 @@ class AppointmentService {
 
         // Eliminar la cita de la base de datos
         await this.appointmentRepository.remove(appointment);
-        
+
         return { message: 'Cita eliminada exitosamente' };
     }
 }

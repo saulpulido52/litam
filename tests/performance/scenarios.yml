@@ -1,0 +1,68 @@
+config:
+  target: "http://localhost:4000/api"
+  phases:
+    - duration: 60
+      arrivalRate: 2
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 5
+      rampTo: 10
+      name: "Ramp up load"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Auth & Profile Flow"
+    weight: 7
+    flow:
+      - log: "New virtual user running Auth Flow"
+      - post:
+          url: "/auth/login"
+          json:
+            email: "nutri.admin@sistema.com"
+            password: "nutri123"
+          capture:
+            - json: "$.data.token"
+              as: "token"
+            - json: "$.data.user.id"
+              as: "userId"
+      - think: 2
+      - get:
+          url: "/users/me/stats"
+          headers:
+            Authorization: "Bearer {{ token }}"
+      - think: 3
+      - patch:
+          url: "/nutritionists/me/profile"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            rfc: "XAXX010101000"
+            curp: "XAXX010101HXXXXX00"
+            professionalId: "12345678"
+            university: "Universidad Nacional"
+            degreeTitle: "Licenciado en Nutrición Avanzada"
+
+  - name: "Dashboard Load"
+    weight: 3
+    flow:
+      - log: "New virtual user checking Dashboard"
+      - post:
+          url: "/auth/login"
+          json:
+            email: "nutri.admin@sistema.com"
+            password: "nutri123"
+          capture:
+            - json: "$.data.token"
+              as: "token"
+      - think: 1
+      - get:
+          url: "/dashboard/stats/simple"
+          headers:
+            Authorization: "Bearer {{ token }}"
+      - think: 2
+      - get:
+          url: "/notifications"
+          headers:
+            Authorization: "Bearer {{ token }}"

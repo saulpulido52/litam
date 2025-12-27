@@ -1,0 +1,132 @@
+config:
+  target: "http://localhost:4000/api"
+  phases:
+    - duration: 60
+      arrivalRate: 1
+      name: "Robust Full Journey Test"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Comprehensive Nutritionist Workflow"
+    flow:
+      # 1. Register Nutritionist
+      - log: "Step 1: Registering new Nutritionist..."
+      - post:
+          url: "/auth/register/nutritionist"
+          json:
+            email: "nutri_robust_{{ $randomString() }}@test.com"
+            password: "Password123!"
+            firstName: "Dr. Robust"
+            lastName: "Test"
+          capture:
+            - json: "$.data.user.email"
+              as: "registeredEmail"
+
+      # 2. Login
+      - log: "Step 2: Authenticating..."
+      - post:
+          url: "/auth/login"
+          json:
+            email: "{{ registeredEmail }}"
+            password: "Password123!"
+          capture:
+            - json: "$.data.token"
+              as: "token"
+      
+      # 3. Update Nutritionist Profile (Legal/Fiscal Data)
+      - log: "Step 3: Updating Nutritionist Profile..."
+      - patch:
+          url: "/nutritionists/me/profile"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            professionalId: "12345678"
+            professionalIdIssuer: "SEP"
+            rfc: "ROBS800101XYZ"
+            curp: "ROBS800101HDFRRA01"
+            university: "Universidad Nacional"
+            degreeTitle: "Licenciado en Nutrición"
+            bio: "Especialista en pruebas de carga."
+            consultationFee: 500
+
+      # 4. Register Patient (by Nutritionist)
+      - log: "Step 4: Registering Patient..."
+      - post:
+          url: "/patients/register-by-nutritionist"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            email: "patient_{{ $randomString() }}@test.com"
+            first_name: "Patient"
+            last_name: "Test"
+            birth_date: "1990-01-01"
+            gender: "female"
+            age: 30
+            phone: "5551234567"
+            consultation_reason: "Initial checkup"
+          capture:
+            - json: "$.data.patient.id"
+              as: "patientId"
+            - json: "$.data.patient.user.id"
+              as: "userId"
+              
+      # 5. Create Clinical Record (History)
+      - log: "Step 5: Creating Clinical Record..."
+      - post:
+          url: "/clinical-records"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            patientId: "{{ userId }}" # ClinicalRecord links to User, identifying by User ID
+            recordDate: "2025-01-01" # DateString YYYY-MM-DD
+            consultationReason: "Initial assessment"
+            anthropometricMeasurements:
+              heightM: 1.70
+              currentWeightKg: 70
+            currentProblems:
+              observations: "No acute problems"
+          capture:
+            - json: "$.recordId"
+              as: "clinicalRecordId"
+
+      # 6. Schedule Appointment
+      - log: "Step 6: Scheduling Appointment..."
+      - post:
+          url: "/appointments/schedule-for-patient"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            patientId: "{{ patientId }}"
+            startTime: "2026-01-15T10:00:00Z"
+            endTime: "2026-01-15T11:00:00Z"
+            notes: "Primera consulta de seguimiento"
+          capture:
+             - json: "$.data.appointment.id"
+               as: "appointmentId"
+
+      # 7. Create Diet Plan
+      - log: "Step 7: Creating Diet Plan..."
+      - post:
+          url: "/diet-plans"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            name: "Plan Balanceado 2025"
+            patientId: "{{ userId }}"
+            startDate: "2025-01-01"
+            endDate: "2025-02-01"
+            dailyCaloriesTarget: 1800
+            description: "Plan generado automáticamente para prueba de carga"
+            meals:
+              - name: "Desayuno"
+                order: 1
+                mealItems: [] 
+
+      # 8. Verify Data
+      - log: "Step 8: Verifying Full Patient Profile..."
+      - get:
+          url: "/patients/{{ userId }}"
+          headers:
+            Authorization: "Bearer {{ token }}"

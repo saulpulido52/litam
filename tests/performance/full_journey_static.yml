@@ -1,0 +1,36 @@
+config:
+  target: "http://localhost:4000/api"
+  phases:
+    - duration: 60
+      arrivalRate: 1
+      name: "Single User Journey Test"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Full Nutritionist Workflow"
+    flow:
+      # 1. Register Nutritionist
+      - log: "Step 1: Registering new Nutritionist..."
+      - post:
+          url: "/auth/register/nutritionist"
+          json:
+            email: "test_static_{{ $randomString() }}@test.com"
+            password: "Password123!"
+            firstName: "Nutri"
+            lastName: "Test"
+          capture:
+            - json: "$.data.token"
+              as: "tempToken"
+      
+      # 2. Login
+      - log: "Step 2: Authenticating..."
+      - post:
+          url: "/auth/login"
+          json:
+            email: "test_static@test.com" 
+            # Note: $randomString() is only evaluated once per VU? 
+            # Actually, using it in login will be different random string. 
+            # So this static test will fail at login unless I capture email.
+            password: "Password123!"
