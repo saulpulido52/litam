@@ -17,6 +17,8 @@ export interface ProfileData {
   license_issuing_authority?: string | null;
   professional_id?: string | null;
   professional_id_issuer?: string | null;
+  rfc?: string | null;
+  curp?: string | null;
   university?: string | null;
   degree_title?: string | null;
   graduation_date?: string | null;
@@ -241,6 +243,8 @@ class ProfileService {
       if (data.first_name) userPayload.first_name = data.first_name;
       if (data.last_name) userPayload.last_name = data.last_name;
       if (data.phone) userPayload.phone = data.phone;
+      if (data.birth_date) userPayload.birth_date = data.birth_date;
+      if (data.gender) userPayload.gender = data.gender;
       // Bio NO pertenece a User, solo a NutritionistProfile. Eliminado para evitar crash 500.
 
       // Si hay datos de usuario para actualizar, agregamos la petición
@@ -255,6 +259,12 @@ class ProfileService {
         const nutritionistPayload: any = {
           // Campos directos del DTO (CamelCase)
           licenseNumber: data.license_number,
+          professionalId: data.professional_id,
+          professionalIdIssuer: data.professional_id_issuer,
+          rfc: data.rfc,
+          curp: data.curp,
+          university: data.university,
+          degreeTitle: data.degree_title,
           yearsOfExperience: data.years_of_experience,
           specialties: data.specialties,
           bio: data.bio, // Bio también en perfil para redundancia/seguridad

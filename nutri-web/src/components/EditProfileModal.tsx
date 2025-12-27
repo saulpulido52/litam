@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Row, Col, Tab, Nav, Spinner, Alert } from 'react-bootstrap';
-import { User, MapPin, Clock, Lock, Shield } from 'lucide-react';
+import { User, MapPin, Clock, Lock, Shield, FileText } from 'lucide-react';
 import type { ProfileData } from '../services/profileService';
 import profileService from '../services/profileService';
 
@@ -35,7 +35,14 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         offers_in_person: true,
         offers_online: true,
         certifications: [],
-        consultation_fee: 0
+        consultation_fee: 0,
+        professional_id: '',
+        university: '',
+        degree_title: '',
+        rfc: '',
+        curp: '',
+        gender: '',
+        birth_date: ''
     });
 
     // Password State
@@ -64,6 +71,13 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 specialties: nutritionist.specialties || profile.specialties || [],
                 years_of_experience: nutritionist.years_of_experience || profile.years_of_experience || 0,
                 license_number: nutritionist.license_number || profile.license_number || '',
+                professional_id: nutritionist.professional_id || profile.professional_id || '',
+                university: nutritionist.university || profile.university || '',
+                degree_title: nutritionist.degree_title || profile.degree_title || '',
+                rfc: nutritionist.rfc || profile.rfc || '',
+                curp: nutritionist.curp || profile.curp || '',
+                gender: profile.gender || '',
+                birth_date: profile.birth_date ? profile.birth_date.split('T')[0] : '',
 
                 // Clinic
                 clinic_name: nutritionist.clinic_name || profile.clinic_name || '',
@@ -94,6 +108,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             setFormData(prev => ({ ...prev, [name]: checked }));
         } else if (type === 'number') {
             setFormData(prev => ({ ...prev, [name]: Number(value) }));
+        } else if (name === 'rfc' || name === 'curp') {
+            setFormData(prev => ({ ...prev, [name]: value.toUpperCase() }));
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
         }
@@ -230,6 +246,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                                 <Nav.Item>
                                     <Nav.Link eventKey="security" className="d-flex align-items-center gap-2">
                                         <Lock size={18} /> Seguridad
+                                    </Nav.Link>
+                                </Nav.Item>
+                                <Nav.Item>
+                                    <Nav.Link eventKey="legal" className="d-flex align-items-center gap-2">
+                                        <FileText size={18} /> Legal / Fiscal
                                     </Nav.Link>
                                 </Nav.Item>
                             </Nav>
@@ -454,6 +475,79 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                                             Ir al Calendario
                                         </Button>
                                     </div>
+                                </Tab.Pane>
+
+                                {/* --- Tab: Legal --- */}
+                                <Tab.Pane eventKey="legal">
+                                    <Form onSubmit={handleSubmitProfile}>
+                                        <h6 className="mb-3 text-muted">Información Legal y Académica</h6>
+                                        <Row className="g-3">
+                                            <Col md={6}>
+                                                <Form.Group>
+                                                    <Form.Label>Cédula Profesional</Form.Label>
+                                                    <Form.Control
+                                                        type="text"
+                                                        name="professional_id"
+                                                        value={formData.professional_id || ''}
+                                                        onChange={handleChange}
+                                                        placeholder="No. de Cédula"
+                                                    />
+                                                </Form.Group>
+                                            </Col>
+                                            <Col md={6}>
+                                                <Form.Group>
+                                                    <Form.Label>Título Profesional</Form.Label>
+                                                    <Form.Control
+                                                        type="text"
+                                                        name="degree_title"
+                                                        value={formData.degree_title || ''}
+                                                        onChange={handleChange}
+                                                        placeholder="Ej. Licenciado en Nutrición"
+                                                    />
+                                                </Form.Group>
+                                            </Col>
+                                            <Col md={12}>
+                                                <Form.Group>
+                                                    <Form.Label>Universidad de Egreso</Form.Label>
+                                                    <Form.Control
+                                                        type="text"
+                                                        name="university"
+                                                        value={formData.university || ''}
+                                                        onChange={handleChange}
+                                                    />
+                                                </Form.Group>
+                                            </Col>
+                                            <Col md={6}>
+                                                <Form.Group>
+                                                    <Form.Label>RFC (Fiscal)</Form.Label>
+                                                    <Form.Control
+                                                        type="text"
+                                                        name="rfc"
+                                                        value={formData.rfc || ''}
+                                                        onChange={handleChange}
+                                                        maxLength={13}
+                                                    />
+                                                </Form.Group>
+                                            </Col>
+                                            <Col md={6}>
+                                                <Form.Group>
+                                                    <Form.Label>CURP (Identidad)</Form.Label>
+                                                    <Form.Control
+                                                        type="text"
+                                                        name="curp"
+                                                        value={formData.curp || ''}
+                                                        onChange={handleChange}
+                                                        maxLength={18}
+                                                    />
+                                                </Form.Group>
+                                            </Col>
+                                        </Row>
+                                        <div className="mt-4 text-end">
+                                            <Button variant="primary" type="submit" disabled={loading} style={{ background: '#2c7a7b', border: 'none' }}>
+                                                {loading ? <Spinner size="sm" animation="border" /> : 'Guardar Información Legal'}
+                                            </Button>
+                                        </div>
+                                    </Form>
                                 </Tab.Pane>
 
                                 {/* --- Tab: Security (Password) --- */}

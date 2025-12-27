@@ -35,6 +35,38 @@ export class CreateUpdateNutritionistProfileDto {
     @Min(0, { message: 'Los años de experiencia no pueden ser negativos.' })
     yearsOfExperience?: number;
 
+    // --- Identificación Profesional y Legal ---
+    @IsOptional()
+    @IsString({ message: 'La cédula profesional debe ser texto.' })
+    @Length(1, 20, { message: 'La cédula profesional debe tener entre 1 y 20 caracteres.' })
+    professionalId?: string;
+
+    @IsOptional()
+    @IsString({ message: 'La entidad emisora de la cédula debe ser texto.' })
+    professionalIdIssuer?: string;
+
+    @IsOptional()
+    @IsString({ message: 'El RFC debe ser texto.' })
+    @Length(12, 13, { message: 'El RFC debe tener 12 o 13 caracteres.' })
+    rfc?: string;
+
+    @IsOptional()
+    @IsString({ message: 'La CURP debe ser texto.' })
+    @Length(18, 18, { message: 'La CURP debe tener exactamente 18 caracteres.' })
+    curp?: string;
+
+    @IsOptional()
+    @IsString({ message: 'La universidad debe ser texto.' })
+    university?: string;
+
+    @IsOptional()
+    @IsString({ message: 'El título profesional debe ser texto.' })
+    degreeTitle?: string;
+
+    @IsOptional()
+    @IsString() // Simple string validation for date string transfer
+    graduationDate?: string;
+
     // --- Formación ---
     @IsOptional()
     @IsArray({ message: 'La educación debe ser un array de cadenas de texto.' })
