@@ -13,6 +13,7 @@ import {
   Star,
   UserPlus
 } from 'lucide-react';
+import { MdCheckCircle, MdVerifiedUser, MdAssignmentInd, MdDashboard } from 'react-icons/md';
 import { Container, Row, Col, Button, Navbar, Nav, Card, Badge } from 'react-bootstrap';
 
 const HomePage: React.FC = () => {
@@ -234,6 +235,96 @@ const HomePage: React.FC = () => {
               </Col>
             ))}
           </Row>
+        </Container>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-5 bg-light position-relative">
+        <Container className="py-5">
+          <div className="text-center mb-5">
+            <h2 className="display-5 fw-bold mb-3">Planes Flexibles</h2>
+            <p className="text-muted lead">Elige el modelo que mejor se adapte a tu crecimiento.</p>
+          </div>
+
+          <Row className="justify-content-center align-items-stretch g-4">
+            {/* Revenue Share Plan */}
+            <Col lg={4} md={6}>
+              <Card className="h-100 border-0 shadow-sm hover-shadow-lg transition-all">
+                <Card.Body className="p-5 d-flex flex-column text-center">
+                  <div className="mb-4">
+                    <span className="badge bg-success bg-opacity-10 text-success p-2 rounded-pill fw-bold">Popular</span>
+                  </div>
+                  <h3 className="fw-bold mb-2">Revenue Share</h3>
+                  <div className="display-4 fw-bold text-dark mb-4">
+                    0<span className="fs-4 text-muted">/mes</span>
+                  </div>
+                  <p className="text-muted mb-4">
+                    Paga solo una pequeña comisión por consulta realizada. Ideal para empezar.
+                  </p>
+                  <ul className="list-unstyled text-start mb-5 mx-auto" style={{ maxWidth: '250px' }}>
+                    <li className="mb-3 d-flex align-items-center">
+                      <MdCheckCircle className="text-success me-2" size={20} /> Sin costo fijo mensual
+                    </li>
+                    <li className="mb-3 d-flex align-items-center">
+                      <MdCheckCircle className="text-success me-2" size={20} /> Pacientes Ilimitados
+                    </li>
+                    <li className="mb-3 d-flex align-items-center">
+                      <MdCheckCircle className="text-success me-2" size={20} /> Todas las funciones
+                    </li>
+                    <li className="d-flex align-items-center">
+                      <MdCheckCircle className="text-success me-2" size={20} /> Soporte estándar
+                    </li>
+                  </ul>
+                  <Link to="/register" className="mt-auto">
+                    <Button variant="outline-success" size="lg" className="w-100 rounded-pill">
+                      Comenzar Gratis
+                    </Button>
+                  </Link>
+                </Card.Body>
+              </Card>
+            </Col>
+
+            {/* Enterprise Plan */}
+            <Col lg={4} md={6}>
+              <Card className="h-100 border-success border-2 shadow hover-shadow-lg transition-all bg-dark text-white">
+                <Card.Body className="p-5 d-flex flex-column text-center">
+                  <div className="mb-4">
+                    <span className="badge bg-warning text-dark p-2 rounded-pill fw-bold">Empresarial</span>
+                  </div>
+                  <h3 className="fw-bold mb-2">Enterprise</h3>
+                  <div className="display-6 fw-bold mb-4 py-2">
+                    A Medida
+                  </div>
+                  <p className="text-gray-300 mb-4 opacity-75">
+                    Soluciones personalizadas para clínicas, hospitales y grandes equipos.
+                  </p>
+                  <ul className="list-unstyled text-start mb-5 mx-auto text-gray-300" style={{ maxWidth: '250px' }}>
+                    <li className="mb-3 d-flex align-items-center">
+                      <Star className="text-warning me-2" size={20} /> Incluye Plan Pro
+                    </li>
+                    <li className="mb-3 d-flex align-items-center">
+                      <MdVerifiedUser className="text-warning me-2" size={20} /> API Access & Integraciones
+                    </li>
+                    <li className="mb-3 d-flex align-items-center">
+                      <MdAssignmentInd className="text-warning me-2" size={20} /> Soporte Dedicado 24/7
+                    </li>
+                    <li className="d-flex align-items-center">
+                      <MdDashboard className="text-warning me-2" size={20} /> Dashboard Multi-Sede
+                    </li>
+                  </ul>
+                  <Link to="/contact" className="mt-auto">
+                    <Button variant="success" size="lg" className="w-100 rounded-pill fw-bold">
+                      Contactar Ventas
+                    </Button>
+                  </Link>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+
+          <div className="text-center mt-5 text-muted small">
+            <p>* Próximamente más planes mensuales y anuales con descuentos exclusivos.</p>
+          </div>
         </Container>
       </section>
 
