@@ -45,6 +45,9 @@ export class SubscriptionPlan {
     @Column({ type: 'decimal', precision: 10, scale: 2, nullable: false })
     price!: number;
 
+    @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+    commission_percentage!: number | null; // Porcentaje de comisión para planes Revenue Share
+
     @Column({ type: 'int', nullable: false })
     duration_days!: number; // 30 para mensual, 365 para anual
 
