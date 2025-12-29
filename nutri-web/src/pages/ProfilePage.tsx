@@ -7,7 +7,7 @@ import {
   Clock, Share2, Shield
 } from 'lucide-react';
 import '../styles/profile-scoped.css';
-import EditProfileModal from '../components/EditProfileModal';
+import EditProfileModal from '../components/Profile/EditProfileModal';
 import type { ProfileData } from '../services/profileService';
 
 const ProfilePage: React.FC = () => {

@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Plus, Settings, Shield, Database, Users, AlertTriangle } from 'lucide-react';
-import type { 
-  CreateDietPlanDto, 
+import type {
+  CreateDietPlanDto,
   GenerateAIDietDto,
-  PlanType, 
+  PlanType,
   PlanPeriod,
   PathologicalRestrictionsDto
-} from '../types/diet';
-import type { Patient } from '../types/patient';
-import type { ClinicalRecord } from '../types/clinical-record';
+} from '../../types/diet';
+import type { Patient } from '../../types/patient';
+import type { ClinicalRecord } from '../../types/clinical-record';
 
 interface DietPlanCreatorProps {
   patients: Patient[];
@@ -31,7 +31,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
   const [planPeriod, setPlanPeriod] = useState<PlanPeriod>('weeks');
   const [timeValue, setTimeValue] = useState(1);
   const [currentStep, setCurrentStep] = useState(1);
-  
+
   // Estados para restricciones patológicas
   const [showPathologicalRestrictions, setShowPathologicalRestrictions] = useState(false);
   const [pathologicalRestrictions, setPathologicalRestrictions] = useState<PathologicalRestrictionsDto>({
@@ -42,7 +42,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
     specialConsiderations: [],
     emergencyContacts: []
   });
-  
+
   // Estados para datos del paciente
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [patientClinicalRecords, setPatientClinicalRecords] = useState<ClinicalRecord[]>([]);
@@ -201,7 +201,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
 
     // Extraer consideraciones especiales
     const specialConsiderations: string[] = [];
-    
+
     if (record.current_problems) {
       const problems = [];
       if (record.current_problems.diarrhea) problems.push('Diarrea');
@@ -212,7 +212,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
       if (record.current_problems.pyrosis) problems.push('Pirosis');
       if (record.current_problems.vomiting) problems.push('Vómitos');
       if (record.current_problems.colitis) problems.push('Colitis');
-      
+
       if (problems.length > 0) {
         specialConsiderations.push(`Problemas digestivos: ${problems.join(', ')}`);
       }
@@ -246,11 +246,11 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
     try {
       // Extraer restricciones del perfil del paciente
       const profileRestrictions = extractRestrictionsFromPatient(patient);
-      
+
       // TODO: Cargar expedientes clínicos del paciente desde la API
       // Por ahora, simulamos que no hay expedientes
       const clinicalRecords: ClinicalRecord[] = [];
-      
+
       let clinicalRestrictions: PathologicalRestrictionsDto = {
         medicalConditions: [],
         allergies: [],
@@ -262,7 +262,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
 
       // Si hay expedientes, extraer restricciones del más reciente
       if (clinicalRecords.length > 0) {
-        const latestRecord = clinicalRecords.sort((a, b) => 
+        const latestRecord = clinicalRecords.sort((a, b) =>
           new Date(b.record_date).getTime() - new Date(a.record_date).getTime()
         )[0];
         clinicalRestrictions = extractRestrictionsFromClinicalRecord(latestRecord);
@@ -374,7 +374,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
 
   const handleGenerateAI = () => {
     if (!onGenerateAI) return;
-    
+
     const aiData: GenerateAIDietDto = {
       patientId: formData.patientId,
       name: formData.name,
@@ -423,16 +423,16 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                 <Users size={16} className="me-2" />
                 Información Básica del Plan
               </h6>
-              
+
               <div className="row">
                 <div className="col-md-6 mb-3">
                   <label className="form-label" htmlFor="patient-select">Paciente *</label>
-                  <select 
+                  <select
                     className="form-select"
                     id="patient-select"
                     name="patient-select"
                     value={formData.patientId}
-                    onChange={(e) => setFormData({...formData, patientId: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
                     required
                   >
                     <option value="">Seleccionar paciente</option>
@@ -445,14 +445,14 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                 </div>
                 <div className="col-md-6 mb-3">
                   <label className="form-label" htmlFor="plan-name">Nombre del Plan *</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
+                  <input
+                    type="text"
+                    className="form-control"
                     id="plan-name"
                     name="plan-name"
                     placeholder={`Ej: ${getPlanTypeLabel()} de Equilibrio y Energía`}
                     value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
                   />
                 </div>
@@ -467,7 +467,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                     name="plan-description"
                     rows={3}
                     value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Describe el objetivo y enfoque del plan nutricional..."
                   />
                 </div>
@@ -482,7 +482,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                     id="start-date"
                     name="start-date"
                     value={formData.startDate}
-                    onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                     required
                   />
                 </div>
@@ -494,7 +494,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                     id="end-date"
                     name="end-date"
                     value={formData.endDate}
-                    onChange={(e) => setFormData({...formData, endDate: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                   />
                 </div>
               </div>
@@ -508,16 +508,16 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                 <Clock size={16} className="me-2" />
                 Configuración de Tiempo
               </h6>
-              
+
               <div className="row">
                 <div className="col-md-4 mb-3">
                   <label className="form-label">Tipo de Plan</label>
-                  <select 
+                  <select
                     className="form-select"
                     value={planType}
                     onChange={(e) => {
                       setPlanType(e.target.value as PlanType);
-                      setFormData({...formData, planType: e.target.value as PlanType});
+                      setFormData({ ...formData, planType: e.target.value as PlanType });
                     }}
                   >
                     <option value="daily">Plan Diario</option>
@@ -529,12 +529,12 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                 </div>
                 <div className="col-md-4 mb-3">
                   <label className="form-label">Período</label>
-                  <select 
+                  <select
                     className="form-select"
                     value={planPeriod}
                     onChange={(e) => {
                       setPlanPeriod(e.target.value as PlanPeriod);
-                      setFormData({...formData, planPeriod: e.target.value as PlanPeriod});
+                      setFormData({ ...formData, planPeriod: e.target.value as PlanPeriod });
                     }}
                     disabled={planType === 'flexible'}
                   >
@@ -551,15 +551,15 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                   </label>
                   {planType === 'flexible' ? (
                     <div className="d-flex gap-2">
-                      <input 
-                        type="number" 
-                        className="form-control" 
+                      <input
+                        type="number"
+                        className="form-control"
                         placeholder="1"
                         min="1"
                         value={timeValue}
                         onChange={(e) => setTimeValue(parseInt(e.target.value) || 1)}
                       />
-                      <select 
+                      <select
                         className="form-select"
                         value={timeValue}
                         onChange={(e) => setTimeValue(parseInt(e.target.value) || 1)}
@@ -573,15 +573,15 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                       </select>
                     </div>
                   ) : (
-                    <input 
-                      type="number" 
-                      className="form-control" 
+                    <input
+                      type="number"
+                      className="form-control"
                       placeholder="1"
                       min="1"
                       value={formData.totalPeriods}
                       onChange={(e) => {
                         const value = parseInt(e.target.value) || 1;
-                        setFormData({...formData, totalPeriods: value});
+                        setFormData({ ...formData, totalPeriods: value });
                       }}
                     />
                   )}
@@ -691,7 +691,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                                   onChange={(e) => {
                                     const updated = [...pathologicalRestrictions.medicalConditions];
                                     updated[index].name = e.target.value;
-                                    setPathologicalRestrictions({...pathologicalRestrictions, medicalConditions: updated});
+                                    setPathologicalRestrictions({ ...pathologicalRestrictions, medicalConditions: updated });
                                   }}
                                   placeholder="Ej: Diabetes, Hipertensión"
                                 />
@@ -704,7 +704,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                                   onChange={(e) => {
                                     const updated = [...pathologicalRestrictions.medicalConditions];
                                     updated[index].category = e.target.value as any;
-                                    setPathologicalRestrictions({...pathologicalRestrictions, medicalConditions: updated});
+                                    setPathologicalRestrictions({ ...pathologicalRestrictions, medicalConditions: updated });
                                   }}
                                 >
                                   <option value="condition">Condición</option>
@@ -720,7 +720,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                                   onChange={(e) => {
                                     const updated = [...pathologicalRestrictions.medicalConditions];
                                     updated[index].severity = e.target.value as any;
-                                    setPathologicalRestrictions({...pathologicalRestrictions, medicalConditions: updated});
+                                    setPathologicalRestrictions({ ...pathologicalRestrictions, medicalConditions: updated });
                                   }}
                                 >
                                   <option value="mild">Leve</option>
@@ -734,7 +734,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                                   className="btn btn-outline-danger btn-sm"
                                   onClick={() => {
                                     const updated = pathologicalRestrictions.medicalConditions.filter((_, i) => i !== index);
-                                    setPathologicalRestrictions({...pathologicalRestrictions, medicalConditions: updated});
+                                    setPathologicalRestrictions({ ...pathologicalRestrictions, medicalConditions: updated });
                                   }}
                                 >
                                   <i className="fas fa-trash"></i>
@@ -788,7 +788,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                                   onChange={(e) => {
                                     const updated = [...pathologicalRestrictions.allergies];
                                     updated[index].allergen = e.target.value;
-                                    setPathologicalRestrictions({...pathologicalRestrictions, allergies: updated});
+                                    setPathologicalRestrictions({ ...pathologicalRestrictions, allergies: updated });
                                   }}
                                   placeholder="Ej: Gluten, Lactosa"
                                 />
@@ -801,7 +801,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                                   onChange={(e) => {
                                     const updated = [...pathologicalRestrictions.allergies];
                                     updated[index].type = e.target.value as any;
-                                    setPathologicalRestrictions({...pathologicalRestrictions, allergies: updated});
+                                    setPathologicalRestrictions({ ...pathologicalRestrictions, allergies: updated });
                                   }}
                                 >
                                   <option value="food">Alimento</option>
@@ -817,7 +817,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                                   onChange={(e) => {
                                     const updated = [...pathologicalRestrictions.allergies];
                                     updated[index].severity = e.target.value as any;
-                                    setPathologicalRestrictions({...pathologicalRestrictions, allergies: updated});
+                                    setPathologicalRestrictions({ ...pathologicalRestrictions, allergies: updated });
                                   }}
                                 >
                                   <option value="mild">Leve</option>
@@ -834,7 +834,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                                   onChange={(e) => {
                                     const updated = [...pathologicalRestrictions.allergies];
                                     updated[index].symptoms = e.target.value.split(',').map(s => s.trim()).filter(s => s);
-                                    setPathologicalRestrictions({...pathologicalRestrictions, allergies: updated});
+                                    setPathologicalRestrictions({ ...pathologicalRestrictions, allergies: updated });
                                   }}
                                   placeholder="Ej: Urticaria, Dificultad respiratoria"
                                 />
@@ -845,7 +845,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                                   className="btn btn-outline-danger btn-sm"
                                   onClick={() => {
                                     const updated = pathologicalRestrictions.allergies.filter((_, i) => i !== index);
-                                    setPathologicalRestrictions({...pathologicalRestrictions, allergies: updated});
+                                    setPathologicalRestrictions({ ...pathologicalRestrictions, allergies: updated });
                                   }}
                                 >
                                   <i className="fas fa-trash"></i>
@@ -898,7 +898,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                                   onChange={(e) => {
                                     const updated = [...pathologicalRestrictions.medications];
                                     updated[index].name = e.target.value;
-                                    setPathologicalRestrictions({...pathologicalRestrictions, medications: updated});
+                                    setPathologicalRestrictions({ ...pathologicalRestrictions, medications: updated });
                                   }}
                                   placeholder="Ej: Metformina, Enalapril"
                                 />
@@ -912,7 +912,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                                   onChange={(e) => {
                                     const updated = [...pathologicalRestrictions.medications];
                                     updated[index].dosage = e.target.value;
-                                    setPathologicalRestrictions({...pathologicalRestrictions, medications: updated});
+                                    setPathologicalRestrictions({ ...pathologicalRestrictions, medications: updated });
                                   }}
                                   placeholder="Ej: 500mg"
                                 />
@@ -926,7 +926,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                                   onChange={(e) => {
                                     const updated = [...pathologicalRestrictions.medications];
                                     updated[index].frequency = e.target.value;
-                                    setPathologicalRestrictions({...pathologicalRestrictions, medications: updated});
+                                    setPathologicalRestrictions({ ...pathologicalRestrictions, medications: updated });
                                   }}
                                   placeholder="Ej: 2 veces al día"
                                 />
@@ -937,7 +937,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                                   className="btn btn-outline-danger btn-sm"
                                   onClick={() => {
                                     const updated = pathologicalRestrictions.medications.filter((_, i) => i !== index);
-                                    setPathologicalRestrictions({...pathologicalRestrictions, medications: updated});
+                                    setPathologicalRestrictions({ ...pathologicalRestrictions, medications: updated });
                                   }}
                                 >
                                   <i className="fas fa-trash"></i>
@@ -1012,15 +1012,15 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                 <Settings size={16} className="me-2" />
                 Configuración de Comidas
               </h6>
-              
+
               <div className="row">
                 <div className="col-md-6 mb-3">
                   <label className="form-label">Número de Comidas por Día</label>
-                  <select 
+                  <select
                     className="form-select"
                     value={formData.mealConfiguration?.mealsPerDay || 3}
                     onChange={(e) => setFormData({
-                      ...formData, 
+                      ...formData,
                       mealConfiguration: {
                         ...formData.mealConfiguration,
                         mealsPerDay: parseInt(e.target.value)
@@ -1035,11 +1035,11 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                 </div>
                 <div className="col-md-6 mb-3">
                   <label className="form-label">Tipo de Plan</label>
-                  <select 
+                  <select
                     className="form-select"
                     value={formData.mealConfiguration?.planType || 'balanced'}
                     onChange={(e) => setFormData({
-                      ...formData, 
+                      ...formData,
                       mealConfiguration: {
                         ...formData.mealConfiguration,
                         planType: e.target.value
@@ -1060,11 +1060,11 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
               <div className="row">
                 <div className="col-md-6 mb-3">
                   <label className="form-label">Horario de Comidas</label>
-                  <select 
+                  <select
                     className="form-select"
                     value={formData.mealConfiguration?.mealTiming || 'flexible'}
                     onChange={(e) => setFormData({
-                      ...formData, 
+                      ...formData,
                       mealConfiguration: {
                         ...formData.mealConfiguration,
                         mealTiming: e.target.value
@@ -1078,11 +1078,11 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                 </div>
                 <div className="col-md-6 mb-3">
                   <label className="form-label">Tamaño de Porciones</label>
-                  <select 
+                  <select
                     className="form-select"
                     value={formData.mealConfiguration?.portionSize || 'standard'}
                     onChange={(e) => setFormData({
-                      ...formData, 
+                      ...formData,
                       mealConfiguration: {
                         ...formData.mealConfiguration,
                         portionSize: e.target.value
@@ -1111,19 +1111,19 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                 <i className="fas fa-bullseye me-2"></i>
                 Objetivos Nutricionales
               </h6>
-              
+
               <div className="row">
                 <div className="col-md-6 mb-3">
                   <label className="form-label">Calorías Diarias Objetivo</label>
                   <div className="input-group">
-                    <input 
-                      type="number" 
-                      className="form-control" 
+                    <input
+                      type="number"
+                      className="form-control"
                       placeholder="2000"
                       min="800"
                       max="5000"
                       value={formData.dailyCaloriesTarget}
-                      onChange={(e) => setFormData({...formData, dailyCaloriesTarget: parseInt(e.target.value) || 2000})}
+                      onChange={(e) => setFormData({ ...formData, dailyCaloriesTarget: parseInt(e.target.value) || 2000 })}
                     />
                     <span className="input-group-text">kcal</span>
                   </div>
@@ -1131,11 +1131,11 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                 </div>
                 <div className="col-md-6 mb-3">
                   <label className="form-label">Objetivo Principal</label>
-                  <select 
+                  <select
                     className="form-select"
                     value={formData.nutritionalGoals?.primaryGoal || 'weight_loss'}
                     onChange={(e) => setFormData({
-                      ...formData, 
+                      ...formData,
                       nutritionalGoals: {
                         ...formData.nutritionalGoals,
                         primaryGoal: e.target.value
@@ -1155,15 +1155,15 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
               <div className="row">
                 <div className="col-md-4 mb-3">
                   <label className="form-label">Proteínas (g)</label>
-                  <input 
-                    type="number" 
-                    className="form-control" 
+                  <input
+                    type="number"
+                    className="form-control"
                     placeholder="150"
                     min="20"
                     max="400"
                     value={formData.dailyMacrosTarget?.protein || 150}
                     onChange={(e) => setFormData({
-                      ...formData, 
+                      ...formData,
                       dailyMacrosTarget: {
                         ...formData.dailyMacrosTarget,
                         protein: parseInt(e.target.value) || 150
@@ -1173,15 +1173,15 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                 </div>
                 <div className="col-md-4 mb-3">
                   <label className="form-label">Carbohidratos (g)</label>
-                  <input 
-                    type="number" 
-                    className="form-control" 
+                  <input
+                    type="number"
+                    className="form-control"
                     placeholder="200"
                     min="20"
                     max="600"
                     value={formData.dailyMacrosTarget?.carbohydrates || 200}
                     onChange={(e) => setFormData({
-                      ...formData, 
+                      ...formData,
                       dailyMacrosTarget: {
                         ...formData.dailyMacrosTarget,
                         carbohydrates: parseInt(e.target.value) || 200
@@ -1191,15 +1191,15 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                 </div>
                 <div className="col-md-4 mb-3">
                   <label className="form-label">Grasas (g)</label>
-                  <input 
-                    type="number" 
-                    className="form-control" 
+                  <input
+                    type="number"
+                    className="form-control"
                     placeholder="67"
                     min="20"
                     max="200"
                     value={formData.dailyMacrosTarget?.fats || 67}
                     onChange={(e) => setFormData({
-                      ...formData, 
+                      ...formData,
                       dailyMacrosTarget: {
                         ...formData.dailyMacrosTarget,
                         fats: parseInt(e.target.value) || 67
@@ -1257,7 +1257,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                 <i className="fas fa-check-circle me-2"></i>
                 Revisión y Creación
               </h6>
-              
+
               <div className="row">
                 <div className="col-md-6">
                   <div className="card mb-3">
@@ -1273,7 +1273,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="col-md-6">
                   <div className="card mb-3">
                     <div className="card-header">
@@ -1303,7 +1303,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="col-md-6">
                   <div className="card mb-3">
                     <div className="card-header">
@@ -1336,7 +1336,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                 </button>
               )}
             </div>
-            
+
             <div>
               {currentStep < steps.length && (
                 <button
@@ -1385,7 +1385,7 @@ const DietPlanCreator: React.FC<DietPlanCreatorProps> = ({
                 </button>
               </>
             )}
-            
+
             <button
               type="button"
               className="btn btn-outline-danger"

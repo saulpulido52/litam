@@ -1,9 +1,9 @@
 import apiService from './api';
-import type { 
-  DietPlan, 
-  CreateDietPlanDto, 
+import type {
+  DietPlan,
+  CreateDietPlanDto,
   GenerateAIDietDto,
-  WeeklyPlanDto 
+  WeeklyPlanDto
 } from '../types/diet';
 import { cacheService, CACHE_KEYS, CACHE_TTL } from './cacheService';
 
@@ -42,7 +42,7 @@ class DietPlansService {
         if (response.status !== 'success' || !response.data) {
           throw new Error(response.message || 'Error fetching diet plans');
         }
-        
+
         // Extraer dietPlans de la estructura anidada y transformar
         const backendPlans = response.data.dietPlans || [];
         return backendPlans.map(plan => this.transformBackendPlan(plan));
@@ -62,7 +62,7 @@ class DietPlansService {
         if (response.status !== 'success' || !response.data) {
           throw new Error(response.message || 'Error fetching patient diet plans');
         }
-        
+
         // Extraer dietPlans de la estructura anidada y transformar
         const backendPlans = response.data.dietPlans || [];
         return backendPlans.map(plan => this.transformBackendPlan(plan));
@@ -82,7 +82,7 @@ class DietPlansService {
         if (response.status !== 'success' || !response.data) {
           throw new Error(response.message || 'Error fetching diet plan');
         }
-        
+
         // Extraer dietPlan de la estructura anidada y transformar
         return this.transformBackendPlan(response.data.dietPlan);
       },
@@ -95,8 +95,8 @@ class DietPlansService {
     try {
       console.log('🔥 === DIETPLANSSERVICE - INICIO CREACIÓN PLAN ===');
       console.log('📨 Datos recibidos del frontend:', dietPlanData);
-      
-             // Analizar específicamente pathologicalRestrictions
+
+      // Analizar específicamente pathologicalRestrictions
       if (dietPlanData.pathologicalRestrictions) {
         console.log('🛡️ pathologicalRestrictions detectado - enviando al backend:', {
           tieneRestricciones: true,
@@ -110,23 +110,23 @@ class DietPlansService {
       } else {
         console.log('🚫 pathologicalRestrictions NO presente en los datos');
       }
-      
+
       console.log('🚀 Enviando solicitud POST a /diet-plans...');
       const response = await apiService.post<{ dietPlan: any }>('/diet-plans', dietPlanData);
-      
+
       console.log('✅ === RESPUESTA DEL BACKEND RECIBIDA ===');
       console.log('📬 Response completa:', response);
-      
+
       if (response.data?.dietPlan) {
         console.log('🔍 Analizando plan creado en backend:');
         console.log('🆔 ID del plan:', response.data.dietPlan.id);
         console.log('📝 Nombre:', response.data.dietPlan.name);
         console.log('👤 Paciente ID:', response.data.dietPlan.patient_id);
-        
+
         // **OPTIMIZACIÓN**: Invalidar caché relacionado al crear nuevo plan
         const nutritionistId = await this.getCurrentNutritionistId();
         this.invalidateRelatedCache(response.data.dietPlan.id, nutritionistId, response.data.dietPlan.patient_id);
-        
+
         // Verificar si se guardaron las restricciones patológicas
         if (response.data.dietPlan.pathological_restrictions) {
           console.log('✅ pathological_restrictions GUARDADO exitosamente en BD:');
@@ -143,27 +143,27 @@ class DietPlansService {
           console.warn('⚠️ pathological_restrictions NO se guardó en la BD (campo null/undefined)');
         }
       }
-      
+
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error creating diet plan');
       }
-      
+
       console.log('🎯 Transformando plan del backend al formato frontend...');
       const transformedPlan = this.transformBackendPlan(response.data.dietPlan);
       console.log('✅ Plan transformado exitosamente:', transformedPlan);
       console.log('🔥 === DIETPLANSSERVICE - FIN CREACIÓN PLAN ===');
-      
+
       return transformedPlan;
     } catch (error) {
       console.error('❌ === ERROR EN DIETPLANSSERVICE ===');
       console.error('🔴 Error creating diet plan:', error);
-      
+
       if (error && typeof error === 'object' && 'response' in error) {
         console.error('🔴 Error response data:', (error as any).response?.data);
         console.error('🔴 Error status:', (error as any).response?.status);
         console.error('🔴 Error headers:', (error as any).response?.headers);
       }
-      
+
       throw error;
     }
   }
@@ -176,7 +176,7 @@ class DietPlansService {
       tieneRestricciones: !!backendPlan.pathological_restrictions,
       restrictionsContent: backendPlan.pathological_restrictions
     });
-    
+
     const transformed = {
       id: backendPlan.id,
       patient_id: backendPlan.patient?.id || backendPlan.patient_id || backendPlan.patient_user_id,
@@ -206,7 +206,7 @@ class DietPlansService {
       nutritional_goals: backendPlan.nutritional_goals,
       flexibility_settings: backendPlan.flexibility_settings
     };
-    
+
     console.log('✅ Plan transformado completamente:', {
       ...transformed,
       datosEstructurales: {
@@ -228,7 +228,7 @@ class DietPlansService {
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error generating diet plan with AI');
       }
-      
+
       return this.transformBackendPlan(response.data.dietPlan);
     } catch (error) {
       console.error('Error generating diet plan with AI:', error);
@@ -267,18 +267,24 @@ class DietPlansService {
     try {
       console.log('🟢 dietPlansService - Actualizando plan con ID:', dietPlanId);
       console.log('🟢 dietPlansService - Datos recibidos:', updateData);
-      
+
       // Si los datos vienen del formulario (CreateDietPlanDto), transformarlos
       const transformedData = this.transformFormDataToUpdateData(updateData);
       console.log('🟢 dietPlansService - Datos transformados para actualización:', transformedData);
-      
+
       const response = await apiService.patch<{ dietPlan: any }>(`/diet-plans/${dietPlanId}`, transformedData);
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error updating diet plan');
       }
-      
+
       console.log('🟢 dietPlansService - Respuesta de actualización:', response);
-      return this.transformBackendPlan(response.data.dietPlan);
+
+      // **OPTIMIZACIÓN**: Invalidar caché después de actualizar
+      const updatedPlan = response.data.dietPlan;
+      const nutritionistId = await this.getCurrentNutritionistId();
+      this.invalidateRelatedCache(updatedPlan.id, nutritionistId, updatedPlan.patient_id);
+
+      return this.transformBackendPlan(updatedPlan);
     } catch (error) {
       console.error('🔴 dietPlansService - Error updating diet plan:', error);
       throw error;
@@ -292,8 +298,14 @@ class DietPlansService {
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error updating diet plan status');
       }
-      
-      return this.transformBackendPlan(response.data.dietPlan);
+
+      const updatedPlan = response.data.dietPlan;
+
+      // **OPTIMIZACIÓN**: Invalidar caché después de cambiar estado
+      const nutritionistId = await this.getCurrentNutritionistId();
+      this.invalidateRelatedCache(updatedPlan.id, nutritionistId, updatedPlan.patient_id);
+
+      return this.transformBackendPlan(updatedPlan);
     } catch (error) {
       console.error('Error updating diet plan status:', error);
       throw error;
@@ -307,6 +319,11 @@ class DietPlansService {
       if (response.status !== 'success') {
         throw new Error(response.message || 'Error deleting diet plan');
       }
+
+      // **OPTIMIZACIÓN**: Invalidar caché después de eliminar
+      const nutritionistId = await this.getCurrentNutritionistId();
+      this.invalidateRelatedCache(dietPlanId, nutritionistId);
+
     } catch (error) {
       console.error('Error deleting diet plan:', error);
       throw error;
@@ -320,7 +337,7 @@ class DietPlansService {
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error adding week to diet plan');
       }
-      
+
       return this.transformBackendPlan(response.data.dietPlan);
     } catch (error) {
       console.error('Error adding week to diet plan:', error);
@@ -338,12 +355,13 @@ class DietPlansService {
     try {
       // Obtener todos los planes del nutriólogo
       const allPlans = await this.getAllDietPlans();
-      
+
       return {
         total: allPlans.length,
         active: allPlans.filter(plan => plan.status === 'active').length,
         completed: allPlans.filter(plan => plan.status === 'completed').length,
-        draft: allPlans.filter(plan => plan.status === 'draft').length};
+        draft: allPlans.filter(plan => plan.status === 'draft').length
+      };
     } catch (error) {
       console.error('Error fetching diet plans stats:', error);
       throw error;
@@ -355,10 +373,10 @@ class DietPlansService {
     const start = new Date(startDate);
     const weekStart = new Date(start);
     weekStart.setDate(start.getDate() + (weekNumber - 1) * 7);
-    
+
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
-    
+
     return {
       startDate: weekStart.toISOString().split('T')[0],
       endDate: weekEnd.toISOString().split('T')[0]
@@ -368,7 +386,7 @@ class DietPlansService {
   // Generar estructura semanal básica
   static generateWeeklyStructure(weekNumber: number, startDate: string, dailyCalories: number): WeeklyPlanDto {
     const weekDates = this.calculateWeekDates(startDate, weekNumber);
-    
+
     return {
       weekNumber,
       startDate: weekDates.startDate,

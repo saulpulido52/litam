@@ -26,7 +26,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useDashboard } from '../hooks/useDashboard';
 import { usePatients } from '../hooks/usePatients';
 import { useNavigate } from 'react-router-dom';
-import RecentActivitiesCard from '../components/RecentActivitiesCard';
+import RecentActivitiesCard from '../components/Dashboard/RecentActivitiesCard';
 import GrowthAlertPanel from '../components/GrowthCharts/GrowthAlertPanel';
 import '../styles/dashboard-modern.css';
 import apiService from '../services/api';

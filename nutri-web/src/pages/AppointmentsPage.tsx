@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Plus, Search, Phone, Edit, Trash2, Settings, CalendarDays, AlertCircle, CheckCircle, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { StatusModal } from '../components/StatusModal';
+import { StatusModal } from '../components/Appointments/StatusModal';
 import { useAppointments } from '../hooks/useAppointments';
 import type { CreateAppointmentForPatientDto, AppointmentType } from '../services/appointmentsService';
 import patientsService from '../services/patientsService';
-import AvailabilityManager from '../components/AvailabilityManager';
+import AvailabilityManager from '../components/Appointments/AvailabilityManager';
 
 interface FormattedAppointment {
   id: string;
@@ -123,8 +123,8 @@ const AppointmentsPage: React.FC = () => {
 
   const filteredAppointments = appointments.filter(appointment => {
     const matchesSearch = appointment.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         appointment.type.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      appointment.type.toLowerCase().includes(searchTerm.toLowerCase());
+
     // Manejar el filtro de estado
     let matchesStatus = true;
     if (statusFilter !== 'all') {
@@ -135,7 +135,7 @@ const AppointmentsPage: React.FC = () => {
         matchesStatus = appointment.status === statusFilter;
       }
     }
-    
+
     const matchesDate = !selectedDate || appointment.date === selectedDate;
     return matchesSearch && matchesStatus && matchesDate;
   });
@@ -176,7 +176,7 @@ const AppointmentsPage: React.FC = () => {
 
   const handleCreateAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.patientId || !formData.date || !formData.time) {
       return; // Error handling is done in the hook
     }
@@ -195,7 +195,7 @@ const AppointmentsPage: React.FC = () => {
       };
 
       await createAppointmentForPatient(appointmentData);
-      
+
       // Cerrar modal y limpiar formulario
       setShowModal(false);
       setFormData({
@@ -271,7 +271,7 @@ const AppointmentsPage: React.FC = () => {
   // Confirmar reagendación
   const handleConfirmReschedule = async () => {
     if (!rescheduleAppointment) return;
-    
+
     try {
       const newDateTime = new Date(`${rescheduleData.date}T${rescheduleData.time}`);
       const endDateTime = new Date(newDateTime.getTime() + (30 * 60000)); // 30 min default
@@ -348,9 +348,9 @@ const AppointmentsPage: React.FC = () => {
         <div className="alert alert-warning alert-dismissible fade show" role="alert">
           <AlertCircle size={18} className="me-2" />
           {error}
-          <button 
-            type="button" 
-            className="btn-close" 
+          <button
+            type="button"
+            className="btn-close"
             onClick={clearError}
             aria-label="Cerrar"
           ></button>
@@ -373,7 +373,7 @@ const AppointmentsPage: React.FC = () => {
           <p className="text-muted">Organiza y gestiona todas tus citas con pacientes</p>
         </div>
         <div className="col-md-4 text-end">
-          <button 
+          <button
             className="btn btn-outline-primary me-2"
             onClick={() => navigate('/calendar')}
             title="Ver calendario visual"
@@ -381,7 +381,7 @@ const AppointmentsPage: React.FC = () => {
             <CalendarDays size={18} className="me-2" />
             Vista Calendario
           </button>
-          <button 
+          <button
             className="btn btn-outline-info me-2"
             onClick={() => setShowAvailability(true)}
             disabled={loading}
@@ -390,7 +390,7 @@ const AppointmentsPage: React.FC = () => {
             <Settings size={18} className="me-2" />
             Disponibilidad
           </button>
-          <button 
+          <button
             className="btn btn-outline-secondary me-2"
             onClick={loadAppointments}
             disabled={loading}
@@ -398,7 +398,7 @@ const AppointmentsPage: React.FC = () => {
           >
             🔄 Recargar
           </button>
-          <button 
+          <button
             className="btn btn-primary"
             onClick={() => setShowModal(true)}
             disabled={loading}
@@ -490,7 +490,7 @@ const AppointmentsPage: React.FC = () => {
           </div>
         </div>
         <div className="col-md-3">
-          <select 
+          <select
             className="form-select"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -511,7 +511,7 @@ const AppointmentsPage: React.FC = () => {
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
             />
-            <button 
+            <button
               className="btn btn-outline-secondary"
               type="button"
               onClick={() => setSelectedDate('')}
@@ -532,7 +532,7 @@ const AppointmentsPage: React.FC = () => {
               Lista de Citas
             </h5>
             <div className="d-flex gap-2">
-              <button 
+              <button
                 className="btn btn-sm btn-outline-secondary"
                 onClick={loadAppointments}
                 disabled={loading}
@@ -553,20 +553,20 @@ const AppointmentsPage: React.FC = () => {
           ) : (
             <>
               {/* Desktop Table */}
-                          <div className="d-none d-md-block">
-              <div className="table-responsive" style={{ overflow: 'visible' }}>
-                <table className="table table-hover mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th style={{ minWidth: '200px' }}>Paciente</th>
-                      <th style={{ minWidth: '120px' }}>Fecha y Hora</th>
-                      <th className="d-lg-table-cell d-none">Tipo</th>
-                      <th style={{ minWidth: '100px' }}>Estado</th>
-                      <th className="d-xl-table-cell d-none">Modalidad</th>
-                      <th className="d-xl-table-cell d-none" style={{ minWidth: '80px' }}>Contacto</th>
-                      <th style={{ minWidth: '180px' }}>Acciones</th>
-                    </tr>
-                  </thead>
+              <div className="d-none d-md-block">
+                <div className="table-responsive" style={{ overflow: 'visible' }}>
+                  <table className="table table-hover mb-0">
+                    <thead className="table-light">
+                      <tr>
+                        <th style={{ minWidth: '200px' }}>Paciente</th>
+                        <th style={{ minWidth: '120px' }}>Fecha y Hora</th>
+                        <th className="d-lg-table-cell d-none">Tipo</th>
+                        <th style={{ minWidth: '100px' }}>Estado</th>
+                        <th className="d-xl-table-cell d-none">Modalidad</th>
+                        <th className="d-xl-table-cell d-none" style={{ minWidth: '80px' }}>Contacto</th>
+                        <th style={{ minWidth: '180px' }}>Acciones</th>
+                      </tr>
+                    </thead>
                     <tbody>
                       {filteredAppointments.map((appointment) => (
                         <tr key={appointment.id}>
@@ -600,7 +600,7 @@ const AppointmentsPage: React.FC = () => {
                             <div className="d-flex align-items-center">
                               <Phone size={12} className="me-1 text-muted" />
                               {appointment.patient_phone ? (
-                                <a 
+                                <a
                                   href={`tel:${appointment.patient_phone}`}
                                   className="text-decoration-none text-primary small"
                                   title="Llamar al paciente"
@@ -615,7 +615,7 @@ const AppointmentsPage: React.FC = () => {
                           </td>
                           <td style={{ minWidth: '180px' }}>
                             <div className="d-flex gap-1 flex-nowrap">
-                              <button 
+                              <button
                                 className="btn btn-outline-primary btn-sm"
                                 onClick={() => handleViewDetails(appointment)}
                                 title="Ver detalles"
@@ -623,7 +623,7 @@ const AppointmentsPage: React.FC = () => {
                               >
                                 <Eye size={12} />
                               </button>
-                              <button 
+                              <button
                                 className="btn btn-outline-secondary btn-sm d-none d-lg-inline-block"
                                 title="Editar cita"
                                 style={{ minWidth: '32px' }}
@@ -631,7 +631,7 @@ const AppointmentsPage: React.FC = () => {
                                 <Edit size={12} />
                               </button>
                               {appointment.status === 'scheduled' && (
-                                <button 
+                                <button
                                   className="btn btn-outline-success btn-sm d-none d-xl-inline-block"
                                   onClick={() => handleStatusChange(appointment.id, 'completed')}
                                   title="Completar cita"
@@ -650,7 +650,7 @@ const AppointmentsPage: React.FC = () => {
                                 <Settings size={12} />
                                 <span className="d-none d-lg-inline ms-1 small">Estado</span>
                               </button>
-                              <button 
+                              <button
                                 className="btn btn-outline-danger btn-sm"
                                 onClick={() => handleDeleteAppointment(appointment.id)}
                                 title="Eliminar cita"
@@ -698,17 +698,17 @@ const AppointmentsPage: React.FC = () => {
                         </div>
                         <div className="col-6">
                           <small className="text-muted d-block">Contacto</small>
-                                                        {appointment.patient_phone ? (
-                                <a 
-                                  href={`tel:${appointment.patient_phone}`}
-                                  className="text-decoration-none text-primary fw-medium"
-                                  title="Llamar al paciente"
-                                >
-                                  {appointment.patient_phone}
-                                </a>
-                              ) : (
-                                <span className="fw-medium text-muted">N/A</span>
-                              )}
+                          {appointment.patient_phone ? (
+                            <a
+                              href={`tel:${appointment.patient_phone}`}
+                              className="text-decoration-none text-primary fw-medium"
+                              title="Llamar al paciente"
+                            >
+                              {appointment.patient_phone}
+                            </a>
+                          ) : (
+                            <span className="fw-medium text-muted">N/A</span>
+                          )}
                         </div>
                         <div className="col-6">
                           <small className="text-muted d-block">Notas</small>
@@ -716,14 +716,14 @@ const AppointmentsPage: React.FC = () => {
                         </div>
                       </div>
                       <div className="d-flex gap-1 flex-wrap">
-                        <button 
+                        <button
                           className="btn btn-sm btn-outline-primary flex-fill"
                           onClick={() => handleViewDetails(appointment)}
                         >
                           <Eye size={14} className="me-1" />
                           Ver
                         </button>
-                        <button 
+                        <button
                           className="btn btn-sm btn-outline-secondary flex-fill"
                           title="Editar cita"
                         >
@@ -740,7 +740,7 @@ const AppointmentsPage: React.FC = () => {
                           <Settings size={14} />
                         </button>
                         {appointment.status === 'scheduled' && (
-                          <button 
+                          <button
                             className="btn btn-sm btn-outline-success flex-fill"
                             onClick={() => handleStatusChange(appointment.id, 'completed')}
                             title="Completar cita"
@@ -749,7 +749,7 @@ const AppointmentsPage: React.FC = () => {
                             Completar
                           </button>
                         )}
-                        <button 
+                        <button
                           className="btn btn-sm btn-outline-danger"
                           onClick={() => handleDeleteAppointment(appointment.id)}
                           title="Eliminar cita"
@@ -768,7 +768,7 @@ const AppointmentsPage: React.FC = () => {
 
       {/* Modal for New Appointment */}
       {showModal && (
-        <div className="modal fade show d-block" tabIndex={-1} style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+        <div className="modal fade show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
@@ -780,9 +780,9 @@ const AppointmentsPage: React.FC = () => {
                   <div className="row">
                     <div className="col-md-6 mb-3">
                       <label className="form-label" htmlFor="appointment-patient">Paciente *</label>
-                      <select 
-                        className="form-select" 
-                        id="appointment-patient" 
+                      <select
+                        className="form-select"
+                        id="appointment-patient"
                         name="patientId"
                         value={formData.patientId}
                         onChange={handleFormChange}
@@ -802,9 +802,9 @@ const AppointmentsPage: React.FC = () => {
                     </div>
                     <div className="col-md-6 mb-3">
                       <label className="form-label" htmlFor="appointment-type">Tipo de cita</label>
-                      <select 
-                        className="form-select" 
-                        id="appointment-type" 
+                      <select
+                        className="form-select"
+                        id="appointment-type"
                         name="type"
                         value={formData.type}
                         onChange={handleFormChange}
@@ -822,9 +822,9 @@ const AppointmentsPage: React.FC = () => {
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label" htmlFor="appointment-date">Fecha *</label>
-                        <input 
-                          type="date" 
-                          className="form-control" 
+                        <input
+                          type="date"
+                          className="form-control"
                           id="appointment-date"
                           name="date"
                           value={formData.date}
@@ -839,9 +839,9 @@ const AppointmentsPage: React.FC = () => {
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label" htmlFor="appointment-time">Hora *</label>
-                        <input 
-                          type="time" 
-                          className="form-control" 
+                        <input
+                          type="time"
+                          className="form-control"
                           id="appointment-time"
                           name="time"
                           value={formData.time}
@@ -856,9 +856,9 @@ const AppointmentsPage: React.FC = () => {
                   <div className="row">
                     <div className="col-md-6 mb-3">
                       <label className="form-label" htmlFor="appointment-duration">Duración (minutos)</label>
-                      <select 
-                        className="form-select" 
-                        id="appointment-duration" 
+                      <select
+                        className="form-select"
+                        id="appointment-duration"
                         name="duration"
                         value={formData.duration}
                         onChange={handleFormChange}
@@ -874,11 +874,11 @@ const AppointmentsPage: React.FC = () => {
                       <label className="form-label" htmlFor="appointment-location">Modalidad</label>
                       <div>
                         <div className="form-check form-check-inline">
-                          <input 
-                            className="form-check-input" 
-                            type="radio" 
-                            name="location" 
-                            id="presencial" 
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="location"
+                            id="presencial"
                             value="presencial"
                             checked={formData.location === 'presencial'}
                             onChange={handleFormChange}
@@ -889,11 +889,11 @@ const AppointmentsPage: React.FC = () => {
                           </label>
                         </div>
                         <div className="form-check form-check-inline">
-                          <input 
-                            className="form-check-input" 
-                            type="radio" 
-                            name="location" 
-                            id="virtual" 
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="location"
+                            id="virtual"
                             value="virtual"
                             checked={formData.location === 'virtual'}
                             onChange={handleFormChange}
@@ -908,13 +908,13 @@ const AppointmentsPage: React.FC = () => {
                   </div>
                   <div className="mb-3">
                     <label className="form-label" htmlFor="appointment-notes">Notas adicionales</label>
-                    <textarea 
-                      className="form-control" 
+                    <textarea
+                      className="form-control"
                       id="appointment-notes"
                       name="notes"
                       value={formData.notes}
                       onChange={handleFormChange}
-                      rows={3} 
+                      rows={3}
                       placeholder="Observaciones sobre la cita..."
                       autoComplete="off"
                       aria-label="Notas adicionales de la cita"
@@ -923,16 +923,16 @@ const AppointmentsPage: React.FC = () => {
                 </form>
               </div>
               <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
+                <button
+                  type="button"
+                  className="btn btn-secondary"
                   onClick={() => setShowModal(false)}
                   disabled={loading}
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="btn btn-primary"
                   onClick={isEditMode ? handleUpdateAppointment : handleCreateAppointment}
                   disabled={loading || !formData.patientId || !formData.date || !formData.time}
@@ -954,7 +954,7 @@ const AppointmentsPage: React.FC = () => {
 
       {/* Modal for Appointment Details */}
       {showDetailModal && selectedAppointment && (
-        <div className="modal fade show d-block" tabIndex={-1} style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+        <div className="modal fade show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
@@ -969,16 +969,16 @@ const AppointmentsPage: React.FC = () => {
                       <strong>Nombre:</strong> {selectedAppointment.patient_name}<br />
                       <strong>Email:</strong> {selectedAppointment.patient_email}<br />
                       <strong>Teléfono:</strong> {selectedAppointment.patient_phone ? (
-                  <a 
-                    href={`tel:${selectedAppointment.patient_phone}`}
-                    className="text-decoration-none text-primary ms-1"
-                    title="Llamar al paciente"
-                  >
-                    {selectedAppointment.patient_phone}
-                  </a>
-                ) : (
-                  <span className="text-muted ms-1">N/A</span>
-                )}
+                        <a
+                          href={`tel:${selectedAppointment.patient_phone}`}
+                          className="text-decoration-none text-primary ms-1"
+                          title="Llamar al paciente"
+                        >
+                          {selectedAppointment.patient_phone}
+                        </a>
+                      ) : (
+                        <span className="text-muted ms-1">N/A</span>
+                      )}
                     </div>
                   </div>
                   <div className="col-md-6">
@@ -1004,7 +1004,7 @@ const AppointmentsPage: React.FC = () => {
                     <div className="d-flex gap-2 flex-wrap">
                       {selectedAppointment.status === 'scheduled' && (
                         <>
-                          <button 
+                          <button
                             className="btn btn-success btn-sm"
                             onClick={() => {
                               handleStatusChange(selectedAppointment.id, 'completed');
@@ -1014,7 +1014,7 @@ const AppointmentsPage: React.FC = () => {
                             <CheckCircle size={16} className="me-1" />
                             Marcar Completada
                           </button>
-                          <button 
+                          <button
                             className="btn btn-warning btn-sm"
                             onClick={() => {
                               handleStatusChange(selectedAppointment.id, 'no_show');
@@ -1026,7 +1026,7 @@ const AppointmentsPage: React.FC = () => {
                           </button>
                         </>
                       )}
-                      <button 
+                      <button
                         className="btn btn-danger btn-sm"
                         onClick={() => {
                           handleDeleteAppointment(selectedAppointment.id);
@@ -1036,7 +1036,7 @@ const AppointmentsPage: React.FC = () => {
                         <Trash2 size={16} className="me-1" />
                         Eliminar Cita
                       </button>
-                      <button 
+                      <button
                         className="btn btn-primary btn-sm"
                         onClick={() => {
                           handleEditAppointment(selectedAppointment);
@@ -1062,7 +1062,7 @@ const AppointmentsPage: React.FC = () => {
 
       {/* AvailabilityManager Modal */}
       {showAvailability && (
-        <div className="modal fade show d-block" tabIndex={-1} style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+        <div className="modal fade show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-xl">
             <div className="modal-content">
               <div className="modal-header">
@@ -1073,9 +1073,9 @@ const AppointmentsPage: React.FC = () => {
                 <AvailabilityManager />
               </div>
               <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
+                <button
+                  type="button"
+                  className="btn btn-secondary"
                   onClick={() => setShowAvailability(false)}
                 >
                   Cerrar
@@ -1106,8 +1106,8 @@ const AppointmentsPage: React.FC = () => {
                   <CalendarDays size={20} className="me-2" />
                   Reagendar Cita
                 </h5>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="btn-close"
                   onClick={() => {
                     setShowRescheduleModal(false);
@@ -1120,7 +1120,7 @@ const AppointmentsPage: React.FC = () => {
                   <strong>Paciente:</strong> {rescheduleAppointment.patient_name}<br />
                   <strong>Cita actual:</strong> {rescheduleAppointment.date} a las {rescheduleAppointment.time}
                 </div>
-                
+
                 <form>
                   <div className="row">
                     <div className="col-md-6">
@@ -1158,8 +1158,8 @@ const AppointmentsPage: React.FC = () => {
                 </form>
               </div>
               <div className="modal-footer">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="btn btn-secondary"
                   onClick={() => {
                     setShowRescheduleModal(false);
@@ -1168,8 +1168,8 @@ const AppointmentsPage: React.FC = () => {
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="btn btn-primary"
                   onClick={handleConfirmReschedule}
                   disabled={!rescheduleData.date || !rescheduleData.time}

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Row, Col, Tab, Nav, Spinner, Alert } from 'react-bootstrap';
 import { User, MapPin, Clock, Lock, Shield, FileText } from 'lucide-react';
-import type { ProfileData } from '../services/profileService';
-import profileService from '../services/profileService';
+import type { ProfileData } from '../../services/profileService';
+import profileService from '../../services/profileService';
 
 interface EditProfileModalProps {
     show: boolean;

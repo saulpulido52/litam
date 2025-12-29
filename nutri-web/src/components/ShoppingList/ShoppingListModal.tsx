@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Modal, Button, Tab, Tabs, Row, Col, Badge, Alert, Form} from 'react-bootstrap';
+import { Modal, Button, Tab, Tabs, Row, Col, Badge, Alert, Form } from 'react-bootstrap';
 import { ShoppingCart, Download, Printer } from 'lucide-react';
 import type { WeeklyPlan } from '../../types/diet';
 import type { WeeklyShoppingList, ShoppingListItem } from '../../types/recipe';
@@ -29,20 +29,21 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
     const ingredientMap = new Map<string, ShoppingListItem>();
 
     // Procesar ALIMENTOS INDIVIDUALES del plan semanal
-    (weeklyPlan.meals as any[]).forEach((meal: any) => {
+    const meals = weeklyPlan.meals || [];
+    (meals as any[]).forEach((meal: any) => {
       console.log(`🍽️ Procesando comida: ${meal.day} - ${meal.meal_type}`);
-      
+
       // Procesar alimentos individuales
       if (meal.foods && meal.foods.length > 0) {
         console.log(`🍎 Encontrados ${meal.foods.length} alimentos en esta comida`);
-        
+
         meal.foods.forEach((mealFood: any) => {
           const foodName = mealFood.food_name || 'Alimento';
           const quantity = mealFood.quantity_grams || 100;
-          
+
           // Determinar categoría basada en el nombre del alimento
           let category = INGREDIENT_CATEGORIES.find(c => c.id === 'others');
-          
+
           const foodNameLower = foodName.toLowerCase();
           if (foodNameLower.includes('pollo') || foodNameLower.includes('carne') || foodNameLower.includes('pescado') || foodNameLower.includes('salmón') || foodNameLower.includes('huevo')) {
             category = INGREDIENT_CATEGORIES.find(c => c.id === 'proteins');
@@ -61,11 +62,11 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
           } else if (foodNameLower.includes('almendra') || foodNameLower.includes('nuez')) {
             category = INGREDIENT_CATEGORIES.find(c => c.id === 'others');
           }
-          
+
           if (!category) category = INGREDIENT_CATEGORIES[0];
 
           const key = `${foodName}-g`;
-          
+
           if (ingredientMap.has(key)) {
             const existing = ingredientMap.get(key)!;
             existing.total_quantity += quantity;
@@ -87,7 +88,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
               recipes_using: [`${meal.day} ${meal.meal_type}`]
             });
           }
-          
+
           console.log(`✅ Agregado a lista: ${foodName} - ${quantity}g`);
         });
       }
@@ -95,16 +96,16 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
       // Procesar RECETAS (con sus ingredientes si los tienen)
       if (meal.recipes && meal.recipes.length > 0) {
         console.log(`🍳 Encontradas ${meal.recipes.length} recetas en esta comida`);
-        
+
         meal.recipes.forEach((mealRecipe: any) => {
           // Si la receta tiene ingredientes definidos, usarlos
           if (mealRecipe.recipe_data && mealRecipe.recipe_data.ingredients && mealRecipe.recipe_data.ingredients.length > 0) {
             console.log(`📝 Receta "${mealRecipe.recipe_name}" tiene ${mealRecipe.recipe_data.ingredients.length} ingredientes definidos`);
-            
+
             mealRecipe.recipe_data.ingredients.forEach((ingredient: any) => {
               const adjustedQuantity = (ingredient.shopping_quantity || ingredient.quantity || 100) * (mealRecipe.servings || 1);
               const key = `${ingredient.food_name || ingredient.ingredient_name}-${ingredient.shopping_unit?.abbreviation || ingredient.unit || 'g'}`;
-              
+
               if (ingredientMap.has(key)) {
                 const existing = ingredientMap.get(key)!;
                 existing.total_quantity += adjustedQuantity;
@@ -129,9 +130,9 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
           } else {
             // Si la receta no tiene ingredientes definidos, crear un item genérico
             console.log(`⚠️ Receta "${mealRecipe.recipe_name}" no tiene ingredientes definidos - creando item genérico`);
-            
+
             const key = `Receta: ${mealRecipe.recipe_name}-porción`;
-            
+
             if (ingredientMap.has(key)) {
               const existing = ingredientMap.get(key)!;
               existing.total_quantity += (mealRecipe.servings || 1);
@@ -177,7 +178,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
     }
 
     const groups = new Map<string, ShoppingListItem[]>();
-    
+
     shoppingList.items.forEach(item => {
       const categoryId = item.category.id;
       if (!groups.has(categoryId)) {
@@ -241,10 +242,10 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
           </div>
           
           ${INGREDIENT_CATEGORIES.map(category => {
-            const categoryItems = shoppingList.items.filter(item => item.category.id === category.id);
-            if (categoryItems.length === 0) return '';
-            
-            return `
+      const categoryItems = shoppingList.items.filter(item => item.category.id === category.id);
+      if (categoryItems.length === 0) return '';
+
+      return `
               <div class="category">
                 <div class="category-title">${category.icon} ${category.display_name}</div>
                 ${categoryItems.map(item => `
@@ -257,7 +258,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
                 `).join('')}
               </div>
             `;
-          }).join('')}
+    }).join('')}
           
           <div style="margin-top: 30px; text-align: center; color: #666;">
             <small>Lista generada automáticamente por Litam</small>
@@ -282,7 +283,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
         </Modal.Header>
         <Modal.Body>
           <Alert variant="info">
-            No hay datos suficientes para generar una lista de compras. 
+            No hay datos suficientes para generar una lista de compras.
             Asegúrate de que el plan semanal tenga recetas con ingredientes definidos.
           </Alert>
         </Modal.Body>
@@ -346,9 +347,8 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
                         {categoryItems.map((item, index) => (
                           <div
                             key={index}
-                            className={`p-3 border-bottom d-flex align-items-center ${
-                              checkedItems.has(item.ingredient_name) ? 'bg-light text-decoration-line-through' : ''
-                            }`}
+                            className={`p-3 border-bottom d-flex align-items-center ${checkedItems.has(item.ingredient_name) ? 'bg-light text-decoration-line-through' : ''
+                              }`}
                           >
                             <Form.Check
                               type="checkbox"
@@ -386,9 +386,8 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
                   {groupedItems.map((item, index) => (
                     <div
                       key={index}
-                      className={`p-3 border-bottom d-flex align-items-center ${
-                        checkedItems.has(item.ingredient_name) ? 'bg-light text-decoration-line-through' : ''
-                      }`}
+                      className={`p-3 border-bottom d-flex align-items-center ${checkedItems.has(item.ingredient_name) ? 'bg-light text-decoration-line-through' : ''
+                        }`}
                     >
                       <Form.Check
                         type="checkbox"

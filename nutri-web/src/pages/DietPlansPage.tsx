@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  Search, 
-  Calendar, 
-  Target, 
-  Clock,
+import {
+  Plus,
+  Search,
+  Calendar,
+  Target,
   Edit,
   Trash2,
   Download,
@@ -20,9 +19,9 @@ import type { DietPlan, CreateDietPlanDto, PlanType } from '../types/diet';
 import { useDietPlans } from '../hooks/useDietPlans';
 import { usePatients } from '../hooks/usePatients';
 import { clinicalRecordsService } from '../services/clinicalRecordsService';
-import { Button, Modal, Alert} from 'react-bootstrap';
-import DietPlanViewer from '../components/DietPlanViewer';
-import NutritionalCardSimple from '../components/NutritionalCardSimple';
+import { Button, Modal, Alert } from 'react-bootstrap';
+import DietPlanViewer from '../components/DietPlans/DietPlanViewer';
+import NutritionalCardSimple from '../components/DietPlans/NutritionalCardSimple';
 import MealPlanner from '../components/MealPlanner';
 import DietPlanService from '../services/dietPlanService';
 
@@ -56,12 +55,13 @@ const DietPlansPage: React.FC = () => {
     clearError,
     setError
   } = useDietPlans();
-  
+
   const { patients } = usePatients();
   const [allClinicalRecords, setAllClinicalRecords] = useState<any[]>([]);
-  
+
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [planTypeFilter, setPlanTypeFilter] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<'plans' | 'recipes' | 'templates'>('plans');
@@ -89,24 +89,24 @@ const DietPlansPage: React.FC = () => {
     try {
       console.log('🔄 Cargando expedientes clínicos para todos los pacientes...');
       const allRecords: any[] = [];
-      
+
       // Cargar expedientes para todos los pacientes secuencialmente
       for (const patient of patients) {
         try {
           console.log(`📋 Cargando expedientes para paciente: ${patient.first_name} ${patient.last_name} (${patient.email})`);
           const patientRecords = await clinicalRecordsService.getPatientRecords(patient.id);
           console.log(`✅ Expedientes encontrados para ${patient.first_name}: ${patientRecords.length}`);
-          
+
           // Agregar los expedientes a la lista acumulativa
           allRecords.push(...patientRecords);
         } catch (error) {
           console.warn(`⚠️ Error cargando expedientes para paciente ${patient.first_name}:`, error);
         }
       }
-      
+
       console.log(`📊 Total de expedientes clínicos cargados: ${allRecords.length}`);
       setAllClinicalRecords(allRecords);
-      
+
       // Debug: Mostrar información detallada de los expedientes cargados
       allRecords.forEach((record, index) => {
         console.log(`📋 Expediente ${index + 1}:`, {
@@ -117,7 +117,7 @@ const DietPlansPage: React.FC = () => {
           allergies: record.pathological_antecedents?.allergies
         });
       });
-      
+
     } catch (error) {
       console.error('❌ Error loading clinical records:', error);
     }
@@ -157,18 +157,18 @@ const DietPlansPage: React.FC = () => {
 
   const filteredPlans = safeDietPlans.filter(plan => {
     const searchTermLower = searchTerm.toLowerCase();
-    
+
     // Defensas robustas para evitar errores de toLowerCase() sobre undefined
     const planName = (plan.name ?? '').toLowerCase();
     const patientFirstName = (plan.patient?.first_name ?? '').toLowerCase();
     const patientLastName = (plan.patient?.last_name ?? '').toLowerCase();
     const planDescription = (plan.description ?? '').toLowerCase();
-    
+
     const matchesSearch = planName.includes(searchTermLower) ||
-                         patientFirstName.includes(searchTermLower) ||
-                         patientLastName.includes(searchTermLower) ||
-                         planDescription.includes(searchTermLower);
-    
+      patientFirstName.includes(searchTermLower) ||
+      patientLastName.includes(searchTermLower) ||
+      planDescription.includes(searchTermLower);
+
     const matchesStatus = statusFilter === 'all' || plan.status === statusFilter;
     const matchesType = planTypeFilter === 'all' || plan.plan_type === planTypeFilter;
     return matchesSearch && matchesStatus && matchesType;
@@ -178,7 +178,7 @@ const DietPlansPage: React.FC = () => {
   //   const searchTermLower = searchTerm.toLowerCase();
   //   const recipeName = (recipe.name ?? '').toLowerCase();
   //   const recipeCategory = (recipe.category ?? '').toLowerCase();
-    
+
   //   return recipeName.includes(searchTermLower) ||
   //          recipeCategory.includes(searchTermLower);
   // });
@@ -193,10 +193,23 @@ const DietPlansPage: React.FC = () => {
       completed: { class: 'bg-primary text-white', text: 'Completado', icon: '🏁' },
       cancelled: { class: 'bg-danger text-white', text: 'Cancelado', icon: '❌' }
     };
-    
+
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
+
+    // Modern badge with soft background
+    // Adjust specific colors manually for better contrast if needed
+    let finalClass = config.class;
+
+    // Map to soft colors
+    if (status === 'active') finalClass = 'bg-success bg-opacity-10 text-success';
+    else if (status === 'draft') finalClass = 'bg-secondary bg-opacity-10 text-secondary';
+    else if (status === 'completed') finalClass = 'bg-info bg-opacity-10 text-info';
+    else if (status === 'pending_review') finalClass = 'bg-warning bg-opacity-10 text-warning';
+    else if (status === 'archived') finalClass = 'bg-dark bg-opacity-10 text-dark';
+    else if (status === 'cancelled') finalClass = 'bg-danger bg-opacity-10 text-danger';
+
     return (
-      <span className={`badge ${config.class}`} title={`Estado: ${config.text}`}>
+      <span className={`badge ${finalClass} px-3 py-2 rounded-pill fw-medium border border-0`} title={`Estado: ${config.text}`}>
         <span className="me-1">{config.icon}</span>
         {config.text}
       </span>
@@ -211,9 +224,18 @@ const DietPlansPage: React.FC = () => {
       custom: { class: 'bg-warning', text: 'Personalizado' },
       flexible: { class: 'bg-purple', text: 'Flexible' }
     };
-    
+
     const config = typeConfig[planType || 'weekly'] || typeConfig.weekly;
-    return <span className={`badge ${config.class}`}>{config.text}</span>;
+
+    // Modern soft badges
+    let finalClass = config.class;
+    if (finalClass.includes('bg-primary')) finalClass = 'bg-primary bg-opacity-10 text-primary';
+    else if (finalClass.includes('bg-success')) finalClass = 'bg-success bg-opacity-10 text-success';
+    else if (finalClass.includes('bg-info')) finalClass = 'bg-info bg-opacity-10 text-info';
+    else if (finalClass.includes('bg-warning')) finalClass = 'bg-warning bg-opacity-10 text-warning';
+    else if (finalClass.includes('bg-purple')) finalClass = 'bg-purple bg-opacity-10 text-purple';
+
+    return <span className={`badge ${finalClass} px-3 py-2 rounded-pill border border-0 fw-normal`}>{config.text}</span>;
   };
 
   const calculatePlanDuration = (startDate?: string, endDate?: string) => {
@@ -233,15 +255,6 @@ const DietPlansPage: React.FC = () => {
   const formatCalories = (calories?: number) => {
     if (!calories || calories === 0) return 'N/A';
     return `${calories} kcal`;
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    try {
-      return new Date(dateString).toLocaleDateString('es-ES');
-    } catch (error) {
-      return 'N/A';
-    }
   };
 
   const getPatientName = (plan: DietPlan) => {
@@ -278,20 +291,27 @@ const DietPlansPage: React.FC = () => {
 
   const handleUpdateDietPlan = async (formData: CreateDietPlanDto) => {
     if (!editingPlan) return;
-    
+
     try {
       const validation = validateDietPlanData(formData);
       if (!validation.isValid) {
         setError('Errores de validación:\n' + validation.errors.join('\n'));
-        return;
       }
 
+      console.log('💾 Guardando plan editado:', formData);
+
       await updateDietPlan(editingPlan.id, formData);
+
+      // Recargar datos para asegurar consistencia
+      await fetchAllDietPlans();
+      await refreshStats();
+
       setEditingPlan(null);
       setShowPlanModal(false);
       clearError();
     } catch (error: any) {
       setError(error.message || 'Error al actualizar el plan de dieta');
+    } finally {
     }
   };
 
@@ -299,26 +319,27 @@ const DietPlansPage: React.FC = () => {
     // Registrar llamada para debugging
     console.log('🗑️ handleDeletePlan llamado con planId:', planId);
     console.trace('Origen de la llamada de eliminación');
-    
+
     if (event) {
       event.preventDefault();
       event.stopPropagation();
     }
-    
+
     if (window.confirm('¿Estás seguro de que quieres eliminar este plan?')) {
       try {
+
         console.log('🔄 Eliminando plan:', planId);
         await deleteDietPlan(planId);
-        
+
         // Recargar todos los datos relacionados
         await Promise.all([
           fetchAllDietPlans(),
           refreshStats(),
           patients.length > 0 ? loadAllClinicalRecords() : Promise.resolve()
         ]);
-        
+
         console.log('✅ Plan eliminado exitosamente:', planId);
-        
+
         // Limpiar cualquier plan seleccionado si era el eliminado
         if (selectedPlan?.id === planId) {
           setSelectedPlan(null);
@@ -329,12 +350,13 @@ const DietPlansPage: React.FC = () => {
         if (selectedPlanForMeals?.id === planId) {
           setSelectedPlanForMeals(null);
         }
-        
+
         clearError();
         console.log('✅ Plan eliminado y datos recargados exitosamente');
       } catch (error: any) {
         console.error('❌ Error eliminando plan:', error);
         setError(error.message || 'Error al eliminar el plan');
+      } finally {
       }
     }
   };
@@ -343,18 +365,18 @@ const DietPlansPage: React.FC = () => {
     try {
       setPdfLoading(true);
       clearError();
-      
+
       console.log('📄 Descargando PDF del planificador de comidas para plan:', plan.id);
-      
+
       // Usar el servicio para descargar el PDF
       const pdfBlob = await DietPlanService.downloadMealPlannerPDF(plan.id);
-      
+
       // Crear URL temporal para el blob
       const pdfUrl = window.URL.createObjectURL(pdfBlob);
-      
+
       // Nombre del archivo
       const filename = `planificador-comidas_${plan.name.replace(/\s+/g, '-')}_${new Date().toISOString().split('T')[0]}.pdf`;
-      
+
       // Crear enlace de descarga
       const link = document.createElement('a');
       link.href = pdfUrl;
@@ -363,14 +385,14 @@ const DietPlansPage: React.FC = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Limpiar URL temporal después de un tiempo
       setTimeout(() => {
         window.URL.revokeObjectURL(pdfUrl);
       }, 10000);
-      
+
       console.log('✅ PDF del planificador de comidas descargado exitosamente');
-      
+
     } catch (error: any) {
       console.error('❌ Error descargando PDF:', error);
       setError(error.message || 'Error al descargar el PDF del planificador de comidas');
@@ -397,30 +419,30 @@ const DietPlansPage: React.FC = () => {
   const handleSaveMealPlan = async (weeklyPlans: any[]) => {
     try {
       console.log('🍽️ Guardando plan de comidas:', weeklyPlans);
-      
+
       if (selectedPlanForMeals) {
         // Actualizar el plan en el backend
         const updatedPlan = await updateDietPlan(selectedPlanForMeals.id, {
           weeklyPlans: weeklyPlans
         });
-        
+
         console.log('✅ Plan actualizado en backend:', updatedPlan);
-        
+
         // Actualizar el estado local del plan seleccionado
         if (selectedPlan) {
           setSelectedPlan(updatedPlan);
         }
-        
+
         // Cerrar el modal y limpiar
         setShowMealPlanner(false);
         setSelectedPlanForMeals(null);
-        
+
         // Mostrar mensaje de éxito
         alert('✅ Plan de comidas guardado exitosamente. Los cambios se han aplicado al plan nutricional.');
-        
+
         // Recargar los datos para asegurar sincronización
         await fetchAllDietPlans();
-        
+
       }
     } catch (error: any) {
       console.error('❌ Error guardando plan de comidas:', error);
@@ -485,7 +507,7 @@ const DietPlansPage: React.FC = () => {
               <span className="d-none d-sm-inline">Nuevo Plan</span>
               <span className="d-sm-none">Nuevo</span>
             </button>
-            
+
             <Button
               variant="outline-secondary"
               onClick={() => setShowFilters(!showFilters)}
@@ -505,7 +527,7 @@ const DietPlansPage: React.FC = () => {
             <div className="d-flex align-items-start">
               <i className="fas fa-info-circle me-2 mt-1"></i>
               <div>
-                <strong>¡Nuevas funcionalidades implementadas!</strong> 
+                <strong>¡Nuevas funcionalidades implementadas!</strong>
                 <span className="d-none d-md-inline"> Gestión completa de recetas, plantillas predefinidas y actualización en tiempo real.</span>
                 <span className="d-md-none"> Recetas y plantillas disponibles.</span>
                 <span className="d-none d-lg-inline"> La generación automática con IA estará disponible próximamente.</span>
@@ -521,71 +543,90 @@ const DietPlansPage: React.FC = () => {
           <div className="d-flex align-items-start">
             <i className="fas fa-exclamation-triangle me-2 mt-1"></i>
             <div className="flex-grow-1">
-          <strong>Error:</strong> {error}
+              <strong>Error:</strong> {error}
             </div>
-          <button type="button" className="btn-close" onClick={clearError}></button>
+            <button type="button" className="btn-close" onClick={clearError}></button>
           </div>
         </div>
       )}
 
       {/* Stats Cards */}
-      <div className="row mb-4">
-        <div className="col-6 col-md-3 mb-3">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="bg-primary bg-opacity-10 rounded-3 p-2 p-md-3 me-3">
-                  <FileText className="text-primary" size={20} />
+      <div className="row mb-5 g-4">
+        <div className="col-12 col-md-6 col-lg-3">
+          <div className="card h-100 border-0 shadow-sm overflow-hidden" style={{ borderRadius: '16px' }}>
+            <div className="card-body p-4 position-relative">
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <div className="p-3 bg-primary bg-opacity-10 rounded-4">
+                  <FileText className="text-primary" size={24} />
                 </div>
-                <div>
-                  <h5 className="mb-0">{stats.total}</h5>
-                  <small className="text-muted">Total planes</small>
-                </div>
+                <span className="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">Total</span>
+              </div>
+              <div>
+                <h2 className="display-6 fw-bold mb-1 text-dark">{stats.total}</h2>
+                <p className="text-muted mb-0 small fw-medium">Planes creados</p>
+              </div>
+              <div className="position-absolute bottom-0 end-0 p-3 opacity-10">
+                <FileText size={80} className="text-primary" />
               </div>
             </div>
           </div>
         </div>
-        <div className="col-6 col-md-3 mb-3">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="bg-success bg-opacity-10 rounded-3 p-2 p-md-3 me-3">
-                  <Target className="text-success" size={20} />
+
+        <div className="col-12 col-md-6 col-lg-3">
+          <div className="card h-100 border-0 shadow-sm overflow-hidden" style={{ borderRadius: '16px' }}>
+            <div className="card-body p-4 position-relative">
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <div className="p-3 bg-success bg-opacity-10 rounded-4">
+                  <Target className="text-success" size={24} />
                 </div>
-                <div>
-                  <h5 className="mb-0">{stats.active}</h5>
-                  <small className="text-muted">Activos</small>
-                </div>
+                <span className="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">Activos</span>
+              </div>
+              <div>
+                <h2 className="display-6 fw-bold mb-1 text-dark">{stats.active}</h2>
+                <p className="text-muted mb-0 small fw-medium">Planes en curso</p>
+              </div>
+              <div className="position-absolute bottom-0 end-0 p-3 opacity-10">
+                <Target size={80} className="text-success" />
               </div>
             </div>
           </div>
         </div>
-        <div className="col-6 col-md-3 mb-3">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="bg-info bg-opacity-10 rounded-3 p-2 p-md-3 me-3">
-                  <Calendar className="text-info" size={20} />
+
+        <div className="col-12 col-md-6 col-lg-3">
+          <div className="card h-100 border-0 shadow-sm overflow-hidden" style={{ borderRadius: '16px' }}>
+            <div className="card-body p-4 position-relative">
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <div className="p-3 bg-info bg-opacity-10 rounded-4">
+                  <Calendar className="text-info" size={24} />
                 </div>
-                <div>
-                  <h5 className="mb-0">{stats.completed}</h5>
-                  <small className="text-muted">Completados</small>
-                </div>
+                <span className="badge bg-info bg-opacity-10 text-info px-3 py-2 rounded-pill">Completados</span>
+              </div>
+              <div>
+                <h2 className="display-6 fw-bold mb-1 text-dark">{stats.completed}</h2>
+                <p className="text-muted mb-0 small fw-medium">Planes finalizados</p>
+              </div>
+              <div className="position-absolute bottom-0 end-0 p-3 opacity-10">
+                <Calendar size={80} className="text-info" />
               </div>
             </div>
           </div>
         </div>
-        <div className="col-6 col-md-3 mb-3">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="bg-warning bg-opacity-10 rounded-3 p-2 p-md-3 me-3">
-                  <Clock className="text-warning" size={20} />
+
+        <div className="col-12 col-md-6 col-lg-3">
+          <div className="card h-100 border-0 shadow-sm overflow-hidden" style={{ borderRadius: '16px' }}>
+            <div className="card-body p-4 position-relative">
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <div className="p-3 bg-warning bg-opacity-10 rounded-4">
+                  <Utensils className="text-warning" size={24} />
                 </div>
-                <div>
-                  <h5 className="mb-0">{recipes.length}</h5>
-                  <small className="text-muted">Recetas</small>
-                </div>
+                <span className="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill">Recetas</span>
+              </div>
+              <div>
+                <h2 className="display-6 fw-bold mb-1 text-dark">{recipes.length}</h2>
+                <p className="text-muted mb-0 small fw-medium">Biblioteca</p>
+              </div>
+              <div className="position-absolute bottom-0 end-0 p-3 opacity-10">
+                <Utensils size={80} className="text-warning" />
               </div>
             </div>
           </div>
@@ -593,83 +634,86 @@ const DietPlansPage: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <ul className="nav nav-tabs mb-4 flex-nowrap overflow-auto">
-        <li className="nav-item flex-shrink-0">
-          <button 
-            className={`nav-link ${activeTab === 'plans' ? 'active' : ''}`}
+      <div className="d-flex justify-content-center mb-4">
+        <div className="bg-white p-1 rounded-pill shadow-sm d-inline-flex">
+          <button
+            className={`btn rounded-pill px-4 py-2 fw-medium transition-all ${activeTab === 'plans' ? 'btn-primary shadow-sm' : 'btn-light bg-transparent text-muted'}`}
             onClick={() => setActiveTab('plans')}
+            style={{ minWidth: '120px' }}
           >
-            <FileText size={16} className="me-1" />
-            <span className="d-none d-sm-inline">Planes</span>
-            <span className="d-sm-none">Planes</span>
+            <FileText size={18} className="me-2 mb-1" />
+            Planes
           </button>
-        </li>
-        <li className="nav-item flex-shrink-0">
-          <button 
-            className={`nav-link ${activeTab === 'recipes' ? 'active' : ''}`}
+          <button
+            className={`btn rounded-pill px-4 py-2 fw-medium transition-all ${activeTab === 'recipes' ? 'btn-primary shadow-sm' : 'btn-light bg-transparent text-muted'}`}
             onClick={() => setActiveTab('recipes')}
+            style={{ minWidth: '120px' }}
           >
-            <Target size={16} className="me-1" />
-            <span className="d-none d-sm-inline">Recetas</span>
-            <span className="d-sm-none">Recetas</span>
+            <Target size={18} className="me-2 mb-1" />
+            Recetas
           </button>
-        </li>
-        <li className="nav-item flex-shrink-0">
-          <button 
-            className={`nav-link ${activeTab === 'templates' ? 'active' : ''}`}
+          <button
+            className={`btn rounded-pill px-4 py-2 fw-medium transition-all ${activeTab === 'templates' ? 'btn-primary shadow-sm' : 'btn-light bg-transparent text-muted'}`}
             onClick={() => setActiveTab('templates')}
+            style={{ minWidth: '120px' }}
           >
-            <Copy size={16} className="me-1" />
-            <span className="d-none d-sm-inline">Plantillas</span>
-            <span className="d-sm-none">Plantillas</span>
+            <Copy size={18} className="me-2 mb-1" />
+            Plantillas
           </button>
-        </li>
-      </ul>
+        </div>
+      </div>
 
       {/* Search and Filters */}
-      <div className="row mb-4">
-        <div className="col-12 col-md-6 mb-3">
-          <div className="input-group">
-            <span className="input-group-text">
-              <Search size={16} />
+      <div className="row mb-4 align-items-center g-3">
+        <div className="col-12 col-md-6 mb-2 mb-md-0">
+          <div className="input-group shadow-sm rounded-4 overflow-hidden border-0">
+            <span className="input-group-text bg-white border-0 ps-3">
+              <Search size={18} className="text-muted" />
             </span>
             <input
               type="text"
-              className="form-control"
-              placeholder={activeTab === 'plans' ? "Buscar planes..." : "Buscar recetas..."}
+              className="form-control border-0 py-3 bg-white"
+              placeholder={activeTab === 'plans' ? "Buscar por nombre, paciente o descripción..." : "Buscar recetas..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ boxShadow: 'none' }}
             />
           </div>
         </div>
         {activeTab === 'plans' && (
           <>
-            <div className="col-6 col-md-3 mb-3">
-            <select 
-              className="form-select"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">Todos los estados</option>
-              <option value="active">Activos</option>
-              <option value="completed">Completados</option>
-              <option value="draft">Borradores</option>
-              <option value="cancelled">Cancelados</option>
-            </select>
-          </div>
-            <div className="col-6 col-md-3 mb-3">
-              <select 
-                className="form-select"
-                value={planTypeFilter}
-                onChange={(e) => setPlanTypeFilter(e.target.value)}
-              >
-                <option value="all">Todos los tipos</option>
-                <option value="daily">Diarios</option>
-                <option value="weekly">Semanales</option>
-                <option value="monthly">Mensuales</option>
-                <option value="custom">Personalizados</option>
-                <option value="flexible">Flexibles</option>
-              </select>
+            <div className="col-6 col-md-3">
+              <div className="shadow-sm rounded-4 overflow-hidden bg-white">
+                <select
+                  className="form-select border-0 py-3 bg-white"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  style={{ boxShadow: 'none', cursor: 'pointer' }}
+                >
+                  <option value="all">Todos los estados</option>
+                  <option value="active">🟢 Activos</option>
+                  <option value="completed">🏁 Completados</option>
+                  <option value="draft">📝 Borradores</option>
+                  <option value="cancelled">❌ Cancelados</option>
+                </select>
+              </div>
+            </div>
+            <div className="col-6 col-md-3">
+              <div className="shadow-sm rounded-4 overflow-hidden bg-white">
+                <select
+                  className="form-select border-0 py-3 bg-white"
+                  value={planTypeFilter}
+                  onChange={(e) => setPlanTypeFilter(e.target.value)}
+                  style={{ boxShadow: 'none', cursor: 'pointer' }}
+                >
+                  <option value="all">Todos los tipos</option>
+                  <option value="daily">📅 Diarios</option>
+                  <option value="weekly">📅 Semanales</option>
+                  <option value="monthly">📅 Mensuales</option>
+                  <option value="custom">👤 Personalizados</option>
+                  <option value="flexible">⚖️ Flexibles</option>
+                </select>
+              </div>
             </div>
           </>
         )}
@@ -685,7 +729,7 @@ const DietPlansPage: React.FC = () => {
                 Planes Nutricionales
               </h5>
               <div className="d-flex gap-2">
-                <button 
+                <button
                   className="btn btn-sm btn-outline-primary"
                   onClick={handleRefreshData}
                   disabled={loading}
@@ -709,7 +753,7 @@ const DietPlansPage: React.FC = () => {
                 <FileText size={48} className="text-muted mb-3" />
                 <h5 className="text-muted">No se encontraron planes</h5>
                 <p className="text-muted">Crea tu primer plan nutricional para comenzar</p>
-                <button 
+                <button
                   className="btn btn-primary"
                   onClick={() => setShowPlanModal(true)}
                 >
@@ -721,168 +765,180 @@ const DietPlansPage: React.FC = () => {
               <>
                 {/* Desktop Table */}
                 <div className="d-none d-lg-block">
-              <div className="table-responsive">
-                <table className="table table-hover mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Plan</th>
-                      <th>Paciente</th>
-                          <th>Tipo</th>
-                      <th>Estado</th>
-                          <th>Duración</th>
-                          <th>Calorías</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                  <div className="table-responsive">
+                    <table className="table table-hover align-middle mb-0">
+                      <thead className="bg-light">
+                        <tr>
+                          <th className="py-3 ps-4 border-0 rounded-start-3 text-secondary small fw-bold text-uppercase">Plan</th>
+                          <th className="py-3 border-0 text-secondary small fw-bold text-uppercase">Paciente</th>
+                          <th className="py-3 border-0 text-secondary small fw-bold text-uppercase">Tipo</th>
+                          <th className="py-3 border-0 text-secondary small fw-bold text-uppercase">Estado</th>
+                          <th className="py-3 border-0 text-secondary small fw-bold text-uppercase">Duración</th>
+                          <th className="py-3 border-0 text-secondary small fw-bold text-uppercase">Calorías</th>
+                          <th className="py-3 pe-4 border-0 rounded-end-3 text-secondary small fw-bold text-uppercase text-end">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="border-top-0">
                         {filteredPlans.map((plan) => (
-                          <tr key={plan.id}>
-                        <td>
-                          <div>
-                                <strong>{plan.name}</strong>
-                                {plan.description && (
-                                  <div className="text-muted small">{plan.description}</div>
-                            )}
-                          </div>
-                        </td>
-                            <td>{getPatientName(plan)}</td>
-                            <td>{getPlanTypeBadge(plan.plan_type)}</td>
-                        <td>{getStatusBadge(plan.status)}</td>
-                            <td>{calculatePlanDuration(plan.start_date, plan.end_date)}</td>
-                            <td>{formatCalories(plan.target_calories)}</td>
-                        <td>
-                          <div className="btn-group btn-group-sm">
-                            <button 
-                                  className="btn btn-outline-primary"
-                                  onClick={() => handleViewPlan(plan)}
-                                  title="Ver plan"
-                            >
-                              <Eye size={14} />
-                            </button>
-                            <button 
-                                  className="btn btn-outline-secondary"
-                              onClick={() => handleEditPlan(plan)}
-                              title="Editar plan"
-                            >
-                              <Edit size={14} />
-                            </button>
-                            <button 
-                              className="btn btn-outline-info"
-                              onClick={() => handleOpenMealPlanner(plan)}
-                              title="Planificar comidas"
-                            >
-                              <Utensils size={14} />
-                            </button>
-                            <button 
-                              className="btn btn-outline-success"
-                              onClick={() => handleDownloadPDF(plan)}
-                              title="Descargar PDF del Planificador de Comidas"
-                              disabled={pdfLoading}
-                            >
-                              {pdfLoading ? (
-                                <div className="spinner-border spinner-border-sm" role="status">
-                                  <span className="visually-hidden">Descargando...</span>
+                          <tr key={plan.id} className="position-relative">
+                            <td className="ps-4 py-3 border-bottom-0">
+                              <div className="d-flex align-items-center">
+                                <div className="bg-primary bg-opacity-10 p-2 rounded-3 me-3">
+                                  <FileText className="text-primary" size={20} />
                                 </div>
-                              ) : (
-                                <Download size={14} />
-                              )}
-                            </button>
-                            <button 
-                              className="btn btn-outline-danger"
-                              onClick={(e) => handleDeletePlan(plan.id, e)}
-                              title="Eliminar plan"
-                              type="button"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                                <div>
+                                  <h6 className="mb-0 fw-bold text-dark">{plan.name}</h6>
+                                  {plan.description && (
+                                    <div className="text-muted small text-truncate" style={{ maxWidth: '200px' }}>{plan.description}</div>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 border-bottom-0">
+                              <div className="d-flex align-items-center">
+                                <div className="avatar-circle bg-light text-primary rounded-circle d-flex align-items-center justify-content-center me-2" style={{ width: '32px', height: '32px', fontSize: '12px' }}>
+                                  {getPatientName(plan).charAt(0)}
+                                </div>
+                                <span className="fw-medium">{getPatientName(plan)}</span>
+                              </div>
+                            </td>
+                            <td className="py-3 border-bottom-0">{getPlanTypeBadge(plan.plan_type)}</td>
+                            <td className="py-3 border-bottom-0">{getStatusBadge(plan.status)}</td>
+                            <td className="py-3 border-bottom-0 text-muted">
+                              {calculatePlanDuration(plan.start_date, plan.end_date)}
+                            </td>
+                            <td className="py-3 border-bottom-0">
+                              <span className="fw-mono text-dark">{formatCalories(plan.target_calories)}</span>
+                            </td>
+                            <td className="pe-4 py-3 border-bottom-0 text-end">
+                              <div className="d-flex justify-content-end gap-2">
+                                <button
+                                  className="btn btn-light btn-sm rounded-circle shadow-sm hover-primary"
+                                  onClick={() => handleViewPlan(plan)}
+                                  title="Ver detalles"
+                                  style={{ width: '32px', height: '32px', padding: 0 }}
+                                >
+                                  <Eye size={16} className="text-muted" />
+                                </button>
+                                <button
+                                  className="btn btn-light btn-sm rounded-circle shadow-sm hover-primary"
+                                  onClick={() => handleEditPlan(plan)}
+                                  title="Editar plan"
+                                  style={{ width: '32px', height: '32px', padding: 0 }}
+                                >
+                                  <Edit size={16} className="text-muted" />
+                                </button>
+                                <button
+                                  className="btn btn-light btn-sm rounded-circle shadow-sm hover-primary"
+                                  onClick={() => handleOpenMealPlanner(plan)}
+                                  title="Planificar comidas"
+                                  style={{ width: '32px', height: '32px', padding: 0 }}
+                                >
+                                  <Utensils size={16} className="text-muted" />
+                                </button>
+                                <button
+                                  className="btn btn-light btn-sm rounded-circle shadow-sm hover-primary"
+                                  onClick={() => handleDownloadPDF(plan)}
+                                  title="Descargar PDF"
+                                  disabled={pdfLoading}
+                                  style={{ width: '32px', height: '32px', padding: 0 }}
+                                >
+                                  {pdfLoading ? (
+                                    <div className="spinner-border spinner-border-sm" role="status" style={{ width: '12px', height: '12px' }}></div>
+                                  ) : (
+                                    <Download size={16} className="text-muted" />
+                                  )}
+                                </button>
+                                <button
+                                  className="btn btn-light btn-sm rounded-circle shadow-sm hover-danger"
+                                  onClick={(e) => handleDeletePlan(plan.id, e)}
+                                  title="Eliminar plan"
+                                  type="button"
+                                  style={{ width: '32px', height: '32px', padding: 0 }}
+                                >
+                                  <Trash2 size={16} className="text-danger" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
                 {/* Mobile Cards */}
                 <div className="d-lg-none">
                   {filteredPlans.map((plan) => (
-                    <div key={plan.id} className="card border-0 border-bottom rounded-0">
-                      <div className="card-body">
-                        <div className="d-flex justify-content-between align-items-start mb-2">
-                          <div className="flex-grow-1">
-                            <h6 className="mb-1 fw-bold">{plan.name}</h6>
-                            {plan.description && (
-                              <p className="text-muted small mb-2">{plan.description}</p>
-                            )}
-                            <div className="d-flex flex-wrap gap-1 mb-2">
-                              {getStatusBadge(plan.status)}
-                              {getPlanTypeBadge(plan.plan_type)}
+                    <div key={plan.id} className="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden">
+                      <div className="card-body p-4">
+                        <div className="d-flex justify-content-between align-items-start mb-3">
+                          <div className="d-flex align-items-center">
+                            <div className="bg-primary bg-opacity-10 p-2 rounded-3 me-3">
+                              <FileText className="text-primary" size={20} />
+                            </div>
+                            <div>
+                              <h6 className="mb-0 fw-bold text-dark">{plan.name}</h6>
+                              {plan.description && (
+                                <p className="text-muted small mb-0 text-truncate" style={{ maxWidth: '180px' }}>{plan.description}</p>
+                              )}
                             </div>
                           </div>
+                          {getStatusBadge(plan.status)}
                         </div>
-                        
-                        <div className="row g-2 mb-3">
+
+                        <div className="row g-3 mb-4">
                           <div className="col-6">
-                            <small className="text-muted d-block">Paciente</small>
-                            <span className="fw-medium">{getPatientName(plan)}</span>
+                            <small className="text-muted d-block small text-uppercase fw-bold mb-1">Paciente</small>
+                            <div className="d-flex align-items-center">
+                              <div className="avatar-circle bg-light text-primary rounded-circle d-flex align-items-center justify-content-center me-2" style={{ width: '24px', height: '24px', fontSize: '10px' }}>
+                                {getPatientName(plan).charAt(0)}
+                              </div>
+                              <span className="fw-medium small">{getPatientName(plan)}</span>
+                            </div>
                           </div>
                           <div className="col-6">
-                            <small className="text-muted d-block">Duración</small>
-                            <span className="fw-medium">{calculatePlanDuration(plan.start_date, plan.end_date)}</span>
+                            <small className="text-muted d-block small text-uppercase fw-bold mb-1">Tipo</small>
+                            {getPlanTypeBadge(plan.plan_type)}
                           </div>
                           <div className="col-6">
-                            <small className="text-muted d-block">Calorías</small>
-                            <span className="fw-medium">{formatCalories(plan.target_calories)}</span>
+                            <small className="text-muted d-block small text-uppercase fw-bold mb-1">Duración</small>
+                            <span className="fw-medium small">{calculatePlanDuration(plan.start_date, plan.end_date)}</span>
                           </div>
                           <div className="col-6">
-                            <small className="text-muted d-block">Creado</small>
-                            <span className="fw-medium">{formatDate(plan.created_at)}</span>
+                            <small className="text-muted d-block small text-uppercase fw-bold mb-1">Calorías</small>
+                            <span className="fw-mono small text-dark">{formatCalories(plan.target_calories)}</span>
                           </div>
                         </div>
-                        
-                        <div className="d-flex gap-1">
+
+                        <div className="d-flex gap-2">
                           <button
-                            className="btn btn-sm btn-outline-primary flex-fill"
+                            className="btn btn-outline-primary btn-sm flex-fill rounded-pill"
                             onClick={() => handleViewPlan(plan)}
                           >
                             <Eye size={14} className="me-1" />
                             Ver
                           </button>
                           <button
-                            className="btn btn-sm btn-outline-secondary flex-fill"
+                            className="btn btn-outline-secondary btn-sm flex-fill rounded-pill"
                             onClick={() => handleEditPlan(plan)}
                           >
                             <Edit size={14} className="me-1" />
                             Editar
                           </button>
                           <button
-                            className="btn btn-sm btn-outline-info flex-fill"
+                            className="btn btn-outline-info btn-sm flex-fill rounded-pill"
                             onClick={() => handleOpenMealPlanner(plan)}
                           >
                             <Utensils size={14} className="me-1" />
-                            Planificar comidas
+                            Planificar
                           </button>
                           <button
-                            className="btn btn-sm btn-outline-success flex-fill"
-                            onClick={() => handleDownloadPDF(plan)}
-                            disabled={pdfLoading}
-                            title="Descargar PDF del Planificador de Comidas"
-                          >
-                            {pdfLoading ? (
-                              <div className="spinner-border spinner-border-sm me-1" role="status">
-                                <span className="visually-hidden">Descargando...</span>
-                              </div>
-                            ) : (
-                              <Download size={14} className="me-1" />
-                            )}
-                            PDF
-                          </button>
-                          <button
-                            className="btn btn-sm btn-outline-danger"
+                            className="btn btn-outline-danger btn-sm rounded-circle shadow-sm"
                             onClick={(e) => handleDeletePlan(plan.id, e)}
                             type="button"
                             title="Eliminar plan"
+                            style={{ width: '32px', height: '32px', padding: 0 }}
                           >
                             <Trash2 size={14} />
                           </button>
@@ -915,7 +971,7 @@ const DietPlansPage: React.FC = () => {
                 <Copy size={18} className="me-2" />
                 Plantillas de Planes Nutricionales
               </h5>
-              <button 
+              <button
                 className="btn btn-primary btn-sm"
                 onClick={() => setShowPlanModal(true)}
               >
@@ -996,7 +1052,7 @@ const DietPlansPage: React.FC = () => {
                           </span>
                         ))}
                       </div>
-                      <button 
+                      <button
                         className="btn btn-outline-primary btn-sm w-100"
                         onClick={() => {
                           // Implementar lógica para usar plantilla
@@ -1048,7 +1104,7 @@ const DietPlansPage: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <NutritionalCardSimple
             dietPlan={editingPlan || undefined}
             patient={editingPlan ? patients.find(p => p.id === editingPlan.patient_id) || patients[0] : patients[0]}
@@ -1085,11 +1141,12 @@ const DietPlansPage: React.FC = () => {
               plan={selectedPlan}
               onClose={() => setShowPlanDetail(false)}
               onEdit={() => {
+                handleEditPlan(selectedPlan); // Switch to edit mode
                 setShowPlanDetail(false);
-                setEditingPlan(selectedPlan);
-                setShowPlanModal(true);
               }}
               onDownload={() => handleDownloadPDF(selectedPlan)}
+              patients={patients}
+              clinicalRecords={allClinicalRecords}
             />
           )}
         </Modal.Body>

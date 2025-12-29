@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Plus, Trash2, Save, Calendar } from 'lucide-react';
-import { useAvailability } from '../hooks/useAvailability';
-import type { AvailabilitySlot } from '../services/appointmentsService';
-import appointmentsService from '../services/appointmentsService';
+import { useAvailability } from '../../hooks/useAvailability';
+import type { AvailabilitySlot } from '../../services/appointmentsService';
+import appointmentsService from '../../services/appointmentsService';
 // import { profileToAvailability, availabilityToProfile, validateSchedule } from '../utils/scheduleSync';
 
 // interface AvailabilityManagerProps {
@@ -38,8 +38,9 @@ const AvailabilityManager: React.FC = () => {
       day_of_week: 'MONDAY',
       start_time_minutes: 540, // 9:00 AM
       end_time_minutes: 1020,  // 5:00 PM
-      is_active: true};
-    
+      is_active: true
+    };
+
     setEditingSlots([...editingSlots, newSlot]);
     setHasChanges(true);
   };
@@ -66,7 +67,7 @@ const AvailabilityManager: React.FC = () => {
         end_time_minutes: slot.end_time_minutes,
         is_active: slot.is_active
       }));
-      
+
       await updateAvailability({ slots: cleanSlots });
       setHasChanges(false);
     } catch (error) {
@@ -144,9 +145,9 @@ const AvailabilityManager: React.FC = () => {
         {error && (
           <div className="alert alert-danger alert-dismissible fade show" role="alert">
             {error}
-            <button 
-              type="button" 
-              className="btn-close" 
+            <button
+              type="button"
+              className="btn-close"
               onClick={clearError}
               aria-label="Cerrar"
             ></button>

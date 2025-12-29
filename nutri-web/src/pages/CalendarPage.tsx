@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, Plus, Clock, MapPin, Video, Edit, List, RefreshCw, Phone, Trash2, Settings, AlertCircle, Eye } from 'lucide-react';
-import { StatusModal } from '../components/StatusModal';
+import { StatusModal } from '../components/Appointments/StatusModal';
 import { useNavigate } from 'react-router-dom';
 import { useAppointments } from '../hooks/useAppointments';
 

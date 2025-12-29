@@ -3,10 +3,10 @@ import { Router } from 'express';
 import recipeController from './recipe.controller';
 import { protect, authorize } from '../../middleware/auth.middleware';
 import { validateMiddleware } from '../../middleware/validation.middleware';
-import { 
-    CreateRecipeDto, 
-    UpdateRecipeDto, 
-    GenerateRecipeDto 
+import {
+    CreateRecipeDto,
+    UpdateRecipeDto,
+    GenerateRecipeDto
 } from './recipe.dto';
 import { RoleName } from '../../database/entities/role.entity';
 
@@ -15,13 +15,7 @@ const router = Router();
 // Rutas públicas (solo requieren autenticación básica)
 router.use(protect);
 
-// Obtener todas las recetas con filtros y búsqueda
-// GET /api/recipes?search=pollo&mealType=lunch&maxCaloriesPerServing=500&page=1&limit=20
-router.get('/', recipeController.getAllRecipes);
-
-// Obtener receta específica por ID
-// GET /api/recipes/:id
-router.get('/:id', recipeController.getRecipeById);
+// IMPORTANTE: Las rutas específicas DEBEN ir ANTES de las rutas dinámicas /:id
 
 // Buscar recetas por ingredientes
 // GET /api/recipes/search/ingredients?ingredients=pollo,arroz,tomate
@@ -31,8 +25,32 @@ router.get('/search/ingredients', recipeController.searchByIngredients);
 // GET /api/recipes/popular
 router.get('/popular', recipeController.getPopularRecipes);
 
+// Obtener todas las recetas con filtros y búsqueda
+// GET /api/recipes?search=pollo&mealType=lunch&maxCaloriesPerServing=500&page=1&limit=20
+router.get('/', recipeController.getAllRecipes);
+
+// Obtener receta específica por ID (DEBE IR DESPUÉS de las rutas específicas)
+// GET /api/recipes/:id
+router.get('/:id', recipeController.getRecipeById);
+
 // Rutas que requieren permisos de nutriólogo o admin
 router.use(authorize(RoleName.NUTRITIONIST, RoleName.ADMIN));
+
+// Calcular información nutricional sin guardar receta
+// POST /api/recipes/calculate-nutrition
+router.post('/calculate-nutrition', recipeController.calculateNutrition);
+
+// Generar recetas automáticamente para un paciente
+// POST /api/recipes/generate
+router.post(
+    '/generate',
+    validateMiddleware(GenerateRecipeDto),
+    recipeController.generateRecipeForPatient
+);
+
+// Obtener estadísticas de recetas
+// GET /api/recipes/stats
+router.get('/stats', recipeController.getRecipeStats);
 
 // Crear nueva receta
 // POST /api/recipes
@@ -60,22 +78,6 @@ router.put(
 // Eliminar receta
 // DELETE /api/recipes/:id
 router.delete('/:id', recipeController.deleteRecipe);
-
-// Generar recetas automáticamente para un paciente
-// POST /api/recipes/generate
-router.post(
-    '/generate',
-    validateMiddleware(GenerateRecipeDto),
-    recipeController.generateRecipeForPatient
-);
-
-// Calcular información nutricional sin guardar receta
-// POST /api/recipes/calculate-nutrition
-router.post('/calculate-nutrition', recipeController.calculateNutrition);
-
-// Obtener estadísticas de recetas
-// GET /api/recipes/stats
-router.get('/stats', recipeController.getRecipeStats);
 
 // --- RUTAS ESPECÍFICAS PARA ADMINISTRADORES ---
 

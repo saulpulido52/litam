@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { 
-  Calendar, 
-  Clock, 
-  Plus, 
+import {
+  Calendar,
+  Clock,
+  Plus,
   Sparkles,
   Copy,
   Save,
@@ -10,10 +10,11 @@ import {
   AlertCircle,
   CheckCircle,
   Users,
-  Target} from 'lucide-react';
-import type { CreateDietPlanDto, GenerateAIDietDto, DietPlan } from '../types/diet';
-import type { Patient } from '../types/patient';
-import type { ClinicalRecord } from '../types/clinical-record';
+  Target
+} from 'lucide-react';
+import type { CreateDietPlanDto, GenerateAIDietDto, DietPlan } from '../../types/diet';
+import type { Patient } from '../../types/patient';
+import type { ClinicalRecord } from '../../types/clinical-record';
 
 interface DietPlanQuickCreateProps {
   patients: Patient[];
@@ -117,7 +118,7 @@ export default function DietPlanQuickCreate({
     const diagnosis = record.nutritional_diagnosis;
     const currentProblems = record.current_problems;
     const activityLevel = record.physical_exercise?.frequency || record.activity_level_description;
-    
+
     // Calcular calorías personalizadas
     let recommendedCalories = 2000; // Base default
     let activityMultiplier = 1.4; // Sedentario por defecto
@@ -170,11 +171,11 @@ export default function DietPlanQuickCreate({
 
     // Generar descripción detallada basada en el expediente
     let description = 'Plan nutricional personalizado';
-    
+
     if (diagnosis) {
       description += ` para ${diagnosis.toLowerCase()}`;
     }
-    
+
     // Agregar información del IMC si está disponible
     if (bmi) {
       if (bmi < 18.5) description += ' (bajo peso)';
@@ -194,26 +195,26 @@ export default function DietPlanQuickCreate({
     if (biochemical?.cholesterol_total_mg_dl && biochemical.cholesterol_total_mg_dl > 200) {
       specialConsiderations.push('colesterol elevado');
     }
-    
+
     if (specialConsiderations.length > 0) {
       description += ` con manejo de ${specialConsiderations.join(', ')}`;
     }
 
     // Generar notas detalladas
     const notes: string[] = [];
-    
+
     if (weight && height) {
       notes.push(`Paciente: ${weight}kg, ${height.toFixed(0)}cm, IMC: ${bmi ? bmi.toFixed(1) : 'N/A'}`);
     }
-    
+
     if (activityLevel) {
       notes.push(`Actividad física: ${activityLevel}`);
     }
-    
+
     if (currentProblems?.observations) {
       notes.push(`Observaciones: ${currentProblems.observations}`);
     }
-    
+
     if (record.consumption_habits?.alcohol || record.consumption_habits?.tobacco) {
       const habits: string[] = [];
       if (record.consumption_habits.alcohol) habits.push(`alcohol: ${record.consumption_habits.alcohol}`);
@@ -267,18 +268,18 @@ export default function DietPlanQuickCreate({
   // Cargar expediente clínico cuando se selecciona un paciente
   useEffect(() => {
     if (formData.patientId && clinicalRecords.length > 0) {
-      const patientRecords = clinicalRecords.filter(record => 
+      const patientRecords = clinicalRecords.filter(record =>
         record.patient?.id === formData.patientId
       );
-      
+
       if (patientRecords.length > 0) {
         // Obtener el expediente más reciente
-        const latestRecord = patientRecords.sort((a, b) => 
+        const latestRecord = patientRecords.sort((a, b) =>
           new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
         )[0];
-        
+
         setSelectedPatientRecord(latestRecord);
-        
+
         // Aplicar recomendaciones del expediente si hay datos relevantes
         if (latestRecord && mode !== 'edit') {
           applyRecommendationsFromClinicalRecord(latestRecord);
@@ -319,7 +320,7 @@ export default function DietPlanQuickCreate({
     if (!formData.startDate || formData.startDate.trim() === '') {
       newErrors.push('Debe seleccionar una fecha de inicio');
     }
-    
+
     // Validación de calorías
     const calories = formData.dailyCaloriesTarget || 0;
     if (calories < 800 || calories > 5000) {
@@ -362,7 +363,7 @@ export default function DietPlanQuickCreate({
   const handleSubmit = () => {
     // Limpiar errores previos
     setErrors([]);
-    
+
     const validation = validateForm();
     if (!validation.isValid) {
       setErrors(validation.errors);
@@ -393,7 +394,7 @@ export default function DietPlanQuickCreate({
 
   const handleGenerateAI = () => {
     if (!onGenerateAI) return;
-    
+
     const validation = validateForm();
     if (!validation.isValid) {
       setErrors(validation.errors);
@@ -470,40 +471,40 @@ export default function DietPlanQuickCreate({
           </div>
         )}
 
-                 {/* Información del plan original si estamos duplicando */}
-         {mode === 'duplicate' && duplicateFromPlan && (
-           <div className="alert alert-info">
-             <Copy size={16} className="me-2" />
-             <strong>Duplicando plan:</strong> {duplicateFromPlan.name}
-             <br />
-             <small>Los datos se han copiado automáticamente. Ajusta las fechas y detalles según necesites.</small>
-           </div>
-         )}
+        {/* Información del plan original si estamos duplicando */}
+        {mode === 'duplicate' && duplicateFromPlan && (
+          <div className="alert alert-info">
+            <Copy size={16} className="me-2" />
+            <strong>Duplicando plan:</strong> {duplicateFromPlan.name}
+            <br />
+            <small>Los datos se han copiado automáticamente. Ajusta las fechas y detalles según necesites.</small>
+          </div>
+        )}
 
-         {/* Información del expediente clínico */}
-         {selectedPatientRecord && showClinicalInfo && (
-           <div className="alert alert-success">
-             <CheckCircle size={16} className="me-2" />
-             <strong>Datos aplicados del expediente clínico:</strong>
-             <br />
-             <small>
-               Se han aplicado recomendaciones basadas en el expediente más reciente del paciente.
-               {selectedPatientRecord.anthropometric_measurements?.current_weight_kg && (
-                 ` Peso actual: ${selectedPatientRecord.anthropometric_measurements.current_weight_kg} kg.`
-               )}
-               {selectedPatientRecord.nutritional_diagnosis && (
-                 ` Diagnóstico: ${selectedPatientRecord.nutritional_diagnosis}.`
-               )}
-             </small>
-             <button
-               type="button"
-               className="btn btn-sm btn-outline-success ms-2"
-               onClick={() => setShowClinicalInfo(false)}
-             >
-               Ocultar
-             </button>
-           </div>
-         )}
+        {/* Información del expediente clínico */}
+        {selectedPatientRecord && showClinicalInfo && (
+          <div className="alert alert-success">
+            <CheckCircle size={16} className="me-2" />
+            <strong>Datos aplicados del expediente clínico:</strong>
+            <br />
+            <small>
+              Se han aplicado recomendaciones basadas en el expediente más reciente del paciente.
+              {selectedPatientRecord.anthropometric_measurements?.current_weight_kg && (
+                ` Peso actual: ${selectedPatientRecord.anthropometric_measurements.current_weight_kg} kg.`
+              )}
+              {selectedPatientRecord.nutritional_diagnosis && (
+                ` Diagnóstico: ${selectedPatientRecord.nutritional_diagnosis}.`
+              )}
+            </small>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-success ms-2"
+              onClick={() => setShowClinicalInfo(false)}
+            >
+              Ocultar
+            </button>
+          </div>
+        )}
 
         <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
           <div className="row">
@@ -513,10 +514,10 @@ export default function DietPlanQuickCreate({
                 <Users size={16} className="me-1" />
                 Paciente *
               </label>
-              <select 
+              <select
                 className="form-select"
                 value={formData.patientId}
-                onChange={(e) => setFormData({...formData, patientId: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
                 required
               >
                 <option value="">Seleccionar paciente</option>
@@ -530,12 +531,12 @@ export default function DietPlanQuickCreate({
 
             <div className="col-md-6 mb-3">
               <label className="form-label fw-semibold">Nombre del Plan *</label>
-              <input 
-                type="text" 
-                className="form-control" 
+              <input
+                type="text"
+                className="form-control"
                 placeholder="Ej: Plan de Equilibrio y Energía"
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
               />
             </div>
@@ -548,11 +549,11 @@ export default function DietPlanQuickCreate({
                 <Calendar size={16} className="me-1" />
                 Fecha de Inicio *
               </label>
-              <input 
-                type="date" 
+              <input
+                type="date"
                 className="form-control"
                 value={formData.startDate}
-                onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                 required
               />
             </div>
@@ -566,7 +567,7 @@ export default function DietPlanQuickCreate({
                 className="form-select"
                 value={formData.totalWeeks}
                 onChange={(e) => setFormData({
-                  ...formData, 
+                  ...formData,
                   totalWeeks: parseInt(e.target.value),
                   totalPeriods: parseInt(e.target.value)
                 })}
@@ -585,14 +586,14 @@ export default function DietPlanQuickCreate({
                 <Target size={16} className="me-1" />
                 Calorías Diarias
               </label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 className="form-control"
                 placeholder="2000"
                 min="800"
                 max="5000"
                 value={formData.dailyCaloriesTarget}
-                onChange={(e) => setFormData({...formData, dailyCaloriesTarget: parseInt(e.target.value) || 2000})}
+                onChange={(e) => setFormData({ ...formData, dailyCaloriesTarget: parseInt(e.target.value) || 2000 })}
               />
             </div>
           </div>
@@ -601,13 +602,13 @@ export default function DietPlanQuickCreate({
           <div className="row">
             <div className="col-md-4 mb-3">
               <label className="form-label">Proteínas (g)</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 className="form-control"
                 placeholder="150"
                 value={formData.dailyMacrosTarget?.protein}
                 onChange={(e) => setFormData({
-                  ...formData, 
+                  ...formData,
                   dailyMacrosTarget: {
                     ...formData.dailyMacrosTarget,
                     protein: parseInt(e.target.value) || 150
@@ -617,13 +618,13 @@ export default function DietPlanQuickCreate({
             </div>
             <div className="col-md-4 mb-3">
               <label className="form-label">Carbohidratos (g)</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 className="form-control"
                 placeholder="200"
                 value={formData.dailyMacrosTarget?.carbohydrates}
                 onChange={(e) => setFormData({
-                  ...formData, 
+                  ...formData,
                   dailyMacrosTarget: {
                     ...formData.dailyMacrosTarget,
                     carbohydrates: parseInt(e.target.value) || 200
@@ -633,13 +634,13 @@ export default function DietPlanQuickCreate({
             </div>
             <div className="col-md-4 mb-3">
               <label className="form-label">Grasas (g)</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 className="form-control"
                 placeholder="67"
                 value={formData.dailyMacrosTarget?.fats}
                 onChange={(e) => setFormData({
-                  ...formData, 
+                  ...formData,
                   dailyMacrosTarget: {
                     ...formData.dailyMacrosTarget,
                     fats: parseInt(e.target.value) || 67
@@ -652,23 +653,23 @@ export default function DietPlanQuickCreate({
           {/* Descripción y notas */}
           <div className="mb-3">
             <label className="form-label">Descripción</label>
-            <textarea 
-              className="form-control" 
-              rows={2} 
+            <textarea
+              className="form-control"
+              rows={2}
               placeholder="Describe el objetivo del plan..."
               value={formData.description || ''}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
           </div>
 
           <div className="mb-4">
             <label className="form-label">Notas Adicionales</label>
-            <textarea 
-              className="form-control" 
-              rows={2} 
+            <textarea
+              className="form-control"
+              rows={2}
               placeholder="Instrucciones especiales, restricciones, etc..."
               value={formData.notes || ''}
-              onChange={(e) => setFormData({...formData, notes: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             />
           </div>
 
@@ -705,23 +706,23 @@ export default function DietPlanQuickCreate({
               </button>
             )}
 
-                         <button
-               type="submit"
-               className="btn btn-primary"
-               disabled={loading}
-             >
-               {loading ? (
-                 <>
-                   <span className="spinner-border spinner-border-sm me-2" />
-                   {mode === 'edit' ? 'Guardando...' : mode === 'duplicate' ? 'Duplicando...' : 'Creando...'}
-                 </>
-               ) : (
-                 <>
-                   <Save size={16} className="me-1" />
-                   {mode === 'edit' ? 'Guardar Cambios' : mode === 'duplicate' ? 'Duplicar Plan' : 'Crear Plan'}
-                 </>
-               )}
-             </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" />
+                  {mode === 'edit' ? 'Guardando...' : mode === 'duplicate' ? 'Duplicando...' : 'Creando...'}
+                </>
+              ) : (
+                <>
+                  <Save size={16} className="me-1" />
+                  {mode === 'edit' ? 'Guardar Cambios' : mode === 'duplicate' ? 'Duplicar Plan' : 'Crear Plan'}
+                </>
+              )}
+            </button>
           </div>
         </form>
       </div>
