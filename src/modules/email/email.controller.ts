@@ -1,6 +1,6 @@
 // src/modules/email/email.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import { emailService } from '../../services/email.service';
+import { emailService } from './email.service';
 import { AppError } from '../../utils/app.error';
 
 class EmailController {
@@ -10,7 +10,7 @@ class EmailController {
     public async verifyConnection(req: Request, res: Response, next: NextFunction) {
         try {
             const isConnected = await emailService.verifyConnection();
-            
+
             res.status(200).json({
                 success: true,
                 message: isConnected ? 'Conexión SMTP exitosa' : 'Error en conexión SMTP',
@@ -31,7 +31,7 @@ class EmailController {
     public async sendTestEmail(req: Request, res: Response, next: NextFunction) {
         try {
             const { email } = req.body;
-            
+
             if (!email) {
                 return next(new AppError('Email es requerido', 400));
             }
@@ -43,7 +43,7 @@ class EmailController {
             }
 
             await emailService.sendTestEmail(email);
-            
+
             res.status(200).json({
                 success: true,
                 message: `Email de prueba enviado exitosamente a ${email}`,
@@ -64,7 +64,7 @@ class EmailController {
     public async sendTestCredentials(req: Request, res: Response, next: NextFunction) {
         try {
             const { email, patient_name, nutritionist_name } = req.body;
-            
+
             if (!email || !patient_name || !nutritionist_name) {
                 return next(new AppError('Email, patient_name y nutritionist_name son requeridos', 400));
             }
@@ -85,7 +85,7 @@ class EmailController {
             };
 
             await emailService.sendPatientCredentials(testCredentials);
-            
+
             res.status(200).json({
                 success: true,
                 message: `Credenciales de prueba enviadas exitosamente a ${email}`,

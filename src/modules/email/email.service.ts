@@ -1,6 +1,6 @@
 // src/services/email.service.ts
 import nodemailer from 'nodemailer';
-import { AppError } from '../utils/app.error';
+import { AppError } from '../../utils/app.error';
 
 export interface EmailCredentials {
     email: string;
@@ -39,7 +39,7 @@ export class EmailService {
     async sendPatientCredentials(credentials: EmailCredentials): Promise<void> {
         try {
             const emailTemplate = this.generateCredentialsEmailTemplate(credentials);
-            
+
             const mailOptions = {
                 from: {
                     name: process.env.EMAIL_FROM_NAME || 'Litam Sistema',
@@ -53,7 +53,7 @@ export class EmailService {
             console.log(`📧 Enviando credenciales a: ${credentials.email}`);
             const result = await this.transporter.sendMail(mailOptions);
             console.log(`✅ Email enviado exitosamente. Message ID: ${result.messageId}`);
-            
+
         } catch (error) {
             console.error('❌ Error enviando email:', error);
             throw new AppError('Error al enviar las credenciales por email', 500);

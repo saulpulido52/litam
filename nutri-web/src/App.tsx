@@ -24,7 +24,7 @@ import DashboardPage from './pages/DashboardPage';
 // **LAZY LOADING PARA PÁGINAS NO CRÍTICAS**
 const AppointmentsPage = React.lazy(() => import('./pages/AppointmentsPage'));
 const CalendarPage = React.lazy(() => import('./pages/CalendarPage'));
-const AppointmentBookingTestPage = React.lazy(() => import('./pages/AppointmentBookingTestPage'));
+
 const PatientsPage = React.lazy(() => import('./pages/PatientsPage'));
 const DietPlansPage = React.lazy(() => import('./pages/DietPlansPage'));
 const MessagingPage = React.lazy(() => import('./pages/MessagingPage'));
@@ -161,13 +161,7 @@ const App: React.FC = () => {
               </Suspense>
             </ProtectedRoute>
           } />
-          <Route path="/appointment-booking-test" element={
-            <ProtectedRoute>
-              <Suspense fallback={<LoadingFallback />}>
-                <AppointmentBookingTestPage />
-              </Suspense>
-            </ProtectedRoute>
-          } />
+
           <Route path="/patients" element={
             <ProtectedRoute>
               <Suspense fallback={<LoadingFallback />}>

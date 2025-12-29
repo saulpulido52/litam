@@ -12,11 +12,12 @@ import { clinicalRecordsService } from '../services/clinicalRecordsService';
 import type { ClinicalRecord, CreateClinicalRecordDto, UpdateClinicalRecordDto } from '../types';
 
 // React Icons
-import { 
+import {
   MdArrowBack,
   MdAdd,
   MdClose,
-  MdWarning} from 'react-icons/md';
+  MdWarning
+} from 'react-icons/md';
 import { FaUsers, FaUserCircle, FaChartLine, FaRobot, FaStethoscope, FaTachometerAlt } from 'react-icons/fa';
 
 import { HiOutlineDocumentText } from 'react-icons/hi';
@@ -27,7 +28,7 @@ const ClinicalRecordsPage: React.FC = () => {
   const { patientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
+
   // Estados locales
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedRecord, setSelectedRecord] = useState<ClinicalRecord | null>(null);
@@ -74,12 +75,12 @@ const ClinicalRecordsPage: React.FC = () => {
     try {
       console.log('🔍 Verificando existencia del paciente:', patientId);
       const patient = await patientsService.getPatientById(patientId);
-      
+
       if (patient) {
         console.log('✅ Paciente encontrado:', patient.first_name, patient.last_name);
         setPatientData(patient);
         setPatientError(null);
-        
+
         // Cargar expedientes clínicos
         await loadPatientRecords(patientId);
       } else {
@@ -88,7 +89,7 @@ const ClinicalRecordsPage: React.FC = () => {
       }
     } catch (error: any) {
       console.error('❌ Error al validar paciente:', error);
-      
+
       if (error.response?.status === 404) {
         handleInvalidPatient('Paciente no encontrado en el sistema');
       } else {
@@ -100,7 +101,7 @@ const ClinicalRecordsPage: React.FC = () => {
   // Función para cargar expedientes clínicos
   const loadPatientRecords = async (patientId: string) => {
     setLoading(true);
-    
+
     try {
       const patientRecords = await clinicalRecordsService.getPatientRecords(patientId);
       setRecords(patientRecords);
@@ -116,7 +117,7 @@ const ClinicalRecordsPage: React.FC = () => {
   const handleInvalidPatient = (errorMessage: string) => {
     console.log('🚨 Paciente inválido detectado:', errorMessage);
     setPatientError(errorMessage);
-    
+
     // Evitar redirecciones múltiples
     if (hasRedirected) {
       console.log('⚠️ Ya se realizó una redirección, evitando ciclo infinito');
@@ -155,7 +156,7 @@ const ClinicalRecordsPage: React.FC = () => {
   // Función para limpiar caché y recargar
   const handleClearCacheAndReload = () => {
     console.log('🧹 Limpiando caché y recargando...');
-    
+
     // Limpiar localStorage
     const keysToRemove = [
       'patients_cache',
@@ -163,14 +164,14 @@ const ClinicalRecordsPage: React.FC = () => {
       'current_patient',
       'last_visited_patient'
     ];
-    
+
     keysToRemove.forEach(key => {
       if (localStorage.getItem(key)) {
         console.log(`🗑️ Removing localStorage key: ${key}`);
         localStorage.removeItem(key);
       }
     });
-    
+
     // Recargar página
     window.location.reload();
   };
@@ -192,9 +193,9 @@ const ClinicalRecordsPage: React.FC = () => {
                 <div className="mb-4">
                   <FaUserCircle className="text-danger" size={48} />
                 </div>
-                
+
                 <h5 className="text-danger mb-3">Error: {patientError}</h5>
-                
+
                 <p className="text-muted mb-4">
                   El paciente con ID <code>{patientId}</code>
                   no existe en el sistema o ya no está disponible.
@@ -205,17 +206,17 @@ const ClinicalRecordsPage: React.FC = () => {
                 </Alert>
 
                 <div className="d-grid gap-2 d-md-flex justify-content-md-center">
-                  <Button 
-                    variant="primary" 
-                    className="me-md-2" 
+                  <Button
+                    variant="primary"
+                    className="me-md-2"
                     onClick={handleManualRedirect}
                   >
                     <FaUsers className="me-2" />
                     Ir a Lista de Pacientes
                   </Button>
-                  
-                  <Button 
-                    variant="secondary" 
+
+                  <Button
+                    variant="secondary"
                     onClick={handleClearCacheAndReload}
                   >
                     <MdClose className="me-2" />
@@ -340,17 +341,17 @@ const ClinicalRecordsPage: React.FC = () => {
                     Paciente: <strong>{patientData.first_name} {patientData.last_name}</strong>
                   </span>
                 )}
-                {viewMode === 'list' 
+                {viewMode === 'list'
                   ? ` - ${records.length} expediente${records.length !== 1 ? 's' : ''} registrado${records.length !== 1 ? 's' : ''}`
-                  : viewMode === 'create' 
+                  : viewMode === 'create'
                     ? ' - Registrar Nuevo Expediente'
                     : viewMode === 'seguimiento-form'
                       ? ' - Seguimiento Automático'
-                    : viewMode === 'dashboard'
-                      ? ' - Dashboard de Seguimiento'
-                    : viewMode === 'edit'
-                      ? ' - Editar Expediente'
-                      : ' - Ver Expediente'
+                      : viewMode === 'dashboard'
+                        ? ' - Dashboard de Seguimiento'
+                        : viewMode === 'edit'
+                          ? ' - Editar Expediente'
+                          : ' - Ver Expediente'
                 }
               </p>
             </div>
@@ -385,8 +386,8 @@ const ClinicalRecordsPage: React.FC = () => {
                 </Nav.Item>
               )}
               <Nav.Item>
-                <Nav.Link 
-                  as={Link} 
+                <Nav.Link
+                  as={Link}
                   to={`/patients/${patientId}/seguimientos`}
                   className="d-flex align-items-center"
                 >
@@ -466,7 +467,7 @@ const ClinicalRecordsPage: React.FC = () => {
 
             {/* Pestaña de Análisis del Paciente */}
             <Tab.Pane eventKey="dashboard">
-              <AnalisisPaciente 
+              <AnalisisPaciente
                 patientId={patientId || ''}
                 patientName={patientData ? `${patientData.first_name} ${patientData.last_name}` : 'Paciente'}
                 records={records}
@@ -477,7 +478,7 @@ const ClinicalRecordsPage: React.FC = () => {
             <Tab.Pane eventKey="seguimiento">
               <Alert variant="success" className="mb-4">
                 <FaRobot className="me-2" />
-                <strong>Seguimiento Activado</strong> - Ya tienes {records.length} expediente{records.length !== 1 ? 's' : ''} 
+                <strong>Seguimiento Activado</strong> - Ya tienes {records.length} expediente{records.length !== 1 ? 's' : ''}
                 para este paciente. Ahora puedes usar el seguimiento inteligente.
               </Alert>
 
@@ -502,8 +503,8 @@ const ClinicalRecordsPage: React.FC = () => {
                     </Col>
                     <Col md={3} className="text-end">
                       <div className="d-grid gap-2">
-                        <Button 
-                          variant="success" 
+                        <Button
+                          variant="success"
                           size="lg"
                           onClick={() => setViewMode('seguimiento-form')}
                         >
@@ -583,7 +584,7 @@ const ClinicalRecordsPage: React.FC = () => {
       ) : (
         // Form or Detail View (existing code)
         <Row className="justify-content-center">
-          <Col md={10} lg={8}>
+          <Col xs={12}>
             {viewMode === 'create' && (
               <ClinicalRecordForm
                 patientId={patientId!}

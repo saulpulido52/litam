@@ -7,7 +7,7 @@ import { AppError } from '../../utils/app.error';
 import { AppDataSource } from '../../database/data-source';
 import { NutritionistRegistrationDto, NutritionistVerificationDto, DocumentUploadDto, NutritionistSearchDto } from './nutritionist-registration.dto';
 import bcrypt from 'bcrypt';
-import { emailService } from '../../services/email.service';
+import { emailService } from '../email/email.service';
 
 export class NutritionistRegistrationService {
     private userRepository: Repository<User>;
@@ -29,10 +29,10 @@ export class NutritionistRegistrationService {
         message: string;
     }> {
         // 1. Verificar que el email no esté en uso
-        const existingUser = await this.userRepository.findOne({ 
-            where: { email: registrationData.email } 
+        const existingUser = await this.userRepository.findOne({
+            where: { email: registrationData.email }
         });
-        
+
         if (existingUser) {
             throw new AppError('Ya existe un usuario registrado con este email', 409);
         }
@@ -62,10 +62,10 @@ export class NutritionistRegistrationService {
         }
 
         // 5. Obtener rol de nutriólogo
-        const nutritionistRole = await this.roleRepository.findOne({ 
-            where: { name: RoleName.NUTRITIONIST } 
+        const nutritionistRole = await this.roleRepository.findOne({
+            where: { name: RoleName.NUTRITIONIST }
         });
-        
+
         if (!nutritionistRole) {
             throw new AppError('Rol de nutriólogo no encontrado en el sistema', 500);
         }
@@ -168,7 +168,7 @@ export class NutritionistRegistrationService {
     }> {
         // Simulación de validación de cédula profesional
         // En producción, aquí se haría una consulta a la API oficial
-        
+
         // Validaciones básicas
         if (professionalId.length < 7 || professionalId.length > 10) {
             return {
@@ -195,7 +195,7 @@ export class NutritionistRegistrationService {
 
         // TODO: Integrar con API oficial del Registro Nacional de Profesionistas
         // const apiResponse = await fetch(`https://api.rnp.gob.mx/validate/${professionalId}`);
-        
+
         return {
             isValid: true,
             details: {
@@ -210,7 +210,7 @@ export class NutritionistRegistrationService {
      * Verifica o rechaza un nutriólogo registrado
      */
     async verifyNutritionist(
-        profileId: string, 
+        profileId: string,
         verificationData: NutritionistVerificationDto,
         adminId: string
     ): Promise<NutritionistProfile> {
@@ -234,9 +234,9 @@ export class NutritionistRegistrationService {
             profile.is_verified = true;
             profile.is_available = true;
             profile.user.is_active = true;
-            
+
             await this.userRepository.save(profile.user);
-            
+
             // Enviar email de aprobación
             await this.sendApprovalEmail(profile.user);
         } else if (verificationData.verification_status === 'rejected') {
@@ -307,14 +307,14 @@ export class NutritionistRegistrationService {
         }
 
         if (searchData.verification_status) {
-            queryBuilder.andWhere('profile.verification_status = :status', { 
-                status: searchData.verification_status 
+            queryBuilder.andWhere('profile.verification_status = :status', {
+                status: searchData.verification_status
             });
         }
 
         if (searchData.university) {
-            queryBuilder.andWhere('profile.university ILIKE :university', { 
-                university: `%${searchData.university}%` 
+            queryBuilder.andWhere('profile.university ILIKE :university', {
+                university: `%${searchData.university}%`
             });
         }
 

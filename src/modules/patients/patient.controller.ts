@@ -5,7 +5,7 @@ import { AppError } from '../../utils/app.error';
 import { CreatePatientDTO, UpdatePatientDTO, PatientsSearchDTO } from './patient.dto';
 import { AppDataSource } from '../../database/data-source';
 import { RelationshipStatus } from '../../database/entities/patient_nutritionist_relation.entity';
-import { emailService } from '../../services/email.service';
+import { emailService } from '../email/email.service';
 
 const patientService = new PatientService();
 
@@ -16,7 +16,7 @@ class PatientController {
     public async checkEmailExists(req: Request, res: Response, next: NextFunction) {
         try {
             const email = req.query.email as string;
-            
+
             if (!email) {
                 return next(new AppError('Email es requerido', 400));
             }
@@ -42,7 +42,7 @@ class PatientController {
             if (!req.user || req.user.role.name !== 'nutritionist') {
                 return next(new AppError('Acceso denegado. Solo nutriólogos pueden ver sus pacientes.', 403));
             }
-            
+
             const searchParams: PatientsSearchDTO = {
                 search: req.query.search as string,
                 gender: req.query.gender as string,
@@ -56,7 +56,7 @@ class PatientController {
             };
 
             const result = await patientService.getPatientsByNutritionist(req.user.id, searchParams);
-            
+
             res.status(200).json({
                 status: 'success',
                 data: result,
@@ -77,7 +77,7 @@ class PatientController {
             }
 
             const patient = await patientService.createPatient(req.user.id, req.body as CreatePatientDTO);
-            
+
             res.status(201).json({
                 status: 'success',
                 data: { patient },
@@ -99,7 +99,7 @@ class PatientController {
 
             const { patientId } = req.params;
             const patient = await patientService.getPatientById(patientId, req.user.id);
-            
+
             res.status(200).json({
                 status: 'success',
                 data: { patient },
@@ -118,7 +118,7 @@ class PatientController {
             console.log(`🔍 UPDATE PATIENT - User: ${req.user?.id || 'NONE'} - Role: ${req.user?.role?.name || 'NONE'}`);
             console.log(`🔍 UPDATE PATIENT - Patient ID: ${req.params.patientId}`);
             console.log(`🔍 UPDATE PATIENT - Body:`, JSON.stringify(req.body, null, 2));
-            
+
             if (!req.user || req.user.role.name !== 'nutritionist') {
                 console.log(`❌ UPDATE PATIENT - Access denied: User=${req.user?.id}, Role=${req.user?.role?.name}`);
                 return next(new AppError('Acceso denegado. Solo nutriólogos pueden actualizar pacientes.', 403));
@@ -126,9 +126,9 @@ class PatientController {
 
             const { patientId } = req.params;
             console.log(`🔄 UPDATE PATIENT - Calling service with nutritionist ${req.user.id}`);
-            
+
             const patient = await patientService.updatePatient(patientId, req.user.id, req.body as UpdatePatientDTO);
-            
+
             console.log(`✅ UPDATE PATIENT - Success for patient ${patientId}`);
             res.status(200).json({
                 status: 'success',
@@ -149,7 +149,7 @@ class PatientController {
             console.log(`🔍 UPDATE BY EMAIL - User: ${req.user?.id || 'NONE'} - Role: ${req.user?.role?.name || 'NONE'}`);
             console.log(`🔍 UPDATE BY EMAIL - Email: ${req.params.email}`);
             console.log(`🔍 UPDATE BY EMAIL - Body:`, JSON.stringify(req.body, null, 2));
-            
+
             if (!req.user || req.user.role.name !== 'nutritionist') {
                 console.log(`❌ UPDATE BY EMAIL - Access denied`);
                 return next(new AppError('Acceso denegado. Solo nutriólogos pueden actualizar pacientes.', 403));
@@ -157,10 +157,10 @@ class PatientController {
 
             const { email } = req.params;
             const updateData = req.body as UpdatePatientDTO;
-            
+
             // Usar el nuevo método que busca directamente por email
             const patient = await patientService.updatePatientByEmail(email, req.user.id, updateData);
-            
+
             console.log(`✅ UPDATE BY EMAIL - Success for email ${email}`);
             res.status(200).json({
                 status: 'success',
@@ -183,7 +183,7 @@ class PatientController {
             }
 
             const stats = await patientService.getPatientStats(req.user.id);
-            
+
             res.status(200).json({
                 status: 'success',
                 data: { stats },
@@ -197,7 +197,7 @@ class PatientController {
     }
 
     // ==================== ESCENARIO 1: REGISTRO POR NUTRIÓLOGO ====================
-    
+
     public async createPatientByNutritionist(req: Request, res: Response, next: NextFunction) {
         try {
             if (!req.user || req.user.role.name !== 'nutritionist') {
@@ -213,7 +213,7 @@ class PatientController {
             // 📧 Enviar credenciales por email
             try {
                 console.log(`📧 Enviando credenciales de acceso a: ${result.patient.user.email}`);
-                
+
                 await emailService.sendPatientCredentials({
                     email: result.patient.user.email,
                     temporary_password: result.temporary_password,
@@ -223,7 +223,7 @@ class PatientController {
                 });
 
                 console.log(`✅ Email de credenciales enviado exitosamente a: ${result.patient.user.email}`);
-                
+
             } catch (emailError) {
                 console.error('❌ Error enviando email de credenciales:', emailError);
                 // No fallar todo el proceso si el email falla, solo logear el error
@@ -251,7 +251,7 @@ class PatientController {
     }
 
     // ==================== ESCENARIO 2: REGISTRO BÁSICO DEL PACIENTE ====================
-    
+
     public async registerBasicPatient(req: Request, res: Response, next: NextFunction) {
         try {
             const registrationData = req.body;
@@ -298,7 +298,7 @@ class PatientController {
     }
 
     // ==================== COMPLETAR EXPEDIENTE CLÍNICO (PARA PACIENTES ONLINE) ====================
-    
+
     public async completePatientClinicalRecord(req: Request, res: Response, next: NextFunction) {
         try {
             if (!req.user || req.user.role.name !== 'nutritionist') {
@@ -324,7 +324,7 @@ class PatientController {
     }
 
     // ==================== OBTENER PACIENTES QUE REQUIEREN COMPLETAR PERFIL ====================
-    
+
     public async getPatientsRequiringCompletion(req: Request, res: Response, next: NextFunction) {
         try {
             if (!req.user || req.user.role.name !== 'nutritionist') {
@@ -345,7 +345,7 @@ class PatientController {
     }
 
     // ==================== FUNCIONALIDADES DE ELIMINACIÓN ====================
-    
+
     // Remover paciente de la lista del nutriólogo (terminar relación)
     public async removePatientRelationship(req: Request, res: Response, next: NextFunction) {
         try {
@@ -412,7 +412,7 @@ class PatientController {
     }
 
     // ==================== CAMBIO DE NUTRIÓLOGO ====================
-    
+
     public async requestNutritionistChange(req: Request, res: Response, next: NextFunction) {
         try {
             if (!req.user || req.user.role.name !== 'patient') {
@@ -445,7 +445,7 @@ class PatientController {
     }
 
     // ==================== MÉTODOS PARA PACIENTES (VER SU PROPIA INFORMACIÓN) ====================
-    
+
     public async getMyProfile(req: Request, res: Response, next: NextFunction) {
         try {
             if (!req.user || req.user.role.name !== 'patient') {
@@ -483,7 +483,7 @@ class PatientController {
     }
 
     // ==================== QUICK ACTIONS ====================
-    
+
     public async getQuickActions(req: Request, res: Response, next: NextFunction) {
         try {
             if (!req.user || req.user.role.name !== 'nutritionist') {

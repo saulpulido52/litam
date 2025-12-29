@@ -3,7 +3,7 @@ import { Calendar, ChevronLeft, ChevronRight, Plus, Clock, MapPin, Video, Edit, 
 import { StatusModal } from '../components/StatusModal';
 import { useNavigate } from 'react-router-dom';
 import { useAppointments } from '../hooks/useAppointments';
-import DebugAppointments from '../components/DebugAppointments';
+
 import type { AppointmentType } from '../services/appointmentsService';
 import '../styles/calendar.css';
 
@@ -26,17 +26,7 @@ interface CalendarEvent {
 const CalendarPage: React.FC = () => {
   const navigate = useNavigate();
   const { appointments, loading, error, loadAppointments, updateAppointmentStatus, deleteAppointment, clearError } = useAppointments();
-  
-  // Debug: Log whenever appointments change
-  React.useEffect(() => {
-    console.log('🔄 [CalendarPage] Appointments changed:', { 
-      appointmentsCount: appointments?.length || 0, 
-      loading, 
-      error,
-      appointmentsData: appointments 
-    });
-  }, [appointments, loading, error]);
-  
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day'>('week');
   const [showEventModal, setShowEventModal] = useState(false);
@@ -71,45 +61,32 @@ const CalendarPage: React.FC = () => {
 
   // Convertir appointments del backend a eventos del calendario
   const events: CalendarEvent[] = useMemo(() => {
-    console.log('🔍 [CalendarPage] Raw appointments from backend:', appointments);
-    console.log('🔢 [CalendarPage] Appointments count:', appointments?.length || 0);
-    
     if (!appointments || !Array.isArray(appointments)) {
-      console.log('❌ [CalendarPage] No appointments or not array:', appointments);
       return [];
     }
 
     if (appointments.length === 0) {
-      console.log('⚠️ [CalendarPage] Appointments array is empty');
       return [];
     }
 
-    const convertedEvents = appointments.map((apt, index) => {
+    const convertedEvents = appointments.map((apt) => {
       try {
-        console.log(`🔄 [CalendarPage] Converting appointment ${index + 1}:`, apt);
-        
+
         // Verificar que apt.start_time y apt.end_time existen
         if (!apt.start_time || !apt.end_time) {
           console.error('❌ [CalendarPage] Missing start_time or end_time:', apt);
           return null;
         }
-        
+
         const startDate = new Date(apt.start_time);
         const endDate = new Date(apt.end_time);
-        
+
         // Verificar fechas válidas
         if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
           console.error('❌ [CalendarPage] Invalid dates:', { start_time: apt.start_time, end_time: apt.end_time });
           return null;
         }
-        
-        console.log('📅 [CalendarPage] Dates:', { 
-          start_time: apt.start_time, 
-          end_time: apt.end_time,
-          startDate: startDate.toISOString(), 
-          endDate: endDate.toISOString() 
-        });
-        
+
         const event = {
           id: apt.id,
           title: apt.notes || 'Consulta',
@@ -124,8 +101,7 @@ const CalendarPage: React.FC = () => {
           notes: apt.notes,
           original: apt
         } as CalendarEvent;
-        
-        console.log('✅ [CalendarPage] Converted event:', event);
+
         return event;
       } catch (transformError) {
         console.error('❌ [CalendarPage] Error transforming appointment to calendar event:', transformError, apt);
@@ -133,9 +109,6 @@ const CalendarPage: React.FC = () => {
       }
     }).filter((event): event is CalendarEvent => event !== null);
 
-    console.log('📋 [CalendarPage] Final converted events:', convertedEvents);
-    console.log('🎯 [CalendarPage] Events by date:', convertedEvents.map(e => ({ date: e.date, time: e.start_time, patient: e.patient_name })));
-    
     return convertedEvents;
   }, [appointments]);
 
@@ -149,7 +122,7 @@ const CalendarPage: React.FC = () => {
     const startOfWeek = new Date(date);
     const day = startOfWeek.getDay();
     startOfWeek.setDate(date.getDate() - day);
-    
+
     const weekDates = [];
     for (let i = 0; i < 7; i++) {
       const currentDate = new Date(startOfWeek);
@@ -167,15 +140,11 @@ const CalendarPage: React.FC = () => {
     const dateStr = formatDateForComparison(date);
     const dayEvents = events.filter(event => {
       const matches = event.date === dateStr;
-      console.log(`🔍 [CalendarPage] Event ${event.id} (${event.date}) matches ${dateStr}? ${matches}`);
       return matches;
     });
-    
-    console.log(`📅 [CalendarPage] Getting events for ${dateStr}:`, dayEvents.length, 'events found');
-    if (dayEvents.length > 0) {
-      console.log(`✅ [CalendarPage] Events for ${dateStr}:`, dayEvents);
-    }
-    
+
+
+
     return dayEvents;
   };
 
@@ -236,19 +205,19 @@ const CalendarPage: React.FC = () => {
         </div>
         <div className="col-md-4 text-end">
           <div className="btn-group me-2">
-            <button 
+            <button
               className={`btn btn-outline-primary ${view === 'day' ? 'active' : ''}`}
               onClick={() => setView('day')}
             >
               Día
             </button>
-            <button 
+            <button
               className={`btn btn-outline-primary ${view === 'week' ? 'active' : ''}`}
               onClick={() => setView('week')}
             >
               Semana
             </button>
-            <button 
+            <button
               className={`btn btn-outline-primary ${view === 'month' ? 'active' : ''}`}
               onClick={() => setView('month')}
             >
@@ -256,7 +225,7 @@ const CalendarPage: React.FC = () => {
             </button>
           </div>
           <div className="btn-group">
-            <button 
+            <button
               className="btn btn-outline-secondary"
               onClick={() => navigate('/appointments')}
               title="Ver lista de citas"
@@ -264,7 +233,7 @@ const CalendarPage: React.FC = () => {
               <List size={18} className="me-2" />
               Vista Lista
             </button>
-            <button 
+            <button
               className="btn btn-primary"
               onClick={() => navigate('/appointments')}
             >
@@ -280,9 +249,9 @@ const CalendarPage: React.FC = () => {
         <div className="alert alert-danger alert-dismissible fade show" role="alert">
           <AlertCircle size={16} className="me-2" />
           {error}
-          <button 
-            type="button" 
-            className="btn-close" 
+          <button
+            type="button"
+            className="btn-close"
             onClick={clearError}
             aria-label="Close"
           ></button>
@@ -363,8 +332,8 @@ const CalendarPage: React.FC = () => {
                   <h6 className="stat-label mb-2">Total Mes</h6>
                   <h3 className="stat-value mb-1">{events.filter(e => {
                     const eventDate = new Date(e.date);
-                    return eventDate.getMonth() === currentDate.getMonth() && 
-                           eventDate.getFullYear() === currentDate.getFullYear();
+                    return eventDate.getMonth() === currentDate.getMonth() &&
+                      eventDate.getFullYear() === currentDate.getFullYear();
                   }).length}</h3>
                   <small className="stat-description">este mes</small>
                 </div>
@@ -392,25 +361,25 @@ const CalendarPage: React.FC = () => {
                   {view === 'day' && `${currentDate.getDate()} de ${months[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
                 </h5>
                 <div className="btn-group">
-                  <button 
+                  <button
                     className="btn btn-outline-secondary btn-sm"
                     onClick={() => navigateWeek('prev')}
                   >
                     <ChevronLeft size={16} />
                   </button>
-                  <button 
+                  <button
                     className="btn btn-outline-primary btn-sm"
                     onClick={goToToday}
                   >
                     Hoy
                   </button>
-                  <button 
+                  <button
                     className="btn btn-outline-secondary btn-sm"
                     onClick={() => navigateWeek('next')}
                   >
                     <ChevronRight size={16} />
                   </button>
-                  <button 
+                  <button
                     className="btn btn-outline-secondary btn-sm ms-2"
                     onClick={loadAppointments}
                     disabled={loading}
@@ -519,8 +488,8 @@ const CalendarPage: React.FC = () => {
                             <span className={`badge ${getEventStatusColor(event.status)} me-2`}>
                               {getEventTypeText(event.type)}
                             </span>
-                            {event.location === 'virtual' ? 
-                              <Video size={14} className="text-info" /> : 
+                            {event.location === 'virtual' ?
+                              <Video size={14} className="text-info" /> :
                               <MapPin size={14} className="text-success" />
                             }
                           </div>
@@ -533,7 +502,7 @@ const CalendarPage: React.FC = () => {
                             <p className="small text-muted mt-1 mb-0">{event.notes}</p>
                           )}
                         </div>
-                        <button 
+                        <button
                           className="btn btn-sm btn-outline-primary"
                           onClick={() => {
                             setSelectedEvent(event);
@@ -570,10 +539,10 @@ const CalendarPage: React.FC = () => {
                           <div>
                             <h6 className="mb-1">{event.patient_name}</h6>
                             <div className="text-muted small">
-                              {new Date(event.date).toLocaleDateString('es-ES', { 
-                                weekday: 'long', 
-                                day: 'numeric', 
-                                month: 'short' 
+                              {new Date(event.date).toLocaleDateString('es-ES', {
+                                weekday: 'long',
+                                day: 'numeric',
+                                month: 'short'
                               })}
                             </div>
                             <div className="text-muted small">
@@ -595,18 +564,18 @@ const CalendarPage: React.FC = () => {
       </div>
 
       {/* Debug Component - Remove in production */}
-      <DebugAppointments />
+
 
       {/* Event Modal */}
       {showEventModal && selectedEvent && (
-        <div className="modal fade show d-block" tabIndex={-1} style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+        <div className="modal fade show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Detalles de la Cita</h5>
-                <button 
-                  type="button" 
-                  className="btn-close" 
+                <button
+                  type="button"
+                  className="btn-close"
                   onClick={() => {
                     setShowEventModal(false);
                     setSelectedEvent(null);
@@ -633,14 +602,14 @@ const CalendarPage: React.FC = () => {
                   <strong>Modalidad:</strong> {selectedEvent.location === 'virtual' ? 'Virtual' : 'Presencial'}
                 </div>
                 <div className="mb-3">
-                  <strong>Estado:</strong> 
+                  <strong>Estado:</strong>
                   <span className={`badge ${getEventStatusColor(selectedEvent.status)} ms-2`}>
                     {selectedEvent.status === 'scheduled' ? 'Programada' :
-                     selectedEvent.status === 'completed' ? 'Completada' :
-                     selectedEvent.status === 'cancelled_by_patient' ? 'Cancelada por paciente' :
-                     selectedEvent.status === 'cancelled_by_nutritionist' ? 'Cancelada por nutriólogo' :
-                     selectedEvent.status === 'rescheduled' ? 'Reagendada' :
-                     selectedEvent.status === 'no_show' ? 'No asistió' : selectedEvent.status}
+                      selectedEvent.status === 'completed' ? 'Completada' :
+                        selectedEvent.status === 'cancelled_by_patient' ? 'Cancelada por paciente' :
+                          selectedEvent.status === 'cancelled_by_nutritionist' ? 'Cancelada por nutriólogo' :
+                            selectedEvent.status === 'rescheduled' ? 'Reagendada' :
+                              selectedEvent.status === 'no_show' ? 'No asistió' : selectedEvent.status}
                   </span>
                 </div>
                 {selectedEvent.notes && (
@@ -650,9 +619,9 @@ const CalendarPage: React.FC = () => {
                 )}
               </div>
               <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
+                <button
+                  type="button"
+                  className="btn btn-secondary"
                   onClick={() => {
                     setShowEventModal(false);
                     setSelectedEvent(null);
@@ -661,7 +630,7 @@ const CalendarPage: React.FC = () => {
                   Cerrar
                 </button>
                 {selectedEvent?.original.patient?.phone && (
-                  <a 
+                  <a
                     href={`tel:${selectedEvent.original.patient.phone}`}
                     className="btn btn-success me-2"
                     title="Llamar al paciente"
@@ -670,7 +639,7 @@ const CalendarPage: React.FC = () => {
                     Llamar
                   </a>
                 )}
-                
+
                 {/* Botón de cambio de estado */}
                 <button
                   className="btn btn-outline-secondary me-2"
@@ -680,9 +649,9 @@ const CalendarPage: React.FC = () => {
                   <Settings size={16} className="me-1" />
                   Estado
                 </button>
-                
-                <button 
-                  type="button" 
+
+                <button
+                  type="button"
                   className="btn btn-outline-danger me-2"
                   onClick={async () => {
                     if (selectedEvent && window.confirm('¿Estás seguro de que deseas eliminar esta cita permanentemente?')) {
@@ -699,8 +668,8 @@ const CalendarPage: React.FC = () => {
                   <Trash2 size={16} className="me-2" />
                   Eliminar
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="btn btn-primary"
                   onClick={() => navigate(`/appointments`)}
                 >
