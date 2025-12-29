@@ -293,7 +293,7 @@ class ClinicalRecordController {
             const { recordId } = req.params;
             const { labDate, description } = req.body;
             const file = req.file; // Multer file
-            
+
             if (!file) {
                 return res.status(400).json({
                     status: 'error',
@@ -359,14 +359,14 @@ class ClinicalRecordController {
             // Leer el archivo PDF generado y enviarlo como respuesta
             if (result.pdf_path && result.filename) {
                 const fs = require('fs').promises;
-                
+
                 try {
                     const pdfBuffer = await fs.readFile(result.pdf_path);
-                    
+
                     res.setHeader('Content-Type', 'application/pdf');
                     res.setHeader('Content-Disposition', `inline; filename="${result.filename}"`);
                     res.setHeader('Content-Length', pdfBuffer.length);
-                    
+
                     console.log(`✅ Sending PDF file: ${result.filename}, size: ${pdfBuffer.length} bytes`);
                     return res.send(pdfBuffer);
                 } catch (fileError) {
@@ -611,7 +611,7 @@ class ClinicalRecordController {
             }
 
             const deteccion = await clinicalRecordService.detectarTipoExpediente(req.body);
-            
+
             res.status(200).json({
                 status: 'success',
                 message: 'Tipo de expediente detectado exitosamente.',
@@ -639,11 +639,11 @@ class ClinicalRecordController {
 
             const patientId = req.params.patientId;
             const datos = await clinicalRecordService.obtenerDatosPreviosPaciente(
-                patientId, 
-                req.user.id, 
+                patientId,
+                req.user.id,
                 req.user.role.name
             );
-            
+
             res.status(200).json({
                 status: 'success',
                 message: 'Datos previos obtenidos exitosamente.',
@@ -671,7 +671,7 @@ class ClinicalRecordController {
 
             const { expedienteActualId, expedienteBaseId } = req.params;
             const comparativo = await clinicalRecordService.generarComparativo(expedienteActualId, expedienteBaseId);
-            
+
             res.status(200).json({
                 status: 'success',
                 message: 'Comparativo generado exitosamente.',
@@ -698,10 +698,10 @@ class ClinicalRecordController {
             }
 
             const record = await clinicalRecordService.createClinicalRecordEvolutivo(
-                req.body as CreateUpdateClinicalRecordDto, 
+                req.body as CreateUpdateClinicalRecordDto,
                 req.user.id
             );
-            
+
             res.status(201).json({
                 status: 'success',
                 message: 'Registro clínico evolutivo creado exitosamente.',
@@ -729,7 +729,7 @@ class ClinicalRecordController {
             }
 
             const estadisticas = await clinicalRecordService.getEstadisticasSeguimiento(req.user.id);
-            
+
             res.status(200).json({
                 status: 'success',
                 message: 'Estadísticas de seguimiento obtenidas exitosamente.',
@@ -743,6 +743,87 @@ class ClinicalRecordController {
                 return next(error);
             }
             next(new AppError('Error al obtener estadísticas de seguimiento.', 500, 'GET_FOLLOWUP_STATS_ERROR'));
+        }
+    }
+
+    /**
+     * 🤖 DETECTAR TIPO DE EXPEDIENTE AUTOMÁTICAMENTE
+     */
+    public async detectarTipoExpediente(req: Request, res: Response, next: NextFunction) {
+        try {
+            // LOG: Diagnosticar problema en producción
+            console.log('[DETECT-TYPE] Inicio de detectarTipoExpediente');
+            console.log('[DETECT-TYPE] User:', req.user ? 'Autenticado' : 'NO AUTENTICADO');
+            console.log('[DETECT-TYPE] Role:', req.user?.role?.name || 'Sin rol');
+            console.log('[DETECT-TYPE] Body:', JSON.stringify(req.body));
+
+            if (!req.user || (req.user.role.name !== RoleName.NUTRITIONIST && req.user.role.name !== RoleName.ADMIN)) {
+                console.log('[DETECT-TYPE] Acceso denegado - User:', req.user?.id, 'Role:', req.user?.role?.name);
+                return next(new AppError('Acceso denegado. Solo nutriólogos o administradores pueden detectar tipos de expediente.', 403, 'FORBIDDEN'));
+            }
+
+            const { patientId, motivoConsulta, esProgramada, tipoConsultaSolicitada } = req.body;
+
+            console.log('[DETECT-TYPE] Llamando al servicio con:', { patientId, motivoConsulta, esProgramada, tipoConsultaSolicitada });
+            const deteccion = await clinicalRecordService.detectarTipoExpediente(
+                patientId,
+                motivoConsulta,
+                esProgramada,
+                tipoConsultaSolicitada
+            );
+
+            console.log('[DETECT-TYPE] Detección completada:', deteccion.tipoSugerido);
+            res.status(200).json({
+                status: 'success',
+                message: 'Tipo de expediente detectado exitosamente.',
+                data: deteccion,
+                timestamp: new Date().toISOString()
+            });
+        } catch (error: any) {
+            console.error('[DETECT-TYPE ERROR] Error en detectarTipoExpediente:', error.message);
+            console.error('[DETECT-TYPE ERROR] Stack:', error.stack);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al detectar el tipo de expediente.', 500, 'DETECT_TYPE_ERROR'));
+        }
+    }
+
+    /**
+     * 📊 OBTENER DATOS PREVIOS DEL PACIENTE
+     */
+    public async obtenerDatosPreviosPaciente(req: Request, res: Response, next: NextFunction) {
+        try {
+            // LOG: Diagnosticar problema en producción
+            console.log('[PREVIOUS-DATA] Inicio de obtenerDatosPreviosPaciente');
+            console.log('[PREVIOUS-DATA] User:', req.user ? 'Autenticado' : 'NO AUTENTICADO');
+            console.log('[PREVIOUS-DATA] Role:', req.user?.role?.name || 'Sin rol');
+            console.log('[PREVIOUS-DATA] PatientId:', req.params.patientId);
+
+            if (!req.user) {
+                console.log('[PREVIOUS-DATA] Usuario no autenticado');
+                return next(new AppError('Usuario no autenticado.', 401, 'UNAUTHORIZED'));
+            }
+
+            const { patientId } = req.params;
+
+            console.log('[PREVIOUS-DATA] Llamando al servicio...');
+            const datosPrevios = await clinicalRecordService.obtenerDatosPreviosPaciente(patientId);
+
+            console.log('[PREVIOUS-DATA] Datos obtenidos exitosamente');
+            res.status(200).json({
+                status: 'success',
+                message: 'Datos previos del paciente obtenidos exitosamente.',
+                data: datosPrevios,
+                timestamp: new Date().toISOString()
+            });
+        } catch (error: any) {
+            console.error('[PREVIOUS-DATA ERROR] Error en obtenerDatosPreviosPaciente:', error.message);
+            console.error('[PREVIOUS-DATA ERROR] Stack:', error.stack);
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al obtener datos previos del paciente.', 500, 'GET_PREVIOUS_DATA_ERROR'));
         }
     }
 }
