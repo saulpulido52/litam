@@ -105,7 +105,7 @@ const ExpedienteDetector: React.FC<ExpedienteDetectorProps> = ({
 
         // Limpiar timeout si las dependencias cambian antes de 1 segundo
         return () => clearTimeout(timeoutId);
-    }, [patientId, motivoConsulta, esProgramada, tipoConsultaSolicitada]);
+    }, [patientId]); // Solo ejecutar una vez al inicio con el patientId
 
     const getTipoBadgeColor = (tipo: string) => {
         switch (tipo) {
