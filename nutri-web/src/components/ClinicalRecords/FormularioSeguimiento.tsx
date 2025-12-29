@@ -1,6 +1,6 @@
 // nutri-web/src/components/ClinicalRecords/FormularioSeguimiento.tsx
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Button, Form, Alert, Spinner, Badge} from 'react-bootstrap';
+import { Card, Row, Col, Button, Form, Alert, Spinner, Badge } from 'react-bootstrap';
 import { FaStethoscope, FaWeight, FaChartLine, FaSave, FaEye } from 'react-icons/fa';
 import ExpedienteDetector from './ExpedienteDetector';
 import ComparativoAutomatico from './ComparativoAutomatico';
@@ -107,9 +107,15 @@ const FormularioSeguimiento: React.FC<FormularioSeguimientoProps> = ({
                 }
 
                 if (response.ok) {
+                    // Verificar que sea JSON antes de parsear
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType?.includes('application/json')) {
+                        console.warn('El endpoint previous-data devolvió un formato incorrecto');
+                        return;
+                    }
                     const data = await response.json();
                     setDatosPrevios(data.data);
-                    
+
                     // Pre-llenar altura si está disponible (no suele cambiar)
                     if (data.data.ultimasMediciones?.altura) {
                         setFormData(prev => ({
@@ -209,9 +215,9 @@ const FormularioSeguimiento: React.FC<FormularioSeguimientoProps> = ({
                     <FaStethoscope className="me-2" />
                     ¡Expediente de seguimiento creado exitosamente!
                 </Alert>
-                
+
                 {formData.expedienteBaseId && (
-                    <ComparativoAutomatico 
+                    <ComparativoAutomatico
                         expedienteActualId={expedienteCreado}
                         expedienteBaseId={formData.expedienteBaseId}
                         onError={(error) => console.error('Error en comparativo:', error)}
@@ -267,7 +273,7 @@ const FormularioSeguimiento: React.FC<FormularioSeguimientoProps> = ({
                             </Col>
                             <Col md={3}>
                                 <strong>IMC:</strong> {
-                                    datosPrevios.ultimasMediciones.imc 
+                                    datosPrevios.ultimasMediciones.imc
                                         ? `${Number(datosPrevios.ultimasMediciones.imc).toFixed(1)} kg/m²`
                                         : 'N/A'
                                 }
@@ -277,7 +283,7 @@ const FormularioSeguimiento: React.FC<FormularioSeguimientoProps> = ({
                             </Col>
                             <Col md={3}>
                                 <small className="text-muted">
-                                    Fecha: {datosPrevios.ultimasMediciones.fecha ? 
+                                    Fecha: {datosPrevios.ultimasMediciones.fecha ?
                                         new Date(datosPrevios.ultimasMediciones.fecha).toLocaleDateString() : 'N/A'}
                                 </small>
                             </Col>
@@ -302,7 +308,7 @@ const FormularioSeguimiento: React.FC<FormularioSeguimientoProps> = ({
                                         as="textarea"
                                         rows={2}
                                         value={formData.consultationReason}
-                                        onChange={(e) => setFormData(prev => ({...prev, consultationReason: e.target.value}))}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, consultationReason: e.target.value }))}
                                         placeholder="Ej: Control de peso, seguimiento de plan nutricional..."
                                         required
                                     />
@@ -314,7 +320,7 @@ const FormularioSeguimiento: React.FC<FormularioSeguimientoProps> = ({
                                     <Form.Control
                                         type="date"
                                         value={formData.recordDate}
-                                        onChange={(e) => setFormData(prev => ({...prev, recordDate: e.target.value}))}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, recordDate: e.target.value }))}
                                     />
                                 </Form.Group>
                             </Col>
@@ -340,8 +346,8 @@ const FormularioSeguimiento: React.FC<FormularioSeguimientoProps> = ({
                                         onChange={(e) => handleInputChange('seguimientoMetadata', 'adherencia_plan', parseInt(e.target.value))}
                                     />
                                     <div className="text-center">
-                                        <Badge bg={formData.seguimientoMetadata.adherencia_plan >= 80 ? 'success' : 
-                                                   formData.seguimientoMetadata.adherencia_plan >= 60 ? 'warning' : 'danger'}>
+                                        <Badge bg={formData.seguimientoMetadata.adherencia_plan >= 80 ? 'success' :
+                                            formData.seguimientoMetadata.adherencia_plan >= 60 ? 'warning' : 'danger'}>
                                             {formData.seguimientoMetadata.adherencia_plan}%
                                         </Badge>
                                     </div>
@@ -479,7 +485,7 @@ const FormularioSeguimiento: React.FC<FormularioSeguimientoProps> = ({
                                 as="textarea"
                                 rows={3}
                                 value={formData.evolutionAndFollowUpNotes}
-                                onChange={(e) => setFormData(prev => ({...prev, evolutionAndFollowUpNotes: e.target.value}))}
+                                onChange={(e) => setFormData(prev => ({ ...prev, evolutionAndFollowUpNotes: e.target.value }))}
                                 placeholder="Observaciones generales, cambios en el plan, próximos objetivos..."
                             />
                         </Form.Group>
