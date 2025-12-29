@@ -35,7 +35,7 @@ const ExpedienteDetector: React.FC<ExpedienteDetectorProps> = ({
     const [deteccion, setDeteccion] = useState<DeteccionExpediente | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-const detectarTipo = async () => {
+    const detectarTipo = async () => {
         if (!patientId) return;
 
         setLoading(true);
@@ -79,7 +79,7 @@ const detectarTipo = async () => {
 
             const data = await response.json();
             const deteccionResult = data.data;
-            
+
             setDeteccion(deteccionResult);
             onDeteccionCompleta(deteccionResult);
 
@@ -93,8 +93,18 @@ const detectarTipo = async () => {
         }
     };
 
+    // Debounce para evitar peticiones en cada tecla
     useEffect(() => {
-        detectarTipo();
+        // Solo ejecutar si hay patientId
+        if (!patientId) return;
+
+        // Debounce de 1 segundo
+        const timeoutId = setTimeout(() => {
+            detectarTipo();
+        }, 1000);
+
+        // Limpiar timeout si las dependencias cambian antes de 1 segundo
+        return () => clearTimeout(timeoutId);
     }, [patientId, motivoConsulta, esProgramada, tipoConsultaSolicitada]);
 
     const getTipoBadgeColor = (tipo: string) => {
@@ -138,8 +148,8 @@ const detectarTipo = async () => {
 
     if (error) {
         return (
-            <ErrorAutenticacion 
-                error={error} 
+            <ErrorAutenticacion
+                error={error}
                 onRetry={detectarTipo}
             />
         );
@@ -159,9 +169,9 @@ const detectarTipo = async () => {
                 <div className="d-flex justify-content-between align-items-start mb-3">
                     <div>
                         <h6 className="mb-2">
-                            Tipo Sugerido: 
-                            <Badge 
-                                bg={getTipoBadgeColor(deteccion.tipoSugerido)} 
+                            Tipo Sugerido:
+                            <Badge
+                                bg={getTipoBadgeColor(deteccion.tipoSugerido)}
                                 className="ms-2"
                             >
                                 {getTipoDisplayName(deteccion.tipoSugerido)}
@@ -172,7 +182,7 @@ const detectarTipo = async () => {
                             {deteccion.razon}
                         </p>
                     </div>
-                    
+
                     {deteccion.requiereConfirmacion && (
                         <Badge bg="warning" text="dark">
                             <FaExclamationTriangle className="me-1" />
@@ -213,8 +223,8 @@ const detectarTipo = async () => {
                         Detectar Nuevamente
                     </Button>
                     {deteccion.expedienteBaseId && (
-                        <Button 
-                            variant="outline-success" 
+                        <Button
+                            variant="outline-success"
                             size="sm"
                             onClick={() => onVerExpedienteBase?.(deteccion.expedienteBaseId!)}
                         >
