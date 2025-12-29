@@ -35,6 +35,16 @@ const ExpedienteDetector: React.FC<ExpedienteDetectorProps> = ({
     const [deteccion, setDeteccion] = useState<DeteccionExpediente | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Helper para obtener la URL base del API
+    const getApiUrl = (): string => {
+        const envApiUrl = import.meta.env.VITE_API_URL;
+        if (envApiUrl) return envApiUrl;
+        return import.meta.env.MODE === 'production'
+            ? 'https://litam.onrender.com/api'
+            : 'http://localhost:4000/api';
+    };
+
     const detectarTipo = async () => {
         if (!patientId) return;
 
@@ -47,7 +57,8 @@ const ExpedienteDetector: React.FC<ExpedienteDetectorProps> = ({
                 throw new Error('No hay sesión activa. Por favor inicia sesión nuevamente.');
             }
 
-            const response = await fetch('/api/clinical-records/detect-type', {
+            const apiUrl = getApiUrl();
+            const response = await fetch(`${apiUrl}/clinical-records/detect-type`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
