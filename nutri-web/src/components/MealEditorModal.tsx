@@ -30,6 +30,30 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
     );
 
     // Helpers
+    const recalculateTotals = (foods: MealFood[], recipes: MealRecipe[]) => {
+        let calories = 0, protein = 0, carbs = 0, fats = 0;
+
+        foods.forEach(f => {
+            calories += f.calories || 0;
+            protein += f.protein || 0;
+            carbs += f.carbs || 0;
+            fats += f.fats || 0;
+        });
+
+        recipes.forEach(r => {
+            calories += r.calories || 0;
+            protein += r.protein || 0;
+            carbs += r.carbs || 0;
+            fats += r.fats || 0;
+        });
+
+        return {
+            total_calories: Math.max(0, calories),
+            total_protein: Math.max(0, protein),
+            total_carbs: Math.max(0, carbs),
+            total_fats: Math.max(0, fats)
+        };
+    };
     const handleAddFood = (food: Food) => {
         const defaultQty = 100; // grams
 
@@ -43,15 +67,16 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
             fats: food.fats
         };
 
-        const updatedMeal = {
+        const newFoods = [...editingMeal.foods, newFood];
+        const newRecipes = [...editingMeal.recipes];
+        const totals = recalculateTotals(newFoods, newRecipes);
+
+        setMeal({
             ...editingMeal,
-            foods: [...editingMeal.foods, newFood],
-            total_calories: editingMeal.total_calories + newFood.calories,
-            total_protein: editingMeal.total_protein + newFood.protein,
-            total_carbs: editingMeal.total_carbs + newFood.carbs,
-            total_fats: editingMeal.total_fats + newFood.fats
-        };
-        setMeal(updatedMeal);
+            foods: newFoods,
+            recipes: newRecipes,
+            ...totals
+        });
     };
 
     const handleAddRecipe = (recipe: Recipe) => {
@@ -71,85 +96,68 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
             is_modified: false
         };
 
-        const updatedMeal = {
+        const newFoods = [...editingMeal.foods];
+        const newRecipes = [...editingMeal.recipes, newRecipe];
+        const totals = recalculateTotals(newFoods, newRecipes);
+
+        setMeal({
             ...editingMeal,
-            recipes: [...editingMeal.recipes, newRecipe],
-            total_calories: editingMeal.total_calories + newRecipe.calories,
-            total_protein: editingMeal.total_protein + newRecipe.protein,
-            total_carbs: editingMeal.total_carbs + newRecipe.carbs,
-            total_fats: editingMeal.total_fats + newRecipe.fats
-        };
-        setMeal(updatedMeal);
+            foods: newFoods,
+            recipes: newRecipes,
+            ...totals
+        });
     };
 
     const handleUpdateQuantity = (index: number, newQuantity: number) => {
         if (newQuantity < 0) return;
 
-        const updatedMeal = { ...editingMeal };
-        const item = updatedMeal.foods[index];
-        const oldQuantity = item.quantity_grams;
+        // Deep clone for safety when calculating ratios/updates
+        const newFoods = editingMeal.foods.map((item, i) => {
+            if (i !== index) return item;
 
-        // Calcular factores
-        const oldFactor = oldQuantity / 100;
-        const newFactor = newQuantity / 100;
+            const oldQuantity = item.quantity_grams || 100;
+            const safeOldQty = oldQuantity === 0 ? 100 : oldQuantity;
+            const ratio = newQuantity / safeOldQty;
 
-        // Restar valores viejos
-        updatedMeal.total_calories -= item.calories;
-        updatedMeal.total_protein -= item.protein;
-        updatedMeal.total_carbs -= item.carbs;
-        updatedMeal.total_fats -= item.fats;
+            return {
+                ...item,
+                quantity_grams: newQuantity,
+                calories: item.calories * ratio,
+                protein: item.protein * ratio,
+                carbs: item.carbs * ratio,
+                fats: item.fats * ratio
+            };
+        });
 
-        // Actualizar item
-        item.quantity_grams = newQuantity;
-        // Recalcular valores nutricionales del item basados en la info original (assumed linear from current values if base not available, but ideally we should have base values. 
-        // NOTE: In this context, we are recalculating based on the CURRENT values which might be dangerous if repeated. 
-        // BETTER: We should rely on the base food values if possible, but here we only have the item.
-        // Assuming item values are currently correct for 'quantity_grams', we derive base 100g values first.
-        const baseCalories = item.calories / oldFactor;
-        const baseProtein = item.protein / oldFactor;
-        const baseCarbs = item.carbs / oldFactor;
-        const baseFats = item.fats / oldFactor;
+        const newRecipes = [...editingMeal.recipes];
+        const totals = recalculateTotals(newFoods, newRecipes);
 
-        item.calories = baseCalories * newFactor;
-        item.protein = baseProtein * newFactor;
-        item.carbs = baseCarbs * newFactor;
-        item.fats = baseFats * newFactor;
-
-        // Sumar valores nuevos
-        updatedMeal.total_calories += item.calories;
-        updatedMeal.total_protein += item.protein;
-        updatedMeal.total_carbs += item.carbs;
-        updatedMeal.total_fats += item.fats;
-
-        setMeal(updatedMeal);
+        setMeal({
+            ...editingMeal,
+            foods: newFoods,
+            recipes: newRecipes,
+            ...totals
+        });
     };
 
     const handleRemoveItem = (index: number, type: 'food' | 'recipe') => {
-        let updatedMeal = { ...editingMeal };
+        let newFoods = [...editingMeal.foods];
+        let newRecipes = [...editingMeal.recipes];
 
         if (type === 'food') {
-            const item = editingMeal.foods[index];
-            updatedMeal.foods = editingMeal.foods.filter((_, i) => i !== index);
-            updatedMeal.total_calories = (updatedMeal.total_calories || 0) - (item.calories || 0);
-            updatedMeal.total_protein = (updatedMeal.total_protein || 0) - (item.protein || 0);
-            updatedMeal.total_carbs = (updatedMeal.total_carbs || 0) - (item.carbs || 0);
-            updatedMeal.total_fats = (updatedMeal.total_fats || 0) - (item.fats || 0);
+            newFoods = newFoods.filter((_, i) => i !== index);
         } else {
-            const item = editingMeal.recipes[index];
-            updatedMeal.recipes = editingMeal.recipes.filter((_, i) => i !== index);
-            updatedMeal.total_calories = (updatedMeal.total_calories || 0) - (item.calories || 0);
-            updatedMeal.total_protein = (updatedMeal.total_protein || 0) - (item.protein || 0);
-            updatedMeal.total_carbs = (updatedMeal.total_carbs || 0) - (item.carbs || 0);
-            updatedMeal.total_fats = (updatedMeal.total_fats || 0) - (item.fats || 0);
+            newRecipes = newRecipes.filter((_, i) => i !== index);
         }
 
-        // Safety check for negative zeros
-        if (updatedMeal.total_calories < 0) updatedMeal.total_calories = 0;
-        if (updatedMeal.total_protein < 0) updatedMeal.total_protein = 0;
-        if (updatedMeal.total_carbs < 0) updatedMeal.total_carbs = 0;
-        if (updatedMeal.total_fats < 0) updatedMeal.total_fats = 0;
+        const totals = recalculateTotals(newFoods, newRecipes);
 
-        setMeal(updatedMeal);
+        setMeal({
+            ...editingMeal,
+            foods: newFoods,
+            recipes: newRecipes,
+            ...totals
+        });
     };
 
     const saveChanges = () => {
