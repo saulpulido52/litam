@@ -275,8 +275,10 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
                     <div className="bg-light p-3 rounded-3">
                       {dietPlan?.pathological_restrictions?.allergies?.length > 0 ? (
                         <ul className="mb-0 ps-3">
-                          {dietPlan.pathological_restrictions.allergies.map((allergy: string, idx: number) => (
-                            <li key={idx} className="text-danger">{allergy}</li>
+                          {dietPlan.pathological_restrictions.allergies.map((allergy: any, idx: number) => (
+                            <li key={idx} className="text-danger">
+                              {typeof allergy === 'object' ? (allergy.allergen || allergy.name || JSON.stringify(allergy)) : allergy}
+                            </li>
                           ))}
                         </ul>
                       ) : (
@@ -289,8 +291,10 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
                     <div className="bg-light p-3 rounded-3">
                       {dietPlan?.pathological_restrictions?.intolerances?.length > 0 ? (
                         <ul className="mb-0 ps-3">
-                          {dietPlan.pathological_restrictions.intolerances.map((intolerance: string, idx: number) => (
-                            <li key={idx} className="text-warning">{intolerance}</li>
+                          {dietPlan.pathological_restrictions.intolerances.map((intolerance: any, idx: number) => (
+                            <li key={idx} className="text-warning">
+                              {typeof intolerance === 'object' ? (intolerance.intolerance || intolerance.name || JSON.stringify(intolerance)) : intolerance}
+                            </li>
                           ))}
                         </ul>
                       ) : (
@@ -303,8 +307,10 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
                     <div className="bg-light p-3 rounded-3">
                       {dietPlan?.pathological_restrictions?.medical_conditions?.length > 0 ? (
                         <ul className="mb-0 ps-3">
-                          {dietPlan.pathological_restrictions.medical_conditions.map((condition: string, idx: number) => (
-                            <li key={idx} className="text-primary">{condition}</li>
+                          {dietPlan.pathological_restrictions.medical_conditions.map((condition: any, idx: number) => (
+                            <li key={idx} className="text-primary">
+                              {typeof condition === 'object' ? (condition.condition || condition.name || JSON.stringify(condition)) : condition}
+                            </li>
                           ))}
                         </ul>
                       ) : (
@@ -317,8 +323,10 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
                     <div className="bg-light p-3 rounded-3">
                       {dietPlan?.pathological_restrictions?.medications?.length > 0 ? (
                         <ul className="mb-0 ps-3">
-                          {dietPlan.pathological_restrictions.medications.map((medication: string, idx: number) => (
-                            <li key={idx} className="text-info">{medication}</li>
+                          {dietPlan.pathological_restrictions.medications.map((medication: any, idx: number) => (
+                            <li key={idx} className="text-info">
+                              {typeof medication === 'object' ? (medication.medication || medication.name || JSON.stringify(medication)) : medication}
+                            </li>
                           ))}
                         </ul>
                       ) : (
@@ -331,9 +339,9 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
                       <label className="form-label fw-bold text-muted small text-uppercase">Consideraciones Especiales</label>
                       <div className="bg-light p-3 rounded-3">
                         <div className="d-flex flex-wrap gap-2">
-                          {dietPlan.pathological_restrictions.special_considerations.map((consideration: string, idx: number) => (
+                          {dietPlan.pathological_restrictions.special_considerations.map((consideration: any, idx: number) => (
                             <span key={idx} className="badge bg-success bg-opacity-10 text-success px-3 py-2">
-                              {consideration}
+                              {typeof consideration === 'object' ? (consideration.consideration || consideration.name || JSON.stringify(consideration)) : consideration}
                             </span>
                           ))}
                         </div>
