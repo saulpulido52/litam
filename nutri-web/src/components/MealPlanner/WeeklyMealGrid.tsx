@@ -57,7 +57,7 @@ const WeeklyMealGrid: React.FC<WeeklyMealGridProps> = ({
                                         <div className="text-muted small d-flex align-items-center">
                                             <Clock size={12} className="me-1" />
                                             {/* Hora por defecto o configurada */}
-                                            08:00
+                                            {type.time}
                                         </div>
                                     </div>
                                 </div>

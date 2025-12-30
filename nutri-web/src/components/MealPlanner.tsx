@@ -58,12 +58,29 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
   };
 
   const handleAddMeal = (day: string, mealType: string) => {
+    // Determine time based on type
+    const timings = dietPlan?.meal_timing || {};
+    const defaultTimes: Record<string, string> = {
+      breakfast: '08:00',
+      morning_snack: '11:00',
+      lunch: '14:00',
+      afternoon_snack: '17:00',
+      dinner: '20:00',
+      evening_snack: '22:00'
+    };
+
+    const key = mealType as keyof typeof defaultTimes;
+    // Map mealType like 'morning_snack' to 'morning_snack_time' property if it exists in snake_case keys in backend
+    // Assuming backend returns keys like "breakfast_time"
+    const timeKey = `${key}_time`;
+    const time = timings[timeKey] || defaultTimes[key] || '08:00';
+
     // Create a new empty meal object
     const newMeal: Meal = {
       id: `${day}-${mealType}-${Date.now()}`,
       day: day as Meal['day'],
       meal_type: mealType as any,
-      meal_time: '08:00', // Default, should come from settings
+      meal_time: time,
       foods: [],
       recipes: [],
       total_calories: 0,
