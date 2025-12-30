@@ -157,8 +157,17 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
     }
 
     // 3. Filtrar según frecuencia
+    // 3. Filtrar según frecuencia
     const freq = dietPlan.meal_frequency;
     console.log('MealPlanner: Frequency Data:', freq);
+
+    // Caso: Objeto booleano (ej: { lunch: true, dinner: true ... })
+    // Comprobamos si es un objeto simple y NO tiene meals_count
+    if (typeof freq === 'object' && freq !== null && !freq.meals_count && !freq.distribution) {
+      console.log('MealPlanner: Using boolean object config');
+      return allTypes.filter(t => freq[t.key] === true);
+    }
+
     let count = 6;
 
     if (freq.meals_count) {
