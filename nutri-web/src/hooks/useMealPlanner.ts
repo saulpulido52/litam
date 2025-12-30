@@ -180,7 +180,9 @@ export const useMealPlanner = ({
     const updateMealInPlan = useCallback((updatedMeal: Meal) => {
         console.log('useMealPlanner: updateMealInPlan called', updatedMeal);
         setPlans(prevPlans => {
+            console.log('useMealPlanner: setPlans updater called. PrevPlans length:', prevPlans.length, 'Target Week:', selectedWeek);
             return prevPlans.map(plan => {
+                console.log(`Checking plan week ${plan.week_number} against selected ${selectedWeek}`);
                 if (plan.week_number === selectedWeek) {
                     const existingMealIndex = plan.meals.findIndex(meal =>
                         meal.day === updatedMeal.day && meal.meal_type === updatedMeal.meal_type
