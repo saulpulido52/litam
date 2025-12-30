@@ -109,14 +109,62 @@ class DietPlanService {
         const start = new Date(startDate);
         const weekStart = new Date(start);
         weekStart.setDate(start.getDate() + (weekNumber - 1) * 7);
-        
+
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
-        
+
         return {
             startDate: weekStart.toISOString().split('T')[0],
             endDate: weekEnd.toISOString().split('T')[0]
         };
+    }
+
+    // --- Normalización de Datos para JSONB ---
+    private normalizeWeeklyPlans(weeklyPlans: any[]): any[] {
+        if (!weeklyPlans || !Array.isArray(weeklyPlans)) return [];
+
+        return weeklyPlans.map(plan => ({
+            week_number: plan.week_number || plan.weekNumber,
+            start_date: plan.start_date || plan.startDate,
+            end_date: plan.end_date || plan.endDate,
+            daily_calories_target: plan.daily_calories_target || plan.dailyCaloriesTarget,
+            daily_macros_target: plan.daily_macros_target || plan.dailyMacrosTarget,
+            notes: plan.notes,
+            // Normalizar comidas internas recursivamente
+            meals: Array.isArray(plan.meals) ? plan.meals.map((meal: any) => ({
+                day: meal.day, // 'monday', 'tuesday', etc.
+                meal_type: meal.meal_type || meal.mealType, // 'breakfast', etc.
+                meal_time: meal.meal_time || meal.mealTime, // Guardar hora específica 'HH:MM'
+                total_calories: meal.total_calories || meal.totalCalories || 0,
+                total_protein: meal.total_protein || meal.totalProtein || 0,
+                total_carbs: meal.total_carbs || meal.totalCarbs || 0,
+                total_fats: meal.total_fats || meal.totalFats || 0,
+                // Preservar alimentos con sus cantidades exactas
+                foods: Array.isArray(meal.foods) ? meal.foods.map((food: any) => ({
+                    food_id: food.food_id || food.foodId,
+                    food_name: food.food_name || food.foodName,
+                    quantity_grams: food.quantity_grams || food.quantityGrams || 0, // CRÍTICO: Persistir cantidad
+                    calories: food.calories,
+                    protein: food.protein,
+                    carbs: food.carbs,
+                    fats: food.fats,
+                    unit: food.unit
+                })) : [],
+                // Preservar recetas
+                recipes: Array.isArray(meal.recipes) ? meal.recipes.map((recipe: any) => ({
+                    recipe_id: recipe.recipe_id || recipe.recipeId,
+                    recipe_name: recipe.recipe_name || recipe.recipeName,
+                    servings: recipe.servings || 1,
+                    calories: recipe.calories,
+                    protein: recipe.protein,
+                    carbs: recipe.carbs,
+                    fats: recipe.fats,
+                    is_modified: recipe.is_modified || recipe.isModified || false,
+                    // Guardar datos de instancia si existen para aislamiento
+                    recipe_data: recipe.recipe_data || recipe.recipeData
+                })) : []
+            })) : []
+        }));
     }
 
     // --- Lógica de IA (Simulación Inicial) ---
@@ -197,7 +245,7 @@ class DietPlanService {
         dislikedFoods?: string[]
     ): Promise<WeeklyPlanDto> {
         const weekDates = this.calculateWeekDates(startDate, weekNumber);
-        
+
         // Calcular macros basados en calorías y objetivo
         let proteinRatio = 0.3; // 30% por defecto
         let carbsRatio = 0.45;  // 45% por defecto
@@ -254,7 +302,7 @@ class DietPlanService {
 
                     const randomFood = mockFoods[Math.floor(Math.random() * mockFoods.length)];
                     const quantity = Math.floor(Math.random() * 150) + 50; // 50-200g
-                    
+
                     foods.push({
                         foodId: randomFood.id,
                         foodName: randomFood.name,
@@ -353,20 +401,9 @@ class DietPlanService {
         // Guardar el plan
         await this.dietPlanRepository.save(newDietPlan);
 
-        // Si hay planes semanales, procesarlos y normalizar nombres de campos
+        // Si hay planes semanales, procesarlos y normalizar usando el helper centralizado
         if (dietPlanDto.weeklyPlans && dietPlanDto.weeklyPlans.length > 0) {
-            // Normalizar nombres de campos de snake_case a estructura interna
-            const normalizedWeeklyPlans = dietPlanDto.weeklyPlans.map(plan => ({
-                week_number: plan.week_number || plan.weekNumber,
-                start_date: plan.start_date || plan.startDate,
-                end_date: plan.end_date || plan.endDate,
-                daily_calories_target: plan.daily_calories_target || plan.dailyCaloriesTarget,
-                daily_macros_target: plan.daily_macros_target || plan.dailyMacrosTarget,
-                meals: plan.meals || [],
-                notes: plan.notes
-            }));
-            
-            newDietPlan.weekly_plans = normalizedWeeklyPlans;
+            newDietPlan.weekly_plans = this.normalizeWeeklyPlans(dietPlanDto.weeklyPlans);
             await this.dietPlanRepository.save(newDietPlan);
         }
 
@@ -416,11 +453,11 @@ class DietPlanService {
                 'meals.meal_items.food',
             ],
         });
-        
+
         if (!savedPlan) {
             throw new AppError('Error al crear el plan de dieta. No se pudo recargar el plan guardado.', 500);
         }
-        
+
         return savedPlan;
     }
 
@@ -439,7 +476,7 @@ class DietPlanService {
     public async generateDietPlanByAI(dto: GenerateDietPlanAiDto, nutritionistId: string): Promise<DietPlan> {
         await this.verifyNutritionistPatientRelation(nutritionistId, dto.patientId);
         const aiGeneratedData = await this.dietGenerationAI.generateFullDietPlan(dto);
-        
+
         // Asegurar que los campos obligatorios no sean undefined
         const createDto: CreateDietPlanDto = {
             name: aiGeneratedData.name || dto.name,
@@ -455,7 +492,7 @@ class DietPlanService {
             weeklyPlans: aiGeneratedData.weeklyPlans || [],
             notes: dto.notesForAI,
         };
-        
+
         const result = await this.createDietPlan(createDto, nutritionistId);
         if (!result) {
             throw new AppError('Error al crear el plan de dieta generado por IA.', 500);
@@ -478,7 +515,7 @@ class DietPlanService {
         // Verificar que la semana no exista ya
         const existingWeeks = dietPlan.weekly_plans || [];
         const weekExists = existingWeeks.some(week => week.weekNumber === weekData.weekNumber);
-        
+
         if (weekExists) {
             throw new AppError(`La semana ${weekData.weekNumber} ya existe en este plan.`, 400);
         }
@@ -609,7 +646,12 @@ class DietPlanService {
         if (updateDto.dailyCaloriesTarget !== undefined) dietPlan.daily_calories_target = updateDto.dailyCaloriesTarget;
         if (updateDto.isWeeklyPlan !== undefined) dietPlan.is_weekly_plan = updateDto.isWeeklyPlan;
         if (updateDto.totalWeeks !== undefined) dietPlan.total_weeks = updateDto.totalWeeks;
-        if (updateDto.weeklyPlans !== undefined) dietPlan.weekly_plans = updateDto.weeklyPlans;
+        if (updateDto.totalWeeks !== undefined) dietPlan.total_weeks = updateDto.totalWeeks;
+
+        // **OPTIMIZACIÓN & CORRECCIÓN**: Normalizar weekly_plans para asegurar persistencia de cantidades y horarios
+        if (updateDto.weeklyPlans !== undefined) {
+            dietPlan.weekly_plans = this.normalizeWeeklyPlans(updateDto.weeklyPlans);
+        }
 
         if (updateDto.dailyMacrosTarget !== undefined) {
             const { protein, carbohydrates, fats } = updateDto.dailyMacrosTarget;
@@ -631,7 +673,7 @@ class DietPlanService {
         if (updateDto.mealFrequency !== undefined) dietPlan.meal_frequency = updateDto.mealFrequency;
         if (updateDto.nutritionalGoals !== undefined) dietPlan.nutritional_goals = updateDto.nutritionalGoals;
         if (updateDto.flexibilitySettings !== undefined) dietPlan.flexibility_settings = updateDto.flexibilitySettings;
-        
+
         // Restricciones patológicas - Normalizar nombres de campos
         if (updateDto.pathologicalRestrictions !== undefined) {
             dietPlan.pathological_restrictions = {
@@ -649,10 +691,10 @@ class DietPlanService {
             if (dietPlan.status !== DietPlanStatus.DRAFT && dietPlan.status !== DietPlanStatus.PENDING_REVIEW) {
                 throw new AppError('La actualización detallada de comidas solo está permitida para planes en borrador o pendientes de revisión.', 400);
             }
-            
+
             // Guardar el plan primero para asegurar que existe
             await this.dietPlanRepository.save(dietPlan);
-            
+
             // Eliminar comidas e ítems existentes para recrearlos
             if (dietPlan.meals && dietPlan.meals.length > 0) {
                 for (const meal of dietPlan.meals) {
@@ -662,7 +704,7 @@ class DietPlanService {
                 }
                 await this.mealRepository.remove(dietPlan.meals);
             }
-            
+
             dietPlan.meals = []; // Resetear el array de comidas
 
             for (const mealDto of updateDto.meals) {
@@ -671,7 +713,7 @@ class DietPlanService {
                     order: mealDto.order,
                     diet_plan: dietPlan,
                 });
-                
+
                 // Guardar la comida primero
                 const savedMeal = await this.mealRepository.save(newMeal);
                 savedMeal.meal_items = [];
@@ -686,7 +728,7 @@ class DietPlanService {
                         quantity: itemDto.quantity,
                         meal: savedMeal,
                     });
-                    
+
                     // Guardar el item de comida
                     const savedMealItem = await this.mealItemRepository.save(newMealItem);
                     savedMeal.meal_items.push(savedMealItem);
@@ -697,7 +739,7 @@ class DietPlanService {
 
 
         await this.dietPlanRepository.save(dietPlan);
-        
+
         // Recargar el plan con todas las relaciones para devolverlo completo
         const updatedDietPlan = await this.loadDietPlanWithFullRelations(dietPlanId);
 
@@ -739,7 +781,7 @@ class DietPlanService {
                 throw new AppError('Ya existe un plan activo para este paciente. Desactívelo primero antes de activar otro.', 400);
             }
         }
-        
+
         // No permitir activación si el plan está vacío (no tiene comidas)
         if (newStatus === DietPlanStatus.ACTIVE) {
             const planWithMeals = await this.dietPlanRepository.findOne({
@@ -773,9 +815,9 @@ class DietPlanService {
         }
 
         await this.dietPlanRepository.remove(dietPlan);
-        return { 
+        return {
             status: 'success',
-            message: 'Plan de dieta eliminado con éxito.' 
+            message: 'Plan de dieta eliminado con éxito.'
         };
     }
 
@@ -785,7 +827,7 @@ class DietPlanService {
     public async generateMealPlannerPDF(dietPlanId: string, requesterId: string, requesterRole: RoleName) {
         // Obtener el plan con permisos
         const dietPlan = await this.getDietPlanById(dietPlanId, requesterId, requesterRole);
-        
+
         try {
             // Pasar directamente el plan de dieta al servicio de PDF
             // El servicio de PDF debe manejar internamente la estructura de datos
