@@ -121,12 +121,15 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
                 <div className="row g-0" style={{ height: '70vh' }}>
                     {/* Left: Search & Add */}
                     <div className="col-lg-7 border-end p-4 d-flex flex-column h-100">
-                        <div className="input-group shadow-sm rounded-pill overflow-hidden mb-4 border search-box">
-                            <span className="input-group-text bg-white border-0 ps-3"><Search size={18} className="text-muted" /></span>
+                        <div className="input-group mb-4 shadow-sm">
+                            <span className="input-group-text bg-white border-end-0 ps-3">
+                                <Search size={18} className="text-secondary" />
+                            </span>
                             <input
                                 type="text"
-                                className="form-control border-0 py-2 shadow-none"
-                                placeholder="Buscar alimentos o recetas..."
+                                className="form-control border-start-0 py-3 text-dark"
+                                placeholder="🔍 Buscar aquí alimentos o recetas..."
+                                style={{ fontSize: '1.1rem' }}
                                 value={searchTerm}
                                 onChange={e => setSearchTerm(e.target.value)}
                             />
@@ -187,27 +190,27 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
 
                             <div className="bg-white rounded-4 p-3 shadow-sm mb-3 d-flex justify-content-between">
                                 <div className="text-center">
-                                    <h5 className="fw-bold text-primary mb-0">{Math.round(meal.total_calories)}</h5>
+                                    <h5 className="fw-bold text-primary mb-0">{Math.round(editingMeal.total_calories)}</h5>
                                     <small className="text-muted">kcal</small>
                                 </div>
                                 <div className="text-center">
-                                    <h5 className="fw-bold text-dark mb-0">{Math.round(meal.total_protein)}g</h5>
+                                    <h5 className="fw-bold text-dark mb-0">{Math.round(editingMeal.total_protein)}g</h5>
                                     <small className="text-muted">Prot</small>
                                 </div>
                                 <div className="text-center">
-                                    <h5 className="fw-bold text-dark mb-0">{Math.round(meal.total_carbs)}g</h5>
+                                    <h5 className="fw-bold text-dark mb-0">{Math.round(editingMeal.total_carbs)}g</h5>
                                     <small className="text-muted">Carb</small>
                                 </div>
                                 <div className="text-center">
-                                    <h5 className="fw-bold text-dark mb-0">{Math.round(meal.total_fats)}g</h5>
+                                    <h5 className="fw-bold text-dark mb-0">{Math.round(editingMeal.total_fats)}g</h5>
                                     <small className="text-muted">Gras</small>
                                 </div>
                             </div>
                         </div>
 
                         <div className="overflow-auto custom-scrollbar flex-grow-1">
-                            {meal.recipes.length > 0 && <h6 className="small text-uppercase fw-bold text-muted mb-2">Recetas</h6>}
-                            {meal.recipes.map((item: MealRecipe, idx: number) => (
+                            {editingMeal.recipes.length > 0 && <h6 className="small text-uppercase fw-bold text-muted mb-2">Recetas</h6>}
+                            {editingMeal.recipes.map((item: MealRecipe, idx: number) => (
                                 <div key={item.recipe_id} className="bg-white p-3 rounded-3 mb-2 shadow-sm d-flex justify-content-between align-items-center">
                                     <div>
                                         <div className="fw-medium text-dark">{item.recipe_name}</div>
@@ -219,8 +222,8 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
                                 </div>
                             ))}
 
-                            {meal.foods.length > 0 && <h6 className="small text-uppercase fw-bold text-muted mb-2 mt-3">Alimentos</h6>}
-                            {meal.foods.map((item: MealFood, idx: number) => (
+                            {editingMeal.foods.length > 0 && <h6 className="small text-uppercase fw-bold text-muted mb-2 mt-3">Alimentos</h6>}
+                            {editingMeal.foods.map((item: MealFood, idx: number) => (
                                 <div key={`${item.food_id}-${idx}`} className="bg-white p-3 rounded-3 mb-2 shadow-sm d-flex justify-content-between align-items-center">
                                     <div>
                                         <div className="fw-medium text-dark">{item.food_name}</div>
@@ -232,7 +235,7 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
                                 </div>
                             ))}
 
-                            {meal.recipes.length === 0 && meal.foods.length === 0 && (
+                            {editingMeal.recipes.length === 0 && editingMeal.foods.length === 0 && (
                                 <div className="text-center py-5 text-muted">
                                     <div className="mb-2">🍽️</div>
                                     <small>Comida vacía. Agrega alimentos del panel izquierdo.</small>
