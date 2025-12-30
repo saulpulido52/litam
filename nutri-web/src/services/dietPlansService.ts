@@ -207,8 +207,7 @@ class DietPlansService {
       flexibility_settings: backendPlan.flexibility_settings,
       // === DURACIÓN EXPLÍCITA ===
       duration_value: backendPlan.duration_value,
-      duration_unit: backendPlan.duration_unit,
-      total_weeks: backendPlan.total_weeks
+      duration_unit: backendPlan.duration_unit
     };
 
     console.log('✅ Plan transformado completamente:', {
