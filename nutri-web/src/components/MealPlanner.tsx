@@ -129,41 +129,46 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
 
   // Constants
   const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-  const allMealTypes = [
-    { key: 'breakfast', label: 'Desayuno', icon: '🌅' },
-    { key: 'morning_snack', label: 'Media Mañana', icon: '☕' },
-    { key: 'lunch', label: 'Almuerzo', icon: '🍽️' },
-    { key: 'afternoon_snack', label: 'Merienda', icon: '🍎' },
-    { key: 'dinner', label: 'Cena', icon: '🌙' },
-    { key: 'evening_snack', label: 'Recena', icon: '🥛' }
-  ];
-
   const mealTypes = React.useMemo(() => {
-    if (!dietPlan?.meal_frequency) return allMealTypes;
+    // 1. Definir horarios base
+    const timings = dietPlan?.meal_timing || {};
+    const defaultTimes = {
+      breakfast: '08:00',
+      morning_snack: '11:00',
+      lunch: '14:00',
+      afternoon_snack: '17:00',
+      dinner: '20:00',
+      evening_snack: '22:00'
+    };
 
-    // Intentar deducir la configuración
+    // 2. Construir tipos con horarios
+    const allTypes = [
+      { key: 'breakfast', label: 'Desayuno', icon: '🌅', time: timings.breakfast_time || defaultTimes.breakfast },
+      { key: 'morning_snack', label: 'Media Mañana', icon: '☕', time: timings.morning_snack_time || defaultTimes.morning_snack },
+      { key: 'lunch', label: 'Almuerzo', icon: '🍽️', time: timings.lunch_time || defaultTimes.lunch },
+      { key: 'afternoon_snack', label: 'Merienda', icon: '🍎', time: timings.afternoon_snack_time || defaultTimes.afternoon_snack },
+      { key: 'dinner', label: 'Cena', icon: '🌙', time: timings.dinner_time || defaultTimes.dinner },
+      { key: 'evening_snack', label: 'Recena', icon: '🥛', time: timings.evening_snack_time || defaultTimes.evening_snack }
+    ];
+
+    if (!dietPlan?.meal_frequency) return allTypes;
+
+    // 3. Filtrar según frecuencia
     const freq = dietPlan.meal_frequency;
     let count = 6;
 
-    // Si tiene propiedad explícita
     if (freq.meals_count) {
       count = Number(freq.meals_count);
     }
-    // Si viene como string en description o similar
     else if (typeof freq === 'string' && freq.includes('5')) {
       count = 5;
     }
-    // Si es objeto con distribution
-    else if (freq.distribution) {
-      // Lógica específica si existiera
-    }
 
-    // Filtrar basado en el conteo (conteo estándar)
-    if (count === 5) return allMealTypes.filter(m => m.key !== 'evening_snack');
-    if (count === 4) return allMealTypes.filter(m => m.key !== 'morning_snack' && m.key !== 'evening_snack');
-    if (count === 3) return allMealTypes.filter(m => ['breakfast', 'lunch', 'dinner'].includes(m.key));
+    if (count === 5) return allTypes.filter(m => m.key !== 'evening_snack');
+    if (count === 4) return allTypes.filter(m => m.key !== 'morning_snack' && m.key !== 'evening_snack');
+    if (count === 3) return allTypes.filter(m => ['breakfast', 'lunch', 'dinner'].includes(m.key));
 
-    return allMealTypes;
+    return allTypes;
   }, [dietPlan]);
 
   if (!isOpen) return null;
