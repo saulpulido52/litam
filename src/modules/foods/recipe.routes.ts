@@ -36,6 +36,10 @@ router.get('/:id', recipeController.getRecipeById);
 // Rutas que requieren permisos de nutriólogo o admin
 router.use(authorize(RoleName.NUTRITIONIST, RoleName.ADMIN));
 
+// Analizar receta con Edamam y OMS
+// POST /api/recipes/analyze
+router.post('/analyze', recipeController.analyzeRecipe);
+
 // Calcular información nutricional sin guardar receta
 // POST /api/recipes/calculate-nutrition
 router.post('/calculate-nutrition', recipeController.calculateNutrition);

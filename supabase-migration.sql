@@ -1,41 +1,28 @@
--- SQL para Supabase - Agregar columnas de recetas base
--- IMPORTANTE: PostgreSQL en Supabase no soporta "IF NOT EXISTS" en ALTER TABLE ADD CONSTRAINT
--- Por eso debemos verificar primero si existen
+-- 1. Crear la tabla de reglas OMS (Esta sí es nueva)
+CREATE TABLE IF NOT EXISTS public.who_standards (
+    id SERIAL PRIMARY KEY,
+    nutrient_key VARCHAR(50) NOT NULL UNIQUE, -- Ej: 'SUGAR', 'SODIUM'
+    daily_limit_value NUMERIC NOT NULL,       
+    unit VARCHAR(10) DEFAULT 'g',
+    description TEXT,
+    severity_level VARCHAR(20) DEFAULT 'HIGH' 
+);
 
--- 1. Agregar columnas (IF NOT EXISTS funciona aquí)
-ALTER TABLE recipes 
-ADD COLUMN IF NOT EXISTS is_base_recipe BOOLEAN DEFAULT FALSE,
-ADD COLUMN IF NOT EXISTS is_shared_by_admin BOOLEAN DEFAULT FALSE,
-ADD COLUMN IF NOT EXISTS original_recipe_id UUID NULL,
-ADD COLUMN IF NOT EXISTS shared_at TIMESTAMP WITH TIME ZONE NULL,
-ADD COLUMN IF NOT EXISTS shared_by_admin_id UUID NULL;
+-- Datos semilla para la OMS
+INSERT INTO public.who_standards (nutrient_key, daily_limit_value, unit, description)
+VALUES 
+    ('SUGAR', 25, 'g', 'Límite de azúcares libres OMS'),
+    ('SODIUM', 2000, 'mg', 'Límite diario de sodio OMS'),
+    ('SAT_FAT', 20, 'g', 'Grasas saturadas referencia')
+ON CONFLICT (nutrient_key) DO NOTHING;
 
--- 2. Agregar constraint para shared_by_admin (solo si no existe)
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint 
-        WHERE conname = 'FK_recipes_shared_by_admin'
-    ) THEN
-        ALTER TABLE recipes 
-        ADD CONSTRAINT FK_recipes_shared_by_admin 
-        FOREIGN KEY (shared_by_admin_id) REFERENCES users(id) ON DELETE SET NULL;
-    END IF;
-END $$;
+-- 2. ADAPTAR la tabla 'foods' existente (En lugar de crear 'cached_ingredients')
+ALTER TABLE public.foods 
+ADD COLUMN IF NOT EXISTS external_api_id VARCHAR(100), 
+ADD COLUMN IF NOT EXISTS api_source VARCHAR(50) DEFAULT 'MANUAL',
+ADD COLUMN IF NOT EXISTS sodium NUMERIC DEFAULT 0, -- Campo nuevo vital
+ADD COLUMN IF NOT EXISTS raw_nutrition_data JSONB, -- El caché del JSON completo
+ADD COLUMN IF NOT EXISTS who_compliance_flag VARCHAR(20) DEFAULT 'UNKNOWN';
 
--- 3. Agregar constraint para original_recipe (solo si no existe)
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint 
-        WHERE conname = 'FK_recipes_original_recipe'
-    ) THEN
-        ALTER TABLE recipes 
-        ADD CONSTRAINT FK_recipes_original_recipe 
-        FOREIGN KEY (original_recipe_id) REFERENCES recipes(id) ON DELETE SET NULL;
-    END IF;
-END $$;
-
--- 4. Crear índices (solo si no existen)
-CREATE INDEX IF NOT EXISTS IDX_recipes_is_base_recipe ON recipes (is_base_recipe);
-CREATE INDEX IF NOT EXISTS IDX_recipes_is_shared_by_admin ON recipes (is_shared_by_admin);
+-- Índice para optimizar búsquedas por ID externo
+CREATE INDEX IF NOT EXISTS idx_foods_external_id ON public.foods(external_api_id);

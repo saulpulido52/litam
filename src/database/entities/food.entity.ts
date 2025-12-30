@@ -59,6 +59,22 @@ export class Food {
     @OneToMany(() => MealItem, (mealItem) => mealItem.food) // Relación inversa a MealItem
     meal_items!: MealItem[];
 
+    // --- Campos de Integración Edamam y Validación OMS ---
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    external_api_id: string | null;
+
+    @Column({ type: 'varchar', length: 50, nullable: true, default: 'MANUAL' })
+    api_source: string | null;
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true, default: 0 })
+    sodium: number | null;
+
+    @Column({ type: 'jsonb', nullable: true })
+    raw_nutrition_data: any | null;
+
+    @Column({ type: 'varchar', length: 20, nullable: true, default: 'UNKNOWN' })
+    who_compliance_flag: string | null;
+
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     created_at!: Date;
 
