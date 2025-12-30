@@ -294,18 +294,28 @@ class AppointmentService {
             throw new AppError('Nutriólogo no encontrado o no autorizado.', 403);
         }
 
-        // **FIX**: El patientId en el DTO es el ID del perfil del paciente, no el user.id
-        // Primero buscamos el perfil del paciente para obtener el user asociado
-        const patientProfile = await AppDataSource.getRepository('PatientProfile').findOne({
-            where: { id: scheduleDto.patientId },
-            relations: ['user']
+        // Primero intentamos buscar al usuario directamente (ID de usuario)
+        // El frontend envía el ID del usuario, así que esta debería ser la búsqueda principal
+        let patient = await this.userRepository.findOne({
+            where: { id: scheduleDto.patientId, role: { name: RoleName.PATIENT } },
         });
 
-        if (!patientProfile || !patientProfile.user) {
-            throw new AppError('Paciente no encontrado.', 404);
+        // Si no se encuentra, intentamos buscar por perfil de paciente (Legacy/Fallback)
+        // Esto mantiene la compatibilidad si algún cliente envía el ID del perfil
+        if (!patient) {
+            const patientProfile = await AppDataSource.getRepository('PatientProfile').findOne({
+                where: { id: scheduleDto.patientId },
+                relations: ['user']
+            });
+
+            if (patientProfile && patientProfile.user) {
+                patient = patientProfile.user;
+            }
         }
 
-        const patient = patientProfile.user;
+        if (!patient) {
+            throw new AppError('Paciente no encontrado.', 404);
+        }
 
         // Verificar relación activa entre nutriólogo y paciente
         const activeRelation = await this.relationRepository.findOne({
