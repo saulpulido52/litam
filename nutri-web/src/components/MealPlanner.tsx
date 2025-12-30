@@ -171,6 +171,22 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
     return allTypes;
   }, [dietPlan]);
 
+  // Calculate Total Weeks based on plan duration
+  const totalWeeks = React.useMemo(() => {
+    if (!dietPlan?.duration_value || !dietPlan?.duration_unit) return 4;
+
+    let weeks = 4;
+    const val = Number(dietPlan.duration_value);
+
+    if (dietPlan.duration_unit === 'weeks' || dietPlan.duration_unit === 'semanas') {
+      weeks = val;
+    } else if (dietPlan.duration_unit === 'months' || dietPlan.duration_unit === 'meses') {
+      weeks = val * 4;
+    }
+
+    return Math.max(1, Math.min(weeks, 12)); // Clip between 1 and 12 weeks
+  }, [dietPlan]);
+
   if (!isOpen) return null;
 
   return (
@@ -190,7 +206,7 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
               {/* 5. Toolbar Component */}
               <MealPlannerToolbar
                 selectedWeek={selectedWeek}
-                totalWeeks={4} // TODO: dynamic from props
+                totalWeeks={totalWeeks}
                 onSelectWeek={setSelectedWeek}
                 onSave={handleSave}
                 onClearWeek={handleClearWeek}
