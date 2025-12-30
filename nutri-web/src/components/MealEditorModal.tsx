@@ -82,24 +82,73 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
         setMeal(updatedMeal);
     };
 
+    const handleUpdateQuantity = (index: number, newQuantity: number) => {
+        if (newQuantity < 0) return;
+
+        const updatedMeal = { ...editingMeal };
+        const item = updatedMeal.foods[index];
+        const oldQuantity = item.quantity_grams;
+
+        // Calcular factores
+        const oldFactor = oldQuantity / 100;
+        const newFactor = newQuantity / 100;
+
+        // Restar valores viejos
+        updatedMeal.total_calories -= item.calories;
+        updatedMeal.total_protein -= item.protein;
+        updatedMeal.total_carbs -= item.carbs;
+        updatedMeal.total_fats -= item.fats;
+
+        // Actualizar item
+        item.quantity_grams = newQuantity;
+        // Recalcular valores nutricionales del item basados en la info original (assumed linear from current values if base not available, but ideally we should have base values. 
+        // NOTE: In this context, we are recalculating based on the CURRENT values which might be dangerous if repeated. 
+        // BETTER: We should rely on the base food values if possible, but here we only have the item.
+        // Assuming item values are currently correct for 'quantity_grams', we derive base 100g values first.
+        const baseCalories = item.calories / oldFactor;
+        const baseProtein = item.protein / oldFactor;
+        const baseCarbs = item.carbs / oldFactor;
+        const baseFats = item.fats / oldFactor;
+
+        item.calories = baseCalories * newFactor;
+        item.protein = baseProtein * newFactor;
+        item.carbs = baseCarbs * newFactor;
+        item.fats = baseFats * newFactor;
+
+        // Sumar valores nuevos
+        updatedMeal.total_calories += item.calories;
+        updatedMeal.total_protein += item.protein;
+        updatedMeal.total_carbs += item.carbs;
+        updatedMeal.total_fats += item.fats;
+
+        setMeal(updatedMeal);
+    };
+
     const handleRemoveItem = (index: number, type: 'food' | 'recipe') => {
         let updatedMeal = { ...editingMeal };
 
         if (type === 'food') {
             const item = editingMeal.foods[index];
-            updatedMeal.foods = editingMeal.foods.filter((_: MealFood, i: number) => i !== index);
-            updatedMeal.total_calories -= item.calories;
-            updatedMeal.total_protein -= item.protein;
-            updatedMeal.total_carbs -= item.carbs;
-            updatedMeal.total_fats -= item.fats;
+            updatedMeal.foods = editingMeal.foods.filter((_, i) => i !== index);
+            updatedMeal.total_calories = (updatedMeal.total_calories || 0) - (item.calories || 0);
+            updatedMeal.total_protein = (updatedMeal.total_protein || 0) - (item.protein || 0);
+            updatedMeal.total_carbs = (updatedMeal.total_carbs || 0) - (item.carbs || 0);
+            updatedMeal.total_fats = (updatedMeal.total_fats || 0) - (item.fats || 0);
         } else {
             const item = editingMeal.recipes[index];
-            updatedMeal.recipes = editingMeal.recipes.filter((_: MealRecipe, i: number) => i !== index);
-            updatedMeal.total_calories -= item.calories;
-            updatedMeal.total_protein -= item.protein;
-            updatedMeal.total_carbs -= item.carbs;
-            updatedMeal.total_fats -= item.fats;
+            updatedMeal.recipes = editingMeal.recipes.filter((_, i) => i !== index);
+            updatedMeal.total_calories = (updatedMeal.total_calories || 0) - (item.calories || 0);
+            updatedMeal.total_protein = (updatedMeal.total_protein || 0) - (item.protein || 0);
+            updatedMeal.total_carbs = (updatedMeal.total_carbs || 0) - (item.carbs || 0);
+            updatedMeal.total_fats = (updatedMeal.total_fats || 0) - (item.fats || 0);
         }
+
+        // Safety check for negative zeros
+        if (updatedMeal.total_calories < 0) updatedMeal.total_calories = 0;
+        if (updatedMeal.total_protein < 0) updatedMeal.total_protein = 0;
+        if (updatedMeal.total_carbs < 0) updatedMeal.total_carbs = 0;
+        if (updatedMeal.total_fats < 0) updatedMeal.total_fats = 0;
+
         setMeal(updatedMeal);
     };
 
@@ -190,19 +239,19 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
 
                             <div className="bg-white rounded-4 p-3 shadow-sm mb-3 d-flex justify-content-between">
                                 <div className="text-center">
-                                    <h5 className="fw-bold text-primary mb-0">{Math.round(editingMeal.total_calories)}</h5>
+                                    <h5 className="fw-bold text-primary mb-0">{Math.round(editingMeal.total_calories || 0)}</h5>
                                     <small className="text-muted">kcal</small>
                                 </div>
                                 <div className="text-center">
-                                    <h5 className="fw-bold text-dark mb-0">{Math.round(editingMeal.total_protein)}g</h5>
+                                    <h5 className="fw-bold text-dark mb-0">{Math.round(editingMeal.total_protein || 0)}g</h5>
                                     <small className="text-muted">Prot</small>
                                 </div>
                                 <div className="text-center">
-                                    <h5 className="fw-bold text-dark mb-0">{Math.round(editingMeal.total_carbs)}g</h5>
+                                    <h5 className="fw-bold text-dark mb-0">{Math.round(editingMeal.total_carbs || 0)}g</h5>
                                     <small className="text-muted">Carb</small>
                                 </div>
                                 <div className="text-center">
-                                    <h5 className="fw-bold text-dark mb-0">{Math.round(editingMeal.total_fats)}g</h5>
+                                    <h5 className="fw-bold text-dark mb-0">{Math.round(editingMeal.total_fats || 0)}g</h5>
                                     <small className="text-muted">Gras</small>
                                 </div>
                             </div>
@@ -225,11 +274,24 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
                             {editingMeal.foods.length > 0 && <h6 className="small text-uppercase fw-bold text-muted mb-2 mt-3">Alimentos</h6>}
                             {editingMeal.foods.map((item: MealFood, idx: number) => (
                                 <div key={`${item.food_id}-${idx}`} className="bg-white p-3 rounded-3 mb-2 shadow-sm d-flex justify-content-between align-items-center">
-                                    <div>
+                                    <div className="flex-grow-1">
                                         <div className="fw-medium text-dark">{item.food_name}</div>
-                                        <div className="small text-muted">{Math.round(item.calories)} kcal • {item.quantity_grams}g</div>
+                                        <div className="d-flex align-items-center mt-1 gap-2">
+                                            <div className="d-flex align-items-center bg-light rounded-pill px-2 py-1 border">
+                                                <input
+                                                    type="number"
+                                                    className="form-control form-control-sm border-0 bg-transparent p-0 text-center fw-bold text-primary"
+                                                    style={{ width: '50px' }}
+                                                    value={item.quantity_grams}
+                                                    onChange={(e) => handleUpdateQuantity(idx, parseFloat(e.target.value) || 0)}
+                                                    min="0"
+                                                />
+                                                <span className="small text-muted ms-1">g</span>
+                                            </div>
+                                            <span className="small text-muted">• {Math.round(item.calories || 0)} kcal</span>
+                                        </div>
                                     </div>
-                                    <button className="btn btn-link text-danger p-0" onClick={() => handleRemoveItem(idx, 'food')}>
+                                    <button className="btn btn-link text-danger p-0 ms-2" onClick={() => handleRemoveItem(idx, 'food')}>
                                         <Trash2 size={16} />
                                     </button>
                                 </div>

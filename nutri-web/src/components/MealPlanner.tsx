@@ -112,7 +112,7 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
 
   // Constants
   const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-  const mealTypes = [
+  const allMealTypes = [
     { key: 'breakfast', label: 'Desayuno', icon: '🌅' },
     { key: 'morning_snack', label: 'Media Mañana', icon: '☕' },
     { key: 'lunch', label: 'Almuerzo', icon: '🍽️' },
@@ -120,6 +120,34 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
     { key: 'dinner', label: 'Cena', icon: '🌙' },
     { key: 'evening_snack', label: 'Recena', icon: '🥛' }
   ];
+
+  const mealTypes = React.useMemo(() => {
+    if (!dietPlan?.meal_frequency) return allMealTypes;
+
+    // Intentar deducir la configuración
+    const freq = dietPlan.meal_frequency;
+    let count = 6;
+
+    // Si tiene propiedad explícita
+    if (freq.meals_count) {
+      count = Number(freq.meals_count);
+    }
+    // Si viene como string en description o similar
+    else if (typeof freq === 'string' && freq.includes('5')) {
+      count = 5;
+    }
+    // Si es objeto con distribution
+    else if (freq.distribution) {
+      // Lógica específica si existiera
+    }
+
+    // Filtrar basado en el conteo (conteo estándar)
+    if (count === 5) return allMealTypes.filter(m => m.key !== 'evening_snack');
+    if (count === 4) return allMealTypes.filter(m => m.key !== 'morning_snack' && m.key !== 'evening_snack');
+    if (count === 3) return allMealTypes.filter(m => ['breakfast', 'lunch', 'dinner'].includes(m.key));
+
+    return allMealTypes;
+  }, [dietPlan]);
 
   if (!isOpen) return null;
 
