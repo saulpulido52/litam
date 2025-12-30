@@ -361,9 +361,11 @@ app.use(cors({
             // Exact match
             if (origin === allowedOrigin) return true;
 
-            // Vercel preview URLs (nutri-*.vercel.app)
+            // Vercel preview URLs (nutri-*.vercel.app o litam-*.vercel.app)
             if (process.env.NODE_ENV !== 'development' &&
-                origin.match(/https:\/\/nutri-[a-z0-9-]+\.vercel\.app$/)) {
+                (origin.match(/https:\/\/nutri-[a-z0-9-]+\.vercel\.app$/) ||
+                    origin.match(/https:\/\/litam-[a-z0-9-]+\.vercel\.app$/) ||
+                    origin.includes('vercel.app'))) { // Fallback mas permisivo para Vercel
                 return true;
             }
 
