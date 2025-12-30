@@ -151,10 +151,14 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
       { key: 'evening_snack', label: 'Recena', icon: '🥛', time: timings.evening_snack_time || defaultTimes.evening_snack }
     ];
 
-    if (!dietPlan?.meal_frequency) return allTypes;
+    if (!dietPlan?.meal_frequency) {
+      console.log('MealPlanner: No meal_frequency, returning default 6');
+      return allTypes;
+    }
 
     // 3. Filtrar según frecuencia
     const freq = dietPlan.meal_frequency;
+    console.log('MealPlanner: Frequency Data:', freq);
     let count = 6;
 
     if (freq.meals_count) {

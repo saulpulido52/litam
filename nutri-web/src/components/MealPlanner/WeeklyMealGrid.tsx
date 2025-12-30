@@ -24,10 +24,15 @@ const WeeklyMealGrid: React.FC<WeeklyMealGridProps> = ({
     onEditMeal,
     onAddMeal
 }) => {
+    // Debug logging
+    console.log('WeeklyMealGrid Render:', { week: selectedWeek, mealsCount: currentPlan?.meals?.length, types: mealTypes.length });
 
     const getMeal = (day: string, typeKey: string) => {
         if (!currentPlan || !currentPlan.meals) return undefined;
-        return currentPlan.meals.find((m: Meal) => m.day === day && m.meal_type === typeKey);
+        // Strict matching for debugging
+        const found = currentPlan.meals.find((m: Meal) => m.day === day && m.meal_type === typeKey);
+        // console.log(`GetMeal [${day} - ${typeKey}]:`, found ? 'Found' : 'Empty');
+        return found;
     };
 
     return (
@@ -35,12 +40,11 @@ const WeeklyMealGrid: React.FC<WeeklyMealGridProps> = ({
             <table className="table table-borderless mb-0 align-middle">
                 <thead className="bg-light border-bottom">
                     <tr>
-                        <th className="py-4 ps-4 text-uppercase text-secondary small fw-bold" style={{ minWidth: '150px' }}>Comida</th>
+                        <th className="py-3 ps-3 text-uppercase text-secondary small fw-bold" style={{ minWidth: '120px' }}>Comida</th>
                         {daysOfWeek.map(day => (
-                            <th key={day} className="py-4 text-center text-uppercase text-secondary small fw-bold" style={{ minWidth: '180px' }}>
+                            <th key={day} className="py-3 text-center text-uppercase text-secondary small fw-bold" style={{ minWidth: '140px' }}>
                                 <div className="d-flex flex-column align-items-center">
                                     <span>{day}</span>
-                                    {/* <small className="fw-normal text-muted mt-1">0 kcal</small> */}
                                 </div>
                             </th>
                         ))}
@@ -49,14 +53,13 @@ const WeeklyMealGrid: React.FC<WeeklyMealGridProps> = ({
                 <tbody>
                     {mealTypes.map((type) => (
                         <tr key={type.key} className="border-bottom-custom">
-                            <td className="ps-4 py-3">
-                                <div className="d-flex align-items-center py-2">
+                            <td className="ps-3 py-2">
+                                <div className="d-flex align-items-center py-1">
                                     <span className="fs-5 me-2">{type.icon}</span>
                                     <div>
-                                        <div className="fw-bold text-dark">{type.label}</div>
-                                        <div className="text-muted small d-flex align-items-center">
-                                            <Clock size={12} className="me-1" />
-                                            {/* Hora por defecto o configurada */}
+                                        <div className="fw-bold text-dark small">{type.label}</div>
+                                        <div className="text-muted small d-flex align-items-center" style={{ fontSize: '0.75rem' }}>
+                                            <Clock size={10} className="me-1" />
                                             {type.time}
                                         </div>
                                     </div>
@@ -67,13 +70,13 @@ const WeeklyMealGrid: React.FC<WeeklyMealGridProps> = ({
                                 const isEmpty = !meal || (meal.foods.length === 0 && meal.recipes.length === 0);
 
                                 return (
-                                    <td key={`${day}-${type.key}`} className="p-2 meal-cell">
+                                    <td key={`${day}-${type.key}`} className="p-1 meal-cell">
                                         <div
-                                            className={`meal-card rounded-3 p-3 transition-all h-100 position-relative group-hover
+                                            className={`meal-card rounded-3 p-2 transition-all h-100 position-relative group-hover
                                                 ${isEmpty ? 'bg-light bg-opacity-50 border border-dashed border-2 cursor-pointer hover-bg-light-dark' : 'bg-white shadow-sm border border-transparent hover-shadow-md cursor-pointer'}
                                             `}
                                             onClick={() => isEmpty ? onAddMeal(day, type.key) : onEditMeal(meal)}
-                                            style={{ minHeight: '100px' }}
+                                            style={{ minHeight: '70px' }}
                                         >
                                             {isEmpty ? (
                                                 <div className="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-50">
