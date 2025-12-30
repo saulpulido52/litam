@@ -90,7 +90,33 @@ export const useMealPlanner = ({
     const [dataError, setDataError] = useState<string | null>(null);
 
     // === INITIALIZATION ===
+    // === INITIALIZATION & LOCAL STORAGE ===
     useEffect(() => {
+        if (!dietPlan?.id) return;
+
+        const storageKey = `meal_plan_draft_${dietPlan.id}`;
+        let localDraft: WeeklyPlan[] | null = null;
+
+        try {
+            const saved = localStorage.getItem(storageKey);
+            if (saved) {
+                localDraft = JSON.parse(saved);
+            }
+        } catch (e) {
+            console.error('Error parsing local draft:', e);
+        }
+
+        // Strategy: Use Local Draft if available and has content (User "Source of Truth")
+        // Otherwise use DB data (initialPlans), otherwise generate defaults.
+
+        const hasLocalContent = localDraft && localDraft.some(p => p.meals && p.meals.length > 0);
+
+        if (hasLocalContent && localDraft) {
+            console.log('useMealPlanner: Using LOCAL DRAFT instead of DB/Default', localDraft);
+            setPlans(localDraft);
+            return;
+        }
+
         if (initialPlans && initialPlans.length > 0) {
             // Normalize plans to ensure week_number exists
             const normalized = initialPlans.map((p, index) => ({
@@ -98,7 +124,7 @@ export const useMealPlanner = ({
                 week_number: p.week_number || (index + 1),
                 meals: p.meals || []
             }));
-            console.log('useMealPlanner: Initialized with plans:', normalized);
+            console.log('useMealPlanner: Initialized with DB plans:', normalized);
             setPlans(normalized);
         } else {
             // Generar planes por defecto
@@ -123,9 +149,23 @@ export const useMealPlanner = ({
                     notes: ''
                 });
             }
+            console.log('useMealPlanner: Initialized with DEFAULT plans');
             setPlans(defaultPlans);
         }
     }, [initialPlans, dietPlan]);
+
+    // === AUTO-SAVE TO LOCAL STORAGE ===
+    useEffect(() => {
+        if (!dietPlan?.id || plans.length === 0) return;
+
+        const storageKey = `meal_plan_draft_${dietPlan.id}`;
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(plans));
+            // console.log('useMealPlanner: Draft saved to LocalStorage'); // Verbose
+        } catch (e) {
+            console.error('Error saving draft locally:', e);
+        }
+    }, [plans, dietPlan]);
 
     // === DATA LOADING ===
     useEffect(() => {

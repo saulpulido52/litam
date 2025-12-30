@@ -22,6 +22,30 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
   const [activeTab, setActiveTab] = useState<string>('list');
   const [groupByCategory, setGroupByCategory] = useState(true);
 
+  // Load checked items from local storage
+  React.useEffect(() => {
+    if (!weeklyPlan) return;
+    const key = `shopping_list_checks_${patientName}_week_${weeklyPlan.week_number}`;
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setCheckedItems(new Set(parsed));
+        }
+      } catch (e) {
+        console.error('Error loading checked items', e);
+      }
+    }
+  }, [weeklyPlan?.week_number, patientName]);
+
+  // Save checked items to local storage
+  React.useEffect(() => {
+    if (!weeklyPlan) return;
+    const key = `shopping_list_checks_${patientName}_week_${weeklyPlan.week_number}`;
+    localStorage.setItem(key, JSON.stringify(Array.from(checkedItems)));
+  }, [checkedItems, weeklyPlan?.week_number, patientName]);
+
   // Generar lista de compras consolidada
   const shoppingList: WeeklyShoppingList | null = useMemo(() => {
     if (!weeklyPlan) return null;
