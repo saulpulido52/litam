@@ -176,7 +176,9 @@ export const useMealPlanner = ({
     // === ACTIONS ===
 
     // Core update function
+    // Core update function
     const updateMealInPlan = useCallback((updatedMeal: Meal) => {
+        console.log('useMealPlanner: updateMealInPlan called', updatedMeal);
         setPlans(prevPlans => {
             return prevPlans.map(plan => {
                 if (plan.week_number === selectedWeek) {
@@ -191,6 +193,7 @@ export const useMealPlanner = ({
                     } else {
                         updatedMeals = [...plan.meals, updatedMeal];
                     }
+                    console.log('useMealPlanner: New meals array', updatedMeals);
                     return { ...plan, meals: updatedMeals };
                 }
                 return plan;
