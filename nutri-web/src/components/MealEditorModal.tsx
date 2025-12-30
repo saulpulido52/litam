@@ -34,17 +34,17 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
         let calories = 0, protein = 0, carbs = 0, fats = 0;
 
         foods.forEach(f => {
-            calories += f.calories || 0;
-            protein += f.protein || 0;
-            carbs += f.carbs || 0;
-            fats += f.fats || 0;
+            calories += Number(f.calories) || 0;
+            protein += Number(f.protein) || 0;
+            carbs += Number(f.carbs) || 0;
+            fats += Number(f.fats) || 0;
         });
 
         recipes.forEach(r => {
-            calories += r.calories || 0;
-            protein += r.protein || 0;
-            carbs += r.carbs || 0;
-            fats += r.fats || 0;
+            calories += Number(r.calories) || 0;
+            protein += Number(r.protein) || 0;
+            carbs += Number(r.carbs) || 0;
+            fats += Number(r.fats) || 0;
         });
 
         return {
@@ -54,6 +54,7 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
             total_fats: Math.max(0, fats)
         };
     };
+
     const handleAddFood = (food: Food) => {
         const defaultQty = 100; // grams
 
@@ -61,10 +62,10 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
             food_id: food.id,
             food_name: food.name,
             quantity_grams: defaultQty,
-            calories: food.calories,
-            protein: food.protein,
-            carbs: food.carbohydrates,
-            fats: food.fats
+            calories: Number(food.calories) || 0,
+            protein: Number(food.protein) || 0,
+            carbs: Number(food.carbohydrates) || 0,
+            fats: Number(food.fats) || 0
         };
 
         const newFoods = [...editingMeal.foods, newFood];
@@ -88,10 +89,10 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
             recipe_id: uniqueRecipeId,
             recipe_name: recipe.title,
             servings: servings,
-            calories: (recipe.total_calories || 0) * factor,
-            protein: (recipe.total_protein || 0) * factor,
-            carbs: (recipe.total_carbs || 0) * factor,
-            fats: (recipe.total_fats || 0) * factor,
+            calories: (Number(recipe.total_calories) || 0) * factor,
+            protein: (Number(recipe.total_protein) || 0) * factor,
+            carbs: (Number(recipe.total_carbs) || 0) * factor,
+            fats: (Number(recipe.total_fats) || 0) * factor,
             original_recipe_id: recipe.id,
             is_modified: false
         };
@@ -109,23 +110,38 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
     };
 
     const handleUpdateQuantity = (index: number, newQuantity: number) => {
-        if (newQuantity < 0) return;
+        if (isNaN(newQuantity) || newQuantity < 0) return;
 
-        // Deep clone for safety when calculating ratios/updates
+        const originalFood = foods.find(f => f.id === editingMeal.foods[index].food_id);
+
         const newFoods = editingMeal.foods.map((item, i) => {
             if (i !== index) return item;
 
-            const oldQuantity = item.quantity_grams || 100;
+            // Strategy: Try to find original food to recalculate from base 100g
+            if (originalFood) {
+                const ratio = newQuantity / 100;
+                return {
+                    ...item,
+                    quantity_grams: newQuantity,
+                    calories: (Number(originalFood.calories) || 0) * ratio,
+                    protein: (Number(originalFood.protein) || 0) * ratio,
+                    carbs: (Number(originalFood.carbohydrates) || 0) * ratio,
+                    fats: (Number(originalFood.fats) || 0) * ratio
+                };
+            }
+
+            // Fallback: Ratio based estimation (less accurate if multiple edits)
+            const oldQuantity = Number(item.quantity_grams) || 100;
             const safeOldQty = oldQuantity === 0 ? 100 : oldQuantity;
             const ratio = newQuantity / safeOldQty;
 
             return {
                 ...item,
                 quantity_grams: newQuantity,
-                calories: item.calories * ratio,
-                protein: item.protein * ratio,
-                carbs: item.carbs * ratio,
-                fats: item.fats * ratio
+                calories: (Number(item.calories) || 0) * ratio,
+                protein: (Number(item.protein) || 0) * ratio,
+                carbs: (Number(item.carbs) || 0) * ratio,
+                fats: (Number(item.fats) || 0) * ratio
             };
         });
 
