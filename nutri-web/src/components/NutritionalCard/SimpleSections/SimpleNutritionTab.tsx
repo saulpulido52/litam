@@ -34,21 +34,21 @@ const SimpleNutritionTab: React.FC<SimpleNutritionTabProps> = ({
     return (
         <div className="nutrition-tab fade-in">
             {/* Header Section */}
-            <div className="d-flex align-items-center mb-4">
-                <div className="bg-success bg-opacity-10 p-2 rounded-circle me-3">
-                    <Target size={20} className="text-success" />
+            <div className="d-flex align-items-center mb-2">
+                <div className="bg-success bg-opacity-10 p-1 rounded-circle me-2">
+                    <Target size={16} className="text-success" />
                 </div>
-                <h6 className="mb-0 fw-bold text-dark">Objetivos Nutricionales</h6>
+                <h6 className="mb-0 fw-bold text-dark small">Objetivos Nutricionales</h6>
             </div>
 
-            <div className="row g-4">
+            <div className="row g-2">
                 {/* Left Column: Macros Inputs */}
                 <div className="col-lg-8">
-                    <div className="card border-0 shadow-sm rounded-4 mb-4">
-                        <div className="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
-                            <h6 className="fw-bold text-dark mb-0">📊 Distribución de Macronutrientes</h6>
+                    <div className="card border-0 shadow-sm rounded-3 mb-2">
+                        <div className="card-header bg-white border-bottom-0 pt-2 px-3 pb-0">
+                            <h6 className="fw-bold text-dark mb-0 small">📊 Distribución de Macronutrientes</h6>
                         </div>
-                        <div className="card-body p-4">
+                        <div className="card-body p-2">
                             <div className="row g-4">
                                 {/* Protein */}
                                 <div className="col-md-4">
@@ -150,14 +150,14 @@ const SimpleNutritionTab: React.FC<SimpleNutritionTabProps> = ({
                         </div>
                     </div>
 
-                    <div className="card border-0 shadow-sm rounded-4">
-                        <div className="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
+                    <div className="card border-0 shadow-sm rounded-3">
+                        <div className="card-header bg-white border-bottom-0 pt-2 px-3 pb-0">
                             <div className="d-flex align-items-center">
-                                <Droplet size={18} className="text-info me-2" />
-                                <h6 className="fw-bold text-dark mb-0">Hidratación y Fibra</h6>
+                                <Droplet size={16} className="text-info me-2" />
+                                <h6 className="fw-bold text-dark mb-0 small">Hidratación y Fibra</h6>
                             </div>
                         </div>
-                        <div className="card-body p-4">
+                        <div className="card-body p-2">
                             <div className="row g-4">
                                 <div className="col-md-6">
                                     <label className="form-label text-muted small fw-bold">Agua Diaria (Litros)</label>
@@ -193,11 +193,11 @@ const SimpleNutritionTab: React.FC<SimpleNutritionTabProps> = ({
 
                 {/* Right Column: Visual Chart/Summary */}
                 <div className="col-lg-4">
-                    <div className="card border-0 shadow-sm rounded-4 h-100 bg-primary bg-opacity-10">
-                        <div className="card-header bg-transparent border-bottom-0 pt-4 px-4 pb-0">
-                            <h6 className="fw-bold text-primary mb-0">📈 Resumen Visual</h6>
+                    <div className="card border-0 shadow-sm rounded-3 h-100 bg-primary bg-opacity-10">
+                        <div className="card-header bg-transparent border-bottom-0 pt-2 px-3 pb-0">
+                            <h6 className="fw-bold text-primary mb-0 small">📈 Resumen Visual</h6>
                         </div>
-                        <div className="card-body p-4 d-flex flex-column justify-content-center">
+                        <div className="card-body p-2 d-flex flex-column justify-content-center">
                             <div className="text-center mb-4 position-relative">
                                 {/* Simple Pizza Chart representation using CSS conic-gradient */}
                                 <div

@@ -185,16 +185,46 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
   }, [dietPlan]);
 
   // Calculate Total Weeks based on plan duration
+  // Calculate Total Weeks based on plan duration
   const totalWeeks = React.useMemo(() => {
-    if (!dietPlan?.duration_value || !dietPlan?.duration_unit) return 4;
+    let weeks = 4; // Default fallback
 
-    let weeks = 4;
-    const val = Number(dietPlan.duration_value);
+    // 1. Prioritize Explicit Duration Fields (New & Legacy)
+    if (dietPlan?.custom_duration?.value) {
+      // New standard structure
+      const val = Number(dietPlan.custom_duration.value);
+      const unit = String(dietPlan.custom_duration.unit).toLowerCase();
+      if (unit.includes('week') || unit.includes('semana')) weeks = val;
+      else if (unit.includes('month') || unit.includes('mes')) weeks = val * 4;
+    }
+    else if (dietPlan?.total_weeks) {
+      // Backend calculated field (most reliable)
+      weeks = Number(dietPlan.total_weeks);
+    }
+    else if (dietPlan?.duration_value && dietPlan?.duration_unit) {
+      // Legacy fields
+      const val = Number(dietPlan.duration_value);
+      const unit = String(dietPlan.duration_unit).toLowerCase();
 
-    if (dietPlan.duration_unit === 'weeks' || dietPlan.duration_unit === 'semanas') {
-      weeks = val;
-    } else if (dietPlan.duration_unit === 'months' || dietPlan.duration_unit === 'meses') {
-      weeks = val * 4;
+      if (unit.includes('week') || unit.includes('semana')) {
+        weeks = val;
+      } else if (unit.includes('month') || unit.includes('mes')) {
+        weeks = val * 4;
+      }
+    }
+    // 2. Fallback to Date Range (Fixed Logic)
+    else if (dietPlan?.start_date && dietPlan?.end_date) {
+      const start = new Date(dietPlan.start_date);
+      const end = new Date(dietPlan.end_date);
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+
+      // Fix: Use standard week calculation (days / 7)
+      // Math.round handles slight variations better than ceil/floor for full weeks
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      // If diffDays is a multiple of 7 (21 days), (21)/7 = 3. 
+      // Previous logic (21+1)/7 = 3.14 -> 4 was wrong for exact weeks.
+      weeks = Math.round(diffDays / 7);
+      if (weeks < 1 && diffDays > 0) weeks = 1;
     }
 
     return Math.max(1, Math.min(weeks, 12)); // Clip between 1 and 12 weeks
@@ -213,7 +243,7 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
           onClose={onClose}
         />
 
-        <div className="container-fluid py-4 px-4 h-100 overflow-auto">
+        <div className="container-fluid py-2 px-3 h-100 overflow-auto">
           {activeTab === 'planner' && (
             <>
               {/* 5. Toolbar Component */}
@@ -230,7 +260,7 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
 
               {/* Error Alert */}
               {dataError && (
-                <div className="alert alert-warning border-0 shadow-sm rounded-4 mb-4">
+                <div className="alert alert-warning border-0 shadow-sm rounded-3 mb-2 py-2 px-3 small">
                   <i className="fas fa-exclamation-triangle me-2"></i>
                   {dataError}
                 </div>
@@ -264,11 +294,11 @@ const MealPlanner: React.FC<MealPlannerProps> = ({
           )}
 
           {activeTab === 'restrictions' && (
-            <div className="card border-0 shadow-sm rounded-4">
-              <div className="card-header bg-white border-bottom pt-4 px-4">
-                <h5 className="fw-bold text-dark mb-0">🚫 Restricciones y Consideraciones</h5>
+            <div className="card border-0 shadow-sm rounded-3">
+              <div className="card-header bg-white border-bottom pt-2 px-3">
+                <h6 className="fw-bold text-dark mb-0 small">🚫 Restricciones y Consideraciones</h6>
               </div>
-              <div className="card-body p-4">
+              <div className="card-body p-3">
                 <div className="row g-4">
                   <div className="col-md-6">
                     <label className="form-label fw-bold text-muted small text-uppercase">Alergias Alimentarias</label>

@@ -29,22 +29,22 @@ const SimpleRestrictionsTab: React.FC<SimpleRestrictionsTabProps> = ({
     return (
         <div className="restrictions-tab fade-in">
             {/* Header Section */}
-            <div className="d-flex align-items-center mb-4">
-                <div className="bg-danger bg-opacity-10 p-2 rounded-circle me-3">
-                    <Shield size={20} className="text-danger" />
+            <div className="d-flex align-items-center mb-2">
+                <div className="bg-danger bg-opacity-10 p-1 rounded-circle me-2">
+                    <Shield size={16} className="text-danger" />
                 </div>
-                <h6 className="mb-0 fw-bold text-dark">Restricciones y Seguridad</h6>
+                <h6 className="mb-0 fw-bold text-dark small">Restricciones y Seguridad</h6>
             </div>
 
-            <div className="row g-4">
+            <div className="row g-2">
                 {/* Left Col: Form */}
                 <div className="col-lg-8">
                     {/* Restrictions Card */}
-                    <div className="card border-0 shadow-sm rounded-4 mb-4">
-                        <div className="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
-                            <h6 className="fw-bold text-dark mb-0">🚫 Restricciones Alimentarias</h6>
+                    <div className="card border-0 shadow-sm rounded-3 mb-2">
+                        <div className="card-header bg-white border-bottom-0 pt-2 px-3 pb-0">
+                            <h6 className="fw-bold text-dark mb-0 small">🚫 Restricciones Alimentarias</h6>
                         </div>
-                        <div className="card-body p-4">
+                        <div className="card-body p-2">
                             <div className="row g-4">
                                 <div className="col-md-6">
                                     <label className="form-label text-muted small fw-bold text-uppercase">Alergias Alimentarias</label>

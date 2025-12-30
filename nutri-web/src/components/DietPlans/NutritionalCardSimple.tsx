@@ -80,19 +80,20 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
     <div className="card h-100 border-0 bg-white rounded-4 shadow-sm overflow-hidden d-flex flex-column animate-fade-in">
 
       {/* HEADER PREMIUM */}
-      <div className="d-flex justify-content-between align-items-center p-4 bg-white border-bottom">
-        <div>
-          <div className="d-flex align-items-center gap-2 mb-1">
+      {/* HEADER PREMIUM */}
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center p-2 bg-white border-bottom gap-2">
+        <div className="flex-grow-1 pe-md-3">
+          <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
             <span className={`badge rounded-pill px-3 py-1 ${mode === 'view' ? 'bg-secondary bg-opacity-10 text-secondary' : 'bg-primary bg-opacity-10 text-primary'}`}>
               {mode === 'create' ? 'Nuevo Plan' : mode === 'edit' ? 'Editando Plan' : 'Vista de Plan'}
             </span>
             {dietPlan?.status === 'active' && <span className="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1">Activo</span>}
           </div>
-          <h4 className="fw-bold text-dark mb-0 ls-tight">
+          <h4 className="fw-bold text-dark mb-0 ls-tight text-break">
             {mode === 'create' ? 'Crear Plan Nutricional' : planData.name || 'Plan Nutricional'}
           </h4>
         </div>
-        <div className="d-flex gap-2">
+        <div className="d-flex flex-wrap gap-2 flex-shrink-0 w-100 w-md-auto justify-content-md-end">
           {mode === 'view' && (
             <>
               {onEdit && (
@@ -127,7 +128,7 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
       </div>
 
       {/* TABS NAVIGATION */}
-      <div className="px-4 pt-3 bg-light bg-opacity-50 border-bottom overflow-x-auto d-flex flex-nowrap gap-3 scrollbar-hide">
+      <div className="px-2 py-1 bg-light bg-opacity-50 border-bottom d-flex flex-nowrap">
         {tabs.map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -135,17 +136,13 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`
-                  d-flex align-items-center gap-2 px-4 py-3 border-0 bg-transparent position-relative
-                  transition-all fw-medium text-nowrap
-                  ${isActive ? 'text-primary' : 'text-secondary'}
-                `}
+              className={`d-flex align-items-center gap-1 px-2 py-1 border-0 bg-transparent position-relative fw-medium text-nowrap ${isActive ? 'text-primary' : 'text-secondary'}`}
               style={{ marginBottom: '-1px' }}
             >
-              <Icon size={18} className={isActive ? 'text-primary' : 'text-muted'} />
-              {tab.label}
+              <Icon size={16} className={isActive ? 'text-primary' : 'text-muted'} />
+              <span className="small">{tab.label}</span>
               {isActive && (
-                <div className="position-absolute bottom-0 start-0 w-100 bg-primary rounded-top" style={{ height: '3px' }}></div>
+                <div className="position-absolute bottom-0 start-0 w-100 bg-primary" style={{ height: '2px' }}></div>
               )}
             </button>
           );
@@ -154,7 +151,7 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
 
       {/* CONTENIDO PRINCIPAL SCROLLEABLE */}
       <div className="flex-grow-1 overflow-y-auto bg-light bg-opacity-10">
-        <div className="p-4 container-fluid" style={{ maxWidth: '1200px' }}>
+        <div className="p-2 container-fluid" style={{ maxWidth: '1200px' }}>
 
           {activeTab === 'summary' && (
             <SimpleSummaryTab
@@ -210,7 +207,7 @@ const NutritionalCardSimple: React.FC<NutritionalCardSimpleProps> = ({
       </div>
 
       {/* FOOTER DE ACCIONES */}
-      <div className="p-4 bg-white border-top shadow-lg d-flex justify-content-between align-items-center z-2">
+      <div className="p-2 bg-white border-top shadow-lg d-flex justify-content-between align-items-center z-2">
         <div className="d-flex flex-column">
           <small className="text-muted fw-bold text-uppercase" style={{ fontSize: '0.7rem' }}>Estado del formulario</small>
           <div className="d-flex align-items-center gap-2">

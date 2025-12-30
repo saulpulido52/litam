@@ -54,32 +54,32 @@ const SimpleScheduleTab: React.FC<SimpleScheduleTabProps> = ({
     return (
         <div className="schedule-tab fade-in">
             {/* Header Section */}
-            <div className="d-flex align-items-center mb-4">
-                <div className="bg-info bg-opacity-10 p-2 rounded-circle me-3">
-                    <Clock size={20} className="text-info" />
+            <div className="d-flex align-items-center mb-2">
+                <div className="bg-info bg-opacity-10 p-1 rounded-circle me-2">
+                    <Clock size={16} className="text-info" />
                 </div>
-                <h6 className="mb-0 fw-bold text-dark">Horarios de Comidas</h6>
+                <h6 className="mb-0 fw-bold text-dark small">Horarios de Comidas</h6>
             </div>
 
-            <div className="row g-4">
+            <div className="row g-2">
                 <div className="col-lg-8">
-                    <div className="card border-0 shadow-sm rounded-4 mb-4">
-                        <div className="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
-                            <h6 className="fw-bold text-dark mb-0">📅 Horarios Detallados</h6>
+                    <div className="card border-0 shadow-sm rounded-3 mb-2">
+                        <div className="card-header bg-white border-bottom-0 pt-2 px-3 pb-0">
+                            <h6 className="fw-bold text-dark mb-0 small">📅 Horarios Detallados</h6>
                         </div>
-                        <div className="card-body p-4">
-                            <div className="row g-4">
+                        <div className="card-body p-2">
+                            <div className="row g-2">
                                 {mealsConfig.map((meal) => (
                                     <div key={meal.key} className="col-md-6">
-                                        <div className="d-flex align-items-center mb-2">
-                                            <meal.icon size={16} className={`text-${meal.color} me-2`} />
-                                            <h6 className="mb-0 fw-bold text-dark small text-uppercase">{meal.label}</h6>
+                                        <div className="d-flex align-items-center mb-1">
+                                            <meal.icon size={14} className={`text-${meal.color} me-1`} />
+                                            <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '0.75rem', textTransform: 'uppercase' }}>{meal.label}</h6>
                                         </div>
-                                        <div className="input-group mb-1 shadow-sm rounded-4 overflow-hidden">
+                                        <div className="input-group mb-1 shadow-sm rounded-3 overflow-hidden">
                                             <input
                                                 type="time"
-                                                className="form-control border-0 bg-light py-2"
-                                                style={{ fontSize: '1.1rem', fontWeight: 500 }}
+                                                className="form-control border-0 bg-light py-1"
+                                                style={{ fontSize: '0.9rem', fontWeight: 500 }}
                                                 value={planData.mealTimes?.[meal.key] || meal.default}
                                                 onChange={(e) => updatePlanData('mealTimes', {
                                                     ...planData.mealTimes,
@@ -87,11 +87,11 @@ const SimpleScheduleTab: React.FC<SimpleScheduleTabProps> = ({
                                                 })}
                                                 disabled={mode === 'view' || isLoading}
                                             />
-                                            <span className="input-group-text border-0 bg-white text-muted small fw-medium px-3">
+                                            <span className="input-group-text border-0 bg-white text-muted px-2" style={{ fontSize: '0.7rem' }}>
                                                 {getCaloriesForMeal(meal.key)} kcal
                                             </span>
                                         </div>
-                                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+                                        <small className="text-muted" style={{ fontSize: '0.65rem' }}>
                                             {meal.key === 'breakfast' && 'Ayuno nocturno: 8-10 horas'}
                                             {meal.key === 'lunch' && 'Comida principal del día'}
                                             {meal.key === 'dinner' && '3 horas antes de dormir'}
@@ -101,24 +101,24 @@ const SimpleScheduleTab: React.FC<SimpleScheduleTabProps> = ({
                                 ))}
 
                                 <div className="col-md-6">
-                                    <div className="d-flex align-items-center mb-2">
-                                        <Moon size={16} className="text-secondary me-2" />
-                                        <h6 className="mb-0 fw-bold text-dark small text-uppercase">Hora de Dormir</h6>
+                                    <div className="d-flex align-items-center mb-1">
+                                        <Moon size={14} className="text-secondary me-1" />
+                                        <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '0.75rem', textTransform: 'uppercase' }}>Hora de Dormir</h6>
                                     </div>
-                                    <div className="input-group mb-1 shadow-sm rounded-4 overflow-hidden">
+                                    <div className="input-group mb-1 shadow-sm rounded-3 overflow-hidden">
                                         <input
                                             type="time"
-                                            className="form-control border-0 bg-light py-2"
-                                            style={{ fontSize: '1.1rem', fontWeight: 500 }}
+                                            className="form-control border-0 bg-light py-1"
+                                            style={{ fontSize: '0.9rem', fontWeight: 500 }}
                                             value={planData.bedTime || '22:00'}
                                             onChange={(e) => updatePlanData('bedTime', e.target.value)}
                                             disabled={mode === 'view' || isLoading}
                                         />
                                         <span className="input-group-text border-0 bg-white text-muted">
-                                            <Clock size={16} />
+                                            <Clock size={14} />
                                         </span>
                                     </div>
-                                    <small className="text-muted" style={{ fontSize: '0.75rem' }}>Para calcular ayuno nocturno</small>
+                                    <small className="text-muted" style={{ fontSize: '0.65rem' }}>Para calcular ayuno nocturno</small>
                                 </div>
                             </div>
                         </div>
@@ -126,32 +126,32 @@ const SimpleScheduleTab: React.FC<SimpleScheduleTabProps> = ({
                 </div>
 
                 <div className="col-lg-4">
-                    <div className="card border-0 shadow-sm rounded-4 h-100">
-                        <div className="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
-                            <h6 className="fw-bold text-dark mb-0">📊 Análisis de Intervalos</h6>
+                    <div className="card border-0 shadow-sm rounded-3 h-100">
+                        <div className="card-header bg-white border-bottom-0 pt-2 px-3 pb-0">
+                            <h6 className="fw-bold text-dark mb-0 small">📊 Análisis de Intervalos</h6>
                         </div>
-                        <div className="card-body p-4">
-                            <div className="mb-4">
-                                <h6 className="text-primary small fw-bold mb-3 text-uppercase">⏰ Timeline del día</h6>
-                                <div className="d-flex flex-column gap-2">
+                        <div className="card-body p-2">
+                            <div className="mb-2">
+                                <h6 className="text-primary small fw-bold mb-2 text-uppercase" style={{ fontSize: '0.75rem' }}>⏰ Timeline del día</h6>
+                                <div className="d-flex flex-column gap-1">
                                     {mealsConfig.map((meal, index) => (
-                                        <div key={index} className="d-flex justify-content-between align-items-center p-2 rounded hover-bg-light transition-all">
+                                        <div key={index} className="d-flex justify-content-between align-items-center p-1 rounded hover-bg-light transition-all">
                                             <div className="d-flex align-items-center">
-                                                <meal.icon size={14} className={`text-${meal.color} me-2`} />
-                                                <span className="small text-secondary">{meal.label}</span>
+                                                <meal.icon size={12} className={`text-${meal.color} me-1`} />
+                                                <span className="small text-secondary" style={{ fontSize: '0.8rem' }}>{meal.label}</span>
                                             </div>
-                                            <span className="fw-bold small">{planData.mealTimes?.[meal.key] || meal.default}</span>
+                                            <span className="fw-bold small" style={{ fontSize: '0.8rem' }}>{planData.mealTimes?.[meal.key] || meal.default}</span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
-                            <div className="bg-success bg-opacity-10 p-3 rounded-4 border border-success border-opacity-10">
-                                <div className="d-flex align-items-center mb-2">
-                                    <CheckCircle size={16} className="text-success me-2" />
-                                    <h6 className="text-success fw-bold mb-0 small">Recomendaciones</h6>
+                            <div className="bg-success bg-opacity-10 p-2 rounded-3 border border-success border-opacity-10">
+                                <div className="d-flex align-items-center mb-1">
+                                    <CheckCircle size={14} className="text-success me-1" />
+                                    <h6 className="text-success fw-bold mb-0" style={{ fontSize: '0.75rem' }}>Recomendaciones</h6>
                                 </div>
-                                <ul className="mb-0 ps-3 small text-secondary">
+                                <ul className="mb-0 ps-3 text-secondary" style={{ fontSize: '0.7rem' }}>
                                     <li>Intervalos de 3-4 horas entre comidas</li>
                                     <li>Última comida 3h antes de dormir</li>
                                     <li>Desayuno dentro de 1h de despertar</li>

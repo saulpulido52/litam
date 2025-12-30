@@ -94,6 +94,34 @@ class FoodController {
             next(new AppError('Error al eliminar el alimento.', 500));
         }
     }
+
+    // Nuevo método para buscar usando NutritionService (Edamam + Cache)
+    public async searchFood(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { query } = req.query;
+            if (!query || typeof query !== 'string') {
+                return next(new AppError('Se requiere un parámetro de búsqueda (query).', 400));
+            }
+
+            // Usar el servicio de nutrición importado dinámicamente o estático si ya está disponible
+            // Importando aquí para evitar dependencias circulares si las hubiera, 
+            // o idealmente importando arriba.
+            const { default: nutritionService } = await import('../nutrition/nutrition.service');
+
+            const food = await nutritionService.fetchRecipeDetails(query, req.user?.id);
+
+            res.status(200).json({
+                status: 'success',
+                data: { food },
+            });
+        } catch (error: any) {
+            // Si es 404, devolvemos success false pero sin explotar, o dejamos que el error handler lo maneje
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(new AppError('Error al buscar el alimento.', 500));
+        }
+    }
 }
 
 export default new FoodController();

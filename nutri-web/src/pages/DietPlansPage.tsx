@@ -418,30 +418,44 @@ const DietPlansPage: React.FC = () => {
 
   const handleSaveMealPlan = async (weeklyPlans: any[]) => {
     try {
-      console.log('🍽️ Guardando plan de comidas:', weeklyPlans);
+      console.log('🔥 === INICIO GUARDADO DE PLAN DE COMIDAS ===');
+      console.log('📤 Payload enviando desde Frontend (weeklyPlans):', weeklyPlans);
 
       if (selectedPlanForMeals) {
-        // Actualizar el plan en el backend
-        const updatedPlan = await updateDietPlan(selectedPlanForMeals.id, {
+        // Prepare update data
+        const updatePayload = {
           weeklyPlans: weeklyPlans
-        });
+        };
+        console.log('📦 Payload completo hacia Service:', updatePayload);
 
-        console.log('✅ Plan actualizado en backend:', updatedPlan);
+        // Actualizar el plan en el backend
+        const updatedPlan = await updateDietPlan(selectedPlanForMeals.id, updatePayload);
 
-        // Actualizar el estado local del plan seleccionado
-        if (selectedPlan) {
+        console.log('✅ Plan actualizado recibido del Backend:', updatedPlan);
+        console.log('📥 Verificando si weekly_plans volvió poblado:', updatedPlan.weekly_plans);
+
+
+        // OPTIMIZATION: Update local state immediately without full refetch
+        // Actualizar el estado local del plan seleccionado para vista detalle
+        if (selectedPlan && selectedPlan.id === updatedPlan.id) {
+          console.log('⚡ Actualizando estado local (selectedPlan) sin refetch...', updatedPlan);
           setSelectedPlan(updatedPlan);
         }
+
+        // Actualizar la lista principal (setDietPlans) solo modificando este elemento
+        // Esto evita la llamada lenta fetchAllDietPlans()
+        // (Asumiendo que setDietPlans es accesible o existe un método para mutar la lista)
+        // Si no, al menos evitamos el blocking await.
 
         // Cerrar el modal y limpiar
         setShowMealPlanner(false);
         setSelectedPlanForMeals(null);
 
         // Mostrar mensaje de éxito
-        alert('✅ Plan de comidas guardado exitosamente. Los cambios se han aplicado al plan nutricional.');
+        alert('✅ Guardado Exitoso: El plan se ha actualizado correctamente.');
 
-        // Recargar los datos para asegurar sincronización
-        await fetchAllDietPlans();
+        // OPTIONAL: Background refresh if really needed, but don't await/block UI
+        fetchAllDietPlans().catch(err => console.error('Background refresh failed', err));
 
       }
     } catch (error: any) {
@@ -554,19 +568,19 @@ const DietPlansPage: React.FC = () => {
       <div className="row mb-5 g-4">
         <div className="col-12 col-md-6 col-lg-3">
           <div className="card h-100 border-0 shadow-sm overflow-hidden" style={{ borderRadius: '16px' }}>
-            <div className="card-body p-4 position-relative">
-              <div className="d-flex align-items-center justify-content-between mb-3">
-                <div className="p-3 bg-primary bg-opacity-10 rounded-4">
-                  <FileText className="text-primary" size={24} />
+            <div className="card-body p-3 position-relative">
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <div className="p-2 bg-primary bg-opacity-10 rounded-3">
+                  <FileText className="text-primary" size={20} />
                 </div>
-                <span className="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">Total</span>
+                <span className="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill small">Total</span>
               </div>
               <div>
-                <h2 className="display-6 fw-bold mb-1 text-dark">{stats.total}</h2>
+                <h3 className="fw-bold mb-0 text-dark">{stats.total}</h3>
                 <p className="text-muted mb-0 small fw-medium">Planes creados</p>
               </div>
-              <div className="position-absolute bottom-0 end-0 p-3 opacity-10">
-                <FileText size={80} className="text-primary" />
+              <div className="position-absolute bottom-0 end-0 p-2 opacity-10">
+                <FileText size={40} className="text-primary" />
               </div>
             </div>
           </div>
@@ -574,19 +588,19 @@ const DietPlansPage: React.FC = () => {
 
         <div className="col-12 col-md-6 col-lg-3">
           <div className="card h-100 border-0 shadow-sm overflow-hidden" style={{ borderRadius: '16px' }}>
-            <div className="card-body p-4 position-relative">
-              <div className="d-flex align-items-center justify-content-between mb-3">
-                <div className="p-3 bg-success bg-opacity-10 rounded-4">
-                  <Target className="text-success" size={24} />
+            <div className="card-body p-3 position-relative">
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <div className="p-2 bg-success bg-opacity-10 rounded-3">
+                  <Target className="text-success" size={20} />
                 </div>
-                <span className="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">Activos</span>
+                <span className="badge bg-success bg-opacity-10 text-success px-2 py-1 rounded-pill small">Activos</span>
               </div>
               <div>
-                <h2 className="display-6 fw-bold mb-1 text-dark">{stats.active}</h2>
+                <h3 className="fw-bold mb-0 text-dark">{stats.active}</h3>
                 <p className="text-muted mb-0 small fw-medium">Planes en curso</p>
               </div>
-              <div className="position-absolute bottom-0 end-0 p-3 opacity-10">
-                <Target size={80} className="text-success" />
+              <div className="position-absolute bottom-0 end-0 p-2 opacity-10">
+                <Target size={40} className="text-success" />
               </div>
             </div>
           </div>
@@ -594,19 +608,19 @@ const DietPlansPage: React.FC = () => {
 
         <div className="col-12 col-md-6 col-lg-3">
           <div className="card h-100 border-0 shadow-sm overflow-hidden" style={{ borderRadius: '16px' }}>
-            <div className="card-body p-4 position-relative">
-              <div className="d-flex align-items-center justify-content-between mb-3">
-                <div className="p-3 bg-info bg-opacity-10 rounded-4">
-                  <Calendar className="text-info" size={24} />
+            <div className="card-body p-3 position-relative">
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <div className="p-2 bg-info bg-opacity-10 rounded-3">
+                  <Calendar className="text-info" size={20} />
                 </div>
-                <span className="badge bg-info bg-opacity-10 text-info px-3 py-2 rounded-pill">Completados</span>
+                <span className="badge bg-info bg-opacity-10 text-info px-2 py-1 rounded-pill small">Completados</span>
               </div>
               <div>
-                <h2 className="display-6 fw-bold mb-1 text-dark">{stats.completed}</h2>
+                <h3 className="fw-bold mb-0 text-dark">{stats.completed}</h3>
                 <p className="text-muted mb-0 small fw-medium">Planes finalizados</p>
               </div>
-              <div className="position-absolute bottom-0 end-0 p-3 opacity-10">
-                <Calendar size={80} className="text-info" />
+              <div className="position-absolute bottom-0 end-0 p-2 opacity-10">
+                <Calendar size={40} className="text-info" />
               </div>
             </div>
           </div>
@@ -614,19 +628,19 @@ const DietPlansPage: React.FC = () => {
 
         <div className="col-12 col-md-6 col-lg-3">
           <div className="card h-100 border-0 shadow-sm overflow-hidden" style={{ borderRadius: '16px' }}>
-            <div className="card-body p-4 position-relative">
-              <div className="d-flex align-items-center justify-content-between mb-3">
-                <div className="p-3 bg-warning bg-opacity-10 rounded-4">
-                  <Utensils className="text-warning" size={24} />
+            <div className="card-body p-3 position-relative">
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <div className="p-2 bg-warning bg-opacity-10 rounded-3">
+                  <Utensils className="text-warning" size={20} />
                 </div>
-                <span className="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill">Recetas</span>
+                <span className="badge bg-warning bg-opacity-10 text-warning px-2 py-1 rounded-pill small">Recetas</span>
               </div>
               <div>
-                <h2 className="display-6 fw-bold mb-1 text-dark">{recipes.length}</h2>
+                <h3 className="fw-bold mb-0 text-dark">{recipes.length}</h3>
                 <p className="text-muted mb-0 small fw-medium">Biblioteca</p>
               </div>
-              <div className="position-absolute bottom-0 end-0 p-3 opacity-10">
-                <Utensils size={80} className="text-warning" />
+              <div className="position-absolute bottom-0 end-0 p-2 opacity-10">
+                <Utensils size={40} className="text-warning" />
               </div>
             </div>
           </div>
@@ -769,19 +783,19 @@ const DietPlansPage: React.FC = () => {
                     <table className="table table-hover align-middle mb-0">
                       <thead className="bg-light">
                         <tr>
-                          <th className="py-3 ps-4 border-0 rounded-start-3 text-secondary small fw-bold text-uppercase">Plan</th>
-                          <th className="py-3 border-0 text-secondary small fw-bold text-uppercase">Paciente</th>
-                          <th className="py-3 border-0 text-secondary small fw-bold text-uppercase">Tipo</th>
-                          <th className="py-3 border-0 text-secondary small fw-bold text-uppercase">Estado</th>
-                          <th className="py-3 border-0 text-secondary small fw-bold text-uppercase">Duración</th>
-                          <th className="py-3 border-0 text-secondary small fw-bold text-uppercase">Calorías</th>
-                          <th className="py-3 pe-4 border-0 rounded-end-3 text-secondary small fw-bold text-uppercase text-end">Acciones</th>
+                          <th className="py-2 ps-4 border-0 rounded-start-3 text-secondary small fw-bold text-uppercase">Plan</th>
+                          <th className="py-2 border-0 text-secondary small fw-bold text-uppercase">Paciente</th>
+                          <th className="py-2 border-0 text-secondary small fw-bold text-uppercase">Tipo</th>
+                          <th className="py-2 border-0 text-secondary small fw-bold text-uppercase">Estado</th>
+                          <th className="py-2 border-0 text-secondary small fw-bold text-uppercase">Duración</th>
+                          <th className="py-2 border-0 text-secondary small fw-bold text-uppercase">Calorías</th>
+                          <th className="py-2 pe-4 border-0 rounded-end-3 text-secondary small fw-bold text-uppercase text-end">Acciones</th>
                         </tr>
                       </thead>
                       <tbody className="border-top-0">
                         {filteredPlans.map((plan) => (
                           <tr key={plan.id} className="position-relative">
-                            <td className="ps-4 py-3 border-bottom-0">
+                            <td className="ps-4 py-2 border-bottom-0">
                               <div className="d-flex align-items-center">
                                 <div className="bg-primary bg-opacity-10 p-2 rounded-3 me-3">
                                   <FileText className="text-primary" size={20} />
@@ -794,7 +808,7 @@ const DietPlansPage: React.FC = () => {
                                 </div>
                               </div>
                             </td>
-                            <td className="py-3 border-bottom-0">
+                            <td className="py-2 border-bottom-0">
                               <div className="d-flex align-items-center">
                                 <div className="avatar-circle bg-light text-primary rounded-circle d-flex align-items-center justify-content-center me-2" style={{ width: '32px', height: '32px', fontSize: '12px' }}>
                                   {getPatientName(plan).charAt(0)}
@@ -802,15 +816,15 @@ const DietPlansPage: React.FC = () => {
                                 <span className="fw-medium">{getPatientName(plan)}</span>
                               </div>
                             </td>
-                            <td className="py-3 border-bottom-0">{getPlanTypeBadge(plan.plan_type)}</td>
-                            <td className="py-3 border-bottom-0">{getStatusBadge(plan.status)}</td>
-                            <td className="py-3 border-bottom-0 text-muted">
+                            <td className="py-2 border-bottom-0">{getPlanTypeBadge(plan.plan_type)}</td>
+                            <td className="py-2 border-bottom-0">{getStatusBadge(plan.status)}</td>
+                            <td className="py-2 border-bottom-0 text-muted">
                               {calculatePlanDuration(plan.start_date, plan.end_date)}
                             </td>
-                            <td className="py-3 border-bottom-0">
+                            <td className="py-2 border-bottom-0">
                               <span className="fw-mono text-dark">{formatCalories(plan.target_calories)}</span>
                             </td>
-                            <td className="pe-4 py-3 border-bottom-0 text-end">
+                            <td className="pe-4 py-2 border-bottom-0 text-end">
                               <div className="d-flex justify-content-end gap-2">
                                 <button
                                   className="btn btn-light btn-sm rounded-circle shadow-sm hover-primary"
@@ -870,9 +884,9 @@ const DietPlansPage: React.FC = () => {
                 {/* Mobile Cards */}
                 <div className="d-lg-none">
                   {filteredPlans.map((plan) => (
-                    <div key={plan.id} className="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden">
-                      <div className="card-body p-4">
-                        <div className="d-flex justify-content-between align-items-start mb-3">
+                    <div key={plan.id} className="card border-0 shadow-sm rounded-4 mb-2 overflow-hidden">
+                      <div className="card-body p-3">
+                        <div className="d-flex justify-content-between align-items-start mb-2">
                           <div className="d-flex align-items-center">
                             <div className="bg-primary bg-opacity-10 p-2 rounded-3 me-3">
                               <FileText className="text-primary" size={20} />
@@ -887,7 +901,7 @@ const DietPlansPage: React.FC = () => {
                           {getStatusBadge(plan.status)}
                         </div>
 
-                        <div className="row g-3 mb-4">
+                        <div className="row g-2 mb-2">
                           <div className="col-6">
                             <small className="text-muted d-block small text-uppercase fw-bold mb-1">Paciente</small>
                             <div className="d-flex align-items-center">

@@ -31,7 +31,7 @@ const MealPlannerToolbar: React.FC<MealPlannerToolbarProps> = ({
     onCopyWeek
 }) => {
     return (
-        <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 bg-light p-3 rounded-4 mb-4">
+        <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 bg-light p-2 rounded-3 mb-3">
             {/* Week Selector */}
             <div className="d-flex align-items-center bg-white rounded-pill shadow-sm p-1">
                 {[...Array(totalWeeks)].map((_, i) => {
@@ -41,9 +41,9 @@ const MealPlannerToolbar: React.FC<MealPlannerToolbarProps> = ({
                         <button
                             key={weekNum}
                             onClick={() => onSelectWeek(weekNum)}
-                            className={`btn rounded-pill px-3 py-2 fw-medium transition-all ${isActive ? 'btn-primary shadow-sm' : 'btn-white text-muted hover-bg-light'}`}
+                            className={`btn rounded-pill px-3 py-1 fw-medium transition-all small ${isActive ? 'btn-primary shadow-sm' : 'btn-white text-muted hover-bg-light'}`}
                         >
-                            <Calendar size={14} className="me-2 mb-1" />
+                            <Calendar size={12} className="me-2 mb-1" />
                             Semana {weekNum}
                         </button>
                     );

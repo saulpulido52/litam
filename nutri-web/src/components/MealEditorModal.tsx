@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Modal, Button } from 'react-bootstrap';
+import { Modal, Button, Spinner } from 'react-bootstrap'; // Added Spinner
 import { Search, Plus, Trash2, ChevronRight } from 'lucide-react';
 import type { Meal, Food, MealFood, MealRecipe } from '../hooks/useMealPlanner';
 import type { Recipe } from '../services/recipeService';
+import { foodService } from '../services/foodService'; // Import Service
 
 interface MealEditorModalProps {
     show: boolean;
@@ -13,21 +14,41 @@ interface MealEditorModalProps {
     onSave: (updatedMeal: Meal) => void;
 }
 
-// ... imports
-
 export default function MealEditorModal({ show, onHide, meal, foods, recipes, onSave }: MealEditorModalProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState<'foods' | 'recipes'>('foods');
     const [editingMeal, setMeal] = useState<Meal>(meal);
 
-    // Filter lists
-    const filteredFoods = foods.filter(f =>
-        f.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Search State
+    const [externalFoods, setExternalFoods] = useState<Food[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+
+    // Filter logic: Local + External
+    const displayFoods = searchTerm
+        ? [...externalFoods, ...foods.filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()))]
+            // Deduplicate by ID just in case
+            .filter((v, i, a) => a.findIndex(t => t.id === v.id) === i)
+        : foods;
 
     const filteredRecipes = recipes.filter(r =>
         r.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    // External Search Handler
+    const handleSearch = async () => {
+        if (!searchTerm.trim()) return;
+
+        setIsSearching(true);
+        try {
+            console.log('🔍 Executing search in Modal:', searchTerm);
+            const results = await foodService.searchFoods(searchTerm);
+            setExternalFoods(results);
+        } catch (error) {
+            console.error('Search failed:', error);
+        } finally {
+            setIsSearching(false);
+        }
+    };
 
     // Helpers
     const recalculateTotals = (foods: MealFood[], recipes: MealRecipe[]) => {
@@ -59,7 +80,8 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
         const defaultQty = 100; // grams
 
         const newFood: MealFood = {
-            food_id: food.id,
+            // Ensure ID is robust
+            food_id: food.id || `temp-${Date.now()}`,
             food_name: food.name,
             quantity_grams: defaultQty,
             calories: Number(food.calories) || 0,
@@ -112,7 +134,8 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
     const handleUpdateQuantity = (index: number, newQuantity: number) => {
         if (isNaN(newQuantity) || newQuantity < 0) return;
 
-        const originalFood = foods.find(f => f.id === editingMeal.foods[index].food_id);
+        // Try to find original in prop foods OR external results
+        const originalFood = [...foods, ...externalFoods].find(f => f.id === editingMeal.foods[index].food_id);
 
         const newFoods = editingMeal.foods.map((item, i) => {
             if (i !== index) return item;
@@ -201,11 +224,19 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
                             <input
                                 type="text"
                                 className="form-control border-start-0 py-3 text-dark"
-                                placeholder="🔍 Buscar aquí alimentos o recetas..."
+                                placeholder="🔍 Buscar en web (ej. Manzana, Pollo)..."
                                 style={{ fontSize: '1.1rem' }}
                                 value={searchTerm}
                                 onChange={e => setSearchTerm(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleSearch()}
                             />
+                            <button
+                                className="btn btn-primary px-4 fw-bold"
+                                onClick={handleSearch}
+                                disabled={isSearching}
+                            >
+                                {isSearching ? <Spinner size="sm" animation="border" /> : 'Buscar'}
+                            </button>
                         </div>
 
                         <div className="d-flex mb-3 gap-2">
@@ -226,7 +257,13 @@ export default function MealEditorModal({ show, onHide, meal, foods, recipes, on
                         <div className="overflow-auto custom-scrollbar flex-grow-1 pe-2">
                             {activeTab === 'foods' ? (
                                 <div className="d-flex flex-column gap-2">
-                                    {filteredFoods.map(food => (
+                                    {displayFoods.length === 0 && !isSearching && (
+                                        <div className="text-center py-5 text-muted">
+                                            <p>No se encontraron alimentos locales.</p>
+                                            <small>Presiona "Buscar" para consultar la base de datos global.</small>
+                                        </div>
+                                    )}
+                                    {displayFoods.map(food => (
                                         <div key={food.id} className="d-flex justify-content-between align-items-center p-3 rounded-3 bg-white border border-light shadow-sm hover-shadow-md transition-all">
                                             <div>
                                                 <div className="fw-bold text-dark">{food.name}</div>

@@ -10,6 +10,7 @@ const router = Router();
 
 // Rutas accesibles por todos (o al menos logueados) para ver alimentos
 router.get('/', foodController.getAllFoods);
+router.get('/search', foodController.searchFood); // New Route
 router.get('/:id', foodController.getFoodById);
 
 // Rutas protegidas que requieren roles específicos

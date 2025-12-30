@@ -50,11 +50,11 @@ const SimpleSummaryTab: React.FC<SimpleSummaryTabProps> = ({
     return (
         <div className="summary-tab fade-in">
             {/* Header Section */}
-            <div className="d-flex align-items-center mb-4">
-                <div className="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
-                    <FileText size={20} className="text-primary" />
+            <div className="d-flex align-items-center mb-2">
+                <div className="bg-primary bg-opacity-10 p-1 rounded-circle me-2">
+                    <FileText size={16} className="text-primary" />
                 </div>
-                <h6 className="mb-0 fw-bold text-dark">Información General del Plan</h6>
+                <h6 className="mb-0 fw-bold text-dark small">Información General del Plan</h6>
             </div>
 
             {/* Smart Alerts */}
@@ -109,18 +109,18 @@ const SimpleSummaryTab: React.FC<SimpleSummaryTabProps> = ({
                 </div>
             )}
 
-            <div className="row g-4">
+            <div className="row g-2">
                 {/* Left Column: Form Inputs */}
                 <div className="col-lg-8">
 
                     {/* Basic Data Card */}
-                    <div className="card border-0 shadow-sm rounded-4 mb-4">
-                        <div className="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
-                            <h6 className="fw-bold text-dark mb-0">📝 Datos Básicos</h6>
+                    <div className="card border-0 shadow-sm rounded-3 mb-2">
+                        <div className="card-header bg-white border-bottom-0 pt-2 px-3 pb-0">
+                            <h6 className="fw-bold text-dark mb-0 small">📝 Datos Básicos</h6>
                         </div>
-                        <div className="card-body p-4">
-                            <div className="mb-4">
-                                <label className="form-label text-muted small fw-bold text-uppercase">Paciente Asignado</label>
+                        <div className="card-body p-2">
+                            <div className="mb-2">
+                                <label className="form-label text-muted small fw-bold text-uppercase" style={{ fontSize: '0.7rem' }}>Paciente Asignado</label>
                                 <div className="input-group">
                                     <span className="input-group-text bg-light border-end-0 rounded-start-pill ps-3">
                                         <User size={18} className="text-muted" />
@@ -143,7 +143,7 @@ const SimpleSummaryTab: React.FC<SimpleSummaryTabProps> = ({
                                 </div>
                             </div>
 
-                            <div className="row g-3 mb-4">
+                            <div className="row g-2 mb-2">
                                 <div className="col-md-12">
                                     <div className="form-floating">
                                         <input
@@ -174,7 +174,7 @@ const SimpleSummaryTab: React.FC<SimpleSummaryTabProps> = ({
                                 </div>
                             </div>
 
-                            <div className="row g-3">
+                            <div className="row g-2">
                                 <div className="col-md-6">
                                     <label className="form-label text-muted small fw-bold text-uppercase">Fecha Inicio</label>
                                     <div className="input-group">
@@ -213,15 +213,15 @@ const SimpleSummaryTab: React.FC<SimpleSummaryTabProps> = ({
                     </div>
 
                     {/* Macronutrients Card */}
-                    <div className="card border-0 shadow-sm rounded-4">
-                        <div className="card-header bg-white border-bottom-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
-                            <h6 className="fw-bold text-dark mb-0">🎯 Objetivos Nutricionales</h6>
+                    <div className="card border-0 shadow-sm rounded-3">
+                        <div className="card-header bg-white border-bottom-0 pt-2 px-3 pb-0 d-flex justify-content-between align-items-center">
+                            <h6 className="fw-bold text-dark mb-0 small">🎯 Objetivos Nutricionales</h6>
                             <div className={`badge rounded - pill px - 3 py - 2 ${isCalorieMatch ? 'bg-success bg-opacity-10 text-success' : 'bg-warning bg-opacity-10 text-warning'} `}>
                                 {isCalorieMatch ? 'Balanceado' : 'Revisar Balance'}
                             </div>
                         </div>
-                        <div className="card-body p-4">
-                            <div className="mb-4 text-center">
+                        <div className="card-body p-2">
+                            <div className="mb-2 text-center">
                                 <label className="form-label text-muted small fw-bold text-uppercase">Calorías Diarias</label>
                                 <div className="d-flex justify-content-center align-items-center">
                                     <button
@@ -250,7 +250,7 @@ const SimpleSummaryTab: React.FC<SimpleSummaryTabProps> = ({
                                 </div>
                             </div>
 
-                            <div className="row g-4">
+                            <div className="row g-2">
                                 {/* Protein */}
                                 <div className="col-md-4">
                                     <div className="p-3 bg-danger bg-opacity-10 rounded-4 text-center h-100 border border-danger border-opacity-10 transition-hover">
@@ -327,13 +327,13 @@ const SimpleSummaryTab: React.FC<SimpleSummaryTabProps> = ({
                 {/* Right Column: Visual Summary */}
                 <div className="col-lg-4">
                     {/* Visual Distribution */}
-                    <div className="card border-0 shadow-sm rounded-4 mb-4 bg-primary text-white overflow-hidden position-relative">
+                    <div className="card border-0 shadow-sm rounded-3 mb-2 bg-primary text-white overflow-hidden position-relative">
                         <div className="position-absolute top-0 end-0 p-3 opacity-10">
                             <Activity size={100} />
                         </div>
-                        <div className="card-body p-4 position-relative z-1">
-                            <h6 className="text-white opacity-75 mb-3">Distribución Calórica</h6>
-                            <div className="mb-4">
+                        <div className="card-body p-2 position-relative z-1">
+                            <h6 className="text-white opacity-75 mb-2 small">Distribución Calórica</h6>
+                            <div className="mb-2">
                                 <div className="display-4 fw-bold">{planData.dailyCaloriesTarget}</div>
                                 <div className="opacity-75">kcal totales</div>
                             </div>
@@ -363,12 +363,12 @@ const SimpleSummaryTab: React.FC<SimpleSummaryTabProps> = ({
 
                     {/* Patient Summary Card */}
                     {selectedPatient && (
-                        <div className="card border-0 shadow-sm rounded-4">
-                            <div className="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
-                                <h6 className="fw-bold text-dark mb-0">👤 Contexto del Paciente</h6>
+                        <div className="card border-0 shadow-sm rounded-3">
+                            <div className="card-header bg-white border-bottom-0 pt-2 px-3 pb-0">
+                                <h6 className="fw-bold text-dark mb-0 small">👤 Contexto del Paciente</h6>
                             </div>
-                            <div className="card-body p-4">
-                                <div className="d-flex flex-column gap-3">
+                            <div className="card-body p-2">
+                                <div className="d-flex flex-column gap-2">
                                     <div className="d-flex align-items-center justify-content-between border-bottom pb-2">
                                         <span className="text-muted small">Nombre</span>
                                         <span className="fw-medium text-end text-truncate" style={{ maxWidth: '150px' }}>

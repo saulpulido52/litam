@@ -37,7 +37,7 @@ export const foodService = {
   async getAllFoods(params: FoodSearchParams = {}): Promise<Food[]> {
     try {
       console.log('🍎 Buscando alimentos con parámetros:', params);
-      
+
       const queryParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -46,11 +46,11 @@ export const foodService = {
       });
 
       const response = await apiService.get(`/foods?${queryParams.toString()}`);
-      
+
       // Acceso robusto a los datos
       const responseData = response.data as any;
       let foods: Food[] = [];
-      
+
       if (responseData.data?.foods) {
         foods = responseData.data.foods;
       } else if (responseData.foods) {
@@ -60,7 +60,7 @@ export const foodService = {
       } else if (Array.isArray(responseData)) {
         foods = responseData;
       }
-      
+
       console.log(`✅ Encontrados ${foods.length} alimentos`);
       return foods;
     } catch (error: any) {
@@ -125,13 +125,33 @@ export const foodService = {
     }
   },
 
-  // Buscar alimentos con texto
+  // Buscar alimentos con texto (Usando Backend Centralizado)
   async searchFoods(searchTerm: string): Promise<Food[]> {
     try {
-      return this.getAllFoods({ search: searchTerm });
+      console.log('🌎 Iniciando búsqueda en Backend:', searchTerm);
+
+      // Llamada al endpoint del backend que orquesta (Cache -> Edamam -> Save)
+      // Llamada al endpoint del backend que orquesta (Cache -> Edamam -> Save)
+      const response = await apiService.get<any>(`/foods/search?query=${encodeURIComponent(searchTerm)}`);
+
+      // response es el body: { status: 'success', data: { food: ... } }
+      // response.data accede a la propiedad 'data'
+      const foodData = response.data?.food;
+
+      // El backend devuelve un solo objeto Food si encuentra match exacto/mejor.
+      // El frontend espera un Array Food[].
+      // Envolvemos en array.
+      if (foodData) {
+        console.log('✅ Resultado recibido del backend:', foodData.name);
+        return [foodData];
+      }
+
+      return [];
+
     } catch (error: any) {
-      console.error('❌ Error al buscar alimentos:', error);
-      throw new Error(error.response?.data?.message || 'Error al buscar alimentos');
+      console.error('❌ Error al buscar alimentos en backend:', error);
+      // Fallback a array vacío para no romper UI
+      return [];
     }
   }
 }; 

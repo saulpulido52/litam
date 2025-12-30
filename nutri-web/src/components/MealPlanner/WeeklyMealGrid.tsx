@@ -40,9 +40,9 @@ const WeeklyMealGrid: React.FC<WeeklyMealGridProps> = ({
             <table className="table table-borderless mb-0 align-middle">
                 <thead className="bg-light border-bottom">
                     <tr>
-                        <th className="py-3 ps-3 text-uppercase text-secondary small fw-bold" style={{ minWidth: '120px' }}>Comida</th>
+                        <th className="py-2 ps-3 text-uppercase text-secondary small fw-bold" style={{ minWidth: '100px' }}>Comida</th>
                         {daysOfWeek.map(day => (
-                            <th key={day} className="py-3 text-center text-uppercase text-secondary small fw-bold" style={{ minWidth: '140px' }}>
+                            <th key={day} className="py-2 text-center text-uppercase text-secondary small fw-bold" style={{ minWidth: '120px' }}>
                                 <div className="d-flex flex-column align-items-center">
                                     <span>{day}</span>
                                 </div>
@@ -76,7 +76,7 @@ const WeeklyMealGrid: React.FC<WeeklyMealGridProps> = ({
                                                 ${isEmpty ? 'bg-light bg-opacity-50 border border-dashed border-2 cursor-pointer hover-bg-light-dark' : 'bg-white shadow-sm border border-transparent hover-shadow-md cursor-pointer'}
                                             `}
                                             onClick={() => isEmpty ? onAddMeal(day, type.key) : onEditMeal(meal)}
-                                            style={{ minHeight: '70px' }}
+                                            style={{ minHeight: '60px' }}
                                         >
                                             {isEmpty ? (
                                                 <div className="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-50">

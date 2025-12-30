@@ -33,6 +33,7 @@ import { TemplateMeal } from './entities/template-meal.entity';
 import { TemplateFood } from './entities/template-food.entity';
 import { TemplateRecipe } from './entities/template-recipe.entity';
 import { Notification } from './entities/notification.entity';
+import { WhoStandard } from './entities/who_standard.entity';
 
 dotenv.config();
 
@@ -166,6 +167,7 @@ export const AppDataSource = new DataSource({
         TemplateFood,
         TemplateRecipe,
         Notification,
+        WhoStandard,
     ],
     migrations: [path.join(__dirname, 'migrations', '*{.ts,.js}')],
     subscribers: [],

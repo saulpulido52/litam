@@ -112,38 +112,204 @@ export const useMealPlanner = ({
         const hasLocalContent = localDraft && localDraft.some(p => p.meals && p.meals.length > 0);
 
         if (hasLocalContent && localDraft) {
-            console.log('useMealPlanner: Using LOCAL DRAFT instead of DB/Default', localDraft);
-            setPlans(localDraft);
+            console.log('useMealPlanner: Local Draft found. Reconciling with current plan settings...');
+
+            // 1. Calculate EXPECTED numberOfWeeks based on current plan
+            let numberOfWeeks = 4;
+            if (dietPlan?.duration_value && dietPlan?.duration_unit) {
+                const val = Number(dietPlan.duration_value);
+                if (dietPlan.duration_unit === 'weeks' || dietPlan.duration_unit === 'semanas') {
+                    numberOfWeeks = val;
+                } else if (dietPlan.duration_unit === 'months' || dietPlan.duration_unit === 'meses') {
+                    numberOfWeeks = val * 4;
+                }
+            } else if (dietPlan?.start_date && dietPlan?.end_date) {
+                const start = new Date(dietPlan.start_date);
+                const end = new Date(dietPlan.end_date);
+                const diffTime = Math.abs(end.getTime() - start.getTime());
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                numberOfWeeks = Math.ceil(diffDays / 7);
+            }
+            if (numberOfWeeks < 1) numberOfWeeks = 1;
+            if (numberOfWeeks > 12) numberOfWeeks = 12;
+
+            // 2. Determine correct calorie target
+            const targetCal = dietPlan?.target_calories || dietPlan?.daily_calories_target || 2000;
+            const targetMacros = {
+                protein: dietPlan?.daily_macros_target?.protein || Math.round(targetCal * 0.25 / 4) || 100,
+                carbohydrates: dietPlan?.daily_macros_target?.carbohydrates || Math.round(targetCal * 0.50 / 4) || 250,
+                fats: dietPlan?.daily_macros_target?.fats || Math.round(targetCal * 0.25 / 9) || 60
+            };
+
+            // Fix Duration: Slice or Extend draft
+            let reconciledWithDuration = [...localDraft];
+
+            // Update Calories for ALL existing weeks to match current plan
+            reconciledWithDuration = reconciledWithDuration.map(p => ({
+                ...p,
+                daily_calories_target: targetCal, // Force sync calorie target
+                daily_macros_target: targetMacros
+            }));
+
+            if (reconciledWithDuration.length > numberOfWeeks) {
+                console.log(`useMealPlanner: Trimming draft from ${reconciledWithDuration.length} to ${numberOfWeeks} weeks.`);
+                reconciledWithDuration = reconciledWithDuration.slice(0, numberOfWeeks);
+            } else if (reconciledWithDuration.length < numberOfWeeks) {
+                console.log(`useMealPlanner: Extending draft from ${reconciledWithDuration.length} to ${numberOfWeeks} weeks.`);
+                for (let i = reconciledWithDuration.length + 1; i <= numberOfWeeks; i++) {
+                    let weekStart = new Date();
+                    if (dietPlan?.start_date) {
+                        weekStart = new Date(dietPlan.start_date);
+                        weekStart.setDate(weekStart.getDate() + (i - 1) * 7);
+                    }
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekEnd.getDate() + 6);
+
+                    reconciledWithDuration.push({
+                        week_number: i,
+                        start_date: weekStart.toISOString().split('T')[0],
+                        end_date: weekEnd.toISOString().split('T')[0],
+                        daily_calories_target: targetCal,
+                        daily_macros_target: targetMacros,
+                        meals: []
+                    });
+                }
+            }
+
+            setPlans(reconciledWithDuration);
             return;
         }
 
         if (initialPlans && initialPlans.length > 0) {
-            // Normalize plans to ensure week_number exists
-            const normalized = initialPlans.map((p, index) => ({
+            console.log('useMealPlanner: Initializing with DB plans. Checking duration consistency...');
+
+            // 1. Calculate Target Duration
+            let targetWeeks = 4;
+            if (dietPlan?.custom_duration?.value) {
+                const val = Number(dietPlan.custom_duration.value);
+                const unit = String(dietPlan.custom_duration.unit).toLowerCase();
+                if (unit.includes('week') || unit.includes('semana')) targetWeeks = val;
+                else if (unit.includes('month') || unit.includes('mes')) targetWeeks = val * 4;
+            }
+            else if (dietPlan?.total_weeks) {
+                targetWeeks = Number(dietPlan.total_weeks);
+            }
+            else if (dietPlan?.duration_value && dietPlan?.duration_unit) {
+                const val = Number(dietPlan.duration_value);
+                const unit = String(dietPlan.duration_unit).toLowerCase();
+                if (unit.includes('week') || unit.includes('semana')) targetWeeks = val;
+                else if (unit.includes('month') || unit.includes('mes')) targetWeeks = val * 4;
+            }
+            else if (dietPlan?.start_date && dietPlan?.end_date) {
+                const start = new Date(dietPlan.start_date);
+                const end = new Date(dietPlan.end_date);
+                const diffTime = Math.abs(end.getTime() - start.getTime());
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                targetWeeks = Math.round(diffDays / 7);
+                if (targetWeeks < 1 && diffDays > 0) targetWeeks = 1;
+            }
+            targetWeeks = Math.max(1, Math.min(targetWeeks, 12));
+
+            // 2. Normalize existing plans
+            let reconciled = initialPlans.map((p, index) => ({
                 ...p,
                 week_number: p.week_number || (index + 1),
                 meals: p.meals || []
             }));
-            console.log('useMealPlanner: Initialized with DB plans:', normalized);
-            setPlans(normalized);
+
+            // 3. Resize (Slice or Extend) PRESERVING MEALS
+            if (reconciled.length > targetWeeks) {
+                console.log(`useMealPlanner: Resizing DB plans from ${reconciled.length} to ${targetWeeks} weeks.`);
+                reconciled = reconciled.slice(0, targetWeeks);
+            } else if (reconciled.length < targetWeeks) {
+                console.log(`useMealPlanner: Extending DB plans from ${reconciled.length} to ${targetWeeks} weeks.`);
+                const targetCal = dietPlan?.target_calories || dietPlan?.daily_calories_target || 2000;
+                const targetMacros = {
+                    protein: dietPlan?.daily_macros_target?.protein || Math.round(targetCal * 0.25 / 4) || 100,
+                    carbohydrates: dietPlan?.daily_macros_target?.carbohydrates || Math.round(targetCal * 0.50 / 4) || 250,
+                    fats: dietPlan?.daily_macros_target?.fats || Math.round(targetCal * 0.25 / 9) || 60
+                };
+
+                for (let i = reconciled.length + 1; i <= targetWeeks; i++) {
+                    // Calculate dates for new week
+                    let weekStart = new Date();
+                    if (dietPlan?.start_date) {
+                        weekStart = new Date(dietPlan.start_date);
+                        weekStart.setDate(weekStart.getDate() + (i - 1) * 7);
+                    }
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekEnd.getDate() + 6);
+
+                    reconciled.push({
+                        week_number: i,
+                        start_date: weekStart.toISOString().split('T')[0],
+                        end_date: weekEnd.toISOString().split('T')[0],
+                        daily_calories_target: targetCal,
+                        daily_macros_target: targetMacros,
+                        meals: []
+                    });
+                }
+            }
+
+            console.log('useMealPlanner: Final reconciled plans:', reconciled);
+            setPlans(reconciled);
         } else {
-            // Generar planes por defecto
+            // Generar planes por defecto basados en la duración del plan
             const defaultPlans: WeeklyPlan[] = [];
-            for (let week = 1; week <= 4; week++) {
-                const startDate = new Date();
-                startDate.setDate(startDate.getDate() + (week - 1) * 7);
-                const endDate = new Date(startDate);
-                endDate.setDate(endDate.getDate() + 6);
+            let numberOfWeeks = 4; // Default fallback
+
+            // 1. Prioridad: Duración explícita
+            if (dietPlan?.duration_value && dietPlan?.duration_unit) {
+                const val = Number(dietPlan.duration_value);
+                const unit = String(dietPlan.duration_unit).toLowerCase();
+
+                if (unit.includes('week') || unit.includes('semana')) {
+                    numberOfWeeks = val;
+                } else if (unit.includes('month') || unit.includes('mes')) {
+                    numberOfWeeks = val * 4;
+                }
+            }
+            // 2. Fallback: Fechas (si no hay duration_value)
+            else if (dietPlan?.start_date && dietPlan?.end_date) {
+                const start = new Date(dietPlan.start_date);
+                const end = new Date(dietPlan.end_date);
+                const diffTime = Math.abs(end.getTime() - start.getTime());
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                numberOfWeeks = Math.ceil(diffDays / 7);
+            }
+
+            if (numberOfWeeks < 1) numberOfWeeks = 1;
+            if (numberOfWeeks > 12) numberOfWeeks = 12; // Safety cap
+
+            console.log(`useMealPlanner: Generating ${numberOfWeeks} weeks based on plan dates`);
+
+            for (let week = 1; week <= numberOfWeeks; week++) {
+                const startDate = new Date(); // Esto debería ser dietPlan.start_date idealmente, pero mantenemos lógica actual para las fechas relativas si es necesario, O MEJOR AUN:
+
+                // Usar la fecha real del plan si existe
+                let weekStart = new Date();
+                if (dietPlan?.start_date) {
+                    weekStart = new Date(dietPlan.start_date);
+                    weekStart.setDate(weekStart.getDate() + (week - 1) * 7);
+                } else {
+                    weekStart.setDate(weekStart.getDate() + (week - 1) * 7);
+                }
+
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekEnd.getDate() + 6);
+
+                // Fix Calorie Mapping: check target_calories first (DB standard), then daily_calories_target
+                const targetCal = dietPlan?.target_calories || dietPlan?.daily_calories_target || 2000;
 
                 defaultPlans.push({
                     week_number: week,
-                    start_date: startDate.toISOString().split('T')[0],
-                    end_date: endDate.toISOString().split('T')[0],
-                    daily_calories_target: dietPlan?.daily_calories_target || 2000,
+                    start_date: weekStart.toISOString().split('T')[0],
+                    end_date: weekEnd.toISOString().split('T')[0],
+                    daily_calories_target: targetCal,
                     daily_macros_target: {
-                        protein: dietPlan?.daily_macros_target?.protein || 150,
-                        carbohydrates: dietPlan?.daily_macros_target?.carbohydrates || 250,
-                        fats: dietPlan?.daily_macros_target?.fats || 67
+                        protein: dietPlan?.daily_macros_target?.protein || Math.round(targetCal * 0.25 / 4) || 100,
+                        carbohydrates: dietPlan?.daily_macros_target?.carbohydrates || Math.round(targetCal * 0.50 / 4) || 250,
+                        fats: dietPlan?.daily_macros_target?.fats || Math.round(targetCal * 0.25 / 9) || 60
                     },
                     meals: [],
                     notes: ''
@@ -345,6 +511,19 @@ export const useMealPlanner = ({
     }, [updateMealInPlan]);
 
     const handleSave = useCallback(() => {
+        console.log('💾 useMealPlanner: handleSave triggered');
+        console.log('📊 Current Plans State:', plans);
+
+        // Log naming convention check
+        if (plans.length > 0) {
+            console.log('🔎 Sample Plan Structure (Week 1):', {
+                week_number: plans[0].week_number,
+                daily_calories_target: plans[0].daily_calories_target,
+                meals_count: plans[0].meals?.length,
+                first_meal: plans[0].meals?.[0]
+            });
+        }
+
         onSave(plans);
     }, [plans, onSave]);
 

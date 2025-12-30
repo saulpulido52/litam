@@ -27,22 +27,22 @@ const SimpleMealsTab: React.FC<SimpleMealsTabProps> = ({
     return (
         <div className="meals-tab fade-in">
             {/* Header Section */}
-            <div className="d-flex align-items-center mb-4">
-                <div className="bg-warning bg-opacity-10 p-2 rounded-circle me-3">
-                    <Utensils size={20} className="text-warning" />
+            <div className="d-flex align-items-center mb-2">
+                <div className="bg-warning bg-opacity-10 p-1 rounded-circle me-2">
+                    <Utensils size={16} className="text-warning" />
                 </div>
-                <h6 className="mb-0 fw-bold text-dark">Planificación de Comidas</h6>
+                <h6 className="mb-0 fw-bold text-dark small">Planificación de Comidas</h6>
             </div>
 
-            <div className="row g-4">
+            <div className="row g-2">
                 {/* Left Column: Configuration */}
                 <div className="col-lg-8">
                     {/* Structure Card */}
-                    <div className="card border-0 shadow-sm rounded-4 mb-4">
-                        <div className="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
-                            <h6 className="fw-bold text-dark mb-0">📅 Estructura del Plan</h6>
+                    <div className="card border-0 shadow-sm rounded-3 mb-2">
+                        <div className="card-header bg-white border-bottom-0 pt-2 px-3 pb-0">
+                            <h6 className="fw-bold text-dark mb-0 small">📅 Estructura del Plan</h6>
                         </div>
-                        <div className="card-body p-4">
+                        <div className="card-body p-2">
                             <div className="row g-4">
                                 <div className="col-md-6">
                                     <label className="form-label text-muted small fw-bold text-uppercase">Tipo de Plan</label>
@@ -85,11 +85,11 @@ const SimpleMealsTab: React.FC<SimpleMealsTabProps> = ({
                     </div>
 
                     {/* Meals Config Card */}
-                    <div className="card border-0 shadow-sm rounded-4">
-                        <div className="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
-                            <h6 className="fw-bold text-dark mb-0">🍽️ Configuración de Comidas</h6>
+                    <div className="card border-0 shadow-sm rounded-3">
+                        <div className="card-header bg-white border-bottom-0 pt-2 px-3 pb-0">
+                            <h6 className="fw-bold text-dark mb-0 small">🍽️ Configuración de Comidas</h6>
                         </div>
-                        <div className="card-body p-4">
+                        <div className="card-body p-2">
                             <div className="row g-4 mb-4">
                                 <div className="col-md-6">
                                     <label className="form-label text-muted small fw-bold text-uppercase">Frecuencia</label>
@@ -171,11 +171,11 @@ const SimpleMealsTab: React.FC<SimpleMealsTabProps> = ({
 
                 {/* Right Column: Schedule */}
                 <div className="col-lg-4">
-                    <div className="card border-0 shadow-sm rounded-4 h-100">
-                        <div className="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
-                            <h6 className="fw-bold text-dark mb-0">⏰ Horarios Sugeridos</h6>
+                    <div className="card border-0 shadow-sm rounded-3 h-100">
+                        <div className="card-header bg-white border-bottom-0 pt-2 px-3 pb-0">
+                            <h6 className="fw-bold text-dark mb-0 small">⏰ Horarios Sugeridos</h6>
                         </div>
-                        <div className="card-body p-4">
+                        <div className="card-body p-2">
                             <div className="d-flex flex-column gap-3">
                                 {[
                                     { label: 'Desayuno', key: 'breakfast', icon: Sunrise, color: 'warning', default: '07:00' },

@@ -204,7 +204,11 @@ class DietPlansService {
       meal_frequency: backendPlan.meal_frequency,
       meal_timing: backendPlan.meal_timing,
       nutritional_goals: backendPlan.nutritional_goals,
-      flexibility_settings: backendPlan.flexibility_settings
+      flexibility_settings: backendPlan.flexibility_settings,
+      // === DURACIÓN EXPLÍCITA ===
+      duration_value: backendPlan.duration_value,
+      duration_unit: backendPlan.duration_unit,
+      total_weeks: backendPlan.total_weeks
     };
 
     console.log('✅ Plan transformado completamente:', {
@@ -270,14 +274,24 @@ class DietPlansService {
 
       // Si los datos vienen del formulario (CreateDietPlanDto), transformarlos
       const transformedData = this.transformFormDataToUpdateData(updateData);
-      console.log('🟢 dietPlansService - Datos transformados para actualización:', transformedData);
+
+      console.log('📡 === SERVICE REQUEST (updateDietPlan) ===');
+      console.log('📤 Payload transformado enviado a PATCH /diet-plans:', JSON.stringify(transformedData, null, 2));
+      console.log('🔍 Verificando campo weeklyPlans:', transformedData.weeklyPlans ? `Array con ${transformedData.weeklyPlans.length} elementos` : 'UNDEFINED');
 
       const response = await apiService.patch<{ dietPlan: any }>(`/diet-plans/${dietPlanId}`, transformedData);
       if (response.status !== 'success' || !response.data) {
         throw new Error(response.message || 'Error updating diet plan');
       }
 
-      console.log('🟢 dietPlansService - Respuesta de actualización:', response);
+      console.log('✅ === SERVICE RESPONSE ===');
+      console.log('📥 Respuesta raw del backend:', response);
+      if (response.data?.dietPlan?.weekly_plans) {
+        console.log('🔢 Weekly Plans recibidos del backend:', response.data.dietPlan.weekly_plans.length);
+        console.log('📝 Primer plan semanal recibido:', response.data.dietPlan.weekly_plans[0]);
+      } else {
+        console.warn('⚠️ No se recibieron weekly_plans en la respuesta del backend');
+      }
 
       // **OPTIMIZACIÓN**: Invalidar caché después de actualizar
       const updatedPlan = response.data.dietPlan;

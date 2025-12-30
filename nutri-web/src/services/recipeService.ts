@@ -93,12 +93,12 @@ class RecipeService {
   }> {
     // Crear clave de caché basada en parámetros
     const cacheKey = this.generateCacheKey('recipes:search', params);
-    
+
     return await cacheService.memoize(
       cacheKey,
       async () => {
-      const queryParams = new URLSearchParams();
-      
+        const queryParams = new URLSearchParams();
+
         if (params.search) queryParams.append('search', params.search);
         if (params.tags && params.tags.length > 0) {
           params.tags.forEach(tag => queryParams.append('tags[]', tag));
@@ -113,7 +113,7 @@ class RecipeService {
         if (params.detailedResults !== undefined) queryParams.append('detailedResults', params.detailedResults.toString());
 
         const url = `/recipes${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-        
+
         const response = await apiService.get<{
           recipes: Recipe[];
           pagination: any;
@@ -161,7 +161,7 @@ class RecipeService {
           detailedResults: false, // Sin ingredientes detallados para mayor velocidad
           sortBy: 'created_desc'
         });
-        
+
         return result.recipes;
       },
       CACHE_TTL.SHORT // 5 minutos para búsquedas rápidas
@@ -178,7 +178,7 @@ class RecipeService {
 
     // **OPTIMIZACIÓN**: Invalidar caché relacionado
     cacheService.invalidatePattern('recipes:');
-    
+
     return response.data.recipe;
   }
 
@@ -223,8 +223,8 @@ class RecipeService {
           detailedResults: false,
           sortBy: 'created_desc'
         });
-        
-    return result.recipes;
+
+        return result.recipes;
       },
       CACHE_TTL.LONG // 1 hora para recetas por tipo de comida
     );
@@ -258,6 +258,23 @@ class RecipeService {
     } catch (error) {
       console.warn('⚠️ Error precargando recetas:', error);
     }
+  }
+  // **NUEVO**: Analizar receta (Edamam + OMS)
+  async analyzeRecipe(ingredients: { name: string; quantity_g: number }[]): Promise<any> {
+    const response = await apiService.post<{
+      status: string;
+      data: {
+        totals: any;
+        who_compliance: any;
+        ingredients_analysis: any[];
+      };
+    }>('/recipes/analyze', { ingredients });
+
+    if (response.status !== 'success' || !response.data) {
+      throw new Error(response.message || 'Error analyzing recipe');
+    }
+
+    return response.data;
   }
 }
 
