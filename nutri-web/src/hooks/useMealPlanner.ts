@@ -92,7 +92,14 @@ export const useMealPlanner = ({
     // === INITIALIZATION ===
     useEffect(() => {
         if (initialPlans && initialPlans.length > 0) {
-            setPlans(initialPlans);
+            // Normalize plans to ensure week_number exists
+            const normalized = initialPlans.map((p, index) => ({
+                ...p,
+                week_number: p.week_number || (index + 1),
+                meals: p.meals || []
+            }));
+            console.log('useMealPlanner: Initialized with plans:', normalized);
+            setPlans(normalized);
         } else {
             // Generar planes por defecto
             const defaultPlans: WeeklyPlan[] = [];
