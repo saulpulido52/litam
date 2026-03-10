@@ -16,7 +16,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.81.2",
     "@types/react-router-dom": "^5.3.3",
-    "axios": "^1.10.0",
+    "axios": "^1.13.5",
     "bootstrap": "^5.3.7",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
